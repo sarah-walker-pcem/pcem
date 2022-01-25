@@ -7,6 +7,7 @@
 #include "timer.h"
 
 #include <pcem/defines.h>
+#include <pcem/logging.h>
 
 #ifdef ABS
 #undef ABS
@@ -14,8 +15,6 @@
 
 #define ABS(x)    ((x) > 0 ? (x) : -(x))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
-
-#define printf pclog
 
 #define READFLASH_FDC 0
 #define READFLASH_HDC 4
@@ -405,9 +404,6 @@ extern int idecallback[2];
 
 extern uint32_t atapi_get_cd_volume(int channel);
 
-void pclog(const char *format, ...);
-void fatal(const char *format, ...);
-void warning(const char *format, ...);
 extern int nmi;
 extern int nmi_auto_clear;
 

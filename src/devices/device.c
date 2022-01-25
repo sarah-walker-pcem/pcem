@@ -5,13 +5,12 @@
 #include "model.h"
 #include "sound.h"
 
-#include <pcem/devices.h>
+#include <pcem/defines.h>
 
-static void *device_priv[256];
-static device_t *devices[256];
-
-static device_t *current_device;
-char *current_device_name = NULL;
+extern void *device_priv[256];
+extern device_t *devices[DEV_MAX];
+extern device_t *current_device;
+extern char *current_device_name;
 
 void device_init()
 {
@@ -20,33 +19,7 @@ void device_init()
 
 void device_add(device_t *d)
 {
-        int c = 0;
-        void *priv = NULL;
-        
-        while (devices[c] != NULL && c < 256)
-                c++;
-        
-        if (c >= 256)
-                fatal("device_add : too many devices\n");
-        
-        current_device = d;
-        current_device_name = d->name;
-        
-        if (d->init != NULL)
-        {
-                priv = d->init();
-                if (priv == NULL)
-                        fatal("device_add : device init failed\n");
-        }
-        
-        devices[c] = d;
-        device_priv[c] = priv;        
-        current_device_name = NULL;
-}
-
-void pcem_add_device(device_t *device)
-{
-        device_add(device);
+        pcem_add_device(d);
 }
 
 void device_close_all()

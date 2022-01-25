@@ -11,9 +11,9 @@
 #include "vid_voodoo_render.h"
 #include "vid_voodoo_fb.h"
 
-uint16_t voodoo_fb_readw(uint32_t addr, void *p)
+uint16_t voodoo_fb_readw(uint32_t addr, void* p)
 {
-        voodoo_t *voodoo = (voodoo_t *)p;
+        voodoo_t* voodoo = (voodoo_t*)p;
         int x, y;
         uint32_t read_addr;
         uint16_t temp;
@@ -31,7 +31,7 @@ uint16_t voodoo_fb_readw(uint32_t addr, void *p)
 
         if (SLI_ENABLED)
         {
-                voodoo_set_t *set = voodoo->set;
+                voodoo_set_t* set = voodoo->set;
 
                 if (y & 1)
                         voodoo = set->voodoos[1];
@@ -42,21 +42,21 @@ uint16_t voodoo_fb_readw(uint32_t addr, void *p)
         }
 
         if (voodoo->col_tiled)
-                read_addr = voodoo->fb_read_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+                read_addr = voodoo->fb_read_offset + (x & 127) + (x >> 7) * 128 * 32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
         else
                 read_addr = voodoo->fb_read_offset + x + (y * voodoo->row_width);
 
         if (read_addr > voodoo->fb_mask)
                 return 0xffff;
 
-        temp = *(uint16_t *)(&voodoo->fb_mem[read_addr & voodoo->fb_mask]);
+        temp = *(uint16_t*)(&voodoo->fb_mem[read_addr & voodoo->fb_mask]);
 
 //        pclog("voodoo_fb_readw : %08X %08X  %i %i  %08X %08X  %08x:%08x %i\n", addr, temp, x, y, read_addr, *(uint32_t *)(&voodoo->fb_mem[4]), cs, pc, fb_reads++);
         return temp;
 }
-uint32_t voodoo_fb_readl(uint32_t addr, void *p)
+uint32_t voodoo_fb_readl(uint32_t addr, void* p)
 {
-        voodoo_t *voodoo = (voodoo_t *)p;
+        voodoo_t* voodoo = (voodoo_t*)p;
         int x, y;
         uint32_t read_addr;
         uint32_t temp;
@@ -74,7 +74,7 @@ uint32_t voodoo_fb_readl(uint32_t addr, void *p)
 
         if (SLI_ENABLED)
         {
-                voodoo_set_t *set = voodoo->set;
+                voodoo_set_t* set = voodoo->set;
 
                 if (y & 1)
                         voodoo = set->voodoos[1];
@@ -85,20 +85,20 @@ uint32_t voodoo_fb_readl(uint32_t addr, void *p)
         }
 
         if (voodoo->col_tiled)
-                read_addr = voodoo->fb_read_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+                read_addr = voodoo->fb_read_offset + (x & 127) + (x >> 7) * 128 * 32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
         else
                 read_addr = voodoo->fb_read_offset + x + (y * voodoo->row_width);
 
         if (read_addr > voodoo->fb_mask)
                 return 0xffffffff;
 
-        temp = *(uint32_t *)(&voodoo->fb_mem[read_addr & voodoo->fb_mask]);
+        temp = *(uint32_t*)(&voodoo->fb_mem[read_addr & voodoo->fb_mask]);
 
 //        pclog("voodoo_fb_readl : %08X %08x %08X  x=%i y=%i  %08X %08X  %08x:%08x %i ro=%08x rw=%i\n", addr, read_addr, temp, x, y, read_addr, *(uint32_t *)(&voodoo->fb_mem[4]), cs, pc, fb_reads++, voodoo->fb_read_offset, voodoo->row_width);
         return temp;
 }
 
-static inline uint16_t do_dither(voodoo_params_t *params, rgba8_t col, int x, int y)
+static inline uint16_t do_dither(voodoo_params_t* params, rgba8_t col, int x, int y)
 {
         int r, g, b;
 
@@ -107,13 +107,13 @@ static inline uint16_t do_dither(voodoo_params_t *params, rgba8_t col, int x, in
                 if (dither2x2)
                 {
                         r = dither_rb2x2[col.r][y & 1][x & 1];
-                        g =  dither_g2x2[col.g][y & 1][x & 1];
+                        g = dither_g2x2[col.g][y & 1][x & 1];
                         b = dither_rb2x2[col.b][y & 1][x & 1];
                 }
                 else
                 {
                         r = dither_rb[col.r][y & 3][x & 3];
-                        g =  dither_g[col.g][y & 3][x & 3];
+                        g = dither_g[col.g][y & 3][x & 3];
                         b = dither_rb[col.b][y & 3][x & 3];
                 }
         }
@@ -127,10 +127,10 @@ static inline uint16_t do_dither(voodoo_params_t *params, rgba8_t col, int x, in
         return b | (g << 5) | (r << 11);
 }
 
-void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
+void voodoo_fb_writew(uint32_t addr, uint16_t val, void* p)
 {
-        voodoo_t *voodoo = (voodoo_t *)p;
-        voodoo_params_t *params = &voodoo->params;
+        voodoo_t* voodoo = (voodoo_t*)p;
+        voodoo_params_t* params = &voodoo->params;
         int x, y;
         uint32_t write_addr, write_addr_aux;
         rgba8_t colour_data;
@@ -151,27 +151,27 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
 
         switch (voodoo->lfbMode & LFB_FORMAT_MASK)
         {
-                case LFB_FORMAT_RGB565:
+        case LFB_FORMAT_RGB565:
                 colour_data = rgb565[val];
                 alpha_data = 0xff;
                 write_mask = LFB_WRITE_COLOUR;
                 break;
-                case LFB_FORMAT_RGB555:
+        case LFB_FORMAT_RGB555:
                 colour_data = argb1555[val];
                 alpha_data = 0xff;
                 write_mask = LFB_WRITE_COLOUR;
                 break;
-                case LFB_FORMAT_ARGB1555:
+        case LFB_FORMAT_ARGB1555:
                 colour_data = argb1555[val];
                 alpha_data = colour_data.a;
                 write_mask = LFB_WRITE_COLOUR;
                 break;
-                case LFB_FORMAT_DEPTH:
+        case LFB_FORMAT_DEPTH:
                 depth_data = val;
                 write_mask = LFB_WRITE_DEPTH;
                 break;
 
-                default:
+        default:
                 fatal("voodoo_fb_writew : bad LFB format %08X\n", voodoo->lfbMode);
         }
 
@@ -194,16 +194,15 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
                 y >>= 1;
         }
 
-
         if (voodoo->fb_write_offset == voodoo->params.front_offset && y < 2048)
                 voodoo->dirty_line[y] = 1;
 
         if (voodoo->col_tiled)
-                write_addr = voodoo->fb_write_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+                write_addr = voodoo->fb_write_offset + (x & 127) + (x >> 7) * 128 * 32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
         else
                 write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
         if (voodoo->aux_tiled)
-                write_addr_aux = voodoo->params.aux_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+                write_addr_aux = voodoo->params.aux_offset + (x & 127) + (x >> 7) * 128 * 32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
         else
                 write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
 
@@ -217,15 +216,15 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
 
                         if (params->fbzMode & FBZ_DEPTH_ENABLE)
                         {
-                                uint16_t old_depth = *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
+                                uint16_t old_depth = *(uint16_t*)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
 
                                 DEPTH_TEST(new_depth);
                         }
 
                         if ((params->fbzMode & FBZ_CHROMAKEY) &&
-                                write_data.r == params->chromaKey_r &&
-                                write_data.g == params->chromaKey_g &&
-                                write_data.b == params->chromaKey_b)
+                            write_data.r == params->chromaKey_r &&
+                            write_data.g == params->chromaKey_g &&
+                            write_data.b == params->chromaKey_b)
                                 goto skip_pixel;
 
                         if (params->fogMode & FOG_ENABLE)
@@ -242,7 +241,7 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
 
                         if (params->alphaMode & (1 << 4))
                         {
-                                uint16_t dat = *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]);
+                                uint16_t dat = *(uint16_t*)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]);
                                 int dest_r, dest_g, dest_b, dest_a;
 
                                 dest_r = (dat >> 8) & 0xf8;
@@ -257,28 +256,27 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p)
                         }
 
                         if (params->fbzMode & FBZ_RGB_WMASK)
-                                *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, write_data, x >> 1, y);
+                                *(uint16_t*)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, write_data, x >> 1, y);
                         if (params->fbzMode & FBZ_DEPTH_WMASK)
-                                *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = new_depth;
+                                *(uint16_t*)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = new_depth;
 
-skip_pixel:
+                    skip_pixel:
                         x = x;
                 }
         }
         else
         {
                 if (write_mask & LFB_WRITE_COLOUR)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, colour_data, x >> 1, y);
+                        *(uint16_t*)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, colour_data, x >> 1, y);
                 if (write_mask & LFB_WRITE_DEPTH)
-                        *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data;
+                        *(uint16_t*)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data;
         }
 }
 
-
-void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
+void voodoo_fb_writel(uint32_t addr, uint32_t val, void* p)
 {
-        voodoo_t *voodoo = (voodoo_t *)p;
-        voodoo_params_t *params = &voodoo->params;
+        voodoo_t* voodoo = (voodoo_t*)p;
+        voodoo_params_t* params = &voodoo->params;
         int x, y;
         uint32_t write_addr, write_addr_aux;
         rgba8_t colour_data[2];
@@ -295,19 +293,19 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
 
         switch (voodoo->lfbMode & LFB_FORMAT_MASK)
         {
-                case LFB_FORMAT_RGB565:
+        case LFB_FORMAT_RGB565:
                 colour_data[0] = rgb565[val & 0xffff];
                 colour_data[1] = rgb565[val >> 16];
                 write_mask = LFB_WRITE_COLOUR;
                 count = 2;
                 break;
-                case LFB_FORMAT_RGB555:
+        case LFB_FORMAT_RGB555:
                 colour_data[0] = argb1555[val & 0xffff];
                 colour_data[1] = argb1555[val >> 16];
                 write_mask = LFB_WRITE_COLOUR;
                 count = 2;
                 break;
-                case LFB_FORMAT_ARGB1555:
+        case LFB_FORMAT_ARGB1555:
                 colour_data[0] = argb1555[val & 0xffff];
                 alpha_data[0] = colour_data[0].a;
                 colour_data[1] = argb1555[val >> 16];
@@ -316,7 +314,7 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                 count = 2;
                 break;
 
-                case LFB_FORMAT_ARGB8888:
+        case LFB_FORMAT_ARGB8888:
                 colour_data[0].b = val & 0xff;
                 colour_data[0].g = (val >> 8) & 0xff;
                 colour_data[0].r = (val >> 16) & 0xff;
@@ -325,14 +323,14 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                 addr >>= 1;
                 break;
 
-                case LFB_FORMAT_DEPTH:
+        case LFB_FORMAT_DEPTH:
                 depth_data[0] = val;
                 depth_data[1] = val >> 16;
                 write_mask = LFB_WRITE_DEPTH;
                 count = 2;
                 break;
 
-                default:
+        default:
                 fatal("voodoo_fb_writel : bad LFB format %08X\n", voodoo->lfbMode);
         }
 
@@ -359,11 +357,11 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                 voodoo->dirty_line[y] = 1;
 
         if (voodoo->col_tiled)
-                write_addr = voodoo->fb_write_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+                write_addr = voodoo->fb_write_offset + (x & 127) + (x >> 7) * 128 * 32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
         else
                 write_addr = voodoo->fb_write_offset + x + (y * voodoo->row_width);
         if (voodoo->aux_tiled)
-                write_addr_aux = voodoo->params.aux_offset + (x & 127) + (x >> 7) * 128*32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
+                write_addr_aux = voodoo->params.aux_offset + (x & 127) + (x >> 7) * 128 * 32 + (y & 31) * 128 + (y >> 5) * voodoo->row_width;
         else
                 write_addr_aux = voodoo->params.aux_offset + x + (y * voodoo->row_width);
 
@@ -380,15 +378,15 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
 
                         if (params->fbzMode & FBZ_DEPTH_ENABLE)
                         {
-                                uint16_t old_depth = *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
+                                uint16_t old_depth = *(uint16_t*)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
 
                                 DEPTH_TEST(new_depth);
                         }
 
                         if ((params->fbzMode & FBZ_CHROMAKEY) &&
-                                write_data.r == params->chromaKey_r &&
-                                write_data.g == params->chromaKey_g &&
-                                write_data.b == params->chromaKey_b)
+                            write_data.r == params->chromaKey_r &&
+                            write_data.g == params->chromaKey_g &&
+                            write_data.b == params->chromaKey_b)
                                 goto skip_pixel;
 
                         if (params->fogMode & FOG_ENABLE)
@@ -405,7 +403,7 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
 
                         if (params->alphaMode & (1 << 4))
                         {
-                                uint16_t dat = *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]);
+                                uint16_t dat = *(uint16_t*)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]);
                                 int dest_r, dest_g, dest_b, dest_a;
 
                                 dest_r = (dat >> 8) & 0xf8;
@@ -420,11 +418,11 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p)
                         }
 
                         if (params->fbzMode & FBZ_RGB_WMASK)
-                                *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, write_data, (x >> 1) + c, y);
+                                *(uint16_t*)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, write_data, (x >> 1) + c, y);
                         if (params->fbzMode & FBZ_DEPTH_WMASK)
-                                *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = new_depth;
+                                *(uint16_t*)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = new_depth;
 
-skip_pixel:
+                    skip_pixel:
                         write_addr += 2;
                         write_addr_aux += 2;
                 }
@@ -436,9 +434,9 @@ skip_pixel:
                 for (c = 0; c < count; c++)
                 {
                         if (write_mask & LFB_WRITE_COLOUR)
-                                *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, colour_data[c], (x >> 1) + c, y);
+                                *(uint16_t*)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]) = do_dither(&voodoo->params, colour_data[c], (x >> 1) + c, y);
                         if (write_mask & LFB_WRITE_DEPTH)
-                                *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data[c];
+                                *(uint16_t*)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]) = depth_data[c];
 
                         write_addr += 2;
                         write_addr_aux += 2;

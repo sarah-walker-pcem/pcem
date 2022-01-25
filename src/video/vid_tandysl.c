@@ -13,18 +13,18 @@ typedef struct tandysl_t
         mem_mapping_t mapping;
         mem_mapping_t ram_mapping;
         mem_mapping_t vram_mapping;
-        
+
         uint8_t crtc[32];
         int crtcreg;
-        
-        int      array_index;
-        uint8_t  array[32];
-        int      memctrl;//=-1;
+
+        int array_index;
+        uint8_t array[32];
+        int memctrl;//=-1;
         uint32_t base;
-        uint8_t  mode, col;
-        uint8_t  stat;
-        
-        uint8_t *vram, *b8000;
+        uint8_t mode, col;
+        uint8_t stat;
+
+        uint8_t* vram, * b8000;
         uint32_t b8000_limit;
         uint8_t planar_ctrl;
 
@@ -34,36 +34,42 @@ typedef struct tandysl_t
         int con, coff, cursoron, blink;
         int vsynctime, vadj;
         uint16_t ma, maback;
-        
+
         uint64_t dispontime, dispofftime;
-	pc_timer_t timer;
+        pc_timer_t timer;
         int firstline, lastline;
 } tandysl_t;
 
-static uint8_t crtcmask[32] = 
-{
-        0xff, 0xff, 0xff, 0xff, 0xff, 0x1f, 0xff, 0xff, 0xf3, 0x1f, 0x7f, 0x1f, 0x3f, 0xff, 0x3f, 0xff,
-        0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+static uint8_t crtcmask[32] =
+        {
+                0xff, 0xff, 0xff, 0xff, 0xff, 0x1f, 0xff, 0xff, 0xf3, 0x1f, 0x7f, 0x1f, 0x3f, 0xff, 0x3f, 0xff,
+                0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        };
 
-static void tandysl_recalcaddress(tandysl_t *tandy);
-static void tandysl_recalctimings(tandysl_t *tandy);
-static void tandysl_recalcmapping(tandysl_t *tandy);
-static uint8_t tandysl_in(uint16_t addr, void *p);
-static void tandysl_ram_write(uint32_t addr, uint8_t val, void *p);
-static void tandysl_write(uint32_t addr, uint8_t val, void *p);
+static void tandysl_recalcaddress(tandysl_t* tandy);
+static void tandysl_recalctimings(tandysl_t* tandy);
+static void tandysl_recalcmapping(tandysl_t* tandy);
+static uint8_t tandysl_in(uint16_t addr, void* p);
+static void tandysl_ram_write(uint32_t addr, uint8_t val, void* p);
+static void tandysl_write(uint32_t addr, uint8_t val, void* p);
 
-static void tandysl_out(uint16_t addr, uint8_t val, void *p)
+static void tandysl_out(uint16_t addr, uint8_t val, void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
+        tandysl_t* tandy = (tandysl_t*)p;
         uint8_t old;
 //        pclog("TandySL OUT %04X %02X\n",addr,val);
         switch (addr)
         {
-                case 0x3d0: case 0x3d2: case 0x3d4: case 0x3d6:
+        case 0x3d0:
+        case 0x3d2:
+        case 0x3d4:
+        case 0x3d6:
                 tandy->crtcreg = val & 0x1f;
                 return;
-                case 0x3d1: case 0x3d3: case 0x3d5: case 0x3d7:
+        case 0x3d1:
+        case 0x3d3:
+        case 0x3d5:
+        case 0x3d7:
 //                pclog("Write CRTC R%02x %02x  ",tandy->crtcreg, val);
                 old = tandy->crtc[tandy->crtcreg];
                 tandy->crtc[tandy->crtcreg] = val & crtcmask[tandy->crtcreg];
@@ -77,17 +83,17 @@ static void tandysl_out(uint16_t addr, uint8_t val, void *p)
                         }
                 }
                 return;
-                case 0x3d8:
+        case 0x3d8:
                 tandy->mode = val;
                 return;
-                case 0x3d9:
+        case 0x3d9:
                 tandy->col = val;
                 return;
-                case 0x3da:
+        case 0x3da:
                 tandy->array_index = val & 0x1f;
                 break;
-                case 0x3de:
-                if (tandy->array_index & 16) 
+        case 0x3de:
+                if (tandy->array_index & 16)
                         val &= 0xf;
                 tandy->array[tandy->array_index & 0x1f] = val;
                 if ((tandy->array_index & 0x1f) == 5)
@@ -96,18 +102,18 @@ static void tandysl_out(uint16_t addr, uint8_t val, void *p)
                         tandysl_recalcaddress(tandy);
                 }
                 break;
-                case 0x3df:
+        case 0x3df:
                 tandy->memctrl = val;
 //                pclog("tandy 3df write %02x\n", val);
                 tandysl_recalcaddress(tandy);
                 break;
-                case 0x65:
+        case 0x65:
                 if (val == 8) /*Hack*/
                         return;
                 tandy->planar_ctrl = val;
                 tandysl_recalcmapping(tandy);
                 break;
-                case 0xffe8:
+        case 0xffe8:
                 if ((val & 0xe) == 0xe)
                         mem_mapping_disable(&tandy->ram_mapping);
                 else
@@ -117,40 +123,40 @@ static void tandysl_out(uint16_t addr, uint8_t val, void *p)
         }
 }
 
-static uint8_t tandysl_in(uint16_t addr, void *p)
+static uint8_t tandysl_in(uint16_t addr, void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
+        tandysl_t* tandy = (tandysl_t*)p;
 //        if (addr!=0x3DA) pclog("Tandy IN %04X\n",addr);
         switch (addr)
         {
-                case 0x3d4:
+        case 0x3d4:
                 return tandy->crtcreg;
-                case 0x3d5:
+        case 0x3d5:
                 return tandy->crtc[tandy->crtcreg];
-                case 0x3da:
+        case 0x3da:
                 return tandy->stat;
         }
 //        pclog("Bad Tandy IN %04x\n", addr);
         return 0xFF;
 }
 
-static void tandysl_recalcaddress(tandysl_t *tandy)
+static void tandysl_recalcaddress(tandysl_t* tandy)
 {
         tandy->b8000_limit = 0x8000;
         if (tandy->array[5] & 1)
         {
-                tandy->vram  = &ram[((tandy->memctrl & 0x04) << 14) + tandy->base];
+                tandy->vram = &ram[((tandy->memctrl & 0x04) << 14) + tandy->base];
                 tandy->b8000 = &ram[((tandy->memctrl & 0x20) << 11) + tandy->base];
         }
         else if ((tandy->memctrl & 0xc0) == 0xc0)
         {
-                tandy->vram  = &ram[((tandy->memctrl & 0x06) << 14) + tandy->base];
+                tandy->vram = &ram[((tandy->memctrl & 0x06) << 14) + tandy->base];
                 tandy->b8000 = &ram[((tandy->memctrl & 0x30) << 11) + tandy->base];
 //                printf("VRAM at %05X B8000 at %05X\n",((tandy->memctrl&0x6)<<14)+tandy->base,((tandy->memctrl&0x30)<<11)+tandy->base);
         }
         else
         {
-                tandy->vram  = &ram[((tandy->memctrl & 0x07) << 14) + tandy->base];
+                tandy->vram = &ram[((tandy->memctrl & 0x07) << 14) + tandy->base];
                 tandy->b8000 = &ram[((tandy->memctrl & 0x38) << 11) + tandy->base];
 //                printf("VRAM at %05X B8000 at %05X\n",((tandy->memctrl&0x7)<<14)+tandy->base,((tandy->memctrl&0x38)<<11)+tandy->base);
                 if ((tandy->memctrl & 0x38) == 0x38)
@@ -158,7 +164,7 @@ static void tandysl_recalcaddress(tandysl_t *tandy)
         }
 }
 
-static void tandysl_recalcmapping(tandysl_t *tandy)
+static void tandysl_recalcmapping(tandysl_t* tandy)
 {
         mem_mapping_disable(&tandy->mapping);
         io_removehandler(0x03d0, 0x0010, tandysl_in, NULL, NULL, tandysl_out, NULL, NULL, tandy);
@@ -187,26 +193,26 @@ static void tandysl_recalcmapping(tandysl_t *tandy)
                 io_removehandler(0x03d0, 0x0010, tandysl_in, NULL, NULL, tandysl_out, NULL, NULL, tandy);
         }
 }
-static void tandysl_ram_write(uint32_t addr, uint8_t val, void *p)
+static void tandysl_ram_write(uint32_t addr, uint8_t val, void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
+        tandysl_t* tandy = (tandysl_t*)p;
 //        pclog("Tandy RAM write %05X %02X %04X:%04X %08x\n",addr,val,CS,pc, tandy->base);
         ram[tandy->base + (addr & 0x1ffff)] = val;
 }
 
-static uint8_t tandysl_ram_read(uint32_t addr, void *p)
+static uint8_t tandysl_ram_read(uint32_t addr, void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
+        tandysl_t* tandy = (tandysl_t*)p;
 //        if (!nopageerrors) pclog("Tandy RAM read %05X %02X %04X:%04X\n",addr,ram[tandy->base + (addr & 0x1ffff)],CS,pc);
         return ram[tandy->base + (addr & 0x1ffff)];
 }
 
-static void tandysl_write(uint32_t addr, uint8_t val, void *p)
+static void tandysl_write(uint32_t addr, uint8_t val, void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
-        if (tandy->memctrl == -1) 
+        tandysl_t* tandy = (tandysl_t*)p;
+        if (tandy->memctrl == -1)
                 return;
-                
+
         egawrites++;
 //        pclog("Tandy VRAM write %05X %02X %04X:%04X  %02x %x\n",addr,val,CS,pc,tandy->array[5], (uintptr_t)&tandy->b8000[addr & 0xffff] - (uintptr_t)ram);
         if (tandy->array[5] & 1)
@@ -219,12 +225,12 @@ static void tandysl_write(uint32_t addr, uint8_t val, void *p)
         }
 }
 
-static uint8_t tandysl_read(uint32_t addr, void *p)
+static uint8_t tandysl_read(uint32_t addr, void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
-        if (tandy->memctrl == -1) 
+        tandysl_t* tandy = (tandysl_t*)p;
+        if (tandy->memctrl == -1)
                 return 0xff;
-                
+
         egareads++;
 //        if (!nopageerrors) pclog("Tandy VRAM read  %05X %02X %04X:%04X\n",addr,tandy->b8000[addr&0x7FFF],CS,pc);
         if (tandy->array[5] & 1)
@@ -234,9 +240,9 @@ static uint8_t tandysl_read(uint32_t addr, void *p)
         return tandy->b8000[addr & 0x7fff];
 }
 
-static void tandysl_recalctimings(tandysl_t *tandy)
+static void tandysl_recalctimings(tandysl_t* tandy)
 {
-	double _dispontime, _dispofftime, disptime;
+        double _dispontime, _dispofftime, disptime;
         if (tandy->mode & 1)
         {
                 disptime = tandy->crtc[0] + 1;
@@ -248,16 +254,15 @@ static void tandysl_recalctimings(tandysl_t *tandy)
                 _dispontime = tandy->crtc[1] << 1;
         }
         _dispofftime = disptime - _dispontime;
-        _dispontime  *= CGACONST;
+        _dispontime *= CGACONST;
         _dispofftime *= CGACONST;
-	tandy->dispontime  = (uint64_t)_dispontime;
-	tandy->dispofftime = (uint64_t)_dispofftime;
+        tandy->dispontime = (uint64_t)_dispontime;
+        tandy->dispofftime = (uint64_t)_dispofftime;
 }
 
-
-static void tandysl_poll(void *p)
+static void tandysl_poll(void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
+        tandysl_t* tandy = (tandysl_t*)p;
         uint16_t ca = (tandy->crtc[15] | (tandy->crtc[14] << 8)) & 0x3fff;
         int drawcursor;
         int x, c;
@@ -277,7 +282,7 @@ static void tandysl_poll(void *p)
                 tandy->stat |= 1;
                 tandy->linepos = 1;
                 oldsc = tandy->sc;
-                if ((tandy->crtc[8] & 3) == 3) 
+                if ((tandy->crtc[8] & 3) == 3)
                         tandy->sc = (tandy->sc << 1) & 7;
                 if (tandy->dispon)
                 {
@@ -293,76 +298,76 @@ static void tandysl_poll(void *p)
                         {
                                 if (tandy->array[3] & 4)
                                 {
-                                        ((uint32_t *)buffer32->line[tandy->displine])[c] = cols[0];
-                                        if (tandy->mode & 1) ((uint32_t *)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 3) + 8] = cols[0];
-                                        else                 ((uint32_t *)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 4) + 8] = cols[0];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[c] = cols[0];
+                                        if (tandy->mode & 1) ((uint32_t*)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 3) + 8] = cols[0];
+                                        else ((uint32_t*)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 4) + 8] = cols[0];
                                 }
                                 else if ((tandy->mode & 0x12) == 0x12)
                                 {
-                                        ((uint32_t *)buffer32->line[tandy->displine])[c] = cgapal[0];
-                                        if (tandy->mode & 1) ((uint32_t *)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 3) + 8] = cgapal[0];
-                                        else                 ((uint32_t *)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 4) + 8] = cgapal[0];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[c] = cgapal[0];
+                                        if (tandy->mode & 1) ((uint32_t*)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 3) + 8] = cgapal[0];
+                                        else ((uint32_t*)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 4) + 8] = cgapal[0];
                                 }
                                 else
                                 {
-                                        ((uint32_t *)buffer32->line[tandy->displine])[c] = cgapal[tandy->col & 15];
-                                        if (tandy->mode & 1) ((uint32_t *)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 3) + 8] = cgapal[tandy->col & 15];
-                                        else                 ((uint32_t *)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 4) + 8] = cgapal[tandy->col & 15];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[c] = cgapal[tandy->col & 15];
+                                        if (tandy->mode & 1) ((uint32_t*)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 3) + 8] = cgapal[tandy->col & 15];
+                                        else ((uint32_t*)buffer32->line[tandy->displine])[c + (tandy->crtc[1] << 4) + 8] = cgapal[tandy->col & 15];
                                 }
                         }
                         if (tandy->array[5] & 1) /*640x200x16*/
                         {
-                                for (x = 0; x < tandy->crtc[1]*2; x++)
+                                for (x = 0; x < tandy->crtc[1] * 2; x++)
                                 {
-                                        dat = (tandy->vram[(tandy->ma << 1) & 0xffff] << 8) | 
-                                               tandy->vram[((tandy->ma << 1) + 1) & 0xffff];
+                                        dat = (tandy->vram[(tandy->ma << 1) & 0xffff] << 8) |
+                                              tandy->vram[((tandy->ma << 1) + 1) & 0xffff];
                                         tandy->ma++;
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 2) + 8]  = cgapal[tandy->array[((dat >> 12) & 0xf)/*tandy->array[1])*/ + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 2) + 9]  = cgapal[tandy->array[((dat >>  8) & 0xf)/*tandy->array[1])*/ + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 2) + 10] = cgapal[tandy->array[((dat >>  4) & 0xf)/*tandy->array[1])*/ + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 2) + 11] = cgapal[tandy->array[(dat         & 0xf)/*tandy->array[1])*/ + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 2) + 8] = cgapal[tandy->array[((dat >> 12) & 0xf)/*tandy->array[1])*/ + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 2) + 9] = cgapal[tandy->array[((dat >> 8) & 0xf)/*tandy->array[1])*/ + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 2) + 10] = cgapal[tandy->array[((dat >> 4) & 0xf)/*tandy->array[1])*/ + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 2) + 11] = cgapal[tandy->array[(dat & 0xf)/*tandy->array[1])*/ + 16]];
                                 }
                         }
                         else if ((tandy->array[3] & 0x10) && (tandy->mode & 1)) /*320x200x16*/
                         {
                                 for (x = 0; x < tandy->crtc[1]; x++)
                                 {
-                                        dat = (tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 3) * 0x2000)] << 8) | 
-                                               tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 3) * 0x2000) + 1];
+                                        dat = (tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 3) * 0x2000)] << 8) |
+                                              tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 3) * 0x2000) + 1];
                                         tandy->ma++;
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 8]  = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 9]  = cgapal[tandy->array[((dat >> 12) & tandy->array[1]) + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 10] = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 11] = cgapal[tandy->array[((dat >>  8) & tandy->array[1]) + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 12] = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 13] = cgapal[tandy->array[((dat >>  4) & tandy->array[1]) + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 14] = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 15] = cgapal[tandy->array[(dat         & tandy->array[1]) + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 8] =
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 9] = cgapal[tandy->array[((dat >> 12) & tandy->array[1]) + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 10] =
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 11] = cgapal[tandy->array[((dat >> 8) & tandy->array[1]) + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 12] =
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 13] = cgapal[tandy->array[((dat >> 4) & tandy->array[1]) + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 14] =
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 15] = cgapal[tandy->array[(dat & tandy->array[1]) + 16]];
                                 }
                         }
                         else if (tandy->array[3] & 0x10) /*160x200x16*/
                         {
                                 for (x = 0; x < tandy->crtc[1]; x++)
                                 {
-                                        dat = (tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000)] << 8) | 
-                                               tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000) + 1];
+                                        dat = (tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000)] << 8) |
+                                              tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000) + 1];
                                         tandy->ma++;
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 8]  = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 9]  = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 10] =
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 11] = cgapal[tandy->array[((dat >> 12) & tandy->array[1]) + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 12] = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 13] =
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 14] =
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 15] = cgapal[tandy->array[((dat >>  8) & tandy->array[1]) + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 16] = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 17] =
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 18] =
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 19] = cgapal[tandy->array[((dat >>  4) & tandy->array[1]) + 16]];
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 20] = 
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 21] =
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 22] =
-                                        ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + 23] = cgapal[tandy->array[(dat         & tandy->array[1]) + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 8] =
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 9] =
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 10] =
+                                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 11] = cgapal[tandy->array[((dat >> 12) & tandy->array[1]) + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 12] =
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 13] =
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 14] =
+                                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 15] = cgapal[tandy->array[((dat >> 8) & tandy->array[1]) + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 16] =
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 17] =
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 18] =
+                                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 19] = cgapal[tandy->array[((dat >> 4) & tandy->array[1]) + 16]];
+                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 20] =
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 21] =
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 22] =
+                                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + 23] = cgapal[tandy->array[(dat & tandy->array[1]) + 16]];
                                 }
                         }
                         else if (tandy->array[3] & 0x08) /*640x200x4 - this implementation is a complete guess!*/
@@ -370,13 +375,13 @@ static void tandysl_poll(void *p)
                                 for (x = 0; x < tandy->crtc[1]; x++)
                                 {
                                         dat = (tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 3) * 0x2000)] << 8) |
-                                               tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 3) * 0x2000) + 1];
+                                              tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 3) * 0x2000) + 1];
                                         tandy->ma++;
                                         for (c = 0; c < 8; c++)
                                         {
-                                                chr  =  (dat >>  7) & 1;
+                                                chr = (dat >> 7) & 1;
                                                 chr |= ((dat >> 14) & 2);
-                                                ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + 8 + c] = cgapal[tandy->array[(chr & tandy->array[1]) + 16]];
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + 8 + c] = cgapal[tandy->array[(chr & tandy->array[1]) + 16]];
                                                 dat <<= 1;
                                         }
                                 }
@@ -385,14 +390,14 @@ static void tandysl_poll(void *p)
                         {
                                 for (x = 0; x < tandy->crtc[1]; x++)
                                 {
-                                        chr  = tandy->vram[ (tandy->ma << 1)      & 0x3fff];
+                                        chr = tandy->vram[(tandy->ma << 1) & 0x3fff];
                                         attr = tandy->vram[((tandy->ma << 1) + 1) & 0x3fff];
                                         drawcursor = ((tandy->ma == ca) && tandy->con && tandy->cursoron);
                                         if (tandy->mode & 0x20)
                                         {
-                                                cols[1] = cgapal[tandy->array[ ((attr & 15)      & tandy->array[1]) + 16]];
+                                                cols[1] = cgapal[tandy->array[((attr & 15) & tandy->array[1]) + 16]];
                                                 cols[0] = cgapal[tandy->array[(((attr >> 4) & 7) & tandy->array[1]) + 16]];
-                                                if ((tandy->blink & 16) && (attr & 0x80) && !drawcursor) 
+                                                if ((tandy->blink & 16) && (attr & 0x80) && !drawcursor)
                                                         cols[1] = cols[0];
                                         }
                                         else
@@ -403,18 +408,18 @@ static void tandysl_poll(void *p)
                                         if (tandy->sc & 8)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + c + 8] = cols[0];
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + c + 8] = cols[0];
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + c + 8] = cols[(fontdat[chr][tandy->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + c + 8] = cols[(fontdat[chr][tandy->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
                                         }
 //                                        if (!((ma^(crtc[15]|(crtc[14]<<8)))&0x3FFF)) printf("Cursor match! %04X\n",ma);
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    ((uint32_t *)buffer32->line[tandy->displine])[(x << 3) + c + 8] ^= 0xffffff;
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 3) + c + 8] ^= 0xffffff;
                                         }
                                         tandy->ma++;
                                 }
@@ -423,14 +428,14 @@ static void tandysl_poll(void *p)
                         {
                                 for (x = 0; x < tandy->crtc[1]; x++)
                                 {
-                                        chr  = tandy->vram[ (tandy->ma << 1)      & 0x3fff];
+                                        chr = tandy->vram[(tandy->ma << 1) & 0x3fff];
                                         attr = tandy->vram[((tandy->ma << 1) + 1) & 0x3fff];
                                         drawcursor = ((tandy->ma == ca) && tandy->con && tandy->cursoron);
                                         if (tandy->mode & 0x20)
                                         {
-                                                cols[1] = cgapal[tandy->array[ ((attr & 15)      & tandy->array[1]) + 16]];
+                                                cols[1] = cgapal[tandy->array[((attr & 15) & tandy->array[1]) + 16]];
                                                 cols[0] = cgapal[tandy->array[(((attr >> 4) & 7) & tandy->array[1]) + 16]];
-                                                if ((tandy->blink & 16) && (attr & 0x80) && !drawcursor) 
+                                                if ((tandy->blink & 16) && (attr & 0x80) && !drawcursor)
                                                         cols[1] = cols[0];
                                         }
                                         else
@@ -442,19 +447,20 @@ static void tandysl_poll(void *p)
                                         if (tandy->sc & 8)
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 8] = 
-                                                    ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[0];
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 8] =
+                                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[0];
                                         }
                                         else
                                         {
                                                 for (c = 0; c < 8; c++)
-                                                    ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 8] = 
-                                                    ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][tandy->sc & 7] & (1 << (c ^ 7))) ? 1 : 0];
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 8] =
+                                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[(fontdat[chr][tandy->sc & 7]
+                                                                                                                                                  & (1 << (c ^ 7))) ? 1 : 0];
                                         }
                                         if (drawcursor)
                                         {
                                                 for (c = 0; c < 16; c++)
-                                                    ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + c + 8] ^= 0xffffff;
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + c + 8] ^= 0xffffff;
                                         }
                                 }
                         }
@@ -482,13 +488,13 @@ static void tandysl_poll(void *p)
                                 }
                                 for (x = 0; x < tandy->crtc[1]; x++)
                                 {
-                                        dat = (tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000)] << 8) | 
-                                               tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000) + 1];
+                                        dat = (tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000)] << 8) |
+                                              tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000) + 1];
                                         tandy->ma++;
                                         for (c = 0; c < 8; c++)
                                         {
-                                                ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 8] =
-                                                ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[dat >> 14];
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 8] =
+                                                        ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + (c << 1) + 1 + 8] = cols[dat >> 14];
                                                 dat <<= 2;
                                         }
                                 }
@@ -500,11 +506,11 @@ static void tandysl_poll(void *p)
                                 for (x = 0; x < tandy->crtc[1]; x++)
                                 {
                                         dat = (tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000)] << 8) |
-                                               tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000) + 1];
+                                              tandy->vram[((tandy->ma << 1) & 0x1fff) + ((tandy->sc & 1) * 0x2000) + 1];
                                         tandy->ma++;
                                         for (c = 0; c < 16; c++)
                                         {
-                                                ((uint32_t *)buffer32->line[tandy->displine])[(x << 4) + c + 8] = cols[dat >> 15];
+                                                ((uint32_t*)buffer32->line[tandy->displine])[(x << 4) + c + 8] = cols[dat >> 15];
                                                 dat <<= 1;
                                         }
                                 }
@@ -515,17 +521,17 @@ static void tandysl_poll(void *p)
                         if (tandy->array[3] & 4)
                         {
                                 if (tandy->mode & 1) hline(buffer32, 0, tandy->displine, (tandy->crtc[1] << 3) + 16, cgapal[tandy->array[2] & 0xf]);
-                                else                 hline(buffer32, 0, tandy->displine, (tandy->crtc[1] << 4) + 16, cgapal[tandy->array[2] & 0xf]);
+                                else hline(buffer32, 0, tandy->displine, (tandy->crtc[1] << 4) + 16, cgapal[tandy->array[2] & 0xf]);
                         }
                         else
                         {
                                 cols[0] = cgapal[((tandy->mode & 0x12) == 0x12) ? 0 : (tandy->col & 0xf)];
                                 if (tandy->mode & 1) hline(buffer32, 0, tandy->displine, (tandy->crtc[1] << 3) + 16, cols[0]);
-                                else                 hline(buffer32, 0, tandy->displine, (tandy->crtc[1] << 4) + 16, cols[0]);
+                                else hline(buffer32, 0, tandy->displine, (tandy->crtc[1] << 4) + 16, cols[0]);
                         }
                 }
                 if (tandy->mode & 1) x = (tandy->crtc[1] << 3) + 16;
-                else                 x = (tandy->crtc[1] << 4) + 16;
+                else x = (tandy->crtc[1] << 4) + 16;
                 tandy->sc = oldsc;
                 if (tandy->vc == tandy->crtc[7] && !tandy->sc)
                 {
@@ -533,13 +539,13 @@ static void tandysl_poll(void *p)
 //                        printf("VSYNC on %i %i\n",vc,sc);
                 }
                 tandy->displine++;
-                if (tandy->displine >= 360) 
+                if (tandy->displine >= 360)
                         tandy->displine = 0;
         }
         else
         {
                 timer_advance_u64(&tandy->timer, tandy->dispontime);
-                if (tandy->dispon) 
+                if (tandy->dispon)
                         tandy->stat &= ~1;
                 tandy->linepos = 0;
                 if (tandy->vsynctime)
@@ -551,10 +557,10 @@ static void tandysl_poll(void *p)
 //                                printf("VSYNC off %i %i\n",vc,sc);
                         }
                 }
-                if (tandy->sc == (tandy->crtc[11] & 31) || ((tandy->crtc[8] & 3) == 3 && tandy->sc == ((tandy->crtc[11] & 31) >> 1))) 
-                { 
-                        tandy->con = 0; 
-                        tandy->coff = 1; 
+                if (tandy->sc == (tandy->crtc[11] & 31) || ((tandy->crtc[8] & 3) == 3 && tandy->sc == ((tandy->crtc[11] & 31) >> 1)))
+                {
+                        tandy->con = 0;
+                        tandy->coff = 1;
                 }
                 if (tandy->vadj)
                 {
@@ -583,7 +589,7 @@ static void tandysl_poll(void *p)
                         tandy->vc++;
                         tandy->vc &= 255;
 //                        printf("VC %i %i %i %i  %i\n",vc,crtc[4],crtc[6],crtc[7],tandy->dispon);
-                        if (tandy->vc == tandy->crtc[6]) 
+                        if (tandy->vc == tandy->crtc[6])
                         {
 //                                pclog("Display off\n");
                                 tandy->dispon = 0;
@@ -594,9 +600,9 @@ static void tandysl_poll(void *p)
 //                                printf("Display over at %i\n",tandy->displine);
                                 tandy->vc = 0;
                                 tandy->vadj = tandy->crtc[5];
-                                if (!tandy->vadj) 
+                                if (!tandy->vadj)
                                         tandy->dispon = 1;
-                                if (!tandy->vadj) 
+                                if (!tandy->vadj)
                                 {
                                         if (tandy->array[5] & 1)
                                                 tandy->ma = tandy->maback = tandy->crtc[13] | (tandy->crtc[12] << 8);
@@ -604,7 +610,7 @@ static void tandysl_poll(void *p)
                                                 tandy->ma = tandy->maback = (tandy->crtc[13] | (tandy->crtc[12] << 8)) & 0x3fff;
                                 }
                                 if ((tandy->crtc[10] & 0x60) == 0x20) tandy->cursoron = 0;
-                                else                                  tandy->cursoron = tandy->blink & 16;
+                                else tandy->cursoron = tandy->blink & 16;
 //                                printf("CRTC10 %02X %i\n",crtc[10],cursoron);
                         }
                         if (tandy->vc == tandy->crtc[7])
@@ -618,7 +624,7 @@ static void tandysl_poll(void *p)
                                 {
 //                                        printf("Lastline %i Firstline %i  %i   %i %i\n",lastline,firstline,lastline-firstline,crtc[1],xsize);
                                         if (tandy->mode & 1) x = (tandy->crtc[1] << 3) + 16;
-                                        else                 x = (tandy->crtc[1] << 4) + 16;
+                                        else x = (tandy->crtc[1] << 4) + 16;
                                         tandy->lastline++;
                                         if (x != xsize || (tandy->lastline - tandy->firstline) != ysize)
                                         {
@@ -632,7 +638,7 @@ static void tandysl_poll(void *p)
 //                                        printf("Blit %i %i\n",firstline,lastline);
 //printf("Xsize is %i\n",xsize);
 
-                                        video_blit_memtoscreen(0, tandy->firstline-4, 0, (tandy->lastline - tandy->firstline) + 8, xsize, (tandy->lastline - tandy->firstline) + 8);
+                                        video_blit_memtoscreen(0, tandy->firstline - 4, 0, (tandy->lastline - tandy->firstline) + 8, xsize, (tandy->lastline - tandy->firstline) + 8);
 
                                         frames++;
                                         video_res_x = xsize - 16;
@@ -648,7 +654,7 @@ static void tandysl_poll(void *p)
                                                 video_bpp = 4;
                                         }
                                         else if (tandy->array[3] & 0x08) /*640x200x4 - this implementation is a complete guess!*/
-                                           video_bpp = 2;
+                                                video_bpp = 2;
                                         else if (tandy->mode & 1)
                                         {
                                                 video_res_x /= 8;
@@ -667,7 +673,7 @@ static void tandysl_poll(void *p)
                                                 video_bpp = 2;
                                         }
                                         else
-                                           video_bpp = 1;                                                
+                                                video_bpp = 1;
                                 }
                                 tandy->firstline = 1000;
                                 tandy->lastline = 0;
@@ -680,24 +686,24 @@ static void tandysl_poll(void *p)
                         tandy->sc &= 31;
                         tandy->ma = tandy->maback;
                 }
-                if ((tandy->sc == (tandy->crtc[10] & 31) || ((tandy->crtc[8] & 3) == 3 && tandy->sc == ((tandy->crtc[10] & 31) >> 1)))) 
+                if ((tandy->sc == (tandy->crtc[10] & 31) || ((tandy->crtc[8] & 3) == 3 && tandy->sc == ((tandy->crtc[10] & 31) >> 1))))
                         tandy->con = 1;
         }
 }
 
-static void *tandysl_init()
+static void* tandysl_init()
 {
-        tandysl_t *tandy = malloc(sizeof(tandysl_t));
+        tandysl_t* tandy = malloc(sizeof(tandysl_t));
         memset(tandy, 0, sizeof(tandysl_t));
 
         tandy->memctrl = -1;
         tandy->base = (mem_size - 128) * 1024;
         tandy->b8000_limit = 0x8000;
         tandy->planar_ctrl = 4;
-        
+
         timer_add(&tandy->timer, tandysl_poll, tandy, 1);
-        mem_mapping_add(&tandy->mapping, 0xb8000, 0x08000, tandysl_read, NULL, NULL, tandysl_write, NULL, NULL,  NULL, 0, tandy);
-        mem_mapping_add(&tandy->ram_mapping, 0x80000, 0x20000, tandysl_ram_read, NULL, NULL, tandysl_ram_write, NULL, NULL,  NULL, 0, tandy);
+        mem_mapping_add(&tandy->mapping, 0xb8000, 0x08000, tandysl_read, NULL, NULL, tandysl_write, NULL, NULL, NULL, 0, tandy);
+        mem_mapping_add(&tandy->ram_mapping, 0x80000, 0x20000, tandysl_ram_read, NULL, NULL, tandysl_ram_write, NULL, NULL, NULL, 0, tandy);
         /*Base 128k mapping is controlled via port 0xffe8, so we remove it from the main mapping*/
         mem_mapping_set_addr(&ram_low_mapping, 0, (mem_size - 128) * 1024);
         io_sethandler(0x03d0, 0x0010, tandysl_in, NULL, NULL, tandysl_out, NULL, NULL, tandy);
@@ -706,28 +712,28 @@ static void *tandysl_init()
         return tandy;
 }
 
-static void tandysl_close(void *p)
+static void tandysl_close(void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
+        tandysl_t* tandy = (tandysl_t*)p;
 
         free(tandy);
 }
 
-static void tandysl_speed_changed(void *p)
+static void tandysl_speed_changed(void* p)
 {
-        tandysl_t *tandy = (tandysl_t *)p;
-        
+        tandysl_t* tandy = (tandysl_t*)p;
+
         tandysl_recalctimings(tandy);
 }
 
 device_t tandysl_device =
-{
-        "Tandy 1000SL (video)",
-        0,
-        tandysl_init,
-        tandysl_close,
-        NULL,
-        tandysl_speed_changed,
-        NULL,
-        NULL
-};
+        {
+                "Tandy 1000SL (video)",
+                0,
+                tandysl_init,
+                tandysl_close,
+                NULL,
+                tandysl_speed_changed,
+                NULL,
+                NULL
+        };

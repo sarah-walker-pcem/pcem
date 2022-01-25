@@ -166,7 +166,7 @@ tcp_reass(tp, ti, m)
 	}
 	tcpstat.tcps_rcvoopack++;
 	tcpstat.tcps_rcvoobyte += ti->ti_len;
-	ti->ti_mbuf = m;
+	ti->ti_mbuf = (struct mbuf *)m;
 
 	/*
 	 * While we overlap succeeding segments trim them or,
@@ -179,11 +179,11 @@ tcp_reass(tp, ti, m)
 		if (i < q->ti_len) {
 			q->ti_seq += i;
 			q->ti_len -= i;
-			m_adj(q->ti_mbuf, i);
+			m_adj((struct SLIRPmbuf *)q->ti_mbuf, i);
 			break;
 		}
 		q = tcpiphdr_next(q);
-		m = tcpiphdr_prev(q)->ti_mbuf;
+		m = (struct SLIRPmbuf *)tcpiphdr_prev(q)->ti_mbuf;
 		remque(tcpiphdr2qlink(tcpiphdr_prev(q)));
 		m_freem(m);
 	}
@@ -209,7 +209,7 @@ present:
 		tp->rcv_nxt += ti->ti_len;
 		flags = ti->ti_flags & TH_FIN;
 		remque(tcpiphdr2qlink(ti));
-		m = ti->ti_mbuf;
+		m = (struct SLIRPmbuf *)ti->ti_mbuf;
 		ti = tcpiphdr_next(ti);
 /*		if (so->so_state & SS_FCANTRCVMORE) */
 		if (so->so_state & SS_FCANTSENDMORE)

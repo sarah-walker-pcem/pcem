@@ -22,42 +22,42 @@ enum
 typedef struct mouse_ps2_t
 {
         int mode;
-        
+
         uint8_t flags;
         uint8_t resolution;
         uint8_t sample_rate;
-        
+
         uint8_t command;
-        
+
         int cd;
-        
+
         int x, y, z, b;
-        
+
         int is_intellimouse;
         int intellimouse_mode;
-        
+
         uint8_t last_data[6];
 } mouse_ps2_t;
 
-void mouse_ps2_write(uint8_t val, void *p)
+void mouse_ps2_write(uint8_t val, void* p)
 {
-        mouse_ps2_t *mouse = (mouse_ps2_t *)p;
-        
+        mouse_ps2_t* mouse = (mouse_ps2_t*)p;
+
         if (mouse->cd)
         {
                 mouse->cd = 0;
                 switch (mouse->command)
                 {
-                        case 0xe8: /*Set mouse resolution*/
+                case 0xe8: /*Set mouse resolution*/
                         mouse->resolution = val;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
-                        
-                        case 0xf3: /*Set sample rate*/
+
+                case 0xf3: /*Set sample rate*/
                         mouse->sample_rate = val;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
-                        
+
 //                        default:
 //                        fatal("mouse_ps2 : Bad data write %02X for command %02X\n", val, mouse->command);
                 }
@@ -65,26 +65,26 @@ void mouse_ps2_write(uint8_t val, void *p)
         else
         {
                 uint8_t temp;
-                
+
                 mouse->command = val;
                 switch (mouse->command)
                 {
-                        case 0xe6: /*Set scaling to 1:1*/
+                case 0xe6: /*Set scaling to 1:1*/
                         mouse->flags &= ~MOUSE_SCALE;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
 
-                        case 0xe7: /*Set scaling to 2:1*/
+                case 0xe7: /*Set scaling to 2:1*/
                         mouse->flags |= MOUSE_SCALE;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
-                        
-                        case 0xe8: /*Set mouse resolution*/
+
+                case 0xe8: /*Set mouse resolution*/
                         mouse->cd = 1;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
-                        
-                        case 0xe9: /*Status request*/
+
+                case 0xe9: /*Status request*/
                         keyboard_at_adddata_mouse(0xfa);
                         temp = mouse->flags;
                         if (mouse_buttons & 1)
@@ -97,8 +97,8 @@ void mouse_ps2_write(uint8_t val, void *p)
                         keyboard_at_adddata_mouse(mouse->resolution);
                         keyboard_at_adddata_mouse(mouse->sample_rate);
                         break;
-                        
-                        case 0xeb: /*Get mouse data*/
+
+                case 0xeb: /*Get mouse data*/
                         keyboard_at_adddata_mouse(0xfa);
 
                         temp = 0;
@@ -118,32 +118,32 @@ void mouse_ps2_write(uint8_t val, void *p)
                         if (mouse->intellimouse_mode)
                                 keyboard_at_adddata_mouse(mouse->z);
                         break;
-                        
-                        case 0xf2: /*Read ID*/
+
+                case 0xf2: /*Read ID*/
                         keyboard_at_adddata_mouse(0xfa);
                         if (mouse->intellimouse_mode)
                                 keyboard_at_adddata_mouse(0x03);
                         else
                                 keyboard_at_adddata_mouse(0x00);
                         break;
-                        
-                        case 0xf3: /*Set sample rate*/
+
+                case 0xf3: /*Set sample rate*/
                         mouse->cd = 1;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
 
-                        case 0xf4: /*Enable*/
+                case 0xf4: /*Enable*/
                         mouse->flags |= MOUSE_ENABLE;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
-                                                
-                        case 0xf5: /*Disable*/
+
+                case 0xf5: /*Disable*/
                         mouse->flags &= ~MOUSE_ENABLE;
                         keyboard_at_adddata_mouse(0xfa);
                         break;
-                        
-                        case 0xff: /*Reset*/
-                        mouse->mode  = MOUSE_STREAM;
+
+                case 0xff: /*Reset*/
+                        mouse->mode = MOUSE_STREAM;
                         mouse->flags = 0;
                         mouse->intellimouse_mode = 0;
                         mouse_queue_start = mouse_queue_end = 0;
@@ -151,21 +151,21 @@ void mouse_ps2_write(uint8_t val, void *p)
                         keyboard_at_adddata_mouse(0xaa);
                         keyboard_at_adddata_mouse(0x00);
                         break;
-                        
+
 //                        default:
 //                        fatal("mouse_ps2 : Bad command %02X\n", val, mouse->command);
                 }
         }
-        
+
         if (mouse->is_intellimouse)
         {
                 int c;
-        
-                for (c = 0; c < 5; c++)        
-                        mouse->last_data[c] = mouse->last_data[c+1];
-                        
+
+                for (c = 0; c < 5; c++)
+                        mouse->last_data[c] = mouse->last_data[c + 1];
+
                 mouse->last_data[5] = val;
-        
+
                 if (mouse->last_data[0] == 0xf3 && mouse->last_data[1] == 0xc8 &&
                     mouse->last_data[2] == 0xf3 && mouse->last_data[3] == 0x64 &&
                     mouse->last_data[4] == 0xf3 && mouse->last_data[5] == 0x50)
@@ -173,17 +173,17 @@ void mouse_ps2_write(uint8_t val, void *p)
         }
 }
 
-void mouse_ps2_poll(int x, int y, int z, int b, void *p)
+void mouse_ps2_poll(int x, int y, int z, int b, void* p)
 {
-        mouse_ps2_t *mouse = (mouse_ps2_t *)p;
-        uint8_t packet[3] = {0x08, 0, 0};
+        mouse_ps2_t* mouse = (mouse_ps2_t*)p;
+        uint8_t packet[3] = { 0x08, 0, 0 };
 
         if (!x && !y && !z && b == mouse->b)
-                return;        
+                return;
 
         if (!mouse_scan)
                 return;
-                
+
         mouse->x += x;
         mouse->y -= y;
         mouse->z -= z;
@@ -191,7 +191,7 @@ void mouse_ps2_poll(int x, int y, int z, int b, void *p)
             ((mouse_queue_end - mouse_queue_start) & 0xf) < 13)
         {
                 mouse->b = b;
-               // pclog("Send packet : %i %i\n", ps2_x, ps2_y);
+                // pclog("Send packet : %i %i\n", ps2_x, ps2_y);
                 if (mouse->x > 255)
                         mouse->x = 255;
                 if (mouse->x < -256)
@@ -223,22 +223,22 @@ void mouse_ps2_poll(int x, int y, int z, int b, void *p)
                 if (mouse->intellimouse_mode)
                         keyboard_at_adddata_mouse(mouse->z);
 
-                mouse->x = mouse->y = mouse->z = 0;                
+                mouse->x = mouse->y = mouse->z = 0;
         }
 }
 
-void *mouse_ps2_init()
+void* mouse_ps2_init()
 {
-        mouse_ps2_t *mouse = (mouse_ps2_t *)malloc(sizeof(mouse_ps2_t));
+        mouse_ps2_t* mouse = (mouse_ps2_t*)malloc(sizeof(mouse_ps2_t));
         memset(mouse, 0, sizeof(mouse_ps2_t));
-        
+
 //        mouse_poll  = mouse_ps2_poll;
 //        mouse_write = mouse_ps2_write;
         mouse->cd = 0;
         mouse->flags = 0;
         mouse->mode = MOUSE_STREAM;
-        
-        if(romset == ROM_PC5086)
+
+        if (romset == ROM_PC5086)
                 upc_set_mouse(mouse_ps2_write, mouse);
         else
                 keyboard_at_set_mouse(mouse_ps2_write, mouse);
@@ -246,35 +246,35 @@ void *mouse_ps2_init()
         return mouse;
 }
 
-void *mouse_intellimouse_init()
+void* mouse_intellimouse_init()
 {
-        mouse_ps2_t *mouse = mouse_ps2_init();
+        mouse_ps2_t* mouse = mouse_ps2_init();
 
         mouse->is_intellimouse = 1;
-                
+
         return mouse;
 }
 
-void mouse_ps2_close(void *p)
+void mouse_ps2_close(void* p)
 {
-        mouse_ps2_t *mouse = (mouse_ps2_t *)p;
-        
+        mouse_ps2_t* mouse = (mouse_ps2_t*)p;
+
         free(mouse);
 }
 
 mouse_t mouse_ps2_2_button =
-{
-        "2-button mouse (PS/2)",
-        mouse_ps2_init,
-        mouse_ps2_close,
-        mouse_ps2_poll,
-        MOUSE_TYPE_PS2
-};
+        {
+                "2-button mouse (PS/2)",
+                mouse_ps2_init,
+                mouse_ps2_close,
+                mouse_ps2_poll,
+                MOUSE_TYPE_PS2
+        };
 mouse_t mouse_intellimouse =
-{
-        "Microsoft Intellimouse (PS/2)",
-        mouse_intellimouse_init,
-        mouse_ps2_close,
-        mouse_ps2_poll,
-        MOUSE_TYPE_PS2 | MOUSE_TYPE_3BUTTON
-};
+        {
+                "Microsoft Intellimouse (PS/2)",
+                mouse_intellimouse_init,
+                mouse_ps2_close,
+                mouse_ps2_poll,
+                MOUSE_TYPE_PS2 | MOUSE_TYPE_3BUTTON
+        };

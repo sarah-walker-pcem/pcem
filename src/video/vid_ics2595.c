@@ -11,9 +11,9 @@ enum
         ICS2595_READ
 };
 
-static int ics2595_div[4] = {8, 4, 2, 1};
+static int ics2595_div[4] = { 8, 4, 2, 1 };
 
-void ics2595_write(ics2595_t *ics2595, int strobe, int dat)
+void ics2595_write(ics2595_t* ics2595, int strobe, int dat)
 {
 //        pclog("ics2595_write : %i %i\n", strobe, dat);
         if (strobe)
@@ -23,11 +23,11 @@ void ics2595_write(ics2595_t *ics2595, int strobe, int dat)
 //                        pclog(" - new dat %i\n", dat & 4);
                         switch (ics2595->state)
                         {
-                                case ICS2595_IDLE:
+                        case ICS2595_IDLE:
                                 ics2595->state = (dat & 4) ? ICS2595_WRITE : ICS2595_IDLE;
                                 ics2595->pos = 0;
                                 break;
-                                case ICS2595_WRITE:
+                        case ICS2595_WRITE:
                                 ics2595->dat = (ics2595->dat >> 1);
                                 if (dat & 4)
                                         ics2595->dat |= (1 << 19);
@@ -44,10 +44,10 @@ void ics2595_write(ics2595_t *ics2595, int strobe, int dat)
 //                                        pclog("ICS2595 clock set - L %i N %i D %i freq = %f\n", l, n, d, (14318181.8 * ((double)n / 46.0)) / (double)d);
                                         ics2595->state = ICS2595_IDLE;
                                 }
-                                break;                                                
+                                break;
                         }
                 }
-                        
+
                 ics2595->oldfs2 = dat & 4;
                 ics2595->oldfs3 = dat & 8;
         }

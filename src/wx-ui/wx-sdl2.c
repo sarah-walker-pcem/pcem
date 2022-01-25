@@ -46,6 +46,8 @@
 #include "wx-common.h"
 #include "wx-display.h"
 
+#include "plugin.h"
+
 #if __APPLE__
 #define pause __pause
 #include <util.h>
@@ -56,7 +58,7 @@
 #include <sys/stat.h>
 #endif
 
-extern void creatediscimage_open(void *hwnd);
+extern void creatediscimage_open(void* hwnd);
 
 #define ID_IS(s) wParam == wx_xrcid(s)
 #define ID_RANGE(a, b) wParam >= wx_xrcid(a) && wParam <= wx_xrcid(b)
@@ -69,11 +71,11 @@ uint64_t timer_freq;
 
 int gfx_present[GFX_MAX];
 
-SDL_mutex *ghMutex;
-SDL_mutex *mainMutex;
-SDL_cond *mainCond;
+SDL_mutex* ghMutex;
+SDL_mutex* mainMutex;
+SDL_cond* mainCond;
 
-SDL_Thread *mainthreadh = NULL;
+SDL_Thread* mainthreadh = NULL;
 
 SDL_TimerID onesectimer;
 
@@ -86,9 +88,9 @@ int quited = 0;
 
 SDL_Rect oldclip;
 
-void *ghwnd = 0;
+void* ghwnd = 0;
 
-void *menu;
+void* menu;
 
 emulation_state_t emulation_state = EMULATION_STOPPED;
 int pause = 0;
@@ -110,10 +112,10 @@ int video_height = 480;
 
 char menuitem[60];
 
-extern int config_selection_open(void *hwnd, int inited);
-extern int shader_manager_open(void *hwnd);
+extern int config_selection_open(void* hwnd, int inited);
+extern int shader_manager_open(void* hwnd);
 
-extern void sdl_set_window_title(const char *title);
+extern void sdl_set_window_title(const char* title);
 
 extern float gl3_shader_refresh_rate;
 extern float gl3_input_scale;
@@ -123,18 +125,6 @@ extern char gl3_shader_file[20][512];
 char screenshot_format[10];
 int screenshot_flash = 1;
 int take_screenshot = 0;
-
-void warning(const char *format, ...)
-{
-        char buf[1024];
-        va_list ap;
-
-        va_start(ap, format);
-        vsprintf(buf, format, ap);
-        va_end(ap);
-
-        wx_messagebox(ghwnd, buf, "PCem", WX_MB_OK);
-}
 
 void updatewindowsize(int x, int y)
 {
@@ -181,7 +171,7 @@ void toggle_fullscreen()
 
 uint64_t main_time;
 
-int mainthread(void *param)
+int mainthread(void* param)
 {
         SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
 
@@ -234,43 +224,7 @@ void stop_emulation_now(void)
         wx_stop_emulation_now(ghwnd);
 }
 
-int dir_exists(char *path)
-{
-        return wx_dir_exists(path);
-}
-
-void get_pcem_path(char *s, int size)
-{
-#ifdef __linux
-        wx_get_home_directory(s);
-        strcat(s, ".pcem/");
-#elif defined(__APPLE__)
-        /*TODO: Use CoreFoundation functions to get proper directory, in case 
-          the Application Support directory is different (I.E., with signing)*/
-        wx_get_home_directory(s);
-        strcat(s, "Library/Application Support/PCem/");
-
-        struct stat st = {0};
-
-        // create ~/Library/Application Support/PCem/
-        // if it doesn't exist
-        if (stat(s, &st) == -1)
-        {
-                mkdir(s, 0700);
-        }
-#else
-        char *path = SDL_GetBasePath();
-        strcpy(s, path);
-#endif
-}
-
-void get_pcem_base_path(char *s, int size)
-{
-        char *path = SDL_GetBasePath();
-        strcpy(s, path);
-}
-
-void set_window_title(const char *s)
+void set_window_title(const char* s)
 {
         sdl_set_window_title(s);
 }
@@ -285,7 +239,7 @@ float flash_failed_func(float x)
         return fabs(sin(x * 3.1415926 * 2));
 }
 
-void screenshot_taken(unsigned char *rgb, int width, int height)
+void screenshot_taken(unsigned char* rgb, int width, int height)
 {
         char name[512];
         char date[128];
@@ -311,7 +265,7 @@ uint64_t timer_read()
         return SDL_GetPerformanceCounter();
 }
 
-Uint32 timer_onesec(Uint32 interval, void *param)
+Uint32 timer_onesec(Uint32 interval, void* param)
 {
         onesec();
         return interval;
@@ -373,7 +327,7 @@ void sdl_saveconfig()
         config_set_int(CFG_MACHINE, "SDL2", "vsync", video_vsync);
         config_set_int(CFG_MACHINE, "SDL2", "focus_dim", video_focus_dim);
         config_set_int(CFG_MACHINE, "SDL2", "alternative_update_lock", video_alternative_update_lock);
-        config_set_string(CFG_MACHINE, "SDL2", "render_driver", (char *)requested_render_driver.sdl_id);
+        config_set_string(CFG_MACHINE, "SDL2", "render_driver", (char*)requested_render_driver.sdl_id);
 
         config_set_float(CFG_MACHINE, "GL3", "input_scale", gl3_input_scale);
         config_set_int(CFG_MACHINE, "GL3", "input_stretch", gl3_input_stretch);
@@ -392,7 +346,7 @@ void sdl_saveconfig()
         config_set_int(CFG_MACHINE, "GL3 Shaders", "shaders", i);
 }
 
-void update_cdrom_menu(void *hmenu)
+void update_cdrom_menu(void* hmenu)
 {
         if (cdrom_drive == CDROM_IMAGE)
                 wx_checkmenuitem(menu, WX_ID("IDM_CDROM_IMAGE"), WX_MB_CHECKED);
@@ -406,7 +360,7 @@ void wx_initmenu()
 {
         menu = wx_getmenu(ghwnd);
 
-        void *cdrom_submenu = wx_getsubmenu(menu, WX_ID("IDM_CDROM"));
+        void* cdrom_submenu = wx_getsubmenu(menu, WX_ID("IDM_CDROM"));
 
 #ifdef __WINDOWS__
         char s[32];
@@ -447,7 +401,7 @@ void wx_initmenu()
 #endif
 }
 
-int wx_setupmenu(void *data)
+int wx_setupmenu(void* data)
 {
         int c;
         update_cdrom_menu(menu);
@@ -458,7 +412,7 @@ int wx_setupmenu(void *data)
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
         wx_checkmenuitem(menu, WX_ID("IDM_VID_FULLSCREEN"), video_fullscreen);
         wx_checkmenuitem(menu, WX_ID("IDM_VID_REMEMBER"),
-                         window_remember ? WX_MB_CHECKED : WX_MB_UNCHECKED);
+                window_remember ? WX_MB_CHECKED : WX_MB_UNCHECKED);
         wx_checkmenuitem(menu, WX_ID("IDM_BPB_DISABLE"), bpb_disable ? WX_MB_CHECKED : WX_MB_UNCHECKED);
 
         sprintf(menuitem, "IDM_SND_BUF[%d]", (int)(log(sound_buf_len / MIN_SND_BUF) / log(2)));
@@ -489,7 +443,7 @@ int wx_setupmenu(void *data)
         wx_checkmenuitem(menu, WX_ID("IDM_SCREENSHOT_FLASH"), screenshot_flash);
 
         int num_renderers;
-        sdl_render_driver *drivers = sdl_get_render_drivers(&num_renderers);
+        sdl_render_driver* drivers = sdl_get_render_drivers(&num_renderers);
         for (c = 1; c < num_renderers; ++c)
         {
                 sprintf(menuitem, "IDM_VID_RENDER_DRIVER[%d]", drivers[c].id);
@@ -530,10 +484,11 @@ void sdl_onconfigloaded()
 extern void wx_loadconfig();
 extern void wx_saveconfig();
 
-int pc_main(int argc, char **argv)
+int pc_main(int argc, char** argv)
 {
         paths_init();
 
+        init_plugin_engine();
         model_init_builtin();
         video_init_builtin();
         lpt_init_builtin();
@@ -542,6 +497,8 @@ int pc_main(int argc, char **argv)
 #ifdef USE_NETWORKING
         network_card_init_builtin();
 #endif
+
+        load_plugins();
 
 #ifdef __linux__
         char s[1024];
@@ -562,6 +519,10 @@ int pc_main(int argc, char **argv)
         set_default_screenshots_path(s);
         append_filename(s, pcem_path, "logs/", 511);
         set_default_logs_path(s);
+#ifdef USE_EXPERIMENTAL_PRINTER
+        append_filename(s, pcem_path, "printer/", 511);
+        set_default_printer_path(s);
+#endif
         append_filename(s, INST_PREFIX, "/share/pcem/plugins/", 512);
         set_plugins_path(s);
 #endif
@@ -590,7 +551,7 @@ int pc_main(int argc, char **argv)
         return TRUE;
 }
 
-int wx_load_config(void *hwnd)
+int wx_load_config(void* hwnd)
 {
         if (!config_override)
         {
@@ -601,7 +562,7 @@ int wx_load_config(void *hwnd)
         return TRUE;
 }
 
-int wx_start(void *hwnd)
+int wx_start(void* hwnd)
 {
         int c, d;
         ghwnd = hwnd;
@@ -632,8 +593,8 @@ int wx_start(void *hwnd)
         if (c == ROM_MAX)
         {
                 wx_messagebox(hwnd,
-                              "No ROMs present!\nYou must have at least one romset to use PCem.",
-                              "PCem fatal error", WX_MB_OK);
+                        "No ROMs present!\nYou must have at least one romset to use PCem.",
+                        "PCem fatal error", WX_MB_OK);
                 return 0;
         }
 
@@ -655,7 +616,7 @@ int resume_emulation()
         return FALSE;
 }
 
-int start_emulation(void *params)
+int start_emulation(void* params)
 {
         if (resume_emulation())
                 return TRUE;
@@ -674,8 +635,8 @@ int start_emulation(void *params)
         {
                 if (romset != -1)
                         wx_messagebox(ghwnd,
-                                      "Configured romset not available.\nDefaulting to available romset.",
-                                      "PCem error", WX_MB_OK);
+                                "Configured romset not available.\nDefaulting to available romset.",
+                                "PCem error", WX_MB_OK);
                 for (c = 0; c < ROM_MAX; c++)
                 {
                         if (romspresent[c])
@@ -691,8 +652,8 @@ int start_emulation(void *params)
         {
                 if (romset != -1)
                         wx_messagebox(ghwnd,
-                                      "Configured video BIOS not available.\nDefaulting to available romset.",
-                                      "PCem error", WX_MB_OK);
+                                "Configured video BIOS not available.\nDefaulting to available romset.",
+                                "PCem error", WX_MB_OK);
                 for (c = GFX_MAX - 1; c >= 0; c--)
                 {
                         if (gfx_present[c])
@@ -786,7 +747,7 @@ int wx_stop()
 }
 
 char openfilestring[260];
-int getfile(void *hwnd, char *f, char *fn)
+int getfile(void* hwnd, char* f, char* fn)
 {
         int ret = wx_filedialog(hwnd, "Open", fn, f, 0, 1, openfilestring);
 #ifdef __APPLE__
@@ -796,7 +757,7 @@ int getfile(void *hwnd, char *f, char *fn)
         return ret;
 }
 
-int getsfile(void *hwnd, char *f, char *fn, char *dir, char *ext)
+int getsfile(void* hwnd, char* f, char* fn, char* dir, char* ext)
 {
         int ret = wx_filedialog(hwnd, "Save", dir, f, ext, 0, openfilestring);
 #ifdef __APPLE__
@@ -805,7 +766,7 @@ int getsfile(void *hwnd, char *f, char *fn, char *dir, char *ext)
         return ret;
 }
 
-int getfilewithcaption(void *hwnd, char *f, char *fn, char *caption)
+int getfilewithcaption(void* hwnd, char* f, char* fn, char* caption)
 {
         int ret = wx_filedialog(hwnd, caption, fn, f, 0, 1, openfilestring);
 #ifdef __APPLE__
@@ -828,7 +789,7 @@ void atapi_close(void)
         }
 }
 
-int custom_resolution_callback(void *window, int message, INT_PARAM wParam, LONG_PARAM lParam)
+int custom_resolution_callback(void* window, int message, INT_PARAM wParam, LONG_PARAM lParam)
 {
         switch (message)
         {
@@ -857,9 +818,9 @@ int custom_resolution_callback(void *window, int message, INT_PARAM wParam, LONG
         return 0;
 }
 
-int wx_handle_command(void *hwnd, int wParam, int checked)
+int wx_handle_command(void* hwnd, int wParam, int checked)
 {
-        void *hmenu;
+        void* hmenu;
         char temp_image_path[1024];
         int new_cdrom_drive;
         hmenu = wx_getmenu(hwnd);
@@ -900,8 +861,8 @@ int wx_handle_command(void *hwnd, int wParam, int checked)
         else if (ID_IS("IDM_DISC_A"))
         {
                 if (!getfile(hwnd,
-                             "Disc image (*.img;*.ima;*.fdi)|*.img;*.ima;*.fdi|All files (*.*)|*.*",
-                             discfns[0]))
+                        "Disc image (*.img;*.ima;*.fdi)|*.img;*.ima;*.fdi|All files (*.*)|*.*",
+                        discfns[0]))
                 {
                         disc_close(0);
                         disc_load(0, openfilestring);
@@ -911,8 +872,8 @@ int wx_handle_command(void *hwnd, int wParam, int checked)
         else if (ID_IS("IDM_DISC_B"))
         {
                 if (!getfile(hwnd,
-                             "Disc image (*.img;*.ima;*.fdi)|*.img;*.ima;*.fdi|All files (*.*)|*.*",
-                             discfns[1]))
+                        "Disc image (*.img;*.ima;*.fdi)|*.img;*.ima;*.fdi|All files (*.*)|*.*",
+                        discfns[1]))
                 {
                         disc_close(1);
                         disc_load(1, openfilestring);
@@ -944,8 +905,8 @@ int wx_handle_command(void *hwnd, int wParam, int checked)
                 char zip_fn[256] = "";
 
                 if (!getfile(hwnd,
-                             "Disc image (*.img)|*.img|All files (*.*)|*.*",
-                             zip_fn))
+                        "Disc image (*.img)|*.img|All files (*.*)|*.*",
+                        zip_fn))
                 {
                         zip_load(openfilestring);
                 }
@@ -957,8 +918,8 @@ int wx_handle_command(void *hwnd, int wParam, int checked)
         else if (ID_IS("IDM_CASSETTE_LOAD"))
         {
                 if (!getfile(hwnd,
-                             "Tape image (*.pzxi;*.pzx)|*.pzxi;*.pzx|All files (*.*)|*.*",
-                             cassettefn))
+                        "Tape image (*.pzxi;*.pzx)|*.pzxi;*.pzx|All files (*.*)|*.*",
+                        cassettefn))
                 {
                         cassette_eject();
                         cassette_load(openfilestring);
@@ -1024,7 +985,7 @@ int wx_handle_command(void *hwnd, int wParam, int checked)
         {
                 window_remember = !window_remember;
                 wx_checkmenuitem(hmenu, WX_ID("IDM_VID_REMEMBER"),
-                                 window_remember ? WX_MB_CHECKED : WX_MB_UNCHECKED);
+                        window_remember ? WX_MB_CHECKED : WX_MB_UNCHECKED);
                 window_doremember = 1;
                 saveconfig(NULL);
         }
@@ -1034,8 +995,8 @@ int wx_handle_command(void *hwnd, int wParam, int checked)
                 {
                         video_fullscreen_first = 0;
                         wx_messagebox(hwnd,
-                                      "Use CTRL + ALT + PAGE DOWN to return to windowed mode",
-                                      "PCem", WX_MB_OK);
+                                "Use CTRL + ALT + PAGE DOWN to return to windowed mode",
+                                "PCem", WX_MB_OK);
                 }
                 video_fullscreen = !video_fullscreen;
                 wx_checkmenuitem(hmenu, wParam, video_fullscreen);
@@ -1169,8 +1130,8 @@ int wx_handle_command(void *hwnd, int wParam, int checked)
         else if (ID_IS("IDM_CDROM_IMAGE") || ID_IS("IDM_CDROM_IMAGE_LOAD"))
         {
                 if (!getfile(hwnd,
-                             "CD-ROM image (*.iso;*.cue)|*.iso;*.cue|All files (*.*)|*.*",
-                             image_path))
+                        "CD-ROM image (*.iso;*.cue)|*.iso;*.cue|All files (*.*)|*.*",
+                        image_path))
                 {
                         old_cdrom_drive = cdrom_drive;
                         strcpy(temp_image_path, openfilestring);

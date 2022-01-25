@@ -43,6 +43,7 @@ configure options are :
   -DUSE_NETWORKING=ON        : Build with networking support.
   -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (On by default needs USE_NETWORKING to compile) Requires libpcap
   -DUSE_ALSA=ON              : Build with support for MIDI output through ALSA. Requires libasound.
+  -DPLUGIN_ENGINE=ON         : Build with plugin support. Builds libpcem-plugin-api and links PCem with it.
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
@@ -61,7 +62,7 @@ incomplete, and may or may not be in a future build of PCem. We do not provide b
 well.
 ```
   -DUSE_EXPERIMENTAL_PGC=ON       : Build PCem with Professional Graphics Controller support.
-  -DUSE_EXPERIMENTAL_PRINTER=ON   : Build PCem with Printer support.
+  -DUSE_EXPERIMENTAL_PRINTER=ON   : Build PCem with Printer support. Requires freetype.
 ``` 
 The menu is a pop-up menu in the Linux/BSD port. Right-click on the main window when mouse is not
 captured.

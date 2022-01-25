@@ -1,0 +1,10 @@
+#ifndef __PRIV_PLUGIN_H__
+#define __PRIV_PLUGIN_H__
+
+#include <pcem/devices.h>
+#include <pcem/defines.h>
+
+void init_plugin_engine();
+void load_plugins();
+
+#endif /* __PRIV_PLUGIN_H__ */

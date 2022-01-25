@@ -3,6 +3,12 @@
 
 #include <pcem/cpu.h>
 
+#define CONFIG_STRING 0
+#define CONFIG_INT 1
+#define CONFIG_BINARY 2
+#define CONFIG_SELECTION 3
+#define CONFIG_MIDI 4
+
 typedef struct device_config_selection_t
 {
         char description[256];
@@ -16,7 +22,7 @@ typedef struct device_config_t
         int type;
         char default_string[256];
         int default_int;
-        device_config_selection_t selection[16];
+        device_config_selection_t selection[30];
 } device_config_t;
 
 typedef struct device_t
@@ -92,9 +98,15 @@ typedef struct NETWORK_CARD
 
 typedef struct lpt_device_t
 {
-        char name[80];
+        char name[50];
+        uint32_t flags;
         void *(*init)();
         void (*close)(void *p);
+        int  (*available)();
+        void (*speed_changed)(void *p);
+        void (*force_redraw)(void *p);
+        void (*add_status_info)(char *s, int max_len, void *p);
+        device_config_t *config;
         void (*write_data)(uint8_t val, void *p);
         void (*write_ctrl)(uint8_t val, void *p);
         uint8_t (*read_status)(void *p);

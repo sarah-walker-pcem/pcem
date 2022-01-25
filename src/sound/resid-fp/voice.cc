@@ -26,15 +26,15 @@
 // ----------------------------------------------------------------------------
 VoiceFP::VoiceFP()
 {
-  nonlinearity = 1.f;
-  set_chip_model(MOS6581FP);
+        nonlinearity = 1.f;
+        set_chip_model(MOS6581FP);
 }
 
 /* Keep this at 1.f for 8580, there are no 6581-only codepaths in this file! */
 void VoiceFP::set_nonlinearity(float nl)
 {
-    nonlinearity = nl;
-    calculate_dac_tables();
+        nonlinearity = nl;
+        calculate_dac_tables();
 }
 
 // ----------------------------------------------------------------------------
@@ -42,37 +42,39 @@ void VoiceFP::set_nonlinearity(float nl)
 // ----------------------------------------------------------------------------
 void VoiceFP::set_chip_model(chip_model model)
 {
-  wave.set_chip_model(model);
+        wave.set_chip_model(model);
 
-  if (model == MOS6581FP) {
-    /* there is some level from each voice even if the env is down and osc
-     * is stopped. You can hear this by routing a voice into filter (filter
-     * should be kept disabled for this) as the master level changes. This
-     * tunable affects the volume of digis. */
-    voice_DC = 0x800 * 0xff;
-    /* In 8580 the waveforms seem well centered, but on the 6581 there is some
-     * offset change as envelope grows, indicating that the waveforms are not
-     * perfectly centered. I estimate the value ~ 0x600 for my R4AR, and ReSID
-     * has used another measurement technique and got 0x380. */
-    wave_zero = 0x600;
-    calculate_dac_tables();
-  }
-  else {
-    /* 8580 is thought to be perfect, apart from small negative offset due to
-     * ext-in mixing, I think. */
-    voice_DC = 0;
-    wave_zero = 0x800;
-    calculate_dac_tables();
-  }
+        if (model == MOS6581FP)
+        {
+                /* there is some level from each voice even if the env is down and osc
+                 * is stopped. You can hear this by routing a voice into filter (filter
+                 * should be kept disabled for this) as the master level changes. This
+                 * tunable affects the volume of digis. */
+                voice_DC = 0x800 * 0xff;
+                /* In 8580 the waveforms seem well centered, but on the 6581 there is some
+                 * offset change as envelope grows, indicating that the waveforms are not
+                 * perfectly centered. I estimate the value ~ 0x600 for my R4AR, and ReSID
+                 * has used another measurement technique and got 0x380. */
+                wave_zero = 0x600;
+                calculate_dac_tables();
+        }
+        else
+        {
+                /* 8580 is thought to be perfect, apart from small negative offset due to
+                 * ext-in mixing, I think. */
+                voice_DC = 0;
+                wave_zero = 0x800;
+                calculate_dac_tables();
+        }
 }
 
 void VoiceFP::calculate_dac_tables()
 {
-    int i;
-    for (i = 0; i < 256; i ++)
-        env_dac[i] = SIDFP::kinked_dac(i, nonlinearity, 8);
-    for (i = 0; i < 4096; i ++)
-        voice_dac[i] = SIDFP::kinked_dac(i, nonlinearity, 12) - wave_zero;
+        int i;
+        for (i = 0; i < 256; i++)
+                env_dac[i] = SIDFP::kinked_dac(i, nonlinearity, 8);
+        for (i = 0; i < 4096; i++)
+                voice_dac[i] = SIDFP::kinked_dac(i, nonlinearity, 12) - wave_zero;
 }
 
 // ----------------------------------------------------------------------------
@@ -80,7 +82,7 @@ void VoiceFP::calculate_dac_tables()
 // ----------------------------------------------------------------------------
 void VoiceFP::set_sync_source(VoiceFP* source)
 {
-  wave.set_sync_source(&source->wave);
+        wave.set_sync_source(&source->wave);
 }
 
 // ----------------------------------------------------------------------------
@@ -88,8 +90,8 @@ void VoiceFP::set_sync_source(VoiceFP* source)
 // ----------------------------------------------------------------------------
 void VoiceFP::writeCONTROL_REG(reg8 control)
 {
-  wave.writeCONTROL_REG(control);
-  envelope.writeCONTROL_REG(control);
+        wave.writeCONTROL_REG(control);
+        envelope.writeCONTROL_REG(control);
 }
 
 // ----------------------------------------------------------------------------
@@ -97,6 +99,6 @@ void VoiceFP::writeCONTROL_REG(reg8 control)
 // ----------------------------------------------------------------------------
 void VoiceFP::reset()
 {
-  wave.reset();
-  envelope.reset();
+        wave.reset();
+        envelope.reset();
 }

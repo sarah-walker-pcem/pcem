@@ -1,9 +1,9 @@
 # PCem v18
 ## Changes in v18
 - PCAP Support is now both Windows and Linux
-- Added plugin support. You can add Video, HDD, Network, Sound, LPT Devices, and PC Models using a plugin.
 - Numerous bugfixes in this build
 - Changed some GUI elements.
+- Preliminary Plugin Extensions Created
 
 ## Added the following machines to v18
 - Hyundai SUPER-16T

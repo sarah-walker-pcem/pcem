@@ -1332,11 +1332,14 @@
 										</object>
 									</object>
 								</object>
-								<object class="spacer">
-									<option>1</option>
-									<flag>wxEXPAND</flag>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
 									<border>5</border>
-									<size>0,0</size>
+									<object class="wxBitmapButton" name="IDC_CONFIGURELPT1">
+										<bitmap>icons/16x16/setting_tools.png</bitmap>
+										<default>0</default>
+									</object>
 								</object>
 							</object>
 						</object>

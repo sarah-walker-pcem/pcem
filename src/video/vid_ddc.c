@@ -3,52 +3,52 @@
 #include "x86.h"
 
 static uint8_t edid_data[128] =
-{
-        0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, /*Fixed header pattern*/
-        0x65, 0x40, /*Manufacturer "PCE" - apparently unassigned by UEFI*/
-        0x00, 0x00, /*Product code*/
-        0x12, 0x34, 0x56, 0x78, /*Serial number*/
-        0x01, 9, /*Manufacturer week and year*/
-        0x01, 0x03, /*EDID version (1.3)*/
+        {
+                0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, /*Fixed header pattern*/
+                0x65, 0x40, /*Manufacturer "PCE" - apparently unassigned by UEFI*/
+                0x00, 0x00, /*Product code*/
+                0x12, 0x34, 0x56, 0x78, /*Serial number*/
+                0x01, 9, /*Manufacturer week and year*/
+                0x01, 0x03, /*EDID version (1.3)*/
 
-        0x08, /*Analogue input, separate sync*/
-        34, 0, /*Landscape, 4:3*/
-        0, /*Gamma*/
-        0x08, /*RGB colour*/
-        0x81, 0xf1, 0xa3, 0x57, 0x53, 0x9f, 0x27, 0x0a, 0x50, /*Chromaticity*/
+                0x08, /*Analogue input, separate sync*/
+                34, 0, /*Landscape, 4:3*/
+                0, /*Gamma*/
+                0x08, /*RGB colour*/
+                0x81, 0xf1, 0xa3, 0x57, 0x53, 0x9f, 0x27, 0x0a, 0x50, /*Chromaticity*/
 
-        0xff, 0xff, 0xff, /*Established timing bitmap*/
-        0x00, 0x00, /*Standard timing information*/
-        0x00, 0x00,
-        0x00, 0x00,
-        0x00, 0x00,
-        0x00, 0x00,
-        0x00, 0x00,
-        0x00, 0x00,
-        0x00, 0x00,
+                0xff, 0xff, 0xff, /*Established timing bitmap*/
+                0x00, 0x00, /*Standard timing information*/
+                0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00,
 
-        /*Detailed mode descriptions*/
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                /*Detailed mode descriptions*/
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
-        0x00, /*No extensions*/
-        0x00
-};
+                0x00, /*No extensions*/
+                0x00
+        };
 
 /*This should probably be split off into a separate I2C module*/
 enum
 {
         TRANSMITTER_MONITOR = 1,
-        TRANSMITTER_HOST    = -1
+        TRANSMITTER_HOST = -1
 };
 
 enum
@@ -107,7 +107,7 @@ static void prom_write(uint8_t byte)
 //        pclog("prom_write: byte=%02x\n", byte);
         switch (prom.state)
         {
-                case PROM_IDLE:
+        case PROM_IDLE:
                 if ((byte & 0xfe) != 0xa0)
                 {
 //                        pclog("I2C address not PROM\n");
@@ -131,7 +131,7 @@ static void prom_write(uint8_t byte)
 //                pclog("PROM R/W=%i\n",promrw);
                 return;
 
-                case PROM_RECEIVEADDR:
+        case PROM_RECEIVEADDR:
 //                pclog("PROM addr=%02X\n",byte);
                 prom.addr = byte;
                 if (prom.rw)
@@ -140,11 +140,11 @@ static void prom_write(uint8_t byte)
                         prom.state = PROM_RECEIVEDATA;
                 break;
 
-                case PROM_RECEIVEDATA:
+        case PROM_RECEIVEDATA:
 //                pclog("PROM write %02X %02X\n",promaddr,byte);
                 break;
 
-                case PROM_SENDDATA:
+        case PROM_SENDDATA:
                 break;
         }
 }
@@ -154,7 +154,7 @@ void ddc_i2c_change(int new_clock, int new_data)
 //        pclog("I2C update clock %i->%i data %i->%i state %i\n",i2c.clock,new_clock,i2c.last_data,new_data,i2c.state);
         switch (i2c.state)
         {
-                case I2C_IDLE:
+        case I2C_IDLE:
                 if (i2c.clock && new_clock)
                 {
                         if (i2c.last_data && !new_data) /*Start bit*/
@@ -166,10 +166,10 @@ void ddc_i2c_change(int new_clock, int new_data)
                 }
                 break;
 
-                case I2C_RECEIVE_WAIT:
+        case I2C_RECEIVE_WAIT:
                 if (!i2c.clock && new_clock)
                         i2c.state = I2C_RECEIVE;
-                case I2C_RECEIVE:
+        case I2C_RECEIVE:
                 if (!i2c.clock && new_clock)
                 {
                         i2c.byte <<= 1;
@@ -198,7 +198,7 @@ void ddc_i2c_change(int new_clock, int new_data)
                 }
                 break;
 
-                case I2C_ACKNOWLEDGE:
+        case I2C_ACKNOWLEDGE:
                 if (!i2c.clock && new_clock)
                 {
 //                        pclog("Acknowledging transfer\n");
@@ -211,7 +211,7 @@ void ddc_i2c_change(int new_clock, int new_data)
                 }
                 break;
 
-                case I2C_TRANSACKNOWLEDGE:
+        case I2C_TRANSACKNOWLEDGE:
                 if (!i2c.clock && new_clock)
                 {
                         if (new_data) /*It's not acknowledged - must be end of transfer*/
@@ -230,7 +230,7 @@ void ddc_i2c_change(int new_clock, int new_data)
                 }
                 break;
 
-                case I2C_TRANSMIT_WAIT:
+        case I2C_TRANSMIT_WAIT:
                 if (i2c.clock && new_clock)
                 {
                         if (i2c.last_data && !new_data) /*Start bit*/
@@ -248,7 +248,7 @@ void ddc_i2c_change(int new_clock, int new_data)
                 }
                 break;
 
-                case I2C_TRANSMIT_START:
+        case I2C_TRANSMIT_START:
                 if (!i2c.clock && new_clock)
                         i2c.state = I2C_TRANSMIT;
                 if (i2c.clock && new_clock && !i2c.last_data && new_data) /*Stop bit*/
@@ -257,7 +257,7 @@ void ddc_i2c_change(int new_clock, int new_data)
                         i2c.state = I2C_IDLE;
                         prom_stop();
                 }
-                case I2C_TRANSMIT:
+        case I2C_TRANSMIT:
                 if (!i2c.clock && new_clock)
                 {
                         i2c.clock = new_clock;

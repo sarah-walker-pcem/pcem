@@ -84,216 +84,216 @@ enum
         COLORKEY_32
 };
 
-static int colorkey(voodoo_t *voodoo, uint32_t src, int src_notdst, int color_format)
+static int colorkey(voodoo_t* voodoo, uint32_t src, int src_notdst, int color_format)
 {
         uint32_t min = src_notdst ? voodoo->banshee_blt.srcColorkeyMin : voodoo->banshee_blt.dstColorkeyMin;
         uint32_t max = src_notdst ? voodoo->banshee_blt.srcColorkeyMax : voodoo->banshee_blt.dstColorkeyMax;
-        
+
         if (!(voodoo->banshee_blt.commandExtra & (src_notdst ? CMDEXTRA_SRC_COLORKEY : CMDEXTRA_DST_COLORKEY)))
                 return 0;
-                
+
         switch (color_format)
         {
-                case COLORKEY_8:
+        case COLORKEY_8:
                 return ((src & 0xff) >= (min & 0xff)) && ((src & 0xff) <= (max & 0xff));
-                
-                case COLORKEY_16:
-                {
-                        int r = (src >> 11) & 0x1f, r_min = (min >> 11) & 0x1f, r_max = (max >> 11) & 0x1f;
-                        int g = (src >>  5) & 0x3f, g_min = (min >>  5) & 0x3f, g_max = (max >>  5) & 0x3f;
-                        int b = src & 0x1f, b_min = min & 0x1f, b_max = max & 0x1f;
-                        
-                        return (r >= r_min) && (r <= r_max) && (g >= g_min) && (g <= g_max) &&
-                                (b >= b_min) && (b <= b_max);
-                }
 
-                case COLORKEY_32:
-                {
-                        int r = (src >> 16) & 0xff, r_min = (min >> 16) & 0xff, r_max = (max >> 16) & 0xff;
-                        int g = (src >>  8) & 0xff, g_min = (min >>  8) & 0xff, g_max = (max >>  8) & 0xff;
-                        int b = src & 0xff, b_min = min & 0xff, b_max = max & 0xff;
-                
-                        return (r >= r_min) && (r <= r_max) && (g >= g_min) && (g <= g_max) &&
-                                (b >= b_min) && (b <= b_max);
-                }
-                
-                default:
+        case COLORKEY_16:
+        {
+                int r = (src >> 11) & 0x1f, r_min = (min >> 11) & 0x1f, r_max = (max >> 11) & 0x1f;
+                int g = (src >> 5) & 0x3f, g_min = (min >> 5) & 0x3f, g_max = (max >> 5) & 0x3f;
+                int b = src & 0x1f, b_min = min & 0x1f, b_max = max & 0x1f;
+
+                return (r >= r_min) && (r <= r_max) && (g >= g_min) && (g <= g_max) &&
+                       (b >= b_min) && (b <= b_max);
+        }
+
+        case COLORKEY_32:
+        {
+                int r = (src >> 16) & 0xff, r_min = (min >> 16) & 0xff, r_max = (max >> 16) & 0xff;
+                int g = (src >> 8) & 0xff, g_min = (min >> 8) & 0xff, g_max = (max >> 8) & 0xff;
+                int b = src & 0xff, b_min = min & 0xff, b_max = max & 0xff;
+
+                return (r >= r_min) && (r <= r_max) && (g >= g_min) && (g <= g_max) &&
+                       (b >= b_min) && (b <= b_max);
+        }
+
+        default:
                 return 0;
         }
 }
 
-static uint32_t MIX(voodoo_t *voodoo, uint32_t dest, uint32_t src, uint32_t pattern, int colour_format_src, int colour_format_dest)
+static uint32_t MIX(voodoo_t* voodoo, uint32_t dest, uint32_t src, uint32_t pattern, int colour_format_src, int colour_format_dest)
 {
         int rop_nr = 0;
         uint32_t result = 0;
         uint32_t rop;
-        
+
         if (colorkey(voodoo, src, 1, colour_format_src))
                 rop_nr |= 2;
         if (colorkey(voodoo, dest, 0, colour_format_dest))
                 rop_nr |= 1;
-                
+
         rop = voodoo->banshee_blt.rops[rop_nr];
 
         if (rop & 0x01)
                 result |= (~pattern & ~src & ~dest);
         if (rop & 0x02)
-                result |= (~pattern & ~src &  dest);
+                result |= (~pattern & ~src & dest);
         if (rop & 0x04)
-                result |= (~pattern &  src & ~dest);
+                result |= (~pattern & src & ~dest);
         if (rop & 0x08)
-                result |= (~pattern &  src &  dest);
+                result |= (~pattern & src & dest);
         if (rop & 0x10)
-                result |= ( pattern & ~src & ~dest);
+                result |= (pattern & ~src & ~dest);
         if (rop & 0x20)
-                result |= ( pattern & ~src &  dest);
+                result |= (pattern & ~src & dest);
         if (rop & 0x40)
-                result |= ( pattern &  src & ~dest);
+                result |= (pattern & src & ~dest);
         if (rop & 0x80)
-                result |= ( pattern &  src &  dest);
+                result |= (pattern & src & dest);
 
         return result;
 }
 
-static uint32_t get_addr(voodoo_t *voodoo, int x, int y, int src_notdst, uint32_t src_stride)
+static uint32_t get_addr(voodoo_t* voodoo, int x, int y, int src_notdst, uint32_t src_stride)
 {
         uint32_t stride = src_notdst ? src_stride : voodoo->banshee_blt.dst_stride;
         uint32_t base_addr = src_notdst ? voodoo->banshee_blt.srcBaseAddr : voodoo->banshee_blt.dstBaseAddr;
-        
+
         if (src_notdst ? voodoo->banshee_blt.srcBaseAddr_tiled : voodoo->banshee_blt.dstBaseAddr_tiled)
-                return (base_addr + (x & 127) + ((x >> 7) * 128*32) + ((y & 31) * 128) + (y >> 5)*stride) & voodoo->fb_mask;
+                return (base_addr + (x & 127) + ((x >> 7) * 128 * 32) + ((y & 31) * 128) + (y >> 5) * stride) & voodoo->fb_mask;
         else
-                return (base_addr + x + y*stride) & voodoo->fb_mask;
+                return (base_addr + x + y * stride) & voodoo->fb_mask;
 }
 
-static void PLOT(voodoo_t *voodoo, int x, int y, int pat_x, int pat_y, uint8_t pattern_mask, uint8_t rop, uint32_t src, int src_colorkey)
+static void PLOT(voodoo_t* voodoo, int x, int y, int pat_x, int pat_y, uint8_t pattern_mask, uint8_t rop, uint32_t src, int src_colorkey)
 {
         switch (voodoo->banshee_blt.dstFormat & DST_FORMAT_COL_MASK)
         {
-                case DST_FORMAT_COL_8_BPP:
-                {
-                        uint32_t addr = get_addr(voodoo, x, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x + y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                        uint32_t dest = voodoo->vram[addr];
-                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                        ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                        voodoo->banshee_blt.colorPattern8[(pat_x & 7) + (pat_y & 7)*8];
+        case DST_FORMAT_COL_8_BPP:
+        {
+                uint32_t addr = get_addr(voodoo, x, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x + y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                uint32_t dest = voodoo->vram[addr];
+                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                        ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                        voodoo->banshee_blt.colorPattern8[(pat_x & 7) + (pat_y & 7) * 8];
 
-                        voodoo->vram[addr] = MIX(voodoo, dest, src, pattern, src_colorkey, COLORKEY_8);
-                        voodoo->changedvram[addr >> 12] = changeframecount;
-                        break;
-                }
-                case DST_FORMAT_COL_16_BPP:
-                {
-                        uint32_t addr = get_addr(voodoo, x*2, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*2 + y*voodoo->banshee_blt.dst_stride)  & voodoo->fb_mask;
-                        uint32_t dest = *(uint16_t *)&voodoo->vram[addr];
-                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                        ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                        voodoo->banshee_blt.colorPattern16[(pat_x & 7) + (pat_y & 7)*8];
+                voodoo->vram[addr] = MIX(voodoo, dest, src, pattern, src_colorkey, COLORKEY_8);
+                voodoo->changedvram[addr >> 12] = changeframecount;
+                break;
+        }
+        case DST_FORMAT_COL_16_BPP:
+        {
+                uint32_t addr = get_addr(voodoo, x * 2, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*2 + y*voodoo->banshee_blt.dst_stride)  & voodoo->fb_mask;
+                uint32_t dest = *(uint16_t*)&voodoo->vram[addr];
+                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                        ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                        voodoo->banshee_blt.colorPattern16[(pat_x & 7) + (pat_y & 7) * 8];
 
-                        *(uint16_t *)&voodoo->vram[addr] = MIX(voodoo, dest, src, pattern, src_colorkey, COLORKEY_16);
-                        voodoo->changedvram[addr >> 12] = changeframecount;
-                        break;
-                }
-                case DST_FORMAT_COL_24_BPP:
-                {
-                        uint32_t addr = get_addr(voodoo, x*3, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*3 + y*voodoo->banshee_blt.dst_stride)  & voodoo->fb_mask;
-                        uint32_t dest = *(uint32_t *)&voodoo->vram[addr];
-                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                        ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                        voodoo->banshee_blt.colorPattern24[(pat_x & 7) + (pat_y & 7)*8];
+                *(uint16_t*)&voodoo->vram[addr] = MIX(voodoo, dest, src, pattern, src_colorkey, COLORKEY_16);
+                voodoo->changedvram[addr >> 12] = changeframecount;
+                break;
+        }
+        case DST_FORMAT_COL_24_BPP:
+        {
+                uint32_t addr = get_addr(voodoo, x * 3, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*3 + y*voodoo->banshee_blt.dst_stride)  & voodoo->fb_mask;
+                uint32_t dest = *(uint32_t*)&voodoo->vram[addr];
+                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                        ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                        voodoo->banshee_blt.colorPattern24[(pat_x & 7) + (pat_y & 7) * 8];
 
-                        *(uint32_t *)&voodoo->vram[addr] = (MIX(voodoo, dest, src, pattern, src_colorkey, COLORKEY_32) & 0xffffff) | (dest & 0xff000000);
-                        voodoo->changedvram[addr >> 12] = changeframecount;
-                        break;
-                }
-                case DST_FORMAT_COL_32_BPP:
-                {
-                        uint32_t addr = get_addr(voodoo, x*4, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*4 + y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                        uint32_t dest = *(uint32_t *)&voodoo->vram[addr];
-                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                        ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                        voodoo->banshee_blt.colorPattern[(pat_x & 7) + (pat_y & 7)*8];
+                *(uint32_t*)&voodoo->vram[addr] = (MIX(voodoo, dest, src, pattern, src_colorkey, COLORKEY_32) & 0xffffff) | (dest & 0xff000000);
+                voodoo->changedvram[addr >> 12] = changeframecount;
+                break;
+        }
+        case DST_FORMAT_COL_32_BPP:
+        {
+                uint32_t addr = get_addr(voodoo, x * 4, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*4 + y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                uint32_t dest = *(uint32_t*)&voodoo->vram[addr];
+                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                        ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                        voodoo->banshee_blt.colorPattern[(pat_x & 7) + (pat_y & 7) * 8];
 
-                        *(uint32_t *)&voodoo->vram[addr] = MIX(voodoo, dest, src, pattern, src_colorkey, COLORKEY_32);
-                        voodoo->changedvram[addr >> 12] = changeframecount;
-                        break;
-                }
+                *(uint32_t*)&voodoo->vram[addr] = MIX(voodoo, dest, src, pattern, src_colorkey, COLORKEY_32);
+                voodoo->changedvram[addr >> 12] = changeframecount;
+                break;
+        }
         }
 }
 
-static void PLOT_LINE(voodoo_t *voodoo, int x, int y, uint8_t rop, uint32_t pattern, int src_colorkey)
+static void PLOT_LINE(voodoo_t* voodoo, int x, int y, uint8_t rop, uint32_t pattern, int src_colorkey)
 {
         switch (voodoo->banshee_blt.dstFormat & DST_FORMAT_COL_MASK)
         {
-                case DST_FORMAT_COL_8_BPP:
-                {
-                        uint32_t addr = get_addr(voodoo, x, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x + y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                        uint32_t dest = voodoo->vram[addr];
+        case DST_FORMAT_COL_8_BPP:
+        {
+                uint32_t addr = get_addr(voodoo, x, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x + y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                uint32_t dest = voodoo->vram[addr];
 
-                        voodoo->vram[addr] = MIX(voodoo, dest, voodoo->banshee_blt.colorFore, pattern, src_colorkey, COLORKEY_8);
-                        voodoo->changedvram[addr >> 12] = changeframecount;
-                        break;
-                }
-                case DST_FORMAT_COL_16_BPP:
-                {
-                        uint32_t addr = get_addr(voodoo, x*2, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*2 + y*voodoo->banshee_blt.dst_stride)  & voodoo->fb_mask;
-                        uint32_t dest = *(uint16_t *)&voodoo->vram[addr];
+                voodoo->vram[addr] = MIX(voodoo, dest, voodoo->banshee_blt.colorFore, pattern, src_colorkey, COLORKEY_8);
+                voodoo->changedvram[addr >> 12] = changeframecount;
+                break;
+        }
+        case DST_FORMAT_COL_16_BPP:
+        {
+                uint32_t addr = get_addr(voodoo, x * 2, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*2 + y*voodoo->banshee_blt.dst_stride)  & voodoo->fb_mask;
+                uint32_t dest = *(uint16_t*)&voodoo->vram[addr];
 
-                        *(uint16_t *)&voodoo->vram[addr] = MIX(voodoo, dest, voodoo->banshee_blt.colorFore, pattern, src_colorkey, COLORKEY_16);
-                        voodoo->changedvram[addr >> 12] = changeframecount;
-                        break;
-                }
-                case DST_FORMAT_COL_24_BPP:
-                {
-                        uint32_t addr = get_addr(voodoo, x*3, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*3 + y*voodoo->banshee_blt.dst_stride)  & voodoo->fb_mask;
-                        uint32_t dest = *(uint32_t *)&voodoo->vram[addr];
+                *(uint16_t*)&voodoo->vram[addr] = MIX(voodoo, dest, voodoo->banshee_blt.colorFore, pattern, src_colorkey, COLORKEY_16);
+                voodoo->changedvram[addr >> 12] = changeframecount;
+                break;
+        }
+        case DST_FORMAT_COL_24_BPP:
+        {
+                uint32_t addr = get_addr(voodoo, x * 3, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*3 + y*voodoo->banshee_blt.dst_stride)  & voodoo->fb_mask;
+                uint32_t dest = *(uint32_t*)&voodoo->vram[addr];
 
-                        *(uint32_t *)&voodoo->vram[addr] = (MIX(voodoo, dest, voodoo->banshee_blt.colorFore, pattern, src_colorkey, COLORKEY_32) & 0xffffff) | (dest & 0xff000000);
-                        voodoo->changedvram[addr >> 12] = changeframecount;
-                        break;
-                }
-                case DST_FORMAT_COL_32_BPP:
-                {
-                        uint32_t addr = get_addr(voodoo, x*4, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*4 + y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                        uint32_t dest = *(uint32_t *)&voodoo->vram[addr];
+                *(uint32_t*)&voodoo->vram[addr] = (MIX(voodoo, dest, voodoo->banshee_blt.colorFore, pattern, src_colorkey, COLORKEY_32) & 0xffffff) | (dest & 0xff000000);
+                voodoo->changedvram[addr >> 12] = changeframecount;
+                break;
+        }
+        case DST_FORMAT_COL_32_BPP:
+        {
+                uint32_t addr = get_addr(voodoo, x * 4, y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + x*4 + y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                uint32_t dest = *(uint32_t*)&voodoo->vram[addr];
 
-                        *(uint32_t *)&voodoo->vram[addr] = MIX(voodoo, dest, voodoo->banshee_blt.colorFore, pattern, src_colorkey, COLORKEY_32);
-                        voodoo->changedvram[addr >> 12] = changeframecount;
-                        break;
-                }
+                *(uint32_t*)&voodoo->vram[addr] = MIX(voodoo, dest, voodoo->banshee_blt.colorFore, pattern, src_colorkey, COLORKEY_32);
+                voodoo->changedvram[addr >> 12] = changeframecount;
+                break;
+        }
         }
 }
 
-static void update_src_stride(voodoo_t *voodoo)
+static void update_src_stride(voodoo_t* voodoo)
 {
         int bpp;
 
         switch (voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK)
         {
-                case SRC_FORMAT_COL_1_BPP:
+        case SRC_FORMAT_COL_1_BPP:
                 bpp = 1;
                 break;
-                case SRC_FORMAT_COL_8_BPP:
+        case SRC_FORMAT_COL_8_BPP:
                 bpp = 8;
                 break;
-                case SRC_FORMAT_COL_16_BPP:
+        case SRC_FORMAT_COL_16_BPP:
                 bpp = 16;
                 break;
-                case SRC_FORMAT_COL_24_BPP:
+        case SRC_FORMAT_COL_24_BPP:
                 bpp = 24;
                 break;
-                case SRC_FORMAT_COL_32_BPP:
+        case SRC_FORMAT_COL_32_BPP:
                 bpp = 32;
                 break;
 
-                default:
+        default:
                 bpp = 16;
                 break;
         }
 
         switch (voodoo->banshee_blt.srcFormat & SRC_FORMAT_PACKING_MASK)
         {
-                case SRC_FORMAT_PACKING_STRIDE:
+        case SRC_FORMAT_PACKING_STRIDE:
                 voodoo->banshee_blt.src_stride_src = voodoo->banshee_blt.src_stride; //voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK;
                 voodoo->banshee_blt.src_stride_dest = voodoo->banshee_blt.src_stride; //voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK;
                 voodoo->banshee_blt.host_data_size_src = (voodoo->banshee_blt.srcSizeX * bpp + 7) >> 3;
@@ -301,7 +301,7 @@ static void update_src_stride(voodoo_t *voodoo)
 //                pclog("Stride packing %08x %08x   bpp=%i dstSizeX=%i\n", voodoo->banshee_blt.src_stride_dest, voodoo->banshee_blt.host_data_size_dest, bpp, voodoo->banshee_blt.dstSizeX);
                 break;
 
-                case SRC_FORMAT_PACKING_BYTE:
+        case SRC_FORMAT_PACKING_BYTE:
                 voodoo->banshee_blt.src_stride_src = (voodoo->banshee_blt.srcSizeX * bpp + 7) >> 3;
                 voodoo->banshee_blt.src_stride_dest = (voodoo->banshee_blt.dstSizeX * bpp + 7) >> 3;
                 voodoo->banshee_blt.host_data_size_src = voodoo->banshee_blt.src_stride_src;
@@ -309,7 +309,7 @@ static void update_src_stride(voodoo_t *voodoo)
 //                pclog("Byte packing %08x %08x\n", voodoo->banshee_blt.src_stride_dest, voodoo->banshee_blt.host_data_size_dest);
                 break;
 
-                case SRC_FORMAT_PACKING_WORD:
+        case SRC_FORMAT_PACKING_WORD:
                 voodoo->banshee_blt.src_stride_src = ((voodoo->banshee_blt.srcSizeX * bpp + 15) >> 4) * 2;
                 voodoo->banshee_blt.src_stride_dest = ((voodoo->banshee_blt.dstSizeX * bpp + 15) >> 4) * 2;
                 voodoo->banshee_blt.host_data_size_src = voodoo->banshee_blt.src_stride_src;
@@ -317,7 +317,7 @@ static void update_src_stride(voodoo_t *voodoo)
 //                pclog("Word packing %08x %08x\n", voodoo->banshee_blt.src_stride_dest, voodoo->banshee_blt.host_data_size_dest);
                 break;
 
-                case SRC_FORMAT_PACKING_DWORD:
+        case SRC_FORMAT_PACKING_DWORD:
                 voodoo->banshee_blt.src_stride_src = ((voodoo->banshee_blt.srcSizeX * bpp + 31) >> 5) * 4;
                 voodoo->banshee_blt.src_stride_dest = ((voodoo->banshee_blt.dstSizeX * bpp + 31) >> 5) * 4;
                 voodoo->banshee_blt.host_data_size_src = voodoo->banshee_blt.src_stride_src;
@@ -327,7 +327,7 @@ static void update_src_stride(voodoo_t *voodoo)
         }
 }
 
-static void end_command(voodoo_t *voodoo)
+static void end_command(voodoo_t* voodoo)
 {
         /*Update dest coordinates if required*/
         if (voodoo->banshee_blt.command & COMMAND_INC_X_START)
@@ -343,14 +343,14 @@ static void end_command(voodoo_t *voodoo)
         }
 }
 
-static void banshee_do_rectfill(voodoo_t *voodoo)
+static void banshee_do_rectfill(voodoo_t* voodoo)
 {
-        clip_t *clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
+        clip_t* clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
         int dst_y = voodoo->banshee_blt.dstY;
-        uint8_t *pattern_mono = (uint8_t *)voodoo->banshee_blt.colorPattern;
+        uint8_t* pattern_mono = (uint8_t*)voodoo->banshee_blt.colorPattern;
         int pat_y = (voodoo->banshee_blt.commandExtra & CMDEXTRA_FORCE_PAT_ROW0) ? 0 : (voodoo->banshee_blt.patoff_y + voodoo->banshee_blt.dstY);
         int use_pattern_trans = (voodoo->banshee_blt.command & (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO)) ==
-                                             (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO);
+                                (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO);
         uint8_t rop = voodoo->banshee_blt.command >> 24;
 
 //        pclog("banshee_do_rectfill: size=%i,%i  dst=%i,%i\n", voodoo->banshee_blt.dstSizeX, voodoo->banshee_blt.dstSizeY, voodoo->banshee_blt.dstX, voodoo->banshee_blt.dstY);
@@ -364,10 +364,10 @@ static void banshee_do_rectfill(voodoo_t *voodoo)
                 {
                         int pat_x = voodoo->banshee_blt.patoff_x + voodoo->banshee_blt.dstX;
                         uint8_t pattern_mask = pattern_mono[pat_y & 7];
-                        
+
                         for (voodoo->banshee_blt.cur_x = 0; voodoo->banshee_blt.cur_x < voodoo->banshee_blt.dstSizeX; voodoo->banshee_blt.cur_x++)
                         {
-                                int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7-(pat_x & 7)))) : 1;
+                                int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7 - (pat_x & 7)))) : 1;
 
                                 if (dst_x >= clip->x_min && dst_x < clip->x_max && pattern_trans)
                                         PLOT(voodoo, dst_x, dst_y, pat_x, pat_y, pattern_mask, rop, voodoo->banshee_blt.colorFore, COLORKEY_32);
@@ -384,32 +384,32 @@ static void banshee_do_rectfill(voodoo_t *voodoo)
         end_command(voodoo);
 }
 
-static void do_screen_to_screen_line(voodoo_t *voodoo, uint8_t *src_p, int use_x_dir, int src_x, int src_tiled)
+static void do_screen_to_screen_line(voodoo_t* voodoo, uint8_t* src_p, int use_x_dir, int src_x, int src_tiled)
 {
-        clip_t *clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
+        clip_t* clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
         int dst_y = voodoo->banshee_blt.dstY;
         int pat_y = (voodoo->banshee_blt.commandExtra & CMDEXTRA_FORCE_PAT_ROW0) ? 0 : (voodoo->banshee_blt.patoff_y + voodoo->banshee_blt.dstY);
-        uint8_t *pattern_mono = (uint8_t *)voodoo->banshee_blt.colorPattern;
+        uint8_t* pattern_mono = (uint8_t*)voodoo->banshee_blt.colorPattern;
         int use_pattern_trans = (voodoo->banshee_blt.command & (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO)) ==
-                                             (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO);
+                                (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO);
         uint8_t rop = voodoo->banshee_blt.command >> 24;
         int src_colorkey;
-        
+
         switch (voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK)
         {
-                case SRC_FORMAT_COL_8_BPP:
+        case SRC_FORMAT_COL_8_BPP:
                 src_colorkey = COLORKEY_8;
                 break;
-                case SRC_FORMAT_COL_16_BPP:
+        case SRC_FORMAT_COL_16_BPP:
                 src_colorkey = COLORKEY_16;
                 break;
-                default:
+        default:
                 src_colorkey = COLORKEY_32;
                 break;
         }
 //        pclog("do_screen_to_screen_line: srcFormat=%08x dst=%08x\n", voodoo->banshee_blt.srcFormat, voodoo->banshee_blt.dstFormat);
         if ((voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK) ==
-                (voodoo->banshee_blt.dstFormat & DST_FORMAT_COL_MASK))
+            (voodoo->banshee_blt.dstFormat & DST_FORMAT_COL_MASK))
         {
                 /*No conversion required*/
                 if (dst_y >= clip->y_min && dst_y < clip->y_max)
@@ -420,68 +420,71 @@ static void do_screen_to_screen_line(voodoo_t *voodoo, uint8_t *src_p, int use_x
 
                         for (voodoo->banshee_blt.cur_x = 0; voodoo->banshee_blt.cur_x < voodoo->banshee_blt.dstSizeX; voodoo->banshee_blt.cur_x++)
                         {
-                                int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7-(pat_x & 7)))) : 1;
+                                int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7 - (pat_x & 7)))) : 1;
                                 int src_x_real = (src_x * voodoo->banshee_blt.src_bpp) >> 3;
-                                
+
                                 if (src_tiled)
-                                        src_x_real = (src_x_real & 127) + ((src_x_real >> 7) * 128*32);
+                                        src_x_real = (src_x_real & 127) + ((src_x_real >> 7) * 128 * 32);
 
                                 if (dst_x >= clip->x_min && dst_x < clip->x_max && pattern_trans)
                                 {
                                         switch (voodoo->banshee_blt.dstFormat & DST_FORMAT_COL_MASK)
                                         {
-                                                case DST_FORMAT_COL_8_BPP:
-                                                {
-                                                        uint32_t dst_addr = get_addr(voodoo, dst_x, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                                                        uint32_t src = src_p[src_x_real];
-                                                        uint32_t dest = voodoo->vram[dst_addr];
-                                                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                                                        ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                                                        voodoo->banshee_blt.colorPattern8[(pat_x & 7) + (pat_y & 7)*8];
+                                        case DST_FORMAT_COL_8_BPP:
+                                        {
+                                                uint32_t dst_addr = get_addr(voodoo, dst_x, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                                                uint32_t src = src_p[src_x_real];
+                                                uint32_t dest = voodoo->vram[dst_addr];
+                                                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                                                        ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                                                        voodoo->banshee_blt.colorPattern8[(pat_x & 7) + (pat_y & 7) * 8];
 
-                                                        voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_8, COLORKEY_8);
-                                                        voodoo->changedvram[dst_addr >> 12] = changeframecount;
-                                                        break;
-                                                }
-                                                case DST_FORMAT_COL_16_BPP:
-                                                {
-                                                        uint32_t dst_addr = get_addr(voodoo, dst_x*2, dst_y, 0, 0);//dst_addr = (voodoo->banshee_blt.dstBaseAddr + dst_x*2 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                                                        uint32_t src = *(uint16_t *)&src_p[src_x_real];
-                                                        uint32_t dest = *(uint16_t *)&voodoo->vram[dst_addr];
-                                                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                                                        ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                                                        voodoo->banshee_blt.colorPattern16[(pat_x & 7) + (pat_y & 7)*8];
+                                                voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_8, COLORKEY_8);
+                                                voodoo->changedvram[dst_addr >> 12] = changeframecount;
+                                                break;
+                                        }
+                                        case DST_FORMAT_COL_16_BPP:
+                                        {
+                                                uint32_t dst_addr = get_addr(voodoo,
+                                                        dst_x * 2, dst_y, 0, 0);//dst_addr = (voodoo->banshee_blt.dstBaseAddr + dst_x*2 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                                                uint32_t src = *(uint16_t*)&src_p[src_x_real];
+                                                uint32_t dest = *(uint16_t*)&voodoo->vram[dst_addr];
+                                                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                                                        ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                                                        voodoo->banshee_blt.colorPattern16[(pat_x & 7) + (pat_y & 7) * 8];
 
-                                                        *(uint16_t *)&voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_16, COLORKEY_16);
-                                                        voodoo->changedvram[dst_addr >> 12] = changeframecount;
-                                                        break;
-                                                }
-                                                case DST_FORMAT_COL_24_BPP:
-                                                {
-                                                        uint32_t dst_addr = get_addr(voodoo, dst_x*3, dst_y, 0, 0);//dst_addr = (voodoo->banshee_blt.dstBaseAddr + dst_x*3 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                                                        uint32_t src = *(uint32_t *)&src_p[src_x_real];
-                                                        uint32_t dest = *(uint32_t *)&voodoo->vram[dst_addr];
-                                                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                                                        ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                                                        voodoo->banshee_blt.colorPattern24[(pat_x & 7) + (pat_y & 7)*8];
+                                                *(uint16_t*)&voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_16, COLORKEY_16);
+                                                voodoo->changedvram[dst_addr >> 12] = changeframecount;
+                                                break;
+                                        }
+                                        case DST_FORMAT_COL_24_BPP:
+                                        {
+                                                uint32_t dst_addr = get_addr(voodoo,
+                                                        dst_x * 3, dst_y, 0, 0);//dst_addr = (voodoo->banshee_blt.dstBaseAddr + dst_x*3 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                                                uint32_t src = *(uint32_t*)&src_p[src_x_real];
+                                                uint32_t dest = *(uint32_t*)&voodoo->vram[dst_addr];
+                                                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                                                        ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                                                        voodoo->banshee_blt.colorPattern24[(pat_x & 7) + (pat_y & 7) * 8];
 
-                                                        *(uint32_t *)&voodoo->vram[dst_addr] = (MIX(voodoo, dest, src, pattern, COLORKEY_32, COLORKEY_32) & 0xffffff) | (dest & 0xff000000);
-                                                        voodoo->changedvram[dst_addr >> 12] = changeframecount;
-                                                        break;
-                                                }
-                                                case DST_FORMAT_COL_32_BPP:
-                                                {
-                                                        uint32_t dst_addr = get_addr(voodoo, dst_x*4, dst_y, 0, 0);//dst_addr = (voodoo->banshee_blt.dstBaseAddr + dst_x*4 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                                                        uint32_t src = *(uint32_t *)&src_p[src_x_real];
-                                                        uint32_t dest = *(uint32_t *)&voodoo->vram[dst_addr];
-                                                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                                                        ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                                                        voodoo->banshee_blt.colorPattern[(pat_x & 7) + (pat_y & 7)*8];
+                                                *(uint32_t*)&voodoo->vram[dst_addr] = (MIX(voodoo, dest, src, pattern, COLORKEY_32, COLORKEY_32) & 0xffffff) | (dest & 0xff000000);
+                                                voodoo->changedvram[dst_addr >> 12] = changeframecount;
+                                                break;
+                                        }
+                                        case DST_FORMAT_COL_32_BPP:
+                                        {
+                                                uint32_t dst_addr = get_addr(voodoo,
+                                                        dst_x * 4, dst_y, 0, 0);//dst_addr = (voodoo->banshee_blt.dstBaseAddr + dst_x*4 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                                                uint32_t src = *(uint32_t*)&src_p[src_x_real];
+                                                uint32_t dest = *(uint32_t*)&voodoo->vram[dst_addr];
+                                                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                                                        ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                                                        voodoo->banshee_blt.colorPattern[(pat_x & 7) + (pat_y & 7) * 8];
 
-                                                        *(uint32_t *)&voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_32, COLORKEY_32);
-                                                        voodoo->changedvram[dst_addr >> 12] = changeframecount;
-                                                        break;
-                                                }
+                                                *(uint32_t*)&voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_32, COLORKEY_32);
+                                                voodoo->changedvram[dst_addr >> 12] = changeframecount;
+                                                break;
+                                        }
                                         }
                                 }
                                 if (use_x_dir)
@@ -513,11 +516,11 @@ static void do_screen_to_screen_line(voodoo_t *voodoo, uint8_t *src_p, int use_x
 
                         for (voodoo->banshee_blt.cur_x = 0; voodoo->banshee_blt.cur_x < voodoo->banshee_blt.dstSizeX; voodoo->banshee_blt.cur_x++)
                         {
-                                int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7-(pat_x & 7)))) : 1;
+                                int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7 - (pat_x & 7)))) : 1;
                                 int src_x_real = (src_x * voodoo->banshee_blt.src_bpp) >> 3;
 
                                 if (src_tiled)
-                                        src_x_real = (src_x_real & 127) + ((src_x_real >> 7) * 128*32);
+                                        src_x_real = (src_x_real & 127) + ((src_x_real >> 7) * 128 * 32);
 
                                 if (dst_x >= clip->x_min && dst_x < clip->x_max && pattern_trans)
                                 {
@@ -526,45 +529,45 @@ static void do_screen_to_screen_line(voodoo_t *voodoo, uint8_t *src_p, int use_x
 
                                         switch (voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK)
                                         {
-                                                case SRC_FORMAT_COL_1_BPP:
-                                                {
-                                                        uint8_t src_byte = src_p[src_x_real];
-                                                        src_data = (src_byte & (0x80 >> (src_x & 7))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack;
-                                                        if (voodoo->banshee_blt.command & COMMAND_TRANS_MONO)
-                                                                transparent = !(src_byte & (0x80 >> (src_x & 7)));
+                                        case SRC_FORMAT_COL_1_BPP:
+                                        {
+                                                uint8_t src_byte = src_p[src_x_real];
+                                                src_data = (src_byte & (0x80 >> (src_x & 7))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack;
+                                                if (voodoo->banshee_blt.command & COMMAND_TRANS_MONO)
+                                                        transparent = !(src_byte & (0x80 >> (src_x & 7)));
 //                                                        pclog(" 1bpp src_byte=%02x src_x=%i src_data=%x transparent=%i\n", src_byte, src_x, src_data, transparent);
-                                                        break;
-                                                }
-                                                case SRC_FORMAT_COL_8_BPP:
-                                                {
-                                                        src_data = src_p[src_x_real];
-                                                        break;
-                                                }
-                                                case SRC_FORMAT_COL_16_BPP:
-                                                {
-                                                        uint16_t src_16 = *(uint16_t *)&src_p[src_x_real];
-                                                        int r = (src_16 >> 11);
-                                                        int g = (src_16 >> 5) & 0x3f;
-                                                        int b = src_16 & 0x1f;
+                                                break;
+                                        }
+                                        case SRC_FORMAT_COL_8_BPP:
+                                        {
+                                                src_data = src_p[src_x_real];
+                                                break;
+                                        }
+                                        case SRC_FORMAT_COL_16_BPP:
+                                        {
+                                                uint16_t src_16 = *(uint16_t*)&src_p[src_x_real];
+                                                int r = (src_16 >> 11);
+                                                int g = (src_16 >> 5) & 0x3f;
+                                                int b = src_16 & 0x1f;
 
-                                                        r = (r << 3) | (r >> 2);
-                                                        g = (g << 2) | (g >> 4);
-                                                        b = (b << 3) | (b >> 2);
-                                                        src_data = (r << 16) | (g << 8) | b;
-                                                        break;
-                                                }
-                                                case SRC_FORMAT_COL_24_BPP:
-                                                {
-                                                        src_data = *(uint32_t *)&src_p[src_x_real];
-                                                        break;
-                                                }
-                                                case SRC_FORMAT_COL_32_BPP:
-                                                {
-                                                        src_data = *(uint32_t *)&src_p[src_x_real];
-                                                        break;
-                                                }
+                                                r = (r << 3) | (r >> 2);
+                                                g = (g << 2) | (g >> 4);
+                                                b = (b << 3) | (b >> 2);
+                                                src_data = (r << 16) | (g << 8) | b;
+                                                break;
+                                        }
+                                        case SRC_FORMAT_COL_24_BPP:
+                                        {
+                                                src_data = *(uint32_t*)&src_p[src_x_real];
+                                                break;
+                                        }
+                                        case SRC_FORMAT_COL_32_BPP:
+                                        {
+                                                src_data = *(uint32_t*)&src_p[src_x_real];
+                                                break;
+                                        }
 #ifndef RELEASE_BUILD
-                                                default:
+                                        default:
                                                 fatal("banshee_do_screen_to_screen_blt: unknown srcFormat %08x\n", voodoo->banshee_blt.srcFormat);
 #endif
                                         }
@@ -601,7 +604,7 @@ static void do_screen_to_screen_line(voodoo_t *voodoo, uint8_t *src_p, int use_x
         }
 }
 
-static void banshee_do_screen_to_screen_blt(voodoo_t *voodoo)
+static void banshee_do_screen_to_screen_blt(voodoo_t* voodoo)
 {
 //        pclog("screen_to_screen: %08x %08x %08x\n", voodoo->banshee_blt.srcFormat, voodoo->banshee_blt.src_stride, voodoo->banshee_blt.src_stride_dest);
 //                return;
@@ -615,7 +618,7 @@ static void banshee_do_screen_to_screen_blt(voodoo_t *voodoo)
         end_command(voodoo);
 }
 
-static void banshee_do_host_to_screen_blt(voodoo_t *voodoo, int count, uint32_t data)
+static void banshee_do_host_to_screen_blt(voodoo_t* voodoo, int count, uint32_t data)
 {
 //        if (voodoo->banshee_blt.dstBaseAddr == 0xee5194)
 //                pclog("banshee_do_host_to_screen_blt: data=%08x host_data_count=%i src_stride_dest=%i host_data_size_dest=%i\n", data, voodoo->banshee_blt.host_data_count, voodoo->banshee_blt.src_stride_dest, voodoo->banshee_blt.host_data_size_dest);
@@ -634,7 +637,7 @@ static void banshee_do_host_to_screen_blt(voodoo_t *voodoo, int count, uint32_t 
                 else
                         last_byte = (voodoo->banshee_blt.srcX & 3) + voodoo->banshee_blt.host_data_size_dest;
 
-                *(uint32_t *)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
+                *(uint32_t*)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
                 voodoo->banshee_blt.host_data_count += 4;
                 if (voodoo->banshee_blt.host_data_count >= last_byte)
                 {
@@ -649,18 +652,18 @@ static void banshee_do_host_to_screen_blt(voodoo_t *voodoo, int count, uint32_t 
                                 if (voodoo->banshee_blt.cur_y == voodoo->banshee_blt.dstSizeY)
                                         end_command(voodoo);
                         }
-                        
+
                         if ((voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK) == SRC_FORMAT_COL_1_BPP)
                                 voodoo->banshee_blt.srcX += (voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK) << 3;
                         else
                                 voodoo->banshee_blt.srcX += (voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK);
-                        
+
                         voodoo->banshee_blt.host_data_count = 0;
                 }
         }
         else
         {
-                *(uint32_t *)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
+                *(uint32_t*)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
                 voodoo->banshee_blt.host_data_count += 4;
                 while (voodoo->banshee_blt.host_data_count >= voodoo->banshee_blt.src_stride_dest)
                 {
@@ -678,25 +681,25 @@ static void banshee_do_host_to_screen_blt(voodoo_t *voodoo, int count, uint32_t 
                         if (voodoo->banshee_blt.host_data_count)
                         {
 //                                pclog("  remaining=%i\n", voodoo->banshee_blt.host_data_count);
-                                *(uint32_t *)&voodoo->banshee_blt.host_data[0] = data >> (4-voodoo->banshee_blt.host_data_count)*8;
+                                *(uint32_t*)&voodoo->banshee_blt.host_data[0] = data >> (4 - voodoo->banshee_blt.host_data_count) * 8;
                         }
                 }
         }
 }
 
-static void do_screen_to_screen_stretch_line(voodoo_t *voodoo,uint8_t *src_p, int src_x, int *src_y)
+static void do_screen_to_screen_stretch_line(voodoo_t* voodoo, uint8_t* src_p, int src_x, int* src_y)
 {
-        clip_t *clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
+        clip_t* clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
 //        int src_y = voodoo->banshee_blt.srcY;
         int dst_y = voodoo->banshee_blt.dstY;
         int pat_y = (voodoo->banshee_blt.commandExtra & CMDEXTRA_FORCE_PAT_ROW0) ? 0 : (voodoo->banshee_blt.patoff_y + voodoo->banshee_blt.dstY);
-        uint8_t *pattern_mono = (uint8_t *)voodoo->banshee_blt.colorPattern;
+        uint8_t* pattern_mono = (uint8_t*)voodoo->banshee_blt.colorPattern;
         int use_pattern_trans = (voodoo->banshee_blt.command & (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO)) ==
-                                             (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO);
-        uint32_t *colorPattern = voodoo->banshee_blt.colorPattern;
+                                (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO);
+        uint32_t* colorPattern = voodoo->banshee_blt.colorPattern;
 
         //int error_y = voodoo->banshee_blt.dstSizeY / 2;
-        
+
 /*        pclog("banshee_do_screen_to_screen_stretch_blt:\n");
         pclog("  srcXY=%i,%i srcsizeXY=%i,%i\n", voodoo->banshee_blt.srcX, voodoo->banshee_blt.srcY, voodoo->banshee_blt.srcSizeX, voodoo->banshee_blt.srcSizeY);
         pclog("  dstXY=%i,%i dstsizeXY=%i,%i\n", voodoo->banshee_blt.dstX, voodoo->banshee_blt.dstY, voodoo->banshee_blt.dstSizeX, voodoo->banshee_blt.dstSizeY);*/
@@ -707,72 +710,76 @@ static void do_screen_to_screen_stretch_line(voodoo_t *voodoo,uint8_t *src_p, in
                 int pat_x = voodoo->banshee_blt.patoff_x + voodoo->banshee_blt.dstX;
                 uint8_t pattern_mask = pattern_mono[pat_y & 7];
                 int error_x = voodoo->banshee_blt.dstSizeX / 2;
-        
+
 //                pclog(" Plot dest line %03i : src line %03i\n", dst_y, src_y);
                 for (voodoo->banshee_blt.cur_x = 0; voodoo->banshee_blt.cur_x < voodoo->banshee_blt.dstSizeX; voodoo->banshee_blt.cur_x++)
                 {
-                        int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7-(pat_x & 7)))) : 1;
+                        int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7 - (pat_x & 7)))) : 1;
 
                         if (dst_x >= clip->x_min && dst_x < clip->x_max && pattern_trans)
                         {
                                 switch (voodoo->banshee_blt.dstFormat & DST_FORMAT_COL_MASK)
                                 {
-                                        case DST_FORMAT_COL_8_BPP:
-                                        {
-                                                uint32_t dst_addr = get_addr(voodoo, dst_x, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                                                uint32_t src = src_p[src_x];
-                                                uint32_t dest = voodoo->vram[dst_addr];
-                                                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                                                ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                                                colorPattern[(pat_x & 7) + (pat_y & 7)*8];
+                                case DST_FORMAT_COL_8_BPP:
+                                {
+                                        uint32_t dst_addr = get_addr(voodoo, dst_x, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                                        uint32_t src = src_p[src_x];
+                                        uint32_t dest = voodoo->vram[dst_addr];
+                                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                                                ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                                                colorPattern[(pat_x & 7) + (pat_y & 7) * 8];
 
-                                                voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_8, COLORKEY_8);
+                                        voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_8, COLORKEY_8);
 //                                                pclog("%i,%i : sdp=%02x,%02x,%02x res=%02x\n", voodoo->banshee_blt.cur_x, voodoo->banshee_blt.cur_y, src, dest, pattern, voodoo->vram[dst_addr]);
-                                                voodoo->changedvram[dst_addr >> 12] = changeframecount;
-                                                break;
-                                        }
-                                        case DST_FORMAT_COL_16_BPP:
-                                        {
-                                                uint32_t dst_addr = get_addr(voodoo, dst_x*2, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x*2 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                                                uint32_t src = *(uint16_t *)&src_p[src_x*2];
-                                                uint32_t dest = *(uint16_t *)&voodoo->vram[dst_addr];
-                                                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                                                ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                                                colorPattern[(pat_x & 7) + (pat_y & 7)*8];
+                                        voodoo->changedvram[dst_addr >> 12] = changeframecount;
+                                        break;
+                                }
+                                case DST_FORMAT_COL_16_BPP:
+                                {
+                                        uint32_t dst_addr = get_addr(voodoo,
+                                                dst_x * 2, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x*2 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                                        uint32_t src = *(uint16_t*)&src_p[src_x * 2];
+                                        uint32_t dest = *(uint16_t*)&voodoo->vram[dst_addr];
+                                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                                                ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                                                colorPattern[(pat_x & 7) + (pat_y & 7) * 8];
 
-                                                *(uint16_t *)&voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_16, COLORKEY_16);
+                                        *(uint16_t*)&voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_16, COLORKEY_16);
 //                                                pclog("%i,%i : sdp=%02x,%02x,%02x res=%02x\n", voodoo->banshee_blt.cur_x, voodoo->banshee_blt.cur_y, src, dest, pattern, *(uint16_t *)&voodoo->vram[dst_addr]);
-                                                voodoo->changedvram[dst_addr >> 12] = changeframecount;
-                                                break;
-                                        }
-                                        case DST_FORMAT_COL_24_BPP:
-                                        {
-                                                uint32_t dst_addr = get_addr(voodoo, dst_x*3, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x*3 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                                                uint32_t src = *(uint32_t *)&src_p[src_x*3];
-                                                uint32_t dest = *(uint32_t *)&voodoo->vram[dst_addr];
-                                                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                                                ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                                                colorPattern[(pat_x & 7) + (pat_y & 7)*8];
+                                        voodoo->changedvram[dst_addr >> 12] = changeframecount;
+                                        break;
+                                }
+                                case DST_FORMAT_COL_24_BPP:
+                                {
+                                        uint32_t dst_addr = get_addr(voodoo,
+                                                dst_x * 3, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x*3 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                                        uint32_t src = *(uint32_t*)&src_p[src_x * 3];
+                                        uint32_t dest = *(uint32_t*)&voodoo->vram[dst_addr];
+                                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                                                ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                                                colorPattern[(pat_x & 7) + (pat_y & 7) * 8];
 
-                                                *(uint32_t *)&voodoo->vram[dst_addr] = (MIX(voodoo, dest, src, pattern, COLORKEY_32, COLORKEY_32) & 0xffffff) | (*(uint32_t *)&voodoo->vram[dst_addr] & 0xff000000);
+                                        *(uint32_t*)&voodoo->vram[dst_addr] =
+                                                (MIX(voodoo, dest, src, pattern, COLORKEY_32, COLORKEY_32) & 0xffffff) | (*(uint32_t*)&voodoo->vram[dst_addr] & 0xff000000);
 //                                                pclog("%i,%i : sdp=%02x,%02x,%02x res=%02x\n", voodoo->banshee_blt.cur_x, voodoo->banshee_blt.cur_y, src, dest, pattern, voodoo->vram[dst_addr]);
-                                                voodoo->changedvram[dst_addr >> 12] = changeframecount;
-                                                break;
-                                        }
-                                        case DST_FORMAT_COL_32_BPP:
-                                        {
-                                                uint32_t dst_addr = get_addr(voodoo, dst_x*4, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x*4 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
-                                                uint32_t src = *(uint32_t *)&src_p[src_x*4];
-                                                uint32_t dest = *(uint32_t *)&voodoo->vram[dst_addr];
-                                                uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
-                                                                ((pattern_mask & (1 << (7-(pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
-                                                                colorPattern[(pat_x & 7) + (pat_y & 7)*8];
+                                        voodoo->changedvram[dst_addr >> 12] = changeframecount;
+                                        break;
+                                }
+                                case DST_FORMAT_COL_32_BPP:
+                                {
+                                        uint32_t dst_addr = get_addr(voodoo,
+                                                dst_x * 4, dst_y, 0, 0);//(voodoo->banshee_blt.dstBaseAddr + dst_x*4 + dst_y*voodoo->banshee_blt.dst_stride) & voodoo->fb_mask;
+                                        uint32_t src = *(uint32_t*)&src_p[src_x * 4];
+                                        uint32_t dest = *(uint32_t*)&voodoo->vram[dst_addr];
+                                        uint32_t pattern = (voodoo->banshee_blt.command & COMMAND_PATTERN_MONO) ?
+                                                ((pattern_mask & (1 << (7 - (pat_x & 7)))) ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack) :
+                                                colorPattern[(pat_x & 7) + (pat_y & 7) * 8];
 
-                                                *(uint32_t *)&voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_32, COLORKEY_32);
+                                        *(uint32_t*)&voodoo->vram[dst_addr] = MIX(voodoo, dest, src, pattern, COLORKEY_32, COLORKEY_32);
 //                                                pclog("%i,%i : sdp=%02x,%02x,%02x res=%02x\n", voodoo->banshee_blt.cur_x, voodoo->banshee_blt.cur_y, src, dest, pattern, voodoo->vram[dst_addr]);
-                                                voodoo->changedvram[dst_addr >> 12] = changeframecount;
-                                                break;
-                                        }
+                                        voodoo->changedvram[dst_addr >> 12] = changeframecount;
+                                        break;
+                                }
                                 }
                         }
 
@@ -786,7 +793,7 @@ static void do_screen_to_screen_stretch_line(voodoo_t *voodoo,uint8_t *src_p, in
                         pat_x++;
                 }
         }
-                
+
         voodoo->banshee_blt.bres_error_0 -= voodoo->banshee_blt.srcSizeY;
         while (voodoo->banshee_blt.bres_error_0 < 0)
         {
@@ -798,7 +805,7 @@ static void do_screen_to_screen_stretch_line(voodoo_t *voodoo,uint8_t *src_p, in
 //        pat_y += (voodoo->banshee_blt.command & COMMAND_DY) ? -1 : 1;
 }
 
-static void banshee_do_screen_to_screen_stretch_blt(voodoo_t *voodoo)
+static void banshee_do_screen_to_screen_stretch_blt(voodoo_t* voodoo)
 {
 //        pclog("screen_to_screen: %08x %08x %08x\n", voodoo->banshee_blt.srcFormat, voodoo->banshee_blt.src_stride, voodoo->banshee_blt.src_stride_dest);
 //                return;
@@ -813,7 +820,7 @@ static void banshee_do_screen_to_screen_stretch_blt(voodoo_t *voodoo)
         end_command(voodoo);
 }
 
-static void banshee_do_host_to_screen_stretch_blt(voodoo_t *voodoo, int count, uint32_t data)
+static void banshee_do_host_to_screen_stretch_blt(voodoo_t* voodoo, int count, uint32_t data)
 {
 //        if (voodoo->banshee_blt.dstBaseAddr == 0xee5194)
 //                pclog("banshee_do_host_to_screen_blt: data=%08x host_data_count=%i src_stride_dest=%i host_data_size_dest=%i\n", data, voodoo->banshee_blt.host_data_count, voodoo->banshee_blt.src_stride_dest, voodoo->banshee_blt.host_data_size_dest);
@@ -827,7 +834,7 @@ static void banshee_do_host_to_screen_stretch_blt(voodoo_t *voodoo, int count, u
         {
                 int last_byte = (voodoo->banshee_blt.srcX & 3) + voodoo->banshee_blt.host_data_size_src;
 
-                *(uint32_t *)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
+                *(uint32_t*)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
                 voodoo->banshee_blt.host_data_count += 4;
                 if (voodoo->banshee_blt.host_data_count >= last_byte)
                 {
@@ -853,7 +860,7 @@ static void banshee_do_host_to_screen_stretch_blt(voodoo_t *voodoo, int count, u
         }
         else
         {
-                *(uint32_t *)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
+                *(uint32_t*)&voodoo->banshee_blt.host_data[voodoo->banshee_blt.host_data_count] = data;
                 voodoo->banshee_blt.host_data_count += 4;
                 while (voodoo->banshee_blt.host_data_count >= voodoo->banshee_blt.src_stride_src)
                 {
@@ -871,13 +878,13 @@ static void banshee_do_host_to_screen_stretch_blt(voodoo_t *voodoo, int count, u
                         if (voodoo->banshee_blt.host_data_count)
                         {
 //                                pclog("  remaining=%i\n", voodoo->banshee_blt.host_data_count);
-                                *(uint32_t *)&voodoo->banshee_blt.host_data[0] = data >> (4-voodoo->banshee_blt.host_data_count)*8;
+                                *(uint32_t*)&voodoo->banshee_blt.host_data[0] = data >> (4 - voodoo->banshee_blt.host_data_count) * 8;
                         }
                 }
         }
 }
 
-static void step_line(voodoo_t *voodoo)
+static void step_line(voodoo_t* voodoo)
 {
         if (voodoo->banshee_blt.line_pix_pos == voodoo->banshee_blt.line_rep_cnt)
         {
@@ -891,9 +898,9 @@ static void step_line(voodoo_t *voodoo)
                 voodoo->banshee_blt.line_pix_pos++;
 }
 
-static void banshee_do_line(voodoo_t *voodoo, int draw_last_pixel)
+static void banshee_do_line(voodoo_t* voodoo, int draw_last_pixel)
 {
-        clip_t *clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
+        clip_t* clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
         uint8_t rop = voodoo->banshee_blt.command >> 24;
         int dx = ABS(voodoo->banshee_blt.dstX - voodoo->banshee_blt.srcX);
         int dy = ABS(voodoo->banshee_blt.dstY - voodoo->banshee_blt.srcY);
@@ -903,16 +910,16 @@ static void banshee_do_line(voodoo_t *voodoo, int draw_last_pixel)
         int y = voodoo->banshee_blt.srcY;
         int error;
         uint32_t stipple = (voodoo->banshee_blt.command & COMMAND_STIPPLE_LINE) ?
-                        voodoo->banshee_blt.lineStipple : ~0;
+                voodoo->banshee_blt.lineStipple : ~0;
 
         if (dx > dy) /*X major*/
         {
-                error = dx/2;
+                error = dx / 2;
                 while (x != voodoo->banshee_blt.dstX)
                 {
                         int mask = stipple & (1 << voodoo->banshee_blt.line_bit_pos);
                         int pattern_trans = (voodoo->banshee_blt.command & COMMAND_TRANS_MONO) ? mask : 1;
-                                
+
                         if (y >= clip->y_min && y < clip->y_max && x >= clip->x_min && x < clip->x_max && pattern_trans)
                                 PLOT_LINE(voodoo, x, y, rop, mask ? voodoo->banshee_blt.colorFore : voodoo->banshee_blt.colorBack, COLORKEY_32);
 
@@ -928,7 +935,7 @@ static void banshee_do_line(voodoo_t *voodoo, int draw_last_pixel)
         }
         else         /*Y major*/
         {
-                error = dy/2;
+                error = dy / 2;
                 while (y != voodoo->banshee_blt.dstY)
                 {
                         int mask = stipple & (1 << voodoo->banshee_blt.line_bit_pos);
@@ -962,7 +969,7 @@ static void banshee_do_line(voodoo_t *voodoo, int draw_last_pixel)
         voodoo->banshee_blt.srcY = y;
 }
 
-static void banshee_polyfill_start(voodoo_t *voodoo)
+static void banshee_polyfill_start(voodoo_t* voodoo)
 {
         voodoo->banshee_blt.lx[0] = voodoo->banshee_blt.srcX;
         voodoo->banshee_blt.ly[0] = voodoo->banshee_blt.srcY;
@@ -976,16 +983,16 @@ static void banshee_polyfill_start(voodoo_t *voodoo)
         voodoo->banshee_blt.rx_cur = voodoo->banshee_blt.dstX;
 }
 
-static void banshee_polyfill_continue(voodoo_t *voodoo, uint32_t data)
+static void banshee_polyfill_continue(voodoo_t* voodoo, uint32_t data)
 {
-        clip_t *clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
-        uint8_t *pattern_mono = (uint8_t *)voodoo->banshee_blt.colorPattern;
+        clip_t* clip = &voodoo->banshee_blt.clip[(voodoo->banshee_blt.command & COMMAND_CLIP_SEL) ? 1 : 0];
+        uint8_t* pattern_mono = (uint8_t*)voodoo->banshee_blt.colorPattern;
         int use_pattern_trans = (voodoo->banshee_blt.command & (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO)) ==
-                                             (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO);
+                                (COMMAND_PATTERN_MONO | COMMAND_TRANS_MONO);
         uint8_t rop = voodoo->banshee_blt.command >> 24;
         int y = MAX(voodoo->banshee_blt.ly[0], voodoo->banshee_blt.ry[0]);
         int y_end;
-        
+
 //        pclog("Polyfill : data %08x\n", data);
 
         /*if r1.y>=l1.y, next vertex is left*/
@@ -1007,7 +1014,7 @@ static void banshee_polyfill_continue(voodoo_t *voodoo, uint32_t data)
                 voodoo->banshee_blt.x_inc[1] = (voodoo->banshee_blt.rx[1] > voodoo->banshee_blt.rx[0]) ? 1 : -1;
                 voodoo->banshee_blt.error[1] = voodoo->banshee_blt.dy[1] / 2;
         }
-        
+
 /*        pclog("   verts now : %03i,%03i    %03i,%03i\n", voodoo->banshee_blt.lx[0], voodoo->banshee_blt.ly[0], voodoo->banshee_blt.rx[0], voodoo->banshee_blt.ry[0]);
         pclog("               %03i,%03i    %03i,%03i\n", voodoo->banshee_blt.lx[1], voodoo->banshee_blt.ly[1], voodoo->banshee_blt.rx[1], voodoo->banshee_blt.ry[1]);
         pclog("        left  dx=%i dy=%i x_inc=%i error=%i\n", voodoo->banshee_blt.dx[0],voodoo->banshee_blt.dy[0],voodoo->banshee_blt.x_inc[0],voodoo->banshee_blt.error[0]);
@@ -1023,17 +1030,17 @@ static void banshee_polyfill_continue(voodoo_t *voodoo, uint32_t data)
                         int pat_y = (voodoo->banshee_blt.commandExtra & CMDEXTRA_FORCE_PAT_ROW0) ? 0 : (voodoo->banshee_blt.patoff_y + y);
                         uint8_t pattern_mask = pattern_mono[pat_y & 7];
                         int x;
-                        
+
                         for (x = voodoo->banshee_blt.lx_cur; x < voodoo->banshee_blt.rx_cur; x++)
                         {
                                 int pat_x = voodoo->banshee_blt.patoff_x + x;
-                                int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7-(pat_x & 7)))) : 1;
+                                int pattern_trans = use_pattern_trans ? (pattern_mask & (1 << (7 - (pat_x & 7)))) : 1;
 
                                 if (x >= clip->x_min && x < clip->x_max && pattern_trans)
                                         PLOT(voodoo, x, y, pat_x, pat_y, pattern_mask, rop, voodoo->banshee_blt.colorFore, COLORKEY_32);
                         }
                 }
-                
+
                 voodoo->banshee_blt.error[0] -= voodoo->banshee_blt.dx[0];
                 while (voodoo->banshee_blt.error[0] < 0)
                 {
@@ -1067,135 +1074,135 @@ static void banshee_polyfill_continue(voodoo_t *voodoo, uint32_t data)
         }
 }
 
-static void banshee_do_2d_blit(voodoo_t *voodoo, int count, uint32_t data)
+static void banshee_do_2d_blit(voodoo_t* voodoo, int count, uint32_t data)
 {
         switch (voodoo->banshee_blt.command & COMMAND_CMD_MASK)
         {
-                case COMMAND_CMD_NOP:
+        case COMMAND_CMD_NOP:
                 break;
-                        
-                case COMMAND_CMD_SCREEN_TO_SCREEN_BLT:
+
+        case COMMAND_CMD_SCREEN_TO_SCREEN_BLT:
                 banshee_do_screen_to_screen_blt(voodoo);
                 break;
-                
-                case COMMAND_CMD_SCREEN_TO_SCREEN_STRETCH_BLT:
+
+        case COMMAND_CMD_SCREEN_TO_SCREEN_STRETCH_BLT:
                 banshee_do_screen_to_screen_stretch_blt(voodoo);
                 break;
 
-                case COMMAND_CMD_HOST_TO_SCREEN_BLT:
+        case COMMAND_CMD_HOST_TO_SCREEN_BLT:
                 banshee_do_host_to_screen_blt(voodoo, count, data);
                 break;
-                
-                case COMMAND_CMD_HOST_TO_SCREEN_STRETCH_BLT:
+
+        case COMMAND_CMD_HOST_TO_SCREEN_STRETCH_BLT:
                 banshee_do_host_to_screen_stretch_blt(voodoo, count, data);
                 break;
 
-                case COMMAND_CMD_RECTFILL:
+        case COMMAND_CMD_RECTFILL:
                 banshee_do_rectfill(voodoo);
                 break;
 
-                case COMMAND_CMD_LINE:
+        case COMMAND_CMD_LINE:
                 banshee_do_line(voodoo, 1);
                 break;
 
-                case COMMAND_CMD_POLYLINE:
+        case COMMAND_CMD_POLYLINE:
                 banshee_do_line(voodoo, 0);
                 break;
 
 #ifndef RELEASE_BUILD
-                default:
+        default:
                 fatal("banshee_do_2d_blit: unknown command=%08x\n", voodoo->banshee_blt.command);
 #endif
         }
 }
 
-void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
+void voodoo_2d_reg_writel(voodoo_t* voodoo, uint32_t addr, uint32_t val)
 {
 //        /*if ((addr & 0x1fc) != 0x80) */pclog("2D reg write %03x %08x\n", addr & 0x1fc, val);
         switch (addr & 0x1fc)
         {
-                case 0x08:
+        case 0x08:
                 voodoo->banshee_blt.clip0Min = val;
                 voodoo->banshee_blt.clip[0].x_min = val & 0xfff;
                 voodoo->banshee_blt.clip[0].y_min = (val >> 16) & 0xfff;
                 break;
-                case 0x0c:
+        case 0x0c:
                 voodoo->banshee_blt.clip0Max = val;
                 voodoo->banshee_blt.clip[0].x_max = val & 0xfff;
                 voodoo->banshee_blt.clip[0].y_max = (val >> 16) & 0xfff;
                 break;
-                case 0x10:
+        case 0x10:
                 voodoo->banshee_blt.dstBaseAddr = val & 0xffffff;
                 voodoo->banshee_blt.dstBaseAddr_tiled = val & 0x80000000;
                 if (voodoo->banshee_blt.dstBaseAddr_tiled)
-                        voodoo->banshee_blt.dst_stride = (voodoo->banshee_blt.dstFormat & DST_FORMAT_STRIDE_MASK) * 128*32;
+                        voodoo->banshee_blt.dst_stride = (voodoo->banshee_blt.dstFormat & DST_FORMAT_STRIDE_MASK) * 128 * 32;
                 else
                         voodoo->banshee_blt.dst_stride = voodoo->banshee_blt.dstFormat & DST_FORMAT_STRIDE_MASK;
 //                pclog("dstBaseAddr=%08x\n", val);
                 break;
-                case 0x14:
+        case 0x14:
                 voodoo->banshee_blt.dstFormat = val;
                 if (voodoo->banshee_blt.dstBaseAddr_tiled)
-                        voodoo->banshee_blt.dst_stride = (voodoo->banshee_blt.dstFormat & DST_FORMAT_STRIDE_MASK) * 128*32;
+                        voodoo->banshee_blt.dst_stride = (voodoo->banshee_blt.dstFormat & DST_FORMAT_STRIDE_MASK) * 128 * 32;
                 else
                         voodoo->banshee_blt.dst_stride = voodoo->banshee_blt.dstFormat & DST_FORMAT_STRIDE_MASK;
 //                pclog("dstFormat=%08x\n", val);
                 break;
-                
-                case 0x18:
+
+        case 0x18:
                 voodoo->banshee_blt.srcColorkeyMin = val & 0xffffff;
                 break;
-                case 0x1c:
+        case 0x1c:
                 voodoo->banshee_blt.srcColorkeyMax = val & 0xffffff;
                 break;
-                case 0x20:
+        case 0x20:
                 voodoo->banshee_blt.dstColorkeyMin = val & 0xffffff;
                 break;
-                case 0x24:
+        case 0x24:
                 voodoo->banshee_blt.dstColorkeyMax = val & 0xffffff;
                 break;
-                
-                case 0x28:
+
+        case 0x28:
                 voodoo->banshee_blt.bresError0 = val;
                 voodoo->banshee_blt.bres_error_0 = val & 0xffff;
                 break;
-                case 0x2c:
+        case 0x2c:
                 voodoo->banshee_blt.bresError1 = val;
                 voodoo->banshee_blt.bres_error_1 = val & 0xffff;
                 break;
-                
-                case 0x30:
+
+        case 0x30:
                 voodoo->banshee_blt.rop = val;
                 voodoo->banshee_blt.rops[1] = val & 0xff;
                 voodoo->banshee_blt.rops[2] = (val >> 8) & 0xff;
                 voodoo->banshee_blt.rops[3] = (val >> 16) & 0xff;
 //                pclog("rop=%08x\n", val);
                 break;
-                case 0x34:
+        case 0x34:
                 voodoo->banshee_blt.srcBaseAddr = val & 0xffffff;
                 voodoo->banshee_blt.srcBaseAddr_tiled = val & 0x80000000;
                 if (voodoo->banshee_blt.srcBaseAddr_tiled)
-                        voodoo->banshee_blt.src_stride = (voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK) * 128*32;
+                        voodoo->banshee_blt.src_stride = (voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK) * 128 * 32;
                 else
                         voodoo->banshee_blt.src_stride = voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK;
                 update_src_stride(voodoo);
 //                pclog("srcBaseAddr=%08x\n", val);
                 break;
-                case 0x38:
+        case 0x38:
                 voodoo->banshee_blt.commandExtra = val;
 //                pclog("commandExtra=%08x\n", val);
                 break;
-                case 0x3c:
+        case 0x3c:
                 voodoo->banshee_blt.lineStipple = val;
                 break;
-                case 0x40:
+        case 0x40:
                 voodoo->banshee_blt.lineStyle = val;
                 voodoo->banshee_blt.line_rep_cnt = val & 0xff;
                 voodoo->banshee_blt.line_bit_mask_size = (val >> 8) & 0x1f;
                 voodoo->banshee_blt.line_pix_pos = (val >> 16) & 0xff;
                 voodoo->banshee_blt.line_bit_pos = (val >> 24) & 0x1f;
                 break;
-                case 0x44:
+        case 0x44:
                 voodoo->banshee_blt.colorPattern[0] = val;
 //                pclog("colorPattern0=%08x\n", val);
                 voodoo->banshee_blt.colorPattern24[0] = val & 0xffffff;
@@ -1207,7 +1214,7 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
                 voodoo->banshee_blt.colorPattern8[2] = (val >> 16) & 0xff;
                 voodoo->banshee_blt.colorPattern8[3] = (val >> 24) & 0xff;
                 break;
-                case 0x48:
+        case 0x48:
                 voodoo->banshee_blt.colorPattern[1] = val;
 //                pclog("colorPattern1=%08x\n", val);
                 voodoo->banshee_blt.colorPattern24[1] = (voodoo->banshee_blt.colorPattern24[1] & 0xff) | ((val & 0xffff) << 8);
@@ -1219,77 +1226,78 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
                 voodoo->banshee_blt.colorPattern8[6] = (val >> 16) & 0xff;
                 voodoo->banshee_blt.colorPattern8[7] = (val >> 24) & 0xff;
                 break;
-                case 0x4c:
+        case 0x4c:
                 voodoo->banshee_blt.clip1Min = val;
                 voodoo->banshee_blt.clip[1].x_min = val & 0xfff;
                 voodoo->banshee_blt.clip[1].y_min = (val >> 16) & 0xfff;
                 break;
-                case 0x50:
+        case 0x50:
                 voodoo->banshee_blt.clip1Max = val;
                 voodoo->banshee_blt.clip[1].x_max = val & 0xfff;
                 voodoo->banshee_blt.clip[1].y_max = (val >> 16) & 0xfff;
                 break;
-                case 0x54:
+        case 0x54:
                 voodoo->banshee_blt.srcFormat = val;
                 if (voodoo->banshee_blt.srcBaseAddr_tiled)
-                        voodoo->banshee_blt.src_stride = (voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK) * 128*32;
+                        voodoo->banshee_blt.src_stride = (voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK) * 128 * 32;
                 else
                         voodoo->banshee_blt.src_stride = voodoo->banshee_blt.srcFormat & SRC_FORMAT_STRIDE_MASK;
                 update_src_stride(voodoo);
                 switch (voodoo->banshee_blt.srcFormat & SRC_FORMAT_COL_MASK)
                 {
-                        case SRC_FORMAT_COL_1_BPP:
+                case SRC_FORMAT_COL_1_BPP:
                         voodoo->banshee_blt.src_bpp = 1;
                         break;
-                        case SRC_FORMAT_COL_8_BPP:
+                case SRC_FORMAT_COL_8_BPP:
                         voodoo->banshee_blt.src_bpp = 8;
                         break;
-                        case SRC_FORMAT_COL_24_BPP:
+                case SRC_FORMAT_COL_24_BPP:
                         voodoo->banshee_blt.src_bpp = 24;
                         break;
-                        case SRC_FORMAT_COL_32_BPP:
+                case SRC_FORMAT_COL_32_BPP:
                         voodoo->banshee_blt.src_bpp = 32;
                         break;
-                        case SRC_FORMAT_COL_16_BPP: default:
+                case SRC_FORMAT_COL_16_BPP:
+                default:
                         voodoo->banshee_blt.src_bpp = 16;
                         break;
                 }
 //                pclog("srcFormat=%08x\n", val);
                 break;
-                case 0x58:
+        case 0x58:
                 voodoo->banshee_blt.srcSize = val;
                 voodoo->banshee_blt.srcSizeX = voodoo->banshee_blt.srcSize & 0x1fff;
                 voodoo->banshee_blt.srcSizeY = (voodoo->banshee_blt.srcSize >> 16) & 0x1fff;
                 update_src_stride(voodoo);
 //                pclog("srcSize=%08x\n", val);
                 break;
-                case 0x5c:
+        case 0x5c:
                 voodoo->banshee_blt.srcXY = val;
                 voodoo->banshee_blt.srcX = ((int32_t)(val << 19)) >> 19;
                 voodoo->banshee_blt.srcY = ((int32_t)(val << 3)) >> 19;
                 update_src_stride(voodoo);
 //                pclog("srcXY=%08x\n", val);
                 break;
-                case 0x60:
+        case 0x60:
                 voodoo->banshee_blt.colorBack = val;
                 break;
-                case 0x64:
+        case 0x64:
                 voodoo->banshee_blt.colorFore = val;
                 break;
-                case 0x68:
+        case 0x68:
                 voodoo->banshee_blt.dstSize = val;
                 voodoo->banshee_blt.dstSizeX = voodoo->banshee_blt.dstSize & 0x1fff;
                 voodoo->banshee_blt.dstSizeY = (voodoo->banshee_blt.dstSize >> 16) & 0x1fff;
                 update_src_stride(voodoo);
 //                pclog("dstSize=%08x\n", val);
                 break;
-                case 0x6c:
+        case 0x6c:
                 voodoo->banshee_blt.dstXY = val;
                 voodoo->banshee_blt.dstX = ((int32_t)(val << 19)) >> 19;
                 voodoo->banshee_blt.dstY = ((int32_t)(val << 3)) >> 19;
 //                pclog("dstXY=%08x\n", val);
                 break;
-                case 0x70:
+        case 0x70:
                 voodoo_wait_for_render_thread_idle(voodoo);
                 voodoo->banshee_blt.command = val;
                 voodoo->banshee_blt.rops[0] = val >> 24;
@@ -1320,8 +1328,8 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
                         if (val & COMMAND_INITIATE)
                                 banshee_do_2d_blit(voodoo, -1, 0);
                         break;*/
-                        
-                        case COMMAND_CMD_POLYFILL:
+
+                case COMMAND_CMD_POLYFILL:
                         if (val & COMMAND_INITIATE)
                         {
                                 voodoo->banshee_blt.dstXY = voodoo->banshee_blt.srcXY;
@@ -1331,90 +1339,162 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
                         banshee_polyfill_start(voodoo);
                         break;
 
-                        default:
+                default:
                         if (val & COMMAND_INITIATE)
                         {
                                 banshee_do_2d_blit(voodoo, -1, 0);
-                        //       fatal("Initiate command!\n");
+                                //       fatal("Initiate command!\n");
                         }
                         break;
                 }
                 break;
-                
-                case 0x80: case 0x84: case 0x88: case 0x8c:
-                case 0x90: case 0x94: case 0x98: case 0x9c:
-                case 0xa0: case 0xa4: case 0xa8: case 0xac:
-                case 0xb0: case 0xb4: case 0xb8: case 0xbc:
-                case 0xc0: case 0xc4: case 0xc8: case 0xcc:
-                case 0xd0: case 0xd4: case 0xd8: case 0xdc:
-                case 0xe0: case 0xe4: case 0xe8: case 0xec:
-                case 0xf0: case 0xf4: case 0xf8: case 0xfc:
+
+        case 0x80:
+        case 0x84:
+        case 0x88:
+        case 0x8c:
+        case 0x90:
+        case 0x94:
+        case 0x98:
+        case 0x9c:
+        case 0xa0:
+        case 0xa4:
+        case 0xa8:
+        case 0xac:
+        case 0xb0:
+        case 0xb4:
+        case 0xb8:
+        case 0xbc:
+        case 0xc0:
+        case 0xc4:
+        case 0xc8:
+        case 0xcc:
+        case 0xd0:
+        case 0xd4:
+        case 0xd8:
+        case 0xdc:
+        case 0xe0:
+        case 0xe4:
+        case 0xe8:
+        case 0xec:
+        case 0xf0:
+        case 0xf4:
+        case 0xf8:
+        case 0xfc:
 //                pclog("launch %08x  %08x %08x %08x\n", voodoo->banshee_blt.command,  voodoo->banshee_blt.commandExtra, voodoo->banshee_blt.srcColorkeyMin, voodoo->banshee_blt.srcColorkeyMax);
                 switch (voodoo->banshee_blt.command & COMMAND_CMD_MASK)
                 {
-                        case COMMAND_CMD_SCREEN_TO_SCREEN_BLT:
+                case COMMAND_CMD_SCREEN_TO_SCREEN_BLT:
                         voodoo->banshee_blt.srcXY = val;
                         voodoo->banshee_blt.srcX = ((int32_t)(val << 19)) >> 19;
                         voodoo->banshee_blt.srcY = ((int32_t)(val << 3)) >> 19;
                         banshee_do_screen_to_screen_blt(voodoo);
                         break;
 
-                        case COMMAND_CMD_HOST_TO_SCREEN_BLT:
-                        banshee_do_2d_blit(voodoo, 32, val);
-                        break;
-                        
-                        case COMMAND_CMD_HOST_TO_SCREEN_STRETCH_BLT:
+                case COMMAND_CMD_HOST_TO_SCREEN_BLT:
                         banshee_do_2d_blit(voodoo, 32, val);
                         break;
 
-                        case COMMAND_CMD_RECTFILL:
+                case COMMAND_CMD_HOST_TO_SCREEN_STRETCH_BLT:
+                        banshee_do_2d_blit(voodoo, 32, val);
+                        break;
+
+                case COMMAND_CMD_RECTFILL:
                         voodoo->banshee_blt.dstXY = val;
                         voodoo->banshee_blt.dstX = ((int32_t)(val << 19)) >> 19;
                         voodoo->banshee_blt.dstY = ((int32_t)(val << 3)) >> 19;
                         banshee_do_rectfill(voodoo);
                         break;
 
-                        case COMMAND_CMD_LINE:
+                case COMMAND_CMD_LINE:
                         voodoo->banshee_blt.dstXY = val;
                         voodoo->banshee_blt.dstX = ((int32_t)(val << 19)) >> 19;
                         voodoo->banshee_blt.dstY = ((int32_t)(val << 3)) >> 19;
                         banshee_do_line(voodoo, 1);
                         break;
 
-                        case COMMAND_CMD_POLYLINE:
+                case COMMAND_CMD_POLYLINE:
                         voodoo->banshee_blt.dstXY = val;
                         voodoo->banshee_blt.dstX = ((int32_t)(val << 19)) >> 19;
                         voodoo->banshee_blt.dstY = ((int32_t)(val << 3)) >> 19;
                         banshee_do_line(voodoo, 0);
                         break;
-                        
-                        case COMMAND_CMD_POLYFILL:
+
+                case COMMAND_CMD_POLYFILL:
                         banshee_polyfill_continue(voodoo, val);
                         break;
 
 #ifndef RELEASE_BUILD
-                        default:
+                default:
                         fatal("launch area write, command=%08x\n", voodoo->banshee_blt.command);
 #endif
                 }
                 break;
 
-                case 0x100: case 0x104: case 0x108: case 0x10c:
-                case 0x110: case 0x114: case 0x118: case 0x11c:
-                case 0x120: case 0x124: case 0x128: case 0x12c:
-                case 0x130: case 0x134: case 0x138: case 0x13c:
-                case 0x140: case 0x144: case 0x148: case 0x14c:
-                case 0x150: case 0x154: case 0x158: case 0x15c:
-                case 0x160: case 0x164: case 0x168: case 0x16c:
-                case 0x170: case 0x174: case 0x178: case 0x17c:
-                case 0x180: case 0x184: case 0x188: case 0x18c:
-                case 0x190: case 0x194: case 0x198: case 0x19c:
-                case 0x1a0: case 0x1a4: case 0x1a8: case 0x1ac:
-                case 0x1b0: case 0x1b4: case 0x1b8: case 0x1bc:
-                case 0x1c0: case 0x1c4: case 0x1c8: case 0x1cc:
-                case 0x1d0: case 0x1d4: case 0x1d8: case 0x1dc:
-                case 0x1e0: case 0x1e4: case 0x1e8: case 0x1ec:
-                case 0x1f0: case 0x1f4: case 0x1f8: case 0x1fc:
+        case 0x100:
+        case 0x104:
+        case 0x108:
+        case 0x10c:
+        case 0x110:
+        case 0x114:
+        case 0x118:
+        case 0x11c:
+        case 0x120:
+        case 0x124:
+        case 0x128:
+        case 0x12c:
+        case 0x130:
+        case 0x134:
+        case 0x138:
+        case 0x13c:
+        case 0x140:
+        case 0x144:
+        case 0x148:
+        case 0x14c:
+        case 0x150:
+        case 0x154:
+        case 0x158:
+        case 0x15c:
+        case 0x160:
+        case 0x164:
+        case 0x168:
+        case 0x16c:
+        case 0x170:
+        case 0x174:
+        case 0x178:
+        case 0x17c:
+        case 0x180:
+        case 0x184:
+        case 0x188:
+        case 0x18c:
+        case 0x190:
+        case 0x194:
+        case 0x198:
+        case 0x19c:
+        case 0x1a0:
+        case 0x1a4:
+        case 0x1a8:
+        case 0x1ac:
+        case 0x1b0:
+        case 0x1b4:
+        case 0x1b8:
+        case 0x1bc:
+        case 0x1c0:
+        case 0x1c4:
+        case 0x1c8:
+        case 0x1cc:
+        case 0x1d0:
+        case 0x1d4:
+        case 0x1d8:
+        case 0x1dc:
+        case 0x1e0:
+        case 0x1e4:
+        case 0x1e8:
+        case 0x1ec:
+        case 0x1f0:
+        case 0x1f4:
+        case 0x1f8:
+        case 0x1fc:
                 voodoo->banshee_blt.colorPattern[(addr >> 2) & 63] = val;
                 if ((addr & 0x1fc) < 0x1c0)
                 {
@@ -1422,19 +1502,19 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
                         uintptr_t src_p = (uintptr_t)&voodoo->banshee_blt.colorPattern[base_addr * 3];
                         int col24 = base_addr * 4;
 
-                        voodoo->banshee_blt.colorPattern24[col24]     = *(uint32_t *)src_p & 0xffffff;
-                        voodoo->banshee_blt.colorPattern24[col24 + 1] = *(uint32_t *)(src_p + 3) & 0xffffff;
-                        voodoo->banshee_blt.colorPattern24[col24 + 2] = *(uint32_t *)(src_p + 6) & 0xffffff;
-                        voodoo->banshee_blt.colorPattern24[col24 + 3] = *(uint32_t *)(src_p + 9) & 0xffffff;
+                        voodoo->banshee_blt.colorPattern24[col24] = *(uint32_t*)src_p & 0xffffff;
+                        voodoo->banshee_blt.colorPattern24[col24 + 1] = *(uint32_t*)(src_p + 3) & 0xffffff;
+                        voodoo->banshee_blt.colorPattern24[col24 + 2] = *(uint32_t*)(src_p + 6) & 0xffffff;
+                        voodoo->banshee_blt.colorPattern24[col24 + 3] = *(uint32_t*)(src_p + 9) & 0xffffff;
                 }
                 if ((addr & 0x1fc) < 0x180)
                 {
-                        voodoo->banshee_blt.colorPattern16[(addr >> 1) & 62]       = val & 0xffff;
+                        voodoo->banshee_blt.colorPattern16[(addr >> 1) & 62] = val & 0xffff;
                         voodoo->banshee_blt.colorPattern16[((addr >> 1) & 62) + 1] = (val >> 16) & 0xffff;
                 }
                 if ((addr & 0x1fc) < 0x140)
                 {
-                        voodoo->banshee_blt.colorPattern8[addr & 60]       = val & 0xff;
+                        voodoo->banshee_blt.colorPattern8[addr & 60] = val & 0xff;
                         voodoo->banshee_blt.colorPattern8[(addr & 60) + 1] = (val >> 8) & 0xff;
                         voodoo->banshee_blt.colorPattern8[(addr & 60) + 2] = (val >> 16) & 0xff;
                         voodoo->banshee_blt.colorPattern8[(addr & 60) + 3] = (val >> 24) & 0xff;
@@ -1443,7 +1523,7 @@ void voodoo_2d_reg_writel(voodoo_t *voodoo, uint32_t addr, uint32_t val)
                 break;
 
 #ifndef RELEASE_BUILD
-                default:
+        default:
                 fatal("Unknown 2D reg write %03x %08x\n", addr & 0x1fc, val);
 #endif
         }

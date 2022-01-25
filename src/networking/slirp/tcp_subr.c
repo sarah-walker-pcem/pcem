@@ -283,7 +283,7 @@ tcp_close(tp)
 	t = tcpfrag_list_first(tp);
 	while (!tcpfrag_list_end(t, tp)) {
 		t = tcpiphdr_next(t);
-		m = tcpiphdr_prev(t)->ti_mbuf;
+		m = (struct SLIRPmbuf *)tcpiphdr_prev(t)->ti_mbuf;
 		remque(tcpiphdr2qlink(tcpiphdr_prev(t)));
 		m_freem(m);
 	}

@@ -14,16 +14,16 @@
 
 extern "C"
 {
-        int wx_load_config(void*);
-        int wx_start(void*);
-        int wx_stop(void*);
-        void wx_show(void*);
-        void wx_handle_command(void*, int, int);
+int wx_load_config(void*);
+int wx_start(void*);
+int wx_stop(void*);
+void wx_show(void*);
+void wx_handle_command(void*, int, int);
 
-        int start_emulation(void*);
-        int resume_emulation();
-        int pause_emulation();
-        int stop_emulation();
+int start_emulation(void*);
+int resume_emulation();
+int pause_emulation();
+int stop_emulation();
 }
 
 extern int config_override;
@@ -53,7 +53,7 @@ App::App()
 
 bool App::OnInit()
 {
-        wxImage::AddHandler( new wxPNGHandler );
+        wxImage::AddHandler(new wxPNGHandler);
         wxXmlResource::Get()->InitAllHandlers();
 //        if (!wxXmlResource::Get()->Load("src/pc.xrc"))
 //        {
@@ -63,7 +63,7 @@ bool App::OnInit()
         InitXmlResource();
 
         frame = new Frame(this, "null frame", wxPoint(500, 500),
-                        wxSize(100, 100));
+                wxSize(100, 100));
         frame->Start();
         return true;
 }
@@ -76,8 +76,8 @@ int App::OnRun()
 #include <sstream>
 
 Frame::Frame(App* app, const wxString& title, const wxPoint& pos,
-                const wxSize& size) :
-                wxFrame(NULL, wxID_ANY, title, pos, size, 0)//wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER))
+        const wxSize& size) :
+        wxFrame(NULL, wxID_ANY, title, pos, size, 0)//wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER))
 {
         this->closing = false;
         this->menu = wxXmlResource::Get()->LoadMenu(wxT("main_menu"));
@@ -241,7 +241,7 @@ void Frame::OnExitCompleteEvent(wxCommandEvent& event)
 
 CExitThread::CExitThread(Frame* frame)
 {
-	this->frame = frame;
+        this->frame = frame;
 }
 
 wxThread::ExitCode CExitThread::Entry()
@@ -249,7 +249,7 @@ wxThread::ExitCode CExitThread::Entry()
         wxCommandEvent* event = new wxCommandEvent(WX_EXIT_COMPLETE_EVENT, wxID_ANY);
         event->SetInt(wx_stop(frame));
         wxQueueEvent(frame, event);
-	return 0;
+        return 0;
 }
 
 #ifdef _WIN32

@@ -58,37 +58,37 @@ typedef struct scb_t
 typedef struct scsi_ibm_t
 {
         rom_t bios_rom;
-        
+
         uint8_t pos_regs[8];
 
         uint8_t basic_ctrl;
         uint32_t command;
-        
+
         uint8_t attention;
         uint8_t attention_pending;
         int attention_waiting;
-        
+
         uint8_t cir[4];
         uint8_t cir_pending[4];
 
         uint8_t irq_status;
-        
+
         uint32_t scb_addr;
-        
+
         uint8_t status;
 
         int in_invalid;
         int in_reset;
         sbc_state_t scb_state;
-                
+
         scb_t scb;
         int scb_id;
-        
+
         int cmd_status;
         int cir_status;
 
         uint8_t pacing;
-        
+
         uint8_t buf[0x600];
 
         uint8_t int_buffer[512];
@@ -98,7 +98,7 @@ typedef struct scsi_ibm_t
                 int phys_id;
                 int lun_id;
         } dev_id[16];
-        
+
         struct
         {
                 int idx, len;
@@ -113,14 +113,14 @@ typedef struct scsi_ibm_t
 
                 int target_id;
         } cdb;
-        
+
         int irq_requests[16];
 
         int cmd_timer;
         pc_timer_t callback_timer;
 
         scsi_state_t scsi_state;
-	scsi_bus_t bus;
+        scsi_bus_t bus;
 } scsi_ibm_t;
 
 #define CTRL_RESET   (1 << 7)
@@ -162,17 +162,17 @@ typedef struct scsi_ibm_t
 #define IRQ_TYPE_SW_SEQ_ERROR       0xf
 #define IRQ_TYPE_RESET_COMPLETE     0x10
 
-static void scsi_rethink_irqs(scsi_ibm_t *scsi)
+static void scsi_rethink_irqs(scsi_ibm_t* scsi)
 {
         int irq_pending = 0;
         int c;
-        
+
 /*        pclog("scsi_rethink_irqs: basic_ctrl=%02x status=%02x\n", scsi->basic_ctrl, scsi->irq_status);
         pclog("   ");
         for (c = 0; c < 16; c++)
                 pclog(" %02x", scsi->irq_requests[c]);
         pclog("\n");*/
-                
+
         if (!scsi->irq_status)
         {
                 for (c = 0; c < 16; c++)
@@ -214,40 +214,43 @@ static void scsi_rethink_irqs(scsi_ibm_t *scsi)
         }
 }
 
-static inline void scsi_ibm_set_irq(scsi_ibm_t *scsi, int id, int type)
+static inline void scsi_ibm_set_irq(scsi_ibm_t* scsi, int id, int type)
 {
 //        pclog("scsi_ibm_set_irq id=%i type=%x %02x\n", id, type, scsi->irq_status);
         scsi->irq_requests[id] = type;
         if (!scsi->irq_status) /*Don't change IRQ status if one is currently being processed*/
                 scsi_rethink_irqs(scsi);
 }
-static inline void scsi_clear_irq(scsi_ibm_t *scsi, int id)
+static inline void scsi_clear_irq(scsi_ibm_t* scsi, int id)
 {
         scsi->irq_requests[id] = IRQ_TYPE_NONE;
         scsi_rethink_irqs(scsi);
 }
 
-static uint8_t scsi_read(uint16_t port, void *p)
+static uint8_t scsi_read(uint16_t port, void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
         uint8_t temp = 0xff;
-        
+
         switch (port & 7)
         {
-                case 0: case 1: case 2: case 3: /*Command Interface Register*/
+        case 0:
+        case 1:
+        case 2:
+        case 3: /*Command Interface Register*/
                 temp = scsi->cir_pending[port & 3];
                 break;
 
-                case 4: /*Attention Register*/
+        case 4: /*Attention Register*/
                 temp = scsi->attention_pending;
                 break;
-                case 5: /*Basic Control Register*/
+        case 5: /*Basic Control Register*/
                 temp = scsi->basic_ctrl;
                 break;
-                case 6: /*IRQ status*/
+        case 6: /*IRQ status*/
                 temp = scsi->irq_status;
                 break;
-                case 7: /*Status*/
+        case 7: /*Status*/
                 temp = scsi->status;
                 if (scsi->cir_status == 0)
                         temp |= STATUS_CMD_EMPTY;
@@ -255,20 +258,23 @@ static uint8_t scsi_read(uint16_t port, void *p)
                         temp |= STATUS_CMD_FULL;
                 break;
         }
-        
+
 //        pclog("scsi_read: port=%04x val=%02x %04x(%05x):%04x %i %02x\n", port, temp,CS,cs,cpu_state.pc, 0/*scsi->callback*/, BH);
-        return temp;        
+        return temp;
 }
 
-static void scsi_write(uint16_t port, uint8_t val, void *p)
+static void scsi_write(uint16_t port, uint8_t val, void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
 
 //        pclog("scsi_write: port=%04x val=%02x %04x:%04x\n", port, val,CS,cpu_state.pc);
-        
+
         switch (port & 7)
         {
-                case 0: case 1: case 2: case 3: /*Command Interface Register*/
+        case 0:
+        case 1:
+        case 2:
+        case 3: /*Command Interface Register*/
                 scsi->cir_pending[port & 3] = val;
                 if (port & 2)
                         scsi->cir_status |= 2;
@@ -276,18 +282,18 @@ static void scsi_write(uint16_t port, uint8_t val, void *p)
                         scsi->cir_status |= 1;
                 break;
 
-                case 4: /*Attention Register*/
+        case 4: /*Attention Register*/
                 scsi->attention_pending = val;
                 scsi->attention_waiting = 2;
                 scsi->status |= STATUS_BUSY;
                 break;
-                
-                case 5: /*Basic Control Register*/
+
+        case 5: /*Basic Control Register*/
                 if ((scsi->basic_ctrl & CTRL_RESET) && !(val & CTRL_RESET))
                 {
 //                        pclog("SCSI reset\n");
                         scsi->in_reset = 1;
-                        scsi->cmd_timer = SCSI_TIME*2;
+                        scsi->cmd_timer = SCSI_TIME * 2;
                         scsi->status |= STATUS_BUSY;
                 }
                 scsi->basic_ctrl = val;
@@ -299,45 +305,45 @@ static void scsi_write(uint16_t port, uint8_t val, void *p)
         }
 }
 
-static uint16_t scsi_readw(uint16_t port, void *p)
+static uint16_t scsi_readw(uint16_t port, void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
         uint16_t temp = 0xffff;
 
         switch (port & 7)
         {
-                case 0: /*Command Interface Register*/
+        case 0: /*Command Interface Register*/
                 temp = scsi->cir_pending[0] | (scsi->cir_pending[1] << 8);
                 break;
-                case 2: /*Command Interface Register*/
+        case 2: /*Command Interface Register*/
                 temp = scsi->cir_pending[2] | (scsi->cir_pending[3] << 8);
                 break;
 
 //                default:
 //                fatal("scsi_readw port=%04x\n", port);
         }
-        
+
 //        pclog("scsi_readw: port=%04x val=%04x\n", port, temp);
-        return temp;        
+        return temp;
 }
 
-static void scsi_writew(uint16_t port, uint16_t val, void *p)
+static void scsi_writew(uint16_t port, uint16_t val, void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
 
         switch (port & 7)
         {
-                case 0: /*Command Interface Register*/
+        case 0: /*Command Interface Register*/
                 scsi->cir_pending[0] = val & 0xff;
                 scsi->cir_pending[1] = val >> 8;
                 scsi->cir_status |= 1;
                 break;
-                case 2: /*Command Interface Register*/
+        case 2: /*Command Interface Register*/
                 scsi->cir_pending[2] = val & 0xff;
                 scsi->cir_pending[3] = val >> 8;
                 scsi->cir_status |= 2;
                 break;
-                
+
 //                default:
 //                fatal("scsi_writew port=%04x val=%04x\n", port, val);
         }
@@ -345,7 +351,7 @@ static void scsi_writew(uint16_t port, uint16_t val, void *p)
 //        pclog("scsi_writew: port=%04x val=%04x\n", port, val);
 }
 
-static void sg_fetch_next(scsi_ibm_t *scsi)
+static void sg_fetch_next(scsi_ibm_t* scsi)
 {
         if (scsi->scb.sys_buf_byte_count > 0)
         {
@@ -358,10 +364,10 @@ static void sg_fetch_next(scsi_ibm_t *scsi)
         }
 }
 
-static void process_ibm_cmd(void *p)
+static void process_ibm_cmd(void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
-        scb_t *scb = &scsi->scb;
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
+        scb_t* scb = &scsi->scb;
         int c;
         int old_scb_state;
 
@@ -369,7 +375,7 @@ static void process_ibm_cmd(void *p)
         if (scsi->in_reset)
         {
                 scsi->status &= ~STATUS_BUSY;
-                
+
                 scsi->irq_status = 0;
                 for (c = 0; c < 16; c++)
                         scsi_clear_irq(scsi, c);
@@ -403,20 +409,20 @@ static void process_ibm_cmd(void *p)
         do
         {
                 old_scb_state = scsi->scb_state;
-                
+
 //                pclog("scb_state=%i\n", scsi->scb_state);
                 switch (scsi->scb_state)
                 {
-                        case SCB_STATE_IDLE:
+                case SCB_STATE_IDLE:
                         break;
-                
-                        case SCB_STATE_START:
+
+                case SCB_STATE_START:
                         if (scsi->dev_id[scsi->scb_id].phys_id == -1)
                         {
                                 scsi_ibm_set_irq(scsi, scsi->scb_id, IRQ_TYPE_COMMAND_FAIL);
                                 scsi->scb_state = SCB_STATE_IDLE;
-                                mem_writew_phys(scb->term_status_block_addr + 0x7*2, (0xe << 8) | 0);
-                                mem_writew_phys(scb->term_status_block_addr + 0x8*2, (0xa << 8) | 0);
+                                mem_writew_phys(scb->term_status_block_addr + 0x7 * 2, (0xe << 8) | 0);
+                                mem_writew_phys(scb->term_status_block_addr + 0x8 * 2, (0xa << 8) | 0);
                                 break;
                         }
 
@@ -429,7 +435,7 @@ static void process_ibm_cmd(void *p)
                         scb->scb_chain_addr = mem_readl_phys(scsi->scb_addr + 0x14);
                         scb->block_count = mem_readw_phys(scsi->scb_addr + 0x18);
                         scb->block_length = mem_readw_phys(scsi->scb_addr + 0x1a);
-                
+
 /*                        pclog("SCB : \n"
                               "  Command = %04x\n"
                               "  Enable = %04x\n"
@@ -444,7 +450,7 @@ static void process_ibm_cmd(void *p)
                                 scb->sys_buf_addr, scb->sys_buf_byte_count,
                                 scb->term_status_block_addr, scb->scb_chain_addr,
                                 scb->block_count, scb->block_length);*/
-                                
+
                         if (scb->enable & ENABLE_PT)
                                 sg_fetch_next(scsi);
                         else
@@ -456,45 +462,45 @@ static void process_ibm_cmd(void *p)
 
                         switch (scb->command & CMD_MASK)
                         {
-                                case CMD_GET_COMPLETE_STATUS:
-                                mem_writew_phys(scb->sys_buf_addr + 0x0*2, 0x201); /*SCB status*/
-                                mem_writew_phys(scb->sys_buf_addr + 0x1*2, 0); /*Retry counts*/
-                                mem_writel_phys(scb->sys_buf_addr + 0x2*2, 0); /*Residual byte count*/
-                                mem_writel_phys(scb->sys_buf_addr + 0x4*2, 0); /*Scatter/gather list element address*/
-                                mem_writew_phys(scb->sys_buf_addr + 0x6*2, 0xc); /*Device dependent status length*/
-                                mem_writew_phys(scb->sys_buf_addr + 0x7*2, scsi->cmd_status << 8);
-                                mem_writew_phys(scb->sys_buf_addr + 0x8*2, 0); /*Error*/
-                                mem_writew_phys(scb->sys_buf_addr + 0x9*2, 0); /*Reserved*/
-                                mem_writew_phys(scb->sys_buf_addr + 0xa*2, 0); /*Cache information status*/
-                                mem_writel_phys(scb->sys_buf_addr + 0xb*2, scsi->scb_addr);
+                        case CMD_GET_COMPLETE_STATUS:
+                                mem_writew_phys(scb->sys_buf_addr + 0x0 * 2, 0x201); /*SCB status*/
+                                mem_writew_phys(scb->sys_buf_addr + 0x1 * 2, 0); /*Retry counts*/
+                                mem_writel_phys(scb->sys_buf_addr + 0x2 * 2, 0); /*Residual byte count*/
+                                mem_writel_phys(scb->sys_buf_addr + 0x4 * 2, 0); /*Scatter/gather list element address*/
+                                mem_writew_phys(scb->sys_buf_addr + 0x6 * 2, 0xc); /*Device dependent status length*/
+                                mem_writew_phys(scb->sys_buf_addr + 0x7 * 2, scsi->cmd_status << 8);
+                                mem_writew_phys(scb->sys_buf_addr + 0x8 * 2, 0); /*Error*/
+                                mem_writew_phys(scb->sys_buf_addr + 0x9 * 2, 0); /*Reserved*/
+                                mem_writew_phys(scb->sys_buf_addr + 0xa * 2, 0); /*Cache information status*/
+                                mem_writel_phys(scb->sys_buf_addr + 0xb * 2, scsi->scb_addr);
                                 scsi->scb_state = SCB_STATE_COMPLETE;
                                 break;
 
-                                case CMD_UNKNOWN_1c10:
+                        case CMD_UNKNOWN_1c10:
                                 for (c = 0; c < 0x600 && c < scb->sys_buf_byte_count; c++)
                                         scsi->buf[c] = mem_readb_phys(scb->sys_buf_addr + c);
                                 scsi->scb_state = SCB_STATE_COMPLETE;
                                 break;
-                                case CMD_UNKNOWN_1c11:
+                        case CMD_UNKNOWN_1c11:
                                 for (c = 0; c < 0x600 && c < scb->sys_buf_byte_count; c++)
                                         mem_writeb_phys(scb->sys_buf_addr + c, scsi->buf[c]);
                                 scsi->scb_state = SCB_STATE_COMPLETE;
                                 break;
 
-                                case CMD_GET_POS_INFO:
-                                mem_writew_phys(scb->sys_buf_addr + 0x0*2, 0x8eff);
-                                mem_writew_phys(scb->sys_buf_addr + 0x1*2, scsi->pos_regs[3] | (scsi->pos_regs[2] << 8));
-                                mem_writew_phys(scb->sys_buf_addr + 0x2*2, 0x0e | (scsi->pos_regs[4] << 8));
-                                mem_writew_phys(scb->sys_buf_addr + 0x3*2, 1 << 12);
-                                mem_writew_phys(scb->sys_buf_addr + 0x4*2, (7 << 8) | 8);
-                                mem_writew_phys(scb->sys_buf_addr + 0x5*2, (16 << 8) | scsi->pacing);
-                                mem_writew_phys(scb->sys_buf_addr + 0x6*2, (30 << 8) | 1);
-                                mem_writew_phys(scb->sys_buf_addr + 0x7*2, 0);
-                                mem_writew_phys(scb->sys_buf_addr + 0x8*2, 0);
+                        case CMD_GET_POS_INFO:
+                                mem_writew_phys(scb->sys_buf_addr + 0x0 * 2, 0x8eff);
+                                mem_writew_phys(scb->sys_buf_addr + 0x1 * 2, scsi->pos_regs[3] | (scsi->pos_regs[2] << 8));
+                                mem_writew_phys(scb->sys_buf_addr + 0x2 * 2, 0x0e | (scsi->pos_regs[4] << 8));
+                                mem_writew_phys(scb->sys_buf_addr + 0x3 * 2, 1 << 12);
+                                mem_writew_phys(scb->sys_buf_addr + 0x4 * 2, (7 << 8) | 8);
+                                mem_writew_phys(scb->sys_buf_addr + 0x5 * 2, (16 << 8) | scsi->pacing);
+                                mem_writew_phys(scb->sys_buf_addr + 0x6 * 2, (30 << 8) | 1);
+                                mem_writew_phys(scb->sys_buf_addr + 0x7 * 2, 0);
+                                mem_writew_phys(scb->sys_buf_addr + 0x8 * 2, 0);
                                 scsi->scb_state = SCB_STATE_COMPLETE;
                                 break;
 
-                                case CMD_DEVICE_INQUIRY:
+                        case CMD_DEVICE_INQUIRY:
                                 scsi->cdb.data[0] = SCSI_INQUIRY;
                                 scsi->cdb.data[1] = scsi->dev_id[scsi->scb_id].lun_id << 5; /*LUN*/
                                 scsi->cdb.data[2] = 0; /*Page code*/
@@ -511,7 +517,7 @@ static void process_ibm_cmd(void *p)
                                 scsi->scb_state = SCB_STATE_WAIT;
                                 return;
 
-                                case CMD_SEND_OTHER_SCSI:
+                        case CMD_SEND_OTHER_SCSI:
 //                                pclog("SEND_OTHER_SCSI:");
                                 for (c = 0; c < 12; c++)
                                 {
@@ -528,7 +534,7 @@ static void process_ibm_cmd(void *p)
                                 scsi->scb_state = SCB_STATE_WAIT;
                                 return;
 
-                                case CMD_READ_DEVICE_CAPACITY:
+                        case CMD_READ_DEVICE_CAPACITY:
                                 scsi->cdb.data[0] = SCSI_READ_CAPACITY_10;
                                 scsi->cdb.data[1] = scsi->dev_id[scsi->scb_id].lun_id << 5; /*LUN*/
                                 scsi->cdb.data[2] = 0; /*LBA*/
@@ -546,7 +552,7 @@ static void process_ibm_cmd(void *p)
                                 scsi->scb_state = SCB_STATE_WAIT;
                                 return;
 
-                                case CMD_READ_DATA:
+                        case CMD_READ_DATA:
                                 scsi->cdb.data[0] = SCSI_READ_10;
                                 scsi->cdb.data[1] = scsi->dev_id[scsi->scb_id].lun_id << 5; /*LUN*/
                                 scsi->cdb.data[2] = (scb->lba_addr >> 24) & 0xff; /*LBA*/
@@ -563,8 +569,8 @@ static void process_ibm_cmd(void *p)
                                 scsi->scsi_state = SCSI_STATE_SELECT;
                                 scsi->scb_state = SCB_STATE_WAIT;
                                 return;
-                                
-                                case CMD_REQUEST_SENSE:
+
+                        case CMD_REQUEST_SENSE:
                                 scsi->cdb.data[0] = SCSI_REQUEST_SENSE;
                                 scsi->cdb.data[1] = scsi->dev_id[scsi->scb_id].lun_id << 5; /*LUN*/
                                 scsi->cdb.data[2] = 0;
@@ -578,7 +584,7 @@ static void process_ibm_cmd(void *p)
                                 scsi->scb_state = SCB_STATE_WAIT;
                                 return;
 
-                                case CMD_WRITE_DATA:
+                        case CMD_WRITE_DATA:
                                 scsi->cdb.data[0] = SCSI_WRITE_10;
                                 scsi->cdb.data[1] = scsi->dev_id[scsi->scb_id].lun_id << 5; /*LUN*/
                                 scsi->cdb.data[2] = (scb->lba_addr >> 24) & 0xff; /*LBA*/
@@ -596,7 +602,7 @@ static void process_ibm_cmd(void *p)
                                 scsi->scb_state = SCB_STATE_WAIT;
                                 return;
 
-                                case CMD_VERIFY:
+                        case CMD_VERIFY:
                                 scsi->cdb.data[0] = SCSI_VERIFY_10;
                                 scsi->cdb.data[1] = scsi->dev_id[scsi->scb_id].lun_id << 5; /*LUN*/
                                 scsi->cdb.data[2] = (scb->lba_addr >> 24) & 0xff; /*LBA*/
@@ -616,13 +622,13 @@ static void process_ibm_cmd(void *p)
                                 return;
 
 #ifndef RELEASE_BUILD
-                                default:
+                        default:
                                 fatal("SCB command %04x\n", scb->command);
 #endif
                         }
                         break;
-                        
-                        case SCB_STATE_WAIT:
+
+                case SCB_STATE_WAIT:
                         if (scsi->scsi_state == SCSI_STATE_IDLE)
                         {
                                 if (scsi->cdb.last_status == STATUS_GOOD)
@@ -631,10 +637,10 @@ static void process_ibm_cmd(void *p)
                                 {
                                         scsi_ibm_set_irq(scsi, scsi->scb_id, IRQ_TYPE_COMMAND_FAIL);
                                         scsi->scb_state = SCB_STATE_IDLE;
-                                        mem_writew_phys(scb->term_status_block_addr + 0x7*2, (0xc << 8) | 2);
-                                        mem_writew_phys(scb->term_status_block_addr + 0x8*2, 0x20);
-                                        mem_writew_phys(scb->term_status_block_addr + 0xb*2, scsi->scb_addr & 0xffff);
-                                        mem_writew_phys(scb->term_status_block_addr + 0xc*2, scsi->scb_addr >> 16);
+                                        mem_writew_phys(scb->term_status_block_addr + 0x7 * 2, (0xc << 8) | 2);
+                                        mem_writew_phys(scb->term_status_block_addr + 0x8 * 2, 0x20);
+                                        mem_writew_phys(scb->term_status_block_addr + 0xb * 2, scsi->scb_addr & 0xffff);
+                                        mem_writew_phys(scb->term_status_block_addr + 0xc * 2, scsi->scb_addr >> 16);
                                 }
 #ifndef RELEASE_BUILD
                                 else
@@ -646,16 +652,16 @@ static void process_ibm_cmd(void *p)
 //                                pclog("SCB_STATE_WAIT SELECT_FAILED\n");
                                 scsi_ibm_set_irq(scsi, scsi->scb_id, IRQ_TYPE_COMMAND_FAIL);
                                 scsi->scb_state = SCB_STATE_IDLE;
-                                mem_writew_phys(scb->term_status_block_addr + 0x7*2, (0xc << 8) | 2);
-                                mem_writew_phys(scb->term_status_block_addr + 0x8*2, 0x10);
+                                mem_writew_phys(scb->term_status_block_addr + 0x7 * 2, (0xc << 8) | 2);
+                                mem_writew_phys(scb->term_status_block_addr + 0x8 * 2, 0x10);
                         }
 #ifndef RELEASE_BUILD
                         else
                                 fatal("SCB_STATE_WAIT other %i\n", scsi->scsi_state);
 #endif
                         break;
-                        
-                        case SCB_STATE_COMPLETE:
+
+                case SCB_STATE_COMPLETE:
                         if (scb->enable & 1)
                         {
                                 scsi->scb_state = SCB_STATE_START;
@@ -672,11 +678,11 @@ static void process_ibm_cmd(void *p)
         } while (scsi->scb_state != old_scb_state);
 }
 
-static void process_immediate_command(scsi_ibm_t *scsi)
+static void process_immediate_command(scsi_ibm_t* scsi)
 {
         switch (scsi->command & CMD_MASK)
         {
-                case CMD_ASSIGN:
+        case CMD_ASSIGN:
 //                pclog("Assign: adapter dev=%x scsi ID=%i LUN=%i\n", (scsi->command >> 16) & 0xf, (scsi->command >> 20) & 7, (scsi->command >> 24) & 7);
                 if (((scsi->command >> 16) & 0xf) == 0xf && ((scsi->command >> 20) & 7) == 7) /*Device 15 always adapter*/
                         scsi_ibm_set_irq(scsi, scsi->attention & 0x0f, IRQ_TYPE_IMM_CMD_COMPLETE);
@@ -697,22 +703,22 @@ static void process_immediate_command(scsi_ibm_t *scsi)
                 }
                 break;
 
-                case CMD_DMA_PACING_CONTROL:
+        case CMD_DMA_PACING_CONTROL:
                 scsi->pacing = scsi->cir[2];
 //                pclog("Pacing control: %i\n", scsi->pacing);
                 scsi_ibm_set_irq(scsi, scsi->attention & 0x0f, IRQ_TYPE_IMM_CMD_COMPLETE);
                 break;
 
-                case CMD_FEATURE_CONTROL:
+        case CMD_FEATURE_CONTROL:
 //                pclog("Feature control: timeout=%is d-rate=%i\n", (scsi->command >> 16) & 0x1fff, scsi->command >> 29);
                 scsi_ibm_set_irq(scsi, scsi->attention & 0x0f, IRQ_TYPE_IMM_CMD_COMPLETE);
                 break;
 
-                case CMD_INVALID_412:
+        case CMD_INVALID_412:
                 scsi_ibm_set_irq(scsi, scsi->attention & 0x0f, IRQ_TYPE_IMM_CMD_COMPLETE);
                 break;
 
-                case CMD_RESET:
+        case CMD_RESET:
                 if ((scsi->attention & 0xf) == 0xf) /*Adapter reset*/
                 {
                         scsi_bus_reset(&scsi->bus);
@@ -724,12 +730,12 @@ static void process_immediate_command(scsi_ibm_t *scsi)
                 scsi_ibm_set_irq(scsi, scsi->attention & 0x0f, IRQ_TYPE_IMM_CMD_COMPLETE);
                 break;
 
-                default:
+        default:
                 fatal("scsi_callback: Bad command %02x\n", scsi->command);
         }
 }
 
-static int wait_for_bus(scsi_bus_t *bus, int state, int req_needed)
+static int wait_for_bus(scsi_bus_t* bus, int state, int req_needed)
 {
         int c;
 
@@ -747,17 +753,17 @@ static int wait_for_bus(scsi_bus_t *bus, int state, int req_needed)
         return 0;
 }
 
-static void process_scsi(scsi_ibm_t *scsi)
+static void process_scsi(scsi_ibm_t* scsi)
 {
         int c;
         int bytes_transferred = 0;
 
         switch (scsi->scsi_state)
         {
-                case SCSI_STATE_IDLE:
+        case SCSI_STATE_IDLE:
                 break;
 
-                case SCSI_STATE_SELECT:
+        case SCSI_STATE_SELECT:
                 scsi->cdb.last_status = 0;
 //                pclog("Select target ID %i\n", scsi->cdb.target_id);
                 scsi_bus_update(&scsi->bus, BUS_SEL | BUS_SETDATA(1 << scsi->cdb.target_id));
@@ -793,10 +799,10 @@ static void process_scsi(scsi_ibm_t *scsi)
                 scsi->scsi_state = SCSI_STATE_SEND_COMMAND;
                 break;
 
-                case SCSI_STATE_SELECT_FAILED:
+        case SCSI_STATE_SELECT_FAILED:
                 break;
 
-                case SCSI_STATE_SEND_COMMAND:
+        case SCSI_STATE_SEND_COMMAND:
                 while (scsi->cdb.idx < scsi->cdb.len && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL)
                 {
                         int bus_out;
@@ -832,7 +838,7 @@ static void process_scsi(scsi_ibm_t *scsi)
                         scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
                 break;
 
-                case SCSI_STATE_NEXT_PHASE:
+        case SCSI_STATE_NEXT_PHASE:
                 /*Wait for SCSI command to move to next phase*/
                 for (c = 0; c < 20; c++)
                 {
@@ -847,27 +853,27 @@ static void process_scsi(scsi_ibm_t *scsi)
 //                                pclog("SCSI next phase - %x\n", bus_state);
                                 switch (bus_state & (BUS_IO | BUS_CD | BUS_MSG))
                                 {
-                                        case 0:
+                                case 0:
 //                                        pclog("Move to write data\n");
                                         scsi->scsi_state = SCSI_STATE_WRITE_DATA;
                                         break;
 
-                                        case BUS_IO:
+                                case BUS_IO:
 //                                        pclog("Move to read data\n");
                                         scsi->scsi_state = SCSI_STATE_READ_DATA;
                                         break;
 
-                                        case (BUS_CD | BUS_IO):
+                                case (BUS_CD | BUS_IO):
 //                                        pclog("Move to read status\n");
                                         scsi->scsi_state = SCSI_STATE_READ_STATUS;
                                         break;
 
-                                        case (BUS_CD | BUS_IO | BUS_MSG):
+                                case (BUS_CD | BUS_IO | BUS_MSG):
 //                                        pclog("Move to read message\n");
                                         scsi->scsi_state = SCSI_STATE_READ_MESSAGE;
                                         break;
 
-                                        case BUS_CD:
+                                case BUS_CD:
                                         bus_out = BUS_SETDATA(0);
 
                                         scsi_bus_update(&scsi->bus, bus_out | BUS_ACK);
@@ -875,7 +881,7 @@ static void process_scsi(scsi_ibm_t *scsi)
                                         break;
 
 #ifndef RELEASE_BUILD
-                                        default:
+                                default:
                                         fatal(" Bad new phase %x\n", bus_state);
 #endif
                                 }
@@ -884,7 +890,7 @@ static void process_scsi(scsi_ibm_t *scsi)
                 }
                 break;
 
-                case SCSI_STATE_END_PHASE:
+        case SCSI_STATE_END_PHASE:
                 /*Wait for SCSI command to move to next phase*/
                 for (c = 0; c < 20; c++)
                 {
@@ -908,7 +914,7 @@ static void process_scsi(scsi_ibm_t *scsi)
                 }
                 break;
 
-                case SCSI_STATE_READ_DATA:
+        case SCSI_STATE_READ_DATA:
                 while (scsi->scsi_state == SCSI_STATE_READ_DATA && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL)
                 {
                         int d;
@@ -956,7 +962,7 @@ static void process_scsi(scsi_ibm_t *scsi)
                 }
                 break;
 
-                case SCSI_STATE_WRITE_DATA:
+        case SCSI_STATE_WRITE_DATA:
                 while (scsi->scsi_state == SCSI_STATE_WRITE_DATA && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL)
                 {
                         int d;
@@ -1009,7 +1015,7 @@ static void process_scsi(scsi_ibm_t *scsi)
 //                        scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
                 break;
 
-                case SCSI_STATE_READ_STATUS:
+        case SCSI_STATE_READ_STATUS:
                 for (c = 0; c < 20; c++)
                 {
                         int bus_state = scsi_bus_read(&scsi->bus);
@@ -1041,7 +1047,7 @@ static void process_scsi(scsi_ibm_t *scsi)
                 }
                 break;
 
-                case SCSI_STATE_READ_MESSAGE:
+        case SCSI_STATE_READ_MESSAGE:
                 for (c = 0; c < 20; c++)
                 {
                         int bus_state = scsi_bus_read(&scsi->bus);
@@ -1067,11 +1073,11 @@ static void process_scsi(scsi_ibm_t *scsi)
 
                                 switch (msg)
                                 {
-                                        case MSG_COMMAND_COMPLETE:
+                                case MSG_COMMAND_COMPLETE:
                                         scsi->scsi_state = SCSI_STATE_END_PHASE;
                                         break;
 #ifndef RELEASE_BUILD
-                                        default:
+                                default:
                                         fatal("READ_MESSAGE - unknown message %02x\n", msg);
 #endif
                                 }
@@ -1081,15 +1087,15 @@ static void process_scsi(scsi_ibm_t *scsi)
                 break;
 
 #ifndef RELEASE_BUILD
-                default:
+        default:
                 fatal("Unknown SCSI_state %d\n", scsi->scsi_state);
 #endif
         }
 }
 
-static void scsi_callback(void *p)
+static void scsi_callback(void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
 
         timer_advance_u64(&scsi->callback_timer, POLL_TIME);
 
@@ -1101,7 +1107,7 @@ static void scsi_callback(void *p)
                         process_ibm_cmd(scsi);
         }
         if (scsi->attention_waiting &&
-                (scsi->scb_state == SCB_STATE_IDLE || (scsi->attention_pending & 0xf0) == 0xe0))
+            (scsi->scb_state == SCB_STATE_IDLE || (scsi->attention_pending & 0xf0) == 0xe0))
         {
                 scsi->attention_waiting--;
                 if (!scsi->attention_waiting)
@@ -1117,47 +1123,49 @@ static void scsi_callback(void *p)
 
                         switch (scsi->attention >> 4)
                         {
-                                case 0x1: /*Immediate command*/
+                        case 0x1: /*Immediate command*/
                                 scsi->cmd_status = 0xa;
                                 scsi->command = scsi->cir[0] | (scsi->cir[1] << 8) | (scsi->cir[2] << 16) | (scsi->cir[3] << 24);
                                 switch (scsi->command & CMD_MASK)
                                 {
-                                        case CMD_ASSIGN:
-                                        case CMD_DMA_PACING_CONTROL:
-                                        case CMD_FEATURE_CONTROL:
-                                        case CMD_INVALID_412:
-                                        case CMD_RESET:
+                                case CMD_ASSIGN:
+                                case CMD_DMA_PACING_CONTROL:
+                                case CMD_FEATURE_CONTROL:
+                                case CMD_INVALID_412:
+                                case CMD_RESET:
                                         process_immediate_command(scsi);
                                         break;
 
 #ifndef RELEASE_BUILD
-                                        default:
+                                default:
                                         fatal("Unknown immediate command %08x\n", scsi->command);
 #endif
                                 }
                                 break;
 
-                                case 0x3: case 0x4: case 0xf: /*Start SCB*/
+                        case 0x3:
+                        case 0x4:
+                        case 0xf: /*Start SCB*/
                                 scsi->cmd_status = 0x1;
                                 scsi->scb_addr = scsi->cir[0] | (scsi->cir[1] << 8) | (scsi->cir[2] << 16) | (scsi->cir[3] << 24);
                                 scsi->scb_state = SCB_STATE_START;
                                 scsi->scb_id = scsi->attention & 0xf;
-                                scsi->cmd_timer = SCSI_TIME*2;
+                                scsi->cmd_timer = SCSI_TIME * 2;
 //                                pclog("Start SCB at %08x\n", scsi->scb_addr);
                                 break;
 
-                                case 5: /*Invalid*/
-                                case 0xa: /*Invalid*/
+                        case 5: /*Invalid*/
+                        case 0xa: /*Invalid*/
                                 scsi->in_invalid = 1;
-                                scsi->cmd_timer = SCSI_TIME*2;
+                                scsi->cmd_timer = SCSI_TIME * 2;
                                 break;
 
-                                case 0xe: /*EOI*/
+                        case 0xe: /*EOI*/
                                 scsi->irq_status = 0;
                                 scsi_clear_irq(scsi, scsi->attention & 0xf);
                                 break;
 #ifndef RELEASE_BUILD
-                                default:
+                        default:
                                 fatal("Attention Register 5 %02x\n", scsi->attention);
 #endif
                         }
@@ -1166,27 +1174,27 @@ static void scsi_callback(void *p)
         process_scsi(scsi);
 }
 
-static uint8_t scsi_ibm_mca_read(int port, void *p)
+static uint8_t scsi_ibm_mca_read(int port, void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
-        
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
+
 //        pclog("scsi_mca_read: port=%04x %02x %04x:%04x\n", port, scsi->pos_regs[port & 7], CS,cpu_state.pc);
-        
+
         return scsi->pos_regs[port & 7];
 }
 
-static void scsi_ibm_mca_write(int port, uint8_t val, void *p)
+static void scsi_ibm_mca_write(int port, uint8_t val, void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
 
         if (port < 0x102)
                 return;
-        
+
 //        pclog("scsi_mca_write: port=%04x val=%02x %04x:%04x\n", port, val, CS, cpu_state.pc);
 
         io_removehandler((((scsi->pos_regs[2] >> 1) & 7) * 8) + 0x3540, 0x0008, scsi_read, scsi_readw, NULL, scsi_write, scsi_writew, NULL, scsi);
         mem_mapping_disable(&scsi->bios_rom.mapping);
-        
+
         scsi->pos_regs[port & 7] = val;
 
         if (scsi->pos_regs[2] & 1)
@@ -1202,9 +1210,9 @@ static void scsi_ibm_mca_write(int port, uint8_t val, void *p)
         }
 }
 
-static void scsi_ibm_reset(void *p)
+static void scsi_ibm_reset(void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
 
 //        pclog("scsi_ibm_reset\n");
         scsi->in_reset = 2;
@@ -1218,10 +1226,10 @@ static void scsi_ibm_reset(void *p)
         scsi_bus_reset(&scsi->bus);
 }
 
-static void *scsi_ibm_init()
+static void* scsi_ibm_init()
 {
         int c;
-        scsi_ibm_t *scsi = malloc(sizeof(scsi_ibm_t));
+        scsi_ibm_t* scsi = malloc(sizeof(scsi_ibm_t));
         memset(scsi, 0, sizeof(scsi_ibm_t));
 
         rom_init_interleaved(&scsi->bios_rom, "92F2244.U68", "92F2245.U69", 0xc8000, 0x8000, 0x7fff, 0x4000, MEM_MAPPING_EXTERNAL);
@@ -1230,16 +1238,16 @@ static void *scsi_ibm_init()
         timer_add(&scsi->callback_timer, scsi_callback, scsi, 1);
 
         mca_add(scsi_ibm_mca_read, scsi_ibm_mca_write, scsi_ibm_reset, scsi);
-        
+
         scsi->pos_regs[0] = 0xff;
         scsi->pos_regs[1] = 0x8e;
-        
+
         scsi->in_reset = 2;
         scsi->cmd_timer = SCSI_TIME * 50;
         scsi->status = STATUS_BUSY;
 
         scsi_bus_init(&scsi->bus);
-        
+
 /*        for (c = 0; c < 7; c++)
         {
                 scsi->dev_id[c].phys_id = c;
@@ -1252,10 +1260,10 @@ static void *scsi_ibm_init()
         return scsi;
 }
 
-static void scsi_ibm_close(void *p)
+static void scsi_ibm_close(void* p)
 {
-        scsi_ibm_t *scsi = (scsi_ibm_t *)p;
-        
+        scsi_ibm_t* scsi = (scsi_ibm_t*)p;
+
         free(scsi);
 }
 
@@ -1265,14 +1273,14 @@ static int scsi_ibm_available()
 }
 
 device_t scsi_ibm_device =
-{
-        "IBM SCSI Adapter with Cache (MCA)",
-        DEVICE_MCA,
-        scsi_ibm_init,
-        scsi_ibm_close,
-        scsi_ibm_available,
-        NULL,
-        NULL,
-        NULL,
-        NULL
-};
+        {
+                "IBM SCSI Adapter with Cache (MCA)",
+                DEVICE_MCA,
+                scsi_ibm_init,
+                scsi_ibm_close,
+                scsi_ibm_available,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };
