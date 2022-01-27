@@ -43,9 +43,9 @@ void load_plugins()
                 if (!strcmp(file.extension, "pcem"))
                 {
                         pclog("plugin loading: %s\n", file.name);
-#if linux
-                        void* handle;
                         void (* initialize_loaded_plugin)();
+#if defined(linux)
+                        void* handle;
                         char *plugin_name;
 
                         handle = dlopen(file.path, RTLD_NOW);
@@ -59,9 +59,27 @@ void load_plugins()
 
                                 if (!initialize_loaded_plugin)
                                 {
-
                                         error("Error: %s\n", dlerror());
                                         dlclose(handle);
+                                }
+                                else
+                                {
+                                        initialize_loaded_plugin();
+                                }
+                        }
+#elif defined(WIN32)
+                        HMODULE handle = LoadLibrary(file.path);
+
+                        if(!handle)
+                        {
+                                error("Cannot load DLL: %s", file.path);
+                        }
+                        else
+                        {
+                                *(void**)(&initialize_loaded_plugin) = GetProcAddress(handle, "init_plugin");
+                                if(!initialize_loaded_plugin)
+                                {
+                                        error("Cannot load init_plugin function from: %s", file.path);
                                 }
                                 else
                                 {
