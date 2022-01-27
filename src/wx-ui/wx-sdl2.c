@@ -47,6 +47,7 @@
 #include "wx-display.h"
 
 #include "plugin.h"
+#include "pic.h"
 
 #if __APPLE__
 #define pause __pause
@@ -486,6 +487,13 @@ extern void wx_saveconfig();
 
 int pc_main(int argc, char** argv)
 {
+        // Expose some functions to libpcem-plugin-api without moving them over to
+        // the plugin api proper
+        _savenvr = savenvr;
+        _dumppic = dumppic;
+        _dumpregs = dumpregs;
+        _sound_speed_changed = sound_speed_changed;
+
         paths_init();
 
         init_plugin_engine();

@@ -559,15 +559,6 @@ void wx_close_status(void* window)
         }
 }
 
-void wx_get_home_directory(char* path)
-{
-        wxString home = wxFileName::GetHomeDir();
-        if (!home.EndsWith(wxFileName::GetPathSeparator())) {
-                home.Append(wxFileName::GetPathSeparator());
-        }
-        strcpy(path, home.mb_str());
-}
-
 int wx_create_directory(char* path)
 {
         return wxFileName::Mkdir(path);
@@ -613,12 +604,6 @@ int wx_file_exists(char* path)
 {
         wxFileName p(path);
         return p.Exists();
-}
-
-int wx_dir_exists(char* path)
-{
-        wxFileName p(path);
-        return p.DirExists();
 }
 
 int wx_copy_file(char* from, char* to, int overwrite)

@@ -7,9 +7,11 @@
 
 #include "config.h"
 #include "paths.h"
-#include "nvr.h"
-#include "pic.h"
-#include "x86.h"
+#include "plugin.h"
+
+void (*_savenvr)();
+void (*_dumppic)();
+void (*_dumpregs)();
 
 FILE* pclogf;
 
@@ -58,9 +60,9 @@ void fatal(const char* format, ...)
         fflush(pclogf);
 #endif
 
-        savenvr();
-        dumppic();
-        dumpregs();
+        _savenvr();
+        _dumppic();
+        _dumpregs();
         exit(-1);
 }
 
