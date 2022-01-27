@@ -81,8 +81,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "SDL.h"
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -92,16 +90,14 @@
 #endif
 
 #include <math.h>
-
-#include "config.h"
-#include "ibm.h"
-#include "lpt.h"
 #include "lpt_epsonlx810.h"
-#include "paths.h"
-#include "wx-utils.h"
+//#include "paths.h"
 
 #include <pcem/devices.h>
 #include <pcem/unsafe/devices.h>
+#include <pcem/unsafe/config.h>
+#include <pcem/logging.h>
+#include <SDL.h>
 
 #define STYLE_CONDENSED 0x02
 #define STYLE_BOLD 0x04
@@ -2252,6 +2248,7 @@ static void *epsonprinter_init()
         }
         int emulatepins = device_get_config_int("bitmaps_emulate_pins");
 
+        char s[512];
         strlcpy(lpt_epsonprinter->fontpath, printer_path, MAX_PATH_STRING - 2);
         put_backslash(lpt_epsonprinter->fontpath);
 

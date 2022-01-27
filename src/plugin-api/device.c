@@ -1,16 +1,16 @@
-#include "ibm.h"
-#include "config.h"
-#include "cpu.h"
-#include "device.h"
-#include "model.h"
-#include "sound.h"
-
 #include <pcem/defines.h>
+#include <pcem/devices.h>
+#include <string.h>
+#include <pcem/unsafe/config.h>
 
 extern void *device_priv[256];
 extern device_t *devices[DEV_MAX];
 extern device_t *current_device;
 extern char *current_device_name;
+
+extern struct device_t *model_getdevice(int model);
+extern int model;
+extern void sound_speed_changed();
 
 void device_init()
 {

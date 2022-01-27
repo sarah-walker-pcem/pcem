@@ -517,10 +517,6 @@ int pc_main(int argc, char** argv)
         set_default_screenshots_path(s);
         append_filename(s, pcem_path, "logs/", 511);
         set_default_logs_path(s);
-#ifdef USE_EXPERIMENTAL_PRINTER
-        append_filename(s, pcem_path, "printer/", 511);
-        set_default_printer_path(s);
-#endif
         append_filename(s, pcem_path, "plugins/", 512);
         set_plugins_path(s);
 #endif

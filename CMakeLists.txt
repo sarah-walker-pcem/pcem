@@ -103,11 +103,9 @@ if(USE_PCAP_NETWORKING)
         include_directories(${PCAP_INCLUDE_DIR})
 endif()
 
-if(USE_EXPERIMENTAL_PRINTER)
-        find_package(Freetype REQUIRED)
-        include_directories(${FREETYPE_INCLUDE_DIRS})
-endif()
-
 find_package(OpenGL REQUIRED)
 
+if(USE_EXPERIMENTAL)
+        add_subdirectory(experimental)
+endif()
 add_subdirectory(src)

@@ -11,7 +11,6 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
 
 set(PCEM_SRC ${PCEM_SRC}
         devices/cassette.c
-        devices/device.c
         devices/esdi_at.c
         devices/f82c710_upc.c
         devices/nvr.c
