@@ -1,10 +1,16 @@
 #include <stdint.h>
-#include <stddef.h>
 #include <string.h>
 #include <stdio.h>
 
-#include "plugin.h"
+#if linux
+#include <dlfcn.h>
+#endif
 
+#include "plugin.h"
+#include "tinydir.h"
+#include "paths.h"
+
+#include <pcem/logging.h>
 
 extern MODEL *models[ROM_MAX];
 extern VIDEO_CARD* video_cards[GFX_MAX];
@@ -26,6 +32,49 @@ void init_plugin_engine()
 void load_plugins()
 {
 #ifdef PLUGIN_ENGINE
+        tinydir_dir dir;
+        tinydir_open(&dir, plugins_default_path);
 
+        while (dir.has_next)
+        {
+                tinydir_file file;
+                tinydir_readfile(&dir, &file);
+
+                if (!strcmp(file.extension, "pcem"))
+                {
+                        pclog("plugin loading: %s\n", file.name);
+#if linux
+                        void* handle;
+                        void (* initialize_loaded_plugin)();
+                        char *plugin_name;
+
+                        handle = dlopen(file.path, RTLD_NOW);
+                        if (!handle)
+                        {
+                                error("Error: %s\n", dlerror());
+                        }
+                        else
+                        {
+                                *(void**)(&initialize_loaded_plugin) = dlsym(handle, "init_plugin");
+
+                                if (!initialize_loaded_plugin)
+                                {
+
+                                        error("Error: %s\n", dlerror());
+                                        dlclose(handle);
+                                }
+                                else
+                                {
+                                        initialize_loaded_plugin();
+                                }
+                        }
+#endif
+                        pclog("plugin finished loading: %s\n", file.name);
+                }
+
+                tinydir_next(&dir);
+        }
+
+        tinydir_close(&dir);
 #endif
 }

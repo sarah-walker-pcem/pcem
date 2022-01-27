@@ -13,10 +13,11 @@
 
 FILE* pclogf;
 
-void fatal(const char* format, ...)
+void error(const char* format, ...)
 {
-        char buf[256];
-        //   return;
+#ifndef RELEASE_BUILD
+        char buf[1024];
+        //return;
         if (!pclogf)
         {
                 strcpy(buf, logs_path);
@@ -30,7 +31,32 @@ void fatal(const char* format, ...)
         vsprintf(buf, format, ap);
         va_end(ap);
         fputs(buf, pclogf);
+        fputs(buf, stderr);
+        //fflush(pclogf);
+#endif
+}
+
+void fatal(const char* format, ...)
+{
+#ifndef RELEASE_BUILD
+        char buf[1024];
+        //return;
+        if (!pclogf)
+        {
+                strcpy(buf, logs_path);
+                put_backslash(buf);
+                strcat(buf, "pcem.log");
+                pclogf = fopen(buf, "wt");
+        }
+        //return;
+        va_list ap;
+        va_start(ap, format);
+        vsprintf(buf, format, ap);
+        va_end(ap);
+        fputs(buf, pclogf);
+        fputs(buf, stderr);
         fflush(pclogf);
+#endif
 
         savenvr();
         dumppic();
@@ -69,6 +95,7 @@ void pclog(const char* format, ...)
         va_end(ap);
         fputs(buf, pclogf);
         fputs(buf, stdout);
-//        fflush(pclogf);
+        //fflush(pclogf);
 #endif
 }
+

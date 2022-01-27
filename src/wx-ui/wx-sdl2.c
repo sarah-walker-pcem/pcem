@@ -498,8 +498,6 @@ int pc_main(int argc, char** argv)
         network_card_init_builtin();
 #endif
 
-        load_plugins();
-
 #ifdef __linux__
         char s[1024];
         /* create directories if they don't exist */
@@ -523,9 +521,11 @@ int pc_main(int argc, char** argv)
         append_filename(s, pcem_path, "printer/", 511);
         set_default_printer_path(s);
 #endif
-        append_filename(s, INST_PREFIX, "/share/pcem/plugins/", 512);
+        append_filename(s, pcem_path, "plugins/", 512);
         set_plugins_path(s);
 #endif
+
+        load_plugins();
 
         add_config_callback(sdl_loadconfig, sdl_saveconfig, sdl_onconfigloaded);
         add_config_callback(wx_loadconfig, wx_saveconfig, 0);
