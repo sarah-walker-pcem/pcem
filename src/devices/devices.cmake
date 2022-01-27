@@ -1,6 +1,5 @@
 set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/devices/cassette.h
-        ${CMAKE_SOURCE_DIR}/includes/private/devices/device.h
         ${CMAKE_SOURCE_DIR}/includes/private/devices/esdi_at.h
         ${CMAKE_SOURCE_DIR}/includes/private/devices/f82c710_upc.h
         ${CMAKE_SOURCE_DIR}/includes/private/devices/nvr.h
