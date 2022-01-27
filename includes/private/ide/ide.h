@@ -4,15 +4,6 @@
 #include "device.h"
 #include "timer.h"
 
-enum
-{
-        DEVICE_NOT_WORKING = 1, /*Device does not currently work correctly and will be disabled in a release build*/
-        DEVICE_AT = 2,          /*Device requires an AT-compatible system*/
-        DEVICE_MCA = 0x20,      /*Device requires an MCA system*/
-        DEVICE_PCI = 0x40,      /*Device requires a PCI system*/
-        DEVICE_PS1 = 0x80       /*Device is only for IBM PS/1 Model 2011*/
-};
-
 struct IDE;
 
 extern void writeide(int ide_board, uint16_t addr, uint8_t val);
