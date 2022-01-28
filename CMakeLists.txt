@@ -105,7 +105,8 @@ endif()
 
 find_package(OpenGL REQUIRED)
 
+add_subdirectory(src)
+
 if(USE_EXPERIMENTAL)
         add_subdirectory(experimental)
 endif()
-add_subdirectory(src)
