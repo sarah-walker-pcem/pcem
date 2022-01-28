@@ -91,7 +91,6 @@
 
 #include <math.h>
 #include "lpt_epsonlx810.h"
-//#include "paths.h"
 
 #include <pcem/devices.h>
 #include <pcem/unsafe/devices.h>

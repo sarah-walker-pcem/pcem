@@ -4,8 +4,8 @@
 
 #include "lpt_epsonlx810.h"
 
-char pcem_path[512];
-char base_path[512];
+extern char pcem_path[512];
+
 LPT_DEVICE l_epsonlx810 = { "Epson LX-810 Printer", "lpt_epsonlx810", &lpt_epsonprinter_device };
 
 #define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
@@ -34,11 +34,7 @@ void save_config()
 void init_config()
 {
         char s[512];
-#ifdef linux
         append_filename(s, pcem_path, "printer/", 512);
-#else
-        append_filename(s, base_path, "printer/", 512);
-#endif
         set_printer_path(s);
 }
 
