@@ -529,10 +529,10 @@ int pc_main(int argc, char** argv)
         set_plugins_path(s);
 #endif
 
-        load_plugins();
-
         add_config_callback(sdl_loadconfig, sdl_saveconfig, sdl_onconfigloaded);
         add_config_callback(wx_loadconfig, wx_saveconfig, 0);
+
+        load_plugins();
 
         initpc(argc, argv);
         resetpchard();

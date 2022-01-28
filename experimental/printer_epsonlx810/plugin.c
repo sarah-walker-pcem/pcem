@@ -18,25 +18,32 @@ void set_printer_path(char *s)
         append_slash(printer_path, 512);
 }
 
+void load_config()
+{
+        char* cfg_printer_path = config_get_string(CFG_GLOBAL, "Paths", "printer_path", 0);
+
+        if (cfg_printer_path)
+                set_printer_path(cfg_printer_path);
+}
+
+void save_config()
+{
+        config_set_string(CFG_GLOBAL, "Paths", "printer_path", printer_path);
+}
+
+void init_config()
+{
+        char s[512];
+#ifdef linux
+        append_filename(s, pcem_path, "printer/", 512);
+#else
+        append_filename(s, base_path, "printer/", 512);
+#endif
+        set_printer_path(s);
+}
+
 PLUGIN_INIT(printer_epsonlx810)
 {
-        char *cfg_printer_path = config_get_string(CFG_GLOBAL, "Paths", "printer_path", 0);
-
-        if(cfg_printer_path)
-        {
-                safe_strncpy(printer_path, cfg_printer_path, 512);
-        }
-        else
-        {
-                char s[512];
-#ifdef linux
-                append_filename(s, pcem_path, "printer/", 512);
-#else
-                append_filename(s, base_path, "printer/", 512);
-#endif
-                set_printer_path(s);
-                config_set_string(CFG_GLOBAL, "Paths", "printer_path", printer_path);
-        }
-
+        add_config_callback(load_config, save_config, init_config);
         pcem_add_lpt(&l_epsonlx810);
 }
