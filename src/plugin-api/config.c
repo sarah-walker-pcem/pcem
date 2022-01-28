@@ -6,7 +6,7 @@
 
 char config_file_default[256];
 char config_name[256];
-config_callback_t config_callbacks[10];
+config_callback_t config_callbacks[CALLBACK_MAX];
 int num_config_callbacks = 0;
 static char config_file[256];
 

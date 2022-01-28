@@ -100,7 +100,6 @@ extern "C" {
         int wx_config_get_bool(void* config, const char* name, int* dst, int defVal);
         int wx_config_has_entry(void* config, const char* name);
         void wx_config_free(void* config);
-        int wx_image_save_fullpath(const char* fullpath, const char* format, unsigned char* rgba, int width, int height, int alpha);
 
         int confirm();
 

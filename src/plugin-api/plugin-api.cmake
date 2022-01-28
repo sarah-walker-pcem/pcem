@@ -2,6 +2,8 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/plugin-api/config.h
         ${CMAKE_SOURCE_DIR}/includes/private/plugin-api/paths.h
         ${CMAKE_SOURCE_DIR}/includes/private/plugin-api/plugin.h
+        ${CMAKE_SOURCE_DIR}/includes/private/plugin-api/tinydir.h
+        ${CMAKE_SOURCE_DIR}/includes/private/plugin-api/device.h
         )
 
 set(PCEM_PUBLIC_API ${PCEM_PUBLIC_API}
@@ -19,6 +21,8 @@ set(PCEM_SRC_PLUGINAPI
         plugin-api/config.c
         plugin-api/paths.c
         plugin-api/logging.c
+        plugin-api/device.c
         plugin-api/devices.c
         plugin-api/plugin.c
+        plugin-api/wx-utils.cc
         )

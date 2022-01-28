@@ -47,6 +47,7 @@
 #include "wx-display.h"
 
 #include "plugin.h"
+#include "pic.h"
 
 #if __APPLE__
 #define pause __pause
@@ -486,6 +487,13 @@ extern void wx_saveconfig();
 
 int pc_main(int argc, char** argv)
 {
+        // Expose some functions to libpcem-plugin-api without moving them over to
+        // the plugin api proper
+        _savenvr = savenvr;
+        _dumppic = dumppic;
+        _dumpregs = dumpregs;
+        _sound_speed_changed = sound_speed_changed;
+
         paths_init();
 
         init_plugin_engine();
@@ -497,8 +505,6 @@ int pc_main(int argc, char** argv)
 #ifdef USE_NETWORKING
         network_card_init_builtin();
 #endif
-
-        load_plugins();
 
 #ifdef __linux__
         char s[1024];
@@ -519,16 +525,14 @@ int pc_main(int argc, char** argv)
         set_default_screenshots_path(s);
         append_filename(s, pcem_path, "logs/", 511);
         set_default_logs_path(s);
-#ifdef USE_EXPERIMENTAL_PRINTER
-        append_filename(s, pcem_path, "printer/", 511);
-        set_default_printer_path(s);
-#endif
-        append_filename(s, INST_PREFIX, "/share/pcem/plugins/", 512);
+        append_filename(s, pcem_path, "plugins/", 512);
         set_plugins_path(s);
 #endif
 
         add_config_callback(sdl_loadconfig, sdl_saveconfig, sdl_onconfigloaded);
         add_config_callback(wx_loadconfig, wx_saveconfig, 0);
+
+        load_plugins();
 
         initpc(argc, argv);
         resetpchard();

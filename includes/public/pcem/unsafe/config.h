@@ -1,6 +1,8 @@
 #ifndef _PCEM_CONFIG_H_
 #define _PCEM_CONFIG_H_
 
+#include <pcem/defines.h>
+
 extern float config_get_float(int is_global, char *head, char *name, float def);
 extern int config_get_int(int is_global, char *head, char *name, int def);
 extern char *config_get_string(int is_global, char *head, char *name, char *def);
@@ -32,7 +34,7 @@ typedef struct config_callback_t
         void (* saveconfig)();
         void (* onloaded)();
 } config_callback_t;
-extern config_callback_t config_callbacks[10];
+extern config_callback_t config_callbacks[CALLBACK_MAX];
 extern int num_config_callbacks;
 
 #define CFG_MACHINE 0

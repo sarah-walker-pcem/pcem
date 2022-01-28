@@ -140,7 +140,6 @@ void      xt_zenith_init();
 void        at_mvp3_init();
 void     at_vs440fx_init();
 void     at_ga686bx_init();
-int model;
 
 int AMSTRAD, AT, PCI, TANDY, MCA;
 

@@ -1,16 +1,25 @@
-#include "ibm.h"
-#include "config.h"
-#include "cpu.h"
-#include "device.h"
-#include "model.h"
-#include "sound.h"
-
 #include <pcem/defines.h>
+#include <pcem/devices.h>
+#include <string.h>
+#include <pcem/unsafe/config.h>
+
+extern MODEL *models[ROM_MAX];
 
 extern void *device_priv[256];
 extern device_t *devices[DEV_MAX];
 extern device_t *current_device;
 extern char *current_device_name;
+
+extern struct device_t *model_getdevice(int model);
+int model;
+extern void sound_speed_changed();
+
+void (*_sound_speed_changed)();
+
+device_t *model_getdevice(int model)
+{
+        return models[model]->device;
+}
 
 void device_init()
 {
@@ -64,7 +73,7 @@ void device_speed_changed()
                 }
         }
         
-        sound_speed_changed();
+        _sound_speed_changed();
 }
 
 void device_force_redraw()

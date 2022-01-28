@@ -1,6 +1,8 @@
 #ifndef _PCEM_CPU_H_
 #define _PCEM_CPU_H_
 
+#include <stdint.h>
+
 typedef struct FPU
 {
         const char *name;

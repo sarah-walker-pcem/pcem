@@ -559,15 +559,6 @@ void wx_close_status(void* window)
         }
 }
 
-void wx_get_home_directory(char* path)
-{
-        wxString home = wxFileName::GetHomeDir();
-        if (!home.EndsWith(wxFileName::GetPathSeparator())) {
-                home.Append(wxFileName::GetPathSeparator());
-        }
-        strcpy(path, home.mb_str());
-}
-
 int wx_create_directory(char* path)
 {
         return wxFileName::Mkdir(path);
@@ -613,12 +604,6 @@ int wx_file_exists(char* path)
 {
         wxFileName p(path);
         return p.Exists();
-}
-
-int wx_dir_exists(char* path)
-{
-        wxFileName p(path);
-        return p.DirExists();
 }
 
 int wx_copy_file(char* from, char* to, int overwrite)
@@ -831,54 +816,4 @@ void wx_date_format(char* s, const char* format)
 {
         wxString res = wxDateTime::Now().Format(format);
         strcpy(s, res.mb_str());
-}
-
-int wx_image_save_fullpath(const char* fullpath, const char* format, unsigned char* rgba, int width, int height, int alpha)
-{
-        int x, y;
-        wxLogNull logNull;
-        wxImage image(width, height);
-        if (alpha)
-        {
-                // these will be automatically freed
-                unsigned char* rgb = (unsigned char*)malloc(width*height*3);
-                unsigned char* a = (unsigned char*)malloc(width*height);
-                for (x = 0; x < width; ++x)
-                {
-                        for (y = 0; y < height; ++y)
-                        {
-                                rgb[(y*width+x)*3+0] = rgba[(y*width+x)*4+0];
-                                rgb[(y*width+x)*3+1] = rgba[(y*width+x)*4+1];
-                                rgb[(y*width+x)*3+2] = rgba[(y*width+x)*4+2];
-                                a[y*width+x] = rgba[(y*width+x)*4+3];
-                        }
-                }
-                image.SetData(rgb);
-                image.SetAlpha(a);
-        }
-        else
-                image.SetData(rgba, true);
-
-        wxImageHandler* h;
-
-        if (!strcmp(format, IMAGE_TIFF))
-                h = new wxTIFFHandler();
-        else if (!strcmp(format, IMAGE_BMP))
-                h = new wxBMPHandler();
-        else if (!strcmp(format, IMAGE_JPG))
-                h = new wxJPEGHandler();
-        else
-                h = new wxPNGHandler();
-
-        int res = 0;
-        if (h)
-        {
-                wxString p(fullpath);
-
-                wxFileOutputStream stream(p);
-                res = h->SaveFile(&image, stream, false);
-                delete h;
-        }
-
-        return res;
 }

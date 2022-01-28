@@ -23,10 +23,6 @@ LPT_DEVICE l_dss = { "Disney Sound Source", "dss", &dss_device };
 LPT_DEVICE l_lpt_dac = { "LPT DAC / Covox Speech Thing", "lpt_dac", &lpt_dac_device };
 LPT_DEVICE l_lpt_dac_stereo = { "Stereo LPT DAC", "lpt_dac_stereo", &lpt_dac_stereo_device };
 
-#ifdef USE_EXPERIMENTAL_PRINTER
-LPT_DEVICE l_epsonlx810 = { "Epson LX-810 Printer", "lpt_epsonlx810", &lpt_epsonprinter_device };
-#endif
-
 char* lpt_device_get_name(int id)
 {
         if (lpt_devices[id] == NULL || strlen(lpt_devices[id]->name) == 0)
@@ -199,7 +195,4 @@ void lpt_init_builtin()
         pcem_add_lpt(&l_dss);
         pcem_add_lpt(&l_lpt_dac);
         pcem_add_lpt(&l_lpt_dac_stereo);
-#ifdef USE_EXPERIMENTAL_PRINTER
-        pcem_add_lpt(&l_epsonlx810);
-#endif
 }

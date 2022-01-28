@@ -9,6 +9,15 @@
 #define CONFIG_SELECTION 3
 #define CONFIG_MIDI 4
 
+enum
+{
+        DEVICE_NOT_WORKING = 1, /*Device does not currently work correctly and will be disabled in a release build*/
+        DEVICE_AT = 2,          /*Device requires an AT-compatible system*/
+        DEVICE_MCA = 0x20,      /*Device requires an MCA system*/
+        DEVICE_PCI = 0x40,      /*Device requires a PCI system*/
+        DEVICE_PS1 = 0x80       /*Device is only for IBM PS/1 Model 2011*/
+};
+
 typedef struct device_config_selection_t
 {
         char description[256];
