@@ -172,11 +172,6 @@ char *model_getname()
         return models[model]->name;
 }
 
-device_t *model_getdevice(int model)
-{
-        return models[model]->device;
-}
-
 char *model_get_internal_name()
 {
         return models[model]->internal_name;

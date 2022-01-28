@@ -22,7 +22,6 @@ set(PCEM_SRC_PLUGINAPI
         plugin-api/paths.c
         plugin-api/logging.c
         plugin-api/device.c
-        plugin-api/devices.c
         plugin-api/plugin.c
         plugin-api/wx-utils.cc
         )
