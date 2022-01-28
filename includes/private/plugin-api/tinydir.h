@@ -45,7 +45,31 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #ifdef __MINGW32__
-# include <io.h>
+// HACK: Since GCC doesnt define these right, putting it here for now.
+#ifndef _FSIZE_T_DEFINED
+typedef unsigned long   _fsize_t;
+#define _FSIZE_T_DEFINED
+#endif
+
+struct _finddata_t
+{
+    unsigned    attrib;     /* Attributes, see constants above. */
+    time_t      time_create;
+    time_t      time_access;    /* always midnight local time */
+    time_t      time_write;
+    _fsize_t    size;
+    char        name[FILENAME_MAX]; /* may include spaces. */
+};
+
+struct _wfinddata_t
+{
+    unsigned    attrib;     /* Attributes, see constants above. */
+    time_t      time_create;
+    time_t      time_access;    /* always midnight local time */
+    time_t      time_write;
+    size_t  size;
+    wchar_t     name[FILENAME_MAX]; /* may include spaces. */
+};
 #endif
 #ifdef _MSC_VER
 # ifndef WIN32_LEAN_AND_MEAN
