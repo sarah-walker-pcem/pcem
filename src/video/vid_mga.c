@@ -2212,6 +2212,45 @@ static void mystique_accel_ctrl_write_l(uint32_t addr, uint32_t val, void* p)
         case REG_DWGCTL:
 //                pclog("  dwgctrl write %08x %08x\n", addr2, val);
                 mystique->dwgreg.dwgctrl = val;
+
+                if (val & DWGCTRL_SOLID)
+                {
+                        int x, y;
+
+                        for (y = 0; y < 8; y++)
+                        {
+                                for (x = 0; x < 8; x++)
+                                        mystique->dwgreg.pattern[y][x] = 1;
+                        }
+                        mystique->dwgreg.src[0] = 0xffffffff;
+                        mystique->dwgreg.src[1] = 0xffffffff;
+                        mystique->dwgreg.src[2] = 0xffffffff;
+                        mystique->dwgreg.src[3] = 0xffffffff;
+                }
+                if (val & DWGCTRL_ARZERO)
+                {
+                        mystique->dwgreg.ar[0] = 0;
+                        mystique->dwgreg.ar[1] = 0;
+                        mystique->dwgreg.ar[2] = 0;
+                        mystique->dwgreg.ar[4] = 0;
+                        mystique->dwgreg.ar[5] = 0;
+                        mystique->dwgreg.ar[6] = 0;
+                }
+                if (val & DWGCTRL_SGNZERO)
+                {
+                        mystique->dwgreg.sgn.sdydxl = 0;
+                        mystique->dwgreg.sgn.scanleft = 0;
+                        mystique->dwgreg.sgn.sdxl = 0;
+                        mystique->dwgreg.sgn.sdy = 0;
+                        mystique->dwgreg.sgn.sdxr = 0;
+                }
+                if (val & DWGCTRL_SHTZERO)
+                {
+                        mystique->dwgreg.funcnt = 0;
+                        mystique->dwgreg.stylelen = 0;
+                        mystique->dwgreg.xoff = 0;
+                        mystique->dwgreg.yoff = 0;
+                }
                 break;
 
         case REG_ZORG:
@@ -5544,44 +5583,6 @@ static void mystique_start_blit(mystique_t* mystique)
         if (mystique->busy)
                 fatal("mystique_start_blit: mystique->busy!\n");
 #endif
-        if (mystique->dwgreg.dwgctrl_running & DWGCTRL_SOLID)
-        {
-                int x, y;
-
-                for (y = 0; y < 8; y++)
-                {
-                        for (x = 0; x < 8; x++)
-                                mystique->dwgreg.pattern[y][x] = 1;
-                }
-                mystique->dwgreg.src[0] = 0xffffffff;
-                mystique->dwgreg.src[1] = 0xffffffff;
-                mystique->dwgreg.src[2] = 0xffffffff;
-                mystique->dwgreg.src[3] = 0xffffffff;
-        }
-        if (mystique->dwgreg.dwgctrl_running & DWGCTRL_ARZERO)
-        {
-                mystique->dwgreg.ar[0] = 0;
-                mystique->dwgreg.ar[1] = 0;
-                mystique->dwgreg.ar[2] = 0;
-                mystique->dwgreg.ar[4] = 0;
-                mystique->dwgreg.ar[5] = 0;
-                mystique->dwgreg.ar[6] = 0;
-        }
-        if (mystique->dwgreg.dwgctrl_running & DWGCTRL_SGNZERO)
-        {
-                mystique->dwgreg.sgn.sdydxl = 0;
-                mystique->dwgreg.sgn.scanleft = 0;
-                mystique->dwgreg.sgn.sdxl = 0;
-                mystique->dwgreg.sgn.sdy = 0;
-                mystique->dwgreg.sgn.sdxr = 0;
-        }
-        if (mystique->dwgreg.dwgctrl_running & DWGCTRL_SHTZERO)
-        {
-                mystique->dwgreg.funcnt = 0;
-                mystique->dwgreg.stylelen = 0;
-                mystique->dwgreg.xoff = 0;
-                mystique->dwgreg.yoff = 0;
-        }
 
         switch (mystique->dwgreg.dwgctrl_running & DWGCTRL_OPCODE_MASK)
         {
