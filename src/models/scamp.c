@@ -8,7 +8,13 @@ static struct
         int cfg_index;
         uint8_t cfg_regs[256];
         int cfg_enable;
-        
+
+        int ems_index;
+        int ems_autoinc;
+        uint16_t ems[0x24];
+        mem_mapping_t ems_mappings[20]; /*a0000-effff*/
+        uint32_t mappings[20];
+
         int ram_config;
         
         mem_mapping_t ram_mapping[2];
@@ -34,6 +40,9 @@ static struct
 #define ID_VL82C311 0xd6
 
 #define RAMMAP_REMP386 (1 << 4)
+
+#define EMSEN1_EMSMAP  (1 << 4)
+#define EMSEN1_EMSENAB (1 << 7)
 
 /*Commodore SL386SX requires proper memory slot decoding to detect memory size.
   Therefore we emulate the SCAMP memory address decoding, and therefore are
@@ -480,12 +489,102 @@ static void recalc_mappings(void)
         }
 }
 
+static void recalc_sltptr(void)
+{
+        uint32_t sltptr = scamp.cfg_regs[CFG_SLTPTR] << 16;
+
+        if (sltptr >= 0xa0000 && sltptr < 0x100000)
+                sltptr = 0x100000;
+        if (sltptr > 0xfe0000)
+                sltptr = 0xfe0000;
+
+//        pclog("sltptr=%06x\n", sltptr);
+        if (sltptr >= 0xa0000)
+        {
+                mem_set_mem_state(0, 0xa0000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                mem_set_mem_state(0x100000, sltptr - 0x100000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                mem_set_mem_state(sltptr, 0x1000000 - sltptr, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+        }
+        else
+        {
+                mem_set_mem_state(0, sltptr, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+                mem_set_mem_state(sltptr, 0xa0000-sltptr, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+                mem_set_mem_state(0x100000, 0xf00000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+        }
+}
+
+static uint8_t scamp_ems_read(uint32_t addr, void *p)
+{
+        int segment = (intptr_t)p;
+
+        addr = (addr & 0x3fff) | scamp.mappings[segment];
+        return ram[addr];
+}
+static void scamp_ems_write(uint32_t addr, uint8_t val, void *p)
+{
+        int segment = (intptr_t)p;
+
+        addr = (addr & 0x3fff) | scamp.mappings[segment];
+        ram[addr] = val;
+}
+
+static void recalc_ems(void)
+{
+        const uint32_t ems_base[12] =
+        {
+                0xc0000, 0xc4000, 0xc8000, 0xcc000,
+                0xd0000, 0xd4000, 0xd8000, 0xdc000,
+                0xe0000, 0xe4000, 0xe8000, 0xec000
+        };
+        uint32_t new_mappings[20];
+        uint16_t ems_enable;
+
+        for (int segment = 0; segment < 20; segment++)
+                new_mappings[segment] = 0xa0000 + segment*0x4000;
+
+        if (scamp.cfg_regs[CFG_EMSEN1] & EMSEN1_EMSENAB)
+                ems_enable = scamp.cfg_regs[CFG_EMSEN2] | ((scamp.cfg_regs[CFG_EMSEN1] & 0xf) << 8);
+        else
+                ems_enable = 0;
+
+        for (int segment = 0; segment < 12; segment++)
+        {
+                if (ems_enable & (1 << segment))
+                {
+                        uint32_t phys_addr = scamp.ems[segment] << 14;
+
+                        /*If physical address is in remapped memory then adjust down to a0000-fffff range*/
+                        if ((scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386) && phys_addr >= (mem_size * 1024)
+                            && phys_addr < ((mem_size + 384) * 1024))
+                                phys_addr = (phys_addr - mem_size * 1024) + 0xa0000;
+                        new_mappings[(ems_base[segment] - 0xa0000) >> 14] = phys_addr;
+                }
+        }
+
+        for (int segment = 0; segment < 20; segment++)
+        {
+                if (new_mappings[segment] != scamp.mappings[segment])
+                {
+                        scamp.mappings[segment] = new_mappings[segment];
+                        if (new_mappings[segment] < (mem_size * 1024))
+                        {
+                                mem_mapping_set_exec(&scamp.ems_mappings[segment], ram + scamp.mappings[segment]);
+                                mem_mapping_enable(&scamp.ems_mappings[segment]);
+                        }
+                        else
+                                mem_mapping_disable(&scamp.ems_mappings[segment]);
+                }
+        }
+}
+
 #define NR_ELEMS(x) (sizeof(x) / sizeof(x[0]))
 
-static void shadow_control(uint32_t addr, uint32_t size, int state)
+static void shadow_control(uint32_t addr, uint32_t size, int state, int ems_enable)
 {
 //        pclog("shadow_control: addr=%08x size=%04x state=%i\n", addr, size, state);
-        switch (state)
+        if (ems_enable)
+                mem_set_mem_state(addr, size, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
+        else switch (state)
         {
                 case 0:
                 mem_set_mem_state(addr, size, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
@@ -501,6 +600,57 @@ static void shadow_control(uint32_t addr, uint32_t size, int state)
                 break;
         }
         flushmmucache_nopc();
+}
+
+static void shadow_recalc(void)
+{
+        uint8_t abaxs = (scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386) ? 0 : scamp.cfg_regs[CFG_ABAXS];
+        uint8_t caxs = (scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386) ? 0 : scamp.cfg_regs[CFG_CAXS];
+        uint8_t daxs = (scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386) ? 0 : scamp.cfg_regs[CFG_DAXS];
+        uint8_t feaxs = (scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386) ? 0 : scamp.cfg_regs[CFG_FEAXS];
+        uint32_t ems_enable;
+
+        if (scamp.cfg_regs[CFG_EMSEN1] & EMSEN1_EMSENAB)
+        {
+                if (scamp.cfg_regs[CFG_EMSEN1] & EMSEN1_EMSMAP) /*Axxx/Bxxx/Dxxx*/
+                        ems_enable = (scamp.cfg_regs[CFG_EMSEN2] & 0xf) | ((scamp.cfg_regs[CFG_EMSEN1] & 0xf) << 4) | ((scamp.cfg_regs[CFG_EMSEN2] & 0xf0) << 8);
+                else /*Cxxx/Dxxx/Exxx*/
+                        ems_enable = (scamp.cfg_regs[CFG_EMSEN2] << 8) | ((scamp.cfg_regs[CFG_EMSEN1] & 0xf) << 16);
+        }
+        else
+                ems_enable = 0;
+
+        /*Enabling remapping will disable all shadowing*/
+        if (scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386)
+                mem_remap_top_384k();
+
+        shadow_control(0xa0000, 0x4000, abaxs & 3, ems_enable & 0x00001);
+        shadow_control(0xa0000, 0x4000, abaxs & 3, ems_enable & 0x00002);
+        shadow_control(0xa8000, 0x4000, (abaxs >> 2) & 3, ems_enable & 0x00004);
+        shadow_control(0xa8000, 0x4000, (abaxs >> 2) & 3, ems_enable & 0x00008);
+
+        shadow_control(0xb0000, 0x4000, (abaxs >> 4) & 3, ems_enable & 0x00010);
+        shadow_control(0xb0000, 0x4000, (abaxs >> 4) & 3, ems_enable & 0x00020);
+        shadow_control(0xb8000, 0x4000, (abaxs >> 6) & 3, ems_enable & 0x00040);
+        shadow_control(0xb8000, 0x4000, (abaxs >> 6) & 3, ems_enable & 0x00080);
+
+        shadow_control(0xc0000, 0x4000, caxs & 3, ems_enable & 0x00100);
+        shadow_control(0xc4000, 0x4000, (caxs >> 2) & 3, ems_enable & 0x00200);
+        shadow_control(0xc8000, 0x4000, (caxs >> 4) & 3, ems_enable & 0x00400);
+        shadow_control(0xcc000, 0x4000, (caxs >> 6) & 3, ems_enable & 0x00800);
+
+        shadow_control(0xd0000, 0x4000, daxs & 3, ems_enable & 0x01000);
+        shadow_control(0xd4000, 0x4000, (daxs >> 2) & 3, ems_enable & 0x02000);
+        shadow_control(0xd8000, 0x4000, (daxs >> 4) & 3, ems_enable & 0x04000);
+        shadow_control(0xdc000, 0x4000, (daxs >> 6) & 3, ems_enable & 0x08000);
+
+        shadow_control(0xe0000, 0x4000, feaxs & 3, ems_enable & 0x10000);
+        shadow_control(0xe4000, 0x4000, feaxs & 3, ems_enable & 0x20000);
+        shadow_control(0xe8000, 0x4000, (feaxs >> 2) & 3, ems_enable & 0x40000);
+        shadow_control(0xec000, 0x4000, (feaxs >> 2) & 3, ems_enable & 0x80000);
+
+        shadow_control(0xf0000, 0x8000, (feaxs >> 4) & 3, 0);
+        shadow_control(0xf8000, 0x8000, (feaxs >> 6) & 3, 0);
 }
 
 void scamp_write(uint16_t addr, uint8_t val, void *p)
@@ -521,6 +671,30 @@ void scamp_write(uint16_t addr, uint8_t val, void *p)
                 }
                 scamp.port_92 = val;
                 break;
+
+                case 0xe8:
+                scamp.ems_index = val & 0x1f;
+                scamp.ems_autoinc = val & 0x40;
+                break;
+
+                case 0xea:
+                if (scamp.ems_index < 0x24)
+                {
+                        scamp.ems[scamp.ems_index] = (scamp.ems[scamp.ems_index] & 0x300) | val;
+                        recalc_ems();
+                }
+//                pclog("EMS[%02x]=%03x (l)\n", scamp.ems_index, scamp.ems[scamp.ems_index]);
+                break;
+                case 0xeb:
+                if (scamp.ems_index < 0x24)
+                {
+                        scamp.ems[scamp.ems_index] = (scamp.ems[scamp.ems_index] & 0x0ff) | ((val & 3) << 8);
+                        recalc_ems();
+                }
+//                pclog("EMS[%02x]=%03x (h)\n", scamp.ems_index, scamp.ems[scamp.ems_index]);
+                if (scamp.ems_autoinc)
+                        scamp.ems_index = (scamp.ems_index + 1) & 0x1f;
+                break;
                 
                 case 0xec:
                 if (scamp.cfg_enable)
@@ -537,79 +711,26 @@ void scamp_write(uint16_t addr, uint8_t val, void *p)
                                 switch (scamp.cfg_index)
                                 {
                                         case CFG_SLTPTR:
+                                        recalc_sltptr();
                                         break;
 
                                         case CFG_RAMMAP:
                                         recalc_mappings();
                                         mem_mapping_disable(&ram_remapped_mapping);
-                                        if (scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386)
-                                        {
-                                                /*Enabling remapping will disable all shadowing*/
-                                                mem_remap_top_384k();
-                                                shadow_control(0xa0000, 0x60000, 0);
-                                        }
-                                        else
-                                        {
-                                                shadow_control(0xa0000, 0x8000, scamp.cfg_regs[CFG_ABAXS] & 3);
-                                                shadow_control(0xa8000, 0x8000, (scamp.cfg_regs[CFG_ABAXS] >> 2) & 3);
-                                                shadow_control(0xb0000, 0x8000, (scamp.cfg_regs[CFG_ABAXS] >> 4) & 3);
-                                                shadow_control(0xb8000, 0x8000, (scamp.cfg_regs[CFG_ABAXS] >> 6) & 3);
+                                        shadow_recalc();
+                                        break;
 
-                                                shadow_control(0xc0000, 0x4000, scamp.cfg_regs[CFG_CAXS] & 3);
-                                                shadow_control(0xc4000, 0x4000, (scamp.cfg_regs[CFG_CAXS] >> 2) & 3);
-                                                shadow_control(0xc8000, 0x4000, (scamp.cfg_regs[CFG_CAXS] >> 4) & 3);
-                                                shadow_control(0xcc000, 0x4000, (scamp.cfg_regs[CFG_CAXS] >> 6) & 3);
-
-                                                shadow_control(0xd0000, 0x4000, scamp.cfg_regs[CFG_DAXS] & 3);
-                                                shadow_control(0xd4000, 0x4000, (scamp.cfg_regs[CFG_DAXS] >> 2) & 3);
-                                                shadow_control(0xd8000, 0x4000, (scamp.cfg_regs[CFG_DAXS] >> 4) & 3);
-                                                shadow_control(0xdc000, 0x4000, (scamp.cfg_regs[CFG_DAXS] >> 6) & 3);
-
-                                                shadow_control(0xe0000, 0x8000, scamp.cfg_regs[CFG_FEAXS] & 3);
-                                                shadow_control(0xe8000, 0x8000, (scamp.cfg_regs[CFG_FEAXS] >> 2) & 3);
-                                                shadow_control(0xf0000, 0x8000, (scamp.cfg_regs[CFG_FEAXS] >> 4) & 3);
-                                                shadow_control(0xf8000, 0x8000, (scamp.cfg_regs[CFG_FEAXS] >> 6) & 3);
-                                        }
+                                        case CFG_EMSEN1:
+                                        case CFG_EMSEN2:
+                                        shadow_recalc();
+                                        recalc_ems();
                                         break;
 
                                         case CFG_ABAXS:
-                                        if (!(scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386))
-                                        {
-                                                shadow_control(0xa0000, 0x8000, val & 3);
-                                                shadow_control(0xa8000, 0x8000, (val >> 2) & 3);
-                                                shadow_control(0xb0000, 0x8000, (val >> 4) & 3);
-                                                shadow_control(0xb8000, 0x8000, (val >> 6) & 3);
-                                        }
-                                        break;
-                                        
                                         case CFG_CAXS:
-                                        if (!(scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386))
-                                        {
-                                                shadow_control(0xc0000, 0x4000, val & 3);
-                                                shadow_control(0xc4000, 0x4000, (val >> 2) & 3);
-                                                shadow_control(0xc8000, 0x4000, (val >> 4) & 3);
-                                                shadow_control(0xcc000, 0x4000, (val >> 6) & 3);
-                                        }
-                                        break;
-                                        
                                         case CFG_DAXS:
-                                        if (!(scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386))
-                                        {
-                                                shadow_control(0xd0000, 0x4000, val & 3);
-                                                shadow_control(0xd4000, 0x4000, (val >> 2) & 3);
-                                                shadow_control(0xd8000, 0x4000, (val >> 4) & 3);
-                                                shadow_control(0xdc000, 0x4000, (val >> 6) & 3);
-                                        }
-                                        break;
-                                        
                                         case CFG_FEAXS:
-                                        if (!(scamp.cfg_regs[CFG_RAMMAP] & RAMMAP_REMP386))
-                                        {
-                                                shadow_control(0xe0000, 0x8000, val & 3);
-                                                shadow_control(0xe8000, 0x8000, (val >> 2) & 3);
-                                                shadow_control(0xf0000, 0x8000, (val >> 4) & 3);
-                                                shadow_control(0xf8000, 0x8000, (val >> 6) & 3);
-                                        }
+                                        shadow_recalc();
                                         break;
                                 }
                         }
@@ -635,6 +756,21 @@ uint8_t scamp_read(uint16_t addr, void *p)
         {
                 case 0x92:
                 ret = scamp.port_92;
+                break;
+
+                case 0xe8:
+                ret = scamp.ems_index | scamp.ems_autoinc;
+                break;
+
+                case 0xea:
+                if (scamp.ems_index < 0x24)
+                        ret = scamp.ems[scamp.ems_index] & 0xff;
+                break;
+                case 0xeb:
+                if (scamp.ems_index < 0x24)
+                        ret = scamp.ems[scamp.ems_index] = (scamp.ems[scamp.ems_index] >> 8) & 0xfc;
+                if (scamp.ems_autoinc)
+                        scamp.ems_index = (scamp.ems_index + 1) & 0x1f;
                 break;
 
                 case 0xed:
@@ -695,6 +831,13 @@ void scamp_init(void)
                         ram_mirrored_read, NULL, NULL,
                         ram_mirrored_write, NULL, NULL);
         mem_mapping_disable(&ram_high_mapping);
+        mem_mapping_set_addr(&ram_mid_mapping, 0xf0000, 0x10000);
+        mem_mapping_set_exec(&ram_mid_mapping, ram+0xf0000);
+
+        mem_mapping_disable(&bios_mapping[0]);
+        mem_mapping_disable(&bios_mapping[1]);
+        mem_mapping_disable(&bios_mapping[2]);
+        mem_mapping_disable(&bios_mapping[3]);
 
         addr = 0;
         for (c = 0; c < 2; c++)
@@ -763,4 +906,14 @@ void scamp_init(void)
         }
         
         mem_set_mem_state(0xfe0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
+
+        for (c = 0; c < 20; c++)
+        {
+                mem_mapping_add(&scamp.ems_mappings[c],
+                                0xa0000 + c*0x4000, 0x4000,
+                                scamp_ems_read, NULL, NULL,
+                                scamp_ems_write, NULL, NULL,
+                                ram + 0xa0000 + c*0x4000, MEM_MAPPING_INTERNAL, (void *)c);
+                scamp.mappings[c] = 0xa0000 + c*0x4000;
+        }
 }
