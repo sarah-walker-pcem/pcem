@@ -184,6 +184,7 @@ static void ide_identify(IDE* ide)
         ide_padstr((char*)(ide->buffer + 23), "v1.0", 8); /* Firmware */
         ide_padstr((char*)(ide->buffer + 27), "PCemHD", 40); /* Model */
 
+        ide->buffer[0] = (1 << 6); /*Fixed drive*/
         ide->buffer[20] = 3;   /*Buffer type*/
         ide->buffer[21] = 512; /*Buffer size*/
         ide->buffer[47] = 16;  /*Max sectors on multiple transfer command*/
