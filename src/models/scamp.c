@@ -693,7 +693,7 @@ void scamp_write(uint16_t addr, uint8_t val, void *p)
                 }
 //                pclog("EMS[%02x]=%03x (h)\n", scamp.ems_index, scamp.ems[scamp.ems_index]);
                 if (scamp.ems_autoinc)
-                        scamp.ems_index = (scamp.ems_index + 1) & 0x1f;
+                        scamp.ems_index = (scamp.ems_index + 1) & 0x3f;
                 break;
                 
                 case 0xec:
@@ -768,9 +768,9 @@ uint8_t scamp_read(uint16_t addr, void *p)
                 break;
                 case 0xeb:
                 if (scamp.ems_index < 0x24)
-                        ret = scamp.ems[scamp.ems_index] = (scamp.ems[scamp.ems_index] >> 8) & 0xfc;
+                        ret = (scamp.ems[scamp.ems_index] >> 8) | 0xfc;
                 if (scamp.ems_autoinc)
-                        scamp.ems_index = (scamp.ems_index + 1) & 0x1f;
+                        scamp.ems_index = (scamp.ems_index + 1) & 0x3f;
                 break;
 
                 case 0xed:
