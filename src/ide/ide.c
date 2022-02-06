@@ -471,7 +471,7 @@ void writeide(int ide_board, uint16_t addr, uint8_t val)
                 case WIN_RESTORE:
                 case WIN_SEEK:
 //                        pclog("WIN_RESTORE start\n");
-                        ide->atastat = READY_STAT;
+                        ide->atastat = READY_STAT | BUSY_STAT;
                         timer_set_delay_u64(&ide_timer[ide_board], 100 * IDE_TIME);
                         return;
 
