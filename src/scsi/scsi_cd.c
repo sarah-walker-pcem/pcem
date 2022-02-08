@@ -391,10 +391,10 @@ static struct
 
                 {
                         // A 24X CD-ROM drive from Creative Labs by Matshita.
-                        "Creative",
+                        "MATSHITA",
                         "Matshita CR-587-B 7S13",
                         "8307DDB76196",
-                        "CD-ROM CR-587",
+                        "CR-587",
                         "7S13",
 
                         "",
@@ -408,10 +408,10 @@ static struct
 
                 {
                         // A 32X CD-ROM drive from Creative Labs by Matshita.
-                        "Creative",
+                        "MATSHITA",
                         "Matshita CR-588-B LS15",
                         "8516DFA30742",
-                        "CD-ROM CR-588-B",
+                        "CR-588-B",
                         "LS15",
 
                         "",
@@ -475,7 +475,7 @@ static struct
                 },
         {
                         // A 72X CD-ROM drive from Kenwood.
-                        "Kenwood",
+                        "KENWOOD",
                         "KENWOOD UCR-421 208E",
                         "9Z18612480",
                         "CD-ROM UCR-421",
