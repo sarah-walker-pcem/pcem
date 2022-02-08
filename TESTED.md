@@ -46,6 +46,7 @@
 - BeOS 5.0 Professional Edition
 
 ### Applications
+- 3DMark 99
 - 3DMark 2000
 - 3DMark 2001SE
 - After Dark 3.06
@@ -65,62 +66,103 @@
 
 ### Games
 - 1602 AD (demo)
+- 11th Hour
+- 3D Lemmings (Demo)
 - 3D Ultra Pinball Thrillride
 - A-10 Tank Killer
 - Actua Soccer
+- Actua Soccer 2 (Demo)
 - Adventure Pinball Forgotten Island (demo)
+- Age of Empires
+- Age of Empires (Demo)
+- Age of Empires 2
+- Age of Empires 2 (Demo)
+- Airlift Rescue
+- Airline Tycoon (Demo)
 - Aladdin
 - Alien vs Predator
 - Alien vs Predator 2 (demo)
 - All New World of Lemmings
 - Alone in the Dark
+- Alone in the Dark 3
 - Alone in the Dark : The New Nightmare (demo)
 - Anachronox
 - Arkanoid
 - Armoured Fist 3 (demo)
 - Asteroids (1998)
+- Azrael's Tear
 - B-17 Flying Fortress
+- Bad Mojo
+- Baldur's Gate
+- Baldur's Gate 2
 - Battle Chess
 - Battlezone
 - Battlezone II
 - Bejeweled
+- Beneath a Steel Sky
 - Beyond Castle Wolfenstein
 - Big Red Racing
 - Bio Menace
 - Black & White
+- Blade Runner
+- Blood
+- Blood 2: The Chosen
+- Blood 2: The Chosen (Demo)
+- Blood 2: The Nightmare Levels
+- Blood Omen: Legacy of Kain
+- Blood Omen: Legacy of Kain (Demo)
+- Boogaloopers (Shareware)
+- Broken Sword: The Shadow of the Templars
+- Broken Sword: The Shadow of the Templars (Demo)
+- Broken Sword 2: The Smoking Mirror
+- Broken Sword 2: The Smoking Mirror (Demo)
 - Brix
+- Bubble Puzzle'97
 - Bugs Bunny Lost In Time (demo)
 - Cannon Fodder 2
 - Carnivores 2
+- Chasm: The Rift (Demo)
 - Civilization
 - Civilization for Windows
+- Civilization II
 - Claw
 - Clive Barker's Undying (demo)
 - Clockwiser
+- Colin McRae Rally
+- Colin McRae Rally (Demo)
 - Command & Conquer : Red Alert
 - Command & Conquer : Red Alert 2
 - Command & Conquer : Tiberian Sun (demo)
 - Command & Conquer Renegade
 - Conquest
+- Conquest Earth
+- Constructor
+- Constructor (Demo)
 - Corridor 7
 - Counter-Strike 2D
 - Crimson Skies (demo)
+- Cruise for a Corpse
 - Croc
 - Curse of Monkey Island
 - Cutthroats (demo)
 - Daikatana
+- Dark Reign
 - Dawn Patrol
 - Day of the Tentacle
 - Dance Dance Revolution
 - Dead Reckoning (demo)
 - Death Drome
+- Deathtrap Dungeon
 - Desert Strike
 - Digger
 - Dirt Track Racing (demo)
 - Disciples (demo)
+- Discworld
 - Discworld II
+- Discworld Noir
 - Doom (v1.2)
 - Doom II (v1.666)
+- Doom'95
 - Double Dragon
 - Drakan (demo)
 - Duke Nukem 3D (v1.3D)
@@ -128,45 +170,90 @@
 - DX-Ball 2
 - Echelon
 - Ecstatica
+- Ecstatica II
 - Epic Pinball
+- Escape from Monkey Island
+- Escape from Monkey Island (Demo)
+- Esoteria (Demo)
 - Every Extend
 - Evolva (demo)
 - Expendable
+- Extreme Assault
+- Extreme Assault (Demo)
 - Eye of the Beholder
+- Fallout
+- Fallout (Demo)
 - Fallout Tactics (demo)
+- FIFA: RTWC 98 (Demo)
+- FIFA 99
+- FIFA 99 (Demo)
+- Fighting Force
+- Final Fantasy VII
+- Final Fantasy VII (Demo)
+- Final Fantasy VIII
 - Final Fantasy VIII (demo)
+- Fire Fighter (Shareware)
 - Flashback
 - Flight Simulator 5
+- Formula 1 '97
+- Formula 1 '97 (Demo)
 - Frogger
 - Frontier : First Encounters
+- Full Throttle
+- Gabriel Knight: The Beast Within
 - Gabriel Knight 3 (demo)
+- Gex 3D: Enter the Gecko
+- Gex 3D: Enter the Gecko (Demo)
 - Giants : Citizen Kabuto
 - GLQuake
+- Grand Theft Auto
 - Grand Theft Auto 2
+- Greedy (Shareware)
+- Grim Fandango
+- Grim Fandango (Demo)
 - Half-Life
+- Half-Life Uplink
 - Halloween Harry
+- Heart of Darkness
 - Heartlight
 - Hellbender
+- Heretic II (Demo)
 - Hexen
+- Hexen II
+- Hexen II (Demo)
 - High Heat Baseball 2002 (demo)
 - Hitch Hiker's Guide to the Galaxy
 - Hocus Pocus
 - Homeworld Cataclysm (demo)
+- House of the Dead
+- House of the Dead 2
+- Inca II
 - Incoming
 - James Pond 2 : Robocod
 - Jazz Jackrabbit
 - Jazz Jackrabbit 2
+- Jedi Knight (Demo)
 - Jill of the Jungle
+- Johnny Bazookatone
 - King's Quest
 - King's Quest II
 - King's Quest III
+- King's Quest VII
 - Lemmings
 - Lemmings 2 : The Tribes
+- Lighthouse
+- Little Big Adventure 2
+- Little Big Adventure 2 (Demo)
 - Lode Runner : The Legend Continues
+- Lomax
+- Lomax (Demo)
 - Lotus III
+- Lure of the Temptress
 - Madden 2002 (demo)
 - Majesty (demo)
 - Maniac Mansion (enhanced)
+- Manx TT Superbike
+- Manx TT Superbike (Demo)
 - Max Payne
 - MDK (Direct3D, USA release)
 - MechCommander 2
@@ -184,23 +271,40 @@
 - Mortal Kombat
 - Mortal Kombat 2
 - Mortal Kombat 3
+- Mortal Kombat 4
 - Motorcross Madness (demo)
 - Mystic Towers
+- Myth (Demo)
 - Nascar Heat
+- Need for Speed SE
+- Need for Speed II
+- Need for Speed II (Demo)
 - Need for Speed II SE
 - Need for Speed III
+- Need for Speed III (Demo)
 - Need for Speed : High Stakes
 - NHL 2001 (demo)
+- Nocturne
 - No One Lives Forever
+- Normality
+- Normality (Demo)
 - Oddworld : Abe's Exoddus
 - One Must Fall 2097
 - Oni
 - Outlaws
 - Pacific Strike
 - Pacman Adventures in Time (demo)
+- Pandemonium!
+- Pandemonium 2
+- Panzer Dragoon
 - Pharoah (demo)
+- Phantasmagoria
+- Phantasmagoria: A Puzzle of Flesh
 - Pinball Fantasies
 - Pinball Illusions
+- Pizza Tycoon
+- Planescape: Torment
+- POD Gold
 - Police Quest
 - Police Quest 2
 - Porrasturvat
@@ -212,20 +316,48 @@
 - Quake
 - Quake II
 - Quake III Arena
+- Railroad Tycoon II
 - Rayman 2 (demo)
+- Realms of the Haunting
+- Recoil (Demo)
 - Red Faction
 - Redline Racer
+- Resident Evil
+- Resident Evil 2
+- Resident Evil 3
+- Return of the Phantom
+- Return to Zork
+- Re-volt (Demo)
+- Riddle of Master Lu
+- Ripper
 - Rise of the Triad (v1.2)
+- Road Rash
+- Road Rash (Demo)
+- Rollercoaster Tycoon
+- Sam and Max Hit the Road
+- Sanitarium
 - Screamer
+- Screamer 2
+- Screamer Rally
+- Sega Rally 
+- Sega Rally (Demo)
+- Sega Rally 2
 - Sega Rally 2 (demo)
+- Sega Touring Car Championship
+- Sega Worldwide Soccer (Demo)
 - Sensible World of Soccer
+- Sensible Soccer '98 (Demo)
 - Settlers 3 (demo)
 - Severance : Blade of Darkness (demo)
 - Shadow Company (demo)
+- Shadow of the Comet
 - Shadow Warrior
 - Shadowman (demo)
+- Shogo
+- Shogo (Demo)
 - Sid Meier's Alien Crossfire (demo)
 - SimCity 2000
+- SimCity 3000
 - SimCity Classic
 - SimTower
 - Sink or Swim
@@ -233,56 +365,98 @@
 - Sonic CD
 - Space Simulator
 - Space Strike
+- Speedy Blupi (Demo)
 - Spider-Man (demo)
 - Springy Madness
+- Sports Car GT (Demo)
+- Star Trek Generations
 - Star Trek Hidden Evil (demo)
+- Star Trek Judgment Rites
 - Star Trek Voyager Elite Force
+- Star Wars Episode 1: Racer
+- Star Wars Episode 1: Racer (Demo)
 - Star Wars Jedi Academy
+- Star Wars Rogue Squadron
+- Star Wars Shadows of the Empire
 - Starfleet Command 2 (demo)
 - Stargunner
 - Starlancer (demo)
 - Steel Beasts (demo)
+- Street Fighter Alpha
+- Street Fighter Alpha 2
 - Stunt Island
+- Sub Culture (Demo)
 - SWAT 3 Elite Edition (demo)
 - Syndicate
 - System Shock
+- System Shock 2 (Demo)
+- Tank Racer
+- Tank Racer (Demo)
 - Tanktics (demo)
 - Terminal Velocity
 - The Dig
+- The Elk Moon Murder
 - The Humans
+- The Journeyman Project 3: Legacy of Time
 - The Labyrinth (RealArcade version)
 - The Lost Vikings
+- The Nomad Soul
+- The Reap
+- The Reap (Demo)
+- The Quivering
 - The Ultimate Doom (v1.9)
 - Theme Hospital
 - Theme Park
+- Thief: The Dark Project (Demo)
 - Tomb Raider
 - Tomb Raider II
+- Tomb Raider III (Demo)
 - Tomb Raider The Last Revelation (demo)
 - Tony Hawk's Pro Skater 2
+- Toonstruck
+- Total Annihilation
+- Total Annihilation (Demo)
 - Transport Tycoon
 - Transport Tycoon Deluxe
 - Tropico (demo)
+- Turok (Demo)
+- Turok 2 (Demo)
 - Turrican 2
 - UFO : Enemy Unknown
+- Ultimate R@ce Pro
+- Ultimate R@ce Pro (Demo)
 - Ultimate Ride (demo)
+- Under a Killing Moon
 - Unreal
 - Unreal Tournament
 - Unreal Tournament 2004 (Direct3D)
+- Virtua Cop 2
+- Virtua Fighter 2
+- Virtua Fighter 2 (Demo)
 - Wacky Wheels
 - Warlords Battlecry (demo)
 - Wheel of Time (demo)
 - Wing Commander
 - Wing Commander : Privateer
+- Wipeout
+- Wipeout 2097 (Demo)
 - Wizkid
 - Wolfenstein 3D
+- World Cup '98
+- World Cup '98 (Demo)
 - World War III : Black Gold (demo)
 - Worms
+- Worms 2 (Demo)
 - Worms Armageddon
+- X-Com: Apocalypse 
 - X-Com : Terror From The Deep
 - Xargon
 - Z : Steel Soldiers (demo)
 - Zak McKracken
 - Zone 66
+- Zork Grand Inquisitor
+- Zork Grand Inquisitor (Demo)
+- Zork Nemesis
 
 ### Demos
 - Cascada - Cronologia
@@ -327,4 +501,5 @@
 - SNES9x v0.96
 - UltraHLE v1.0.0
 - vMac v0.1.9.1
+- WinUAE 0.8.8
 - ZSNES v0.800c
