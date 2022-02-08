@@ -273,6 +273,8 @@
 - Mortal Kombat 3
 - Mortal Kombat 4
 - Motorcross Madness (demo)
+- Moto Racer (Demo)
+- Moto Racer 2 (Demo)
 - Mystic Towers
 - Myth (Demo)
 - Nascar Heat
@@ -356,10 +358,12 @@
 - Shogo
 - Shogo (Demo)
 - Sid Meier's Alien Crossfire (demo)
+- Silver
 - SimCity 2000
 - SimCity 3000
 - SimCity Classic
 - SimTower
+- SiN (Demo)
 - Sink or Swim
 - Soldat (1.0.5)
 - Sonic CD
@@ -401,9 +405,9 @@
 - The Labyrinth (RealArcade version)
 - The Lost Vikings
 - The Nomad Soul
+- The Quivering
 - The Reap
 - The Reap (Demo)
-- The Quivering
 - The Ultimate Doom (v1.9)
 - Theme Hospital
 - Theme Park
