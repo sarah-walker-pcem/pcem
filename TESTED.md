@@ -77,6 +77,7 @@
 - Age of Empires (Demo)
 - Age of Empires 2
 - Age of Empires 2 (Demo)
+- Age of Empires: Rise of Rome
 - Airlift Rescue
 - Airline Tycoon (Demo)
 - Aladdin
@@ -89,6 +90,7 @@
 - Anachronox
 - Arkanoid
 - Armoured Fist 3 (demo)
+- Asghan (Demo)
 - Asteroids (1998)
 - Azrael's Tear
 - B-17 Flying Fortress
@@ -119,6 +121,8 @@
 - Brix
 - Bubble Puzzle'97
 - Bugs Bunny Lost In Time (demo)
+- Caesar III
+- Caesar III (Demo)
 - Cannon Fodder 2
 - Carnivores 2
 - Chasm: The Rift (Demo)
@@ -146,6 +150,8 @@
 - Curse of Monkey Island
 - Cutthroats (demo)
 - Daikatana
+- Dark Earth
+- Dark Earth (Demo)
 - Dark Reign
 - Dawn Patrol
 - Day of the Tentacle
@@ -154,6 +160,9 @@
 - Death Drome
 - Deathtrap Dungeon
 - Desert Strike
+- Diablo
+- Diablo (Demo)
+- Diablo II
 - Digger
 - Dirt Track Racing (demo)
 - Disciples (demo)
@@ -167,6 +176,8 @@
 - Drakan (demo)
 - Duke Nukem 3D (v1.3D)
 - Dune
+- Dungeon Keeper (Demo)
+- Dungeon Keeper 2 (Demo)
 - DX-Ball 2
 - Echelon
 - Ecstatica
@@ -184,6 +195,7 @@
 - Fallout
 - Fallout (Demo)
 - Fallout Tactics (demo)
+- Faust: Seven Games of the Soul
 - FIFA: RTWC 98 (Demo)
 - FIFA 99
 - FIFA 99 (Demo)
@@ -201,11 +213,14 @@
 - Frontier : First Encounters
 - Full Throttle
 - Gabriel Knight: The Beast Within
+- Gabriel Knight 3: Blood of the Sacred, Blood of the Damned
 - Gabriel Knight 3 (demo)
 - Gex 3D: Enter the Gecko
 - Gex 3D: Enter the Gecko (Demo)
 - Giants : Citizen Kabuto
+- Glover (Demo)
 - GLQuake
+- Grand Prix 2 (Demo)
 - Grand Theft Auto
 - Grand Theft Auto 2
 - Greedy (Shareware)
@@ -226,8 +241,11 @@
 - Hocus Pocus
 - Homeworld Cataclysm (demo)
 - House of the Dead
+- House of the Dead (Demo)
 - House of the Dead 2
+- Ignition
 - Inca II
+- Interstate 76 (Demo)
 - Incoming
 - James Pond 2 : Robocod
 - Jazz Jackrabbit
@@ -235,10 +253,12 @@
 - Jedi Knight (Demo)
 - Jill of the Jungle
 - Johnny Bazookatone
+- Katharsis (Demo)
 - King's Quest
 - King's Quest II
 - King's Quest III
 - King's Quest VII
+- Klingon Honour Guard (Demo)
 - Lemmings
 - Lemmings 2 : The Tribes
 - Lighthouse
@@ -254,8 +274,11 @@
 - Maniac Mansion (enhanced)
 - Manx TT Superbike
 - Manx TT Superbike (Demo)
+- Master of Orion ll
 - Max Payne
 - MDK (Direct3D, USA release)
+- MDK Special Edition
+- MechCommander (Demo)
 - MechCommander 2
 - Mechwarrior 2
 - Mechwarrior 3
@@ -276,8 +299,9 @@
 - Moto Racer (Demo)
 - Moto Racer 2 (Demo)
 - Mystic Towers
-- Myth (Demo)
+- Myth: The Fallen Lords (Demo)
 - Nascar Heat
+- NBA Action 98 (Demo)
 - Need for Speed SE
 - Need for Speed II
 - Need for Speed II (Demo)
@@ -286,18 +310,25 @@
 - Need for Speed III (Demo)
 - Need for Speed : High Stakes
 - NHL 2001 (demo)
+- Nightmare Creatures
+- Nightmare Creatures (Demo)
 - Nocturne
 - No One Lives Forever
 - Normality
 - Normality (Demo)
 - Oddworld : Abe's Exoddus
+- O.D.T. (Demo)
 - One Must Fall 2097
 - Oni
+- Outcast
+- Outcast (Demo)
 - Outlaws
 - Pacific Strike
 - Pacman Adventures in Time (demo)
 - Pandemonium!
+- Pandemonium! (Demo)
 - Pandemonium 2
+- Pandemonium 2 (Demo)
 - Panzer Dragoon
 - Pharoah (demo)
 - Phantasmagoria
@@ -309,7 +340,9 @@
 - POD Gold
 - Police Quest
 - Police Quest 2
+- Populous 3: The Beginning
 - Porrasturvat
+- Powerboat Racing (Demo)
 - Power Drive
 - Prince of Persia
 - Prince of Persia 3D (demo)
@@ -318,6 +351,7 @@
 - Quake
 - Quake II
 - Quake III Arena
+- Quiver (Shareware)
 - Railroad Tycoon II
 - Rayman 2 (demo)
 - Realms of the Haunting
@@ -325,21 +359,26 @@
 - Red Faction
 - Redline Racer
 - Resident Evil
-- Resident Evil 2
+- Resident Evil 2 
+- Resident Evil 2 (Demo)
 - Resident Evil 3
 - Return of the Phantom
 - Return to Zork
+- Reveng of Mutant Camels
 - Re-volt (Demo)
 - Riddle of Master Lu
 - Ripper
+- Rise 2: Resurrection (Demo)
 - Rise of the Triad (v1.2)
 - Road Rash
 - Road Rash (Demo)
+- Rollcage
 - Rollercoaster Tycoon
 - Sam and Max Hit the Road
 - Sanitarium
 - Screamer
 - Screamer 2
+- Screamer 2 (Demo)
 - Screamer Rally
 - Sega Rally 
 - Sega Rally (Demo)
@@ -355,6 +394,7 @@
 - Shadow of the Comet
 - Shadow Warrior
 - Shadowman (demo)
+- Shanghai: Great Moments (Demo)
 - Shogo
 - Shogo (Demo)
 - Sid Meier's Alien Crossfire (demo)
@@ -365,10 +405,13 @@
 - SimTower
 - SiN (Demo)
 - Sink or Swim
+- Slave Zero (Demo)
 - Soldat (1.0.5)
 - Sonic CD
 - Space Simulator
 - Space Strike
+- Speed Busters
+- Speed Busters (Demo)
 - Speedy Blupi (Demo)
 - Spider-Man (demo)
 - Springy Madness
@@ -386,20 +429,28 @@
 - Stargunner
 - Starlancer (demo)
 - Steel Beasts (demo)
+- Stonekeep
 - Street Fighter Alpha
 - Street Fighter Alpha 2
 - Stunt Island
 - Sub Culture (Demo)
 - SWAT 3 Elite Edition (demo)
+- SWIV 3D
 - Syndicate
 - System Shock
 - System Shock 2 (Demo)
 - Tank Racer
 - Tank Racer (Demo)
 - Tanktics (demo)
+- Tennis Elbow (Shareware)
+- Teenagent
+- Test Drive 4 (Demo)
+- Test Drive 5 (Demo)
 - Terminal Velocity
 - The Dig
+- The Elder Scrolls: Redguard (Demo)
 - The Elk Moon Murder
+- The Fifth Element (Demo)
 - The Humans
 - The Journeyman Project 3: Legacy of Time
 - The Labyrinth (RealArcade version)
@@ -408,14 +459,19 @@
 - The Quivering
 - The Reap
 - The Reap (Demo)
+- The Settlers 3 (Demo)
 - The Ultimate Doom (v1.9)
 - Theme Hospital
 - Theme Park
 - Thief: The Dark Project (Demo)
+- TOCA Touring Car Championship (Demo)
+- TOCA 2 Touring Cars
+- TOCA 2 Touring Cars (Demo)
 - Tomb Raider
 - Tomb Raider II
 - Tomb Raider III (Demo)
 - Tomb Raider The Last Revelation (demo)
+- Tonic Trouble (Demo)
 - Tony Hawk's Pro Skater 2
 - Toonstruck
 - Total Annihilation
@@ -434,6 +490,7 @@
 - Unreal
 - Unreal Tournament
 - Unreal Tournament 2004 (Direct3D)
+- Vanguard Ace (Shareware)
 - Virtua Cop 2
 - Virtua Fighter 2
 - Virtua Fighter 2 (Demo)
