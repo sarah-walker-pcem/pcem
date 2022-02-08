@@ -160,6 +160,7 @@
 - Death Drome
 - Deathtrap Dungeon
 - Desert Strike
+- Destruction Derby 2 (Demo)
 - Diablo
 - Diablo (Demo)
 - Diablo II
@@ -174,6 +175,7 @@
 - Doom'95
 - Double Dragon
 - Drakan (demo)
+- Driver (Demo)
 - Duke Nukem 3D (v1.3D)
 - Dune
 - Dungeon Keeper (Demo)
@@ -195,6 +197,7 @@
 - Fallout
 - Fallout (Demo)
 - Fallout Tactics (demo)
+- Fatal Racing
 - Faust: Seven Games of the Soul
 - FIFA: RTWC 98 (Demo)
 - FIFA 99
@@ -274,7 +277,7 @@
 - Maniac Mansion (enhanced)
 - Manx TT Superbike
 - Manx TT Superbike (Demo)
-- Master of Orion ll
+- Master of Orion II
 - Max Payne
 - MDK (Direct3D, USA release)
 - MDK Special Edition
@@ -364,7 +367,7 @@
 - Resident Evil 3
 - Return of the Phantom
 - Return to Zork
-- Reveng of Mutant Camels
+- Revenge of the Mutant Camels
 - Re-volt (Demo)
 - Riddle of Master Lu
 - Ripper
@@ -455,6 +458,7 @@
 - The Journeyman Project 3: Legacy of Time
 - The Labyrinth (RealArcade version)
 - The Lost Vikings
+- The Neverhood
 - The Nomad Soul
 - The Quivering
 - The Reap
@@ -464,6 +468,7 @@
 - Theme Hospital
 - Theme Park
 - Thief: The Dark Project (Demo)
+- TimeGate: Knight's Chase
 - TOCA Touring Car Championship (Demo)
 - TOCA 2 Touring Cars
 - TOCA 2 Touring Cars (Demo)
@@ -476,6 +481,7 @@
 - Toonstruck
 - Total Annihilation
 - Total Annihilation (Demo)
+- Total Mania
 - Transport Tycoon
 - Transport Tycoon Deluxe
 - Tropico (demo)
@@ -501,6 +507,7 @@
 - Wing Commander : Privateer
 - Wipeout
 - Wipeout 2097 (Demo)
+- Witchaven II Blood Vengeance
 - Wizkid
 - Wolfenstein 3D
 - World Cup '98
