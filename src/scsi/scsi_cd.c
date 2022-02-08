@@ -416,7 +416,7 @@ static struct
 
                         "",
                         "LS15",
-                        "MATSHITA CD-ROM CR-588-B",
+                        "MATSHITA CR-588-B",
                         "Creative CR-588-B (32X)",
                         "cr-588-b",
                         CD_MODEL_INTERFACE_IDE,
