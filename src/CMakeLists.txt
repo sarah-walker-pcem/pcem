@@ -138,6 +138,7 @@ install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION share/pcem/roms/ibmp
 install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION share/pcem/roms/ibmpcjr)
 install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION share/pcem/roms/ibmps1)
 install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION share/pcem/roms/ibmps1_2121)
+install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION share/pcem/roms/ibmps1_2133)
 install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION share/pcem/roms/ibmps1es)
 install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION share/pcem/roms/ibmps2_m30_286)
 install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION share/pcem/roms/ibmps2_m70_type3)
