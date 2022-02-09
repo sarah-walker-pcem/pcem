@@ -70,8 +70,11 @@
 - 3D Lemmings (Demo)
 - 3D Ultra Pinball Thrillride
 - A-10 Tank Killer
+- Acid Tetris (Shareware)
 - Actua Soccer
 - Actua Soccer 2 (Demo)
+- Addiction Pinball
+- Addiction Pinball (Demo)
 - Adventure Pinball Forgotten Island (demo)
 - Age of Empires
 - Age of Empires (Demo)
@@ -80,6 +83,7 @@
 - Age of Empires: Rise of Rome
 - Airlift Rescue
 - Airline Tycoon (Demo)
+- Airport Inc.
 - Aladdin
 - Alien vs Predator
 - Alien vs Predator 2 (demo)
@@ -92,6 +96,7 @@
 - Armoured Fist 3 (demo)
 - Asghan (Demo)
 - Asteroids (1998)
+- Atlantis (Demo)
 - Azrael's Tear
 - B-17 Flying Fortress
 - Bad Mojo
@@ -113,14 +118,18 @@
 - Blood 2: The Nightmare Levels
 - Blood Omen: Legacy of Kain
 - Blood Omen: Legacy of Kain (Demo)
+- Blupimania (Demo)
+- Bluppo (Shareware)
 - Boogaloopers (Shareware)
+- Breakneck (Demo)
+- Brix
 - Broken Sword: The Shadow of the Templars
 - Broken Sword: The Shadow of the Templars (Demo)
 - Broken Sword 2: The Smoking Mirror
 - Broken Sword 2: The Smoking Mirror (Demo)
-- Brix
 - Bubble Puzzle'97
 - Bugs Bunny Lost In Time (demo)
+- Bureau 13
 - Caesar III
 - Caesar III (Demo)
 - Cannon Fodder 2
@@ -150,12 +159,16 @@
 - Curse of Monkey Island
 - Cutthroats (demo)
 - Daikatana
+- Dance Dance Revolution
+- Dark Colony
+- Dark Colony (Demo)
 - Dark Earth
 - Dark Earth (Demo)
+- Dark Forces (Demo)
 - Dark Reign
 - Dawn Patrol
 - Day of the Tentacle
-- Dance Dance Revolution
+- Daytona USA Deluxe (Demo)
 - Dead Reckoning (demo)
 - Death Drome
 - Deathtrap Dungeon
@@ -164,6 +177,8 @@
 - Diablo
 - Diablo (Demo)
 - Diablo II
+- Die By The Sword (Demo)
+- Die Hard Trilogy
 - Digger
 - Dirt Track Racing (demo)
 - Disciples (demo)
@@ -182,6 +197,8 @@
 - Dungeon Keeper 2 (Demo)
 - DX-Ball 2
 - Echelon
+- EcoQuest
+- EcoQuest 2: Lost Secret of the Rainforest
 - Ecstatica
 - Ecstatica II
 - Epic Pinball
@@ -190,6 +207,7 @@
 - Esoteria (Demo)
 - Every Extend
 - Evolva (demo)
+- Excessive Speed (Demo)
 - Expendable
 - Extreme Assault
 - Extreme Assault (Demo)
@@ -210,14 +228,19 @@
 - Fire Fighter (Shareware)
 - Flashback
 - Flight Simulator 5
+- Flip (Shareware)
 - Formula 1 '97
 - Formula 1 '97 (Demo)
+- Fracas (Shareware)
 - Frogger
 - Frontier : First Encounters
 - Full Throttle
+- Fury 3
+- Fury 3 (Trial)
 - Gabriel Knight: The Beast Within
 - Gabriel Knight 3: Blood of the Sacred, Blood of the Damned
 - Gabriel Knight 3 (demo)
+- Gex
 - Gex 3D: Enter the Gecko
 - Gex 3D: Enter the Gecko (Demo)
 - Giants : Citizen Kabuto
@@ -232,9 +255,11 @@
 - Half-Life
 - Half-Life Uplink
 - Halloween Harry
+- Hardwar (Demo)
 - Heart of Darkness
 - Heartlight
-- Hellbender
+- Helicops (Demo)
+- Hellbender (Trial)
 - Heretic II (Demo)
 - Hexen
 - Hexen II
@@ -261,7 +286,12 @@
 - King's Quest II
 - King's Quest III
 - King's Quest VII
+- King's Quest VIII (Demo)
+- Kingpin: Life of Crime (Demo)
+- KKnD (Demo)
+- KKnD 2 (Demo)
 - Klingon Honour Guard (Demo)
+- Last Bronx (Demo)
 - Lemmings
 - Lemmings 2 : The Tribes
 - Lighthouse
@@ -294,6 +324,7 @@
 - Monkey Island 2
 - Monster Bash
 - Monster Truck Madness
+- Monster Truck Madness 2 (Demo)
 - Mortal Kombat
 - Mortal Kombat 2
 - Mortal Kombat 3
@@ -312,6 +343,8 @@
 - Need for Speed III
 - Need for Speed III (Demo)
 - Need for Speed : High Stakes
+- Need for Speed: Road Challenge
+- Need for Speed: Road Challenge (Demo)
 - NHL 2001 (demo)
 - Nightmare Creatures
 - Nightmare Creatures (Demo)
@@ -321,6 +354,7 @@
 - Normality (Demo)
 - Oddworld : Abe's Exoddus
 - O.D.T. (Demo)
+- Of Light & Darkness
 - One Must Fall 2097
 - Oni
 - Outcast
@@ -338,6 +372,7 @@
 - Phantasmagoria: A Puzzle of Flesh
 - Pinball Fantasies
 - Pinball Illusions
+- Pitfall: The Mayan Adventure (Demo)
 - Pizza Tycoon
 - Planescape: Torment
 - POD Gold
@@ -350,9 +385,12 @@
 - Prince of Persia
 - Prince of Persia 3D (demo)
 - Pro Pinball : The Web
+- Pro Pinball : Timeshock! (Demo)
 - Psycho Pinball
 - Quake
+- Quake (Shareware)
 - Quake II
+- Quake II (Demo)
 - Quake III Arena
 - Quiver (Shareware)
 - Railroad Tycoon II
@@ -361,6 +399,7 @@
 - Recoil (Demo)
 - Red Faction
 - Redline Racer
+- Requiem: Avenging Angel (Demo)
 - Resident Evil
 - Resident Evil 2 
 - Resident Evil 2 (Demo)
@@ -368,15 +407,17 @@
 - Return of the Phantom
 - Return to Zork
 - Revenge of the Mutant Camels
-- Re-volt (Demo)
+- Re-Volt (Demo)
 - Riddle of Master Lu
 - Ripper
 - Rise 2: Resurrection (Demo)
 - Rise of the Triad (v1.2)
 - Road Rash
 - Road Rash (Demo)
+- Rocket Raid (Shareware)
 - Rollcage
 - Rollercoaster Tycoon
+- Rollercoaster Tycoon (Demo)
 - Sam and Max Hit the Road
 - Sanitarium
 - Screamer
@@ -388,9 +429,10 @@
 - Sega Rally 2
 - Sega Rally 2 (demo)
 - Sega Touring Car Championship
+- Sega Touring Car Championship (Demo)
 - Sega Worldwide Soccer (Demo)
-- Sensible World of Soccer
 - Sensible Soccer '98 (Demo)
+- Sensible World of Soccer
 - Settlers 3 (demo)
 - Severance : Blade of Darkness (demo)
 - Shadow Company (demo)
@@ -416,6 +458,7 @@
 - Speed Busters
 - Speed Busters (Demo)
 - Speedy Blupi (Demo)
+- Spellcross (Demo)
 - Spider-Man (demo)
 - Springy Madness
 - Sports Car GT (Demo)
@@ -428,6 +471,7 @@
 - Star Wars Jedi Academy
 - Star Wars Rogue Squadron
 - Star Wars Shadows of the Empire
+- StarCraft (Shareware)
 - Starfleet Command 2 (demo)
 - Stargunner
 - Starlancer (demo)
@@ -435,13 +479,16 @@
 - Stonekeep
 - Street Fighter Alpha
 - Street Fighter Alpha 2
+- Street Wars (Demo)
 - Stunt Island
 - Sub Culture (Demo)
+- Super Cross (Shareware)
 - SWAT 3 Elite Edition (demo)
 - SWIV 3D
 - Syndicate
 - System Shock
 - System Shock 2 (Demo)
+- Take No Prisoners (Demo)
 - Tank Racer
 - Tank Racer (Demo)
 - Tanktics (demo)
@@ -450,13 +497,17 @@
 - Test Drive 4 (Demo)
 - Test Drive 5 (Demo)
 - Terminal Velocity
+- Terracide (Demo)
 - The Dig
 - The Elder Scrolls: Redguard (Demo)
 - The Elk Moon Murder
 - The Fifth Element (Demo)
 - The Humans
+- The Journeyman Project 2: Buried in Time
 - The Journeyman Project 3: Legacy of Time
 - The Labyrinth (RealArcade version)
+- The Last Express
+- The Longest Journey (Demo)
 - The Lost Vikings
 - The Neverhood
 - The Nomad Soul
@@ -467,7 +518,9 @@
 - The Ultimate Doom (v1.9)
 - Theme Hospital
 - Theme Park
+- Thexder 95 (Demo)
 - Thief: The Dark Project (Demo)
+- Thrust, Twist 'n' Turn (Demo)
 - TimeGate: Knight's Chase
 - TOCA Touring Car Championship (Demo)
 - TOCA 2 Touring Cars
@@ -485,9 +538,10 @@
 - Transport Tycoon
 - Transport Tycoon Deluxe
 - Tropico (demo)
-- Turok (Demo)
-- Turok 2 (Demo)
+- Turok: Dinosaur Hunter (Demo)
+- Turok 2: Seeds of Evil (Demo)
 - Turrican 2
+- Twisted Metal 2
 - UFO : Enemy Unknown
 - Ultimate R@ce Pro
 - Ultimate R@ce Pro (Demo)
@@ -517,7 +571,9 @@
 - Worms 2 (Demo)
 - Worms Armageddon
 - X-Com: Apocalypse 
+- X-Com: Apocalypse (Demo)
 - X-Com : Terror From The Deep
+- X-Men: Children of the Atom (Demo)
 - Xargon
 - Z : Steel Soldiers (demo)
 - Zak McKracken
