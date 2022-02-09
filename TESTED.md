@@ -72,6 +72,7 @@
 - 3D Ultra Pinball Thrillride
 - A-10 Tank Killer
 - Acid Tetris (Shareware)
+- Action Super Cross (Shareware)
 - Actua Soccer
 - Actua Soccer 2 (Demo)
 - Addiction Pinball
@@ -137,8 +138,8 @@
 - Carnivores 2
 - Chasm: The Rift (Demo)
 - Civilization
-- Civilization for Windows
 - Civilization II
+- Civilization for Windows
 - Claw
 - Clive Barker's Undying (demo)
 - Clockwiser
@@ -241,7 +242,6 @@
 - Full Throttle
 - Fury 3
 - Fury 3 (Trial)
-- Gabriel Knight: The Beast Within
 - Gabriel Knight 3: Blood of the Sacred, Blood of the Damned
 - Gabriel Knight 3 (demo)
 - Galapagos (Demo)
@@ -264,9 +264,10 @@
 - Half-Life Uplink
 - Halloween Harry
 - Hardwar (Demo)
-- Heart of Darkness
 - Heartlight
+- Heart of Darkness
 - Helicops (Demo)
+- Hellbender
 - Hellbender (Trial)
 - Heretic II (Demo)
 - Hexen
@@ -493,7 +494,6 @@
 - Street Wars (Demo)
 - Stunt Island
 - Sub Culture (Demo)
-- Super Cross (Shareware)
 - SWAT 3 Elite Edition (demo)
 - SWIV 3D
 - Syndicate
@@ -503,12 +503,13 @@
 - Tank Racer
 - Tank Racer (Demo)
 - Tanktics (demo)
-- Tennis Elbow (Shareware)
 - Teenagent
+- Tennis Elbow (Shareware)
 - Terminal Velocity
 - Test Drive 4 (Demo)
 - Test Drive 5 (Demo)
 - Terracide (Demo)
+- The Beast Within: A Gabriel Knight Mystery
 - The Dig
 - The Elder Scrolls: Redguard (Demo)
 - The Elk Moon Murder
