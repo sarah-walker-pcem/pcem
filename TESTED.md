@@ -67,6 +67,7 @@
 ### Games
 - 1602 AD (demo)
 - 11th Hour
+- 3D-Jongg (Demo)
 - 3D Lemmings (Demo)
 - 3D Ultra Pinball Thrillride
 - A-10 Tank Killer
@@ -166,6 +167,7 @@
 - Dark Earth (Demo)
 - Dark Forces (Demo)
 - Dark Reign
+- Dark Vengeance (Demo)
 - Dawn Patrol
 - Day of the Tentacle
 - Daytona USA Deluxe (Demo)
@@ -185,6 +187,7 @@
 - Discworld
 - Discworld II
 - Discworld Noir
+- Dominion: Storm Over Gift 3 (Demo)
 - Doom (v1.2)
 - Doom II (v1.666)
 - Doom'95
@@ -209,6 +212,7 @@
 - Evolva (demo)
 - Excessive Speed (Demo)
 - Expendable
+- Extacy (Shareware)
 - Extreme Assault
 - Extreme Assault (Demo)
 - Eye of the Beholder
@@ -240,6 +244,7 @@
 - Gabriel Knight: The Beast Within
 - Gabriel Knight 3: Blood of the Sacred, Blood of the Damned
 - Gabriel Knight 3 (demo)
+- Galapagos (Demo)
 - Gex
 - Gex 3D: Enter the Gecko
 - Gex 3D: Enter the Gecko (Demo)
@@ -249,6 +254,9 @@
 - Grand Prix 2 (Demo)
 - Grand Theft Auto
 - Grand Theft Auto 2
+- Grand Touring 
+- Grand Touring (Demo)
+- Gravity Well (Shareware)
 - Greedy (Shareware)
 - Grim Fandango
 - Grim Fandango (Demo)
@@ -275,6 +283,7 @@
 - Inca II
 - Interstate 76 (Demo)
 - Incoming
+- Incubation (Demo)
 - James Pond 2 : Robocod
 - Jazz Jackrabbit
 - Jazz Jackrabbit 2
@@ -317,6 +326,7 @@
 - Mechwarrior 3
 - Megaman Legends
 - Metal Gear Solid
+- Micro Machines V3 (Demo)
 - Microsoft Arcade
 - Microsoft Golf 99 (demo)
 - Midtown Madness 2 (demo)
@@ -336,6 +346,7 @@
 - Myth: The Fallen Lords (Demo)
 - Nascar Heat
 - NBA Action 98 (Demo)
+- Nebula Fighter (Shareware)
 - Need for Speed SE
 - Need for Speed II
 - Need for Speed II (Demo)
@@ -494,9 +505,9 @@
 - Tanktics (demo)
 - Tennis Elbow (Shareware)
 - Teenagent
+- Terminal Velocity
 - Test Drive 4 (Demo)
 - Test Drive 5 (Demo)
-- Terminal Velocity
 - Terracide (Demo)
 - The Dig
 - The Elder Scrolls: Redguard (Demo)
@@ -514,7 +525,6 @@
 - The Quivering
 - The Reap
 - The Reap (Demo)
-- The Settlers 3 (Demo)
 - The Ultimate Doom (v1.9)
 - Theme Hospital
 - Theme Park
@@ -546,17 +556,21 @@
 - Ultimate R@ce Pro
 - Ultimate R@ce Pro (Demo)
 - Ultimate Ride (demo)
+- Ultra Violent Worlds (Shareware)
 - Under a Killing Moon
 - Unreal
 - Unreal Tournament
 - Unreal Tournament 2004 (Direct3D)
 - Vanguard Ace (Shareware)
+- Vegas Games 2000 (Demo)
 - Virtua Cop 2
 - Virtua Fighter 2
 - Virtua Fighter 2 (Demo)
 - Wacky Wheels
+- Warlords III: Reign of Heroes (Demo)
 - Warlords Battlecry (demo)
 - Wheel of Time (demo)
+- Winds of Zolaria (Demo)
 - Wing Commander
 - Wing Commander : Privateer
 - Wipeout
