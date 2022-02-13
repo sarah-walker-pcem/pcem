@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "config.h"
 #include "paths.h"
@@ -26,6 +27,11 @@ void error(const char* format, ...)
                 put_backslash(buf);
                 strcat(buf, "pcem.log");
                 pclogf = fopen(buf, "wt");
+
+                if (NULL == pclogf) {
+                  fprintf(stderr, "Could not open log file for writing: %s",  strerror(errno));
+                  return;
+                }
         }
         //return;
         va_list ap;
@@ -49,6 +55,12 @@ void fatal(const char* format, ...)
                 put_backslash(buf);
                 strcat(buf, "pcem.log");
                 pclogf = fopen(buf, "wt");
+
+                if (NULL == pclogf) {
+                  fprintf(stderr, "Could not open log file for writing: %s",  strerror(errno));
+                  return;
+                }
+
         }
         //return;
         va_list ap;
@@ -89,6 +101,11 @@ void pclog(const char* format, ...)
                 put_backslash(buf);
                 strcat(buf, "pcem.log");
                 pclogf = fopen(buf, "wt");
+                if (NULL == pclogf) {
+                  fprintf(stderr, "Could not open log file for writing: %s",  strerror(errno));
+                  return;
+                }
+
         }
         //return;
         va_list ap;
