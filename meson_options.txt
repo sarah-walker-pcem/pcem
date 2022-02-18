@@ -1,0 +1,7 @@
+option('use-plugin-engine', type: 'boolean', value: false, description: 'Build PCem with plugin support.')
+option('use-networking', type: 'boolean', value: false, description: 'Build PCem with networking support.')
+option('use-pcap-networking', type: 'boolean', value: true, description: 'Build PCem with PCAP support. Need to allow networking support for this option to work.')
+option('use-alsa', type: 'boolean', value: false, description: 'Build PCem with MIDI output using ALSA. This option only works on Linux.')
+option('allow-experimental-code', type: 'boolean', value: false, description: 'Build PCem with experimental code.')
+option('use-experimental-pdc', type: 'boolean', value: false, description: 'Build Professional Graphics Controller Support. Need to allow experimental code for this option to work.')
+option('use-experimental-printer', type: 'boolean', value: false, description: 'Build Printer Support. Need to allow experimental code for this option to work.')
