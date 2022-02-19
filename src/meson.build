@@ -42,4 +42,4 @@ pcem_src += files(
 
 subdir('plugin-api')
 
-executable('pcem', pcem_src, dependencies: pcem_dependencies, include_directories: pcem_include_dirs)
+executable('pcem', pcem_src, dependencies: pcem_dependencies, link_with: pcem_project_libraries, include_directories: pcem_include_dirs, install: true, win_subsystem: 'windows')

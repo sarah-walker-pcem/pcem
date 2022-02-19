@@ -47,3 +47,5 @@ pcem_include_dirs = include_directories(
         'private/wx-ui',
         'public'
         )
+
+install_subdir('public', install_dir: get_option('includedir') / 'pcem', strip_directory : true)

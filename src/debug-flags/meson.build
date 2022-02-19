@@ -1,33 +1,31 @@
-#if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-#        set(PCEM_DEFINES ${PCEM_DEFINES} DEBUG)
-#
-#        if(PCEM_SLIRP_DEBUG)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} SLIRP_DEBUG)
-#        endif()
-#        if(PCEM_RECOMPILER_DEBUG)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} RECOMPILER_DEBUG)
-#        endif()
-#        if(PCEM_NE2000_DEBUG)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} NE2000_DEBUG)
-#        endif()
-#        if(PCEM_EMU8K_DEBUG_REGISTERS)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} EMU8K_DEBUG_REGISTERS)
-#        endif()
-#        if(PCEM_SB_DSP_RECORD_DEBUG)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} SB_DSP_RECORD_DEBUG)
-#        endif()
-#        if(PCEM_MACH64_DEBUG)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} MACH64_DEBUG)
-#        endif()
-#        if(PCEM_NE2000_DEBUG)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} NE2000_DEBUG)
-#        endif()
-#        if(PCEM_DEBUG_EXTRA)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} DEBUG_EXTRA)
-#        endif()
-#        if(PCEM_PRINTER_DEBUG)
-#                set(PCEM_DEFINES ${PCEM_DEFINES} PRINTER_DEBUG)
-#        endif()
-#else()
-#        set(PCEM_DEFINES ${PCEM_DEFINES} RELEASE_BUILD)
-#endif()
+if get_option('buildtype').startswith('debug')
+        if get_option('slirp-debug')
+                add_project_arguments('-DSLIRP_DEBUG', language: ['c', 'cpp'])
+        endif
+        if get_option('recompiler-debug')
+                add_project_arguments('-DRECOMPILER_DEBUG', language: ['c', 'cpp'])
+        endif
+        if get_option('ne2000-debug')
+                add_project_arguments('-DNE2000_DEBUG', language: ['c', 'cpp'])
+        endif
+        if get_option('emu8k-debug-registers')
+                add_project_arguments('-DEMU8K_DEBUG_REGISTERS', language: ['c', 'cpp'])
+        endif
+        if get_option('sb-dsp-record-debug')
+                add_project_arguments('-DSB_DSP_RECORD_DEBUG', language: ['c', 'cpp'])
+        endif
+        if get_option('mach64-debug')
+                add_project_arguments('-DMACH64_DEBUG', language: ['c', 'cpp'])
+        endif
+        if get_option('plugin-debug')
+                add_project_arguments('-DPLUGIN_DEBUG', language: ['c', 'cpp'])
+        endif
+        if get_option('extra-debug')
+                add_project_arguments('-DDEBUG_EXTRA', language: ['c', 'cpp'])
+        endif
+        if get_option('printer-debug')
+                add_project_arguments('-DPRINTER_DEBUG', language: ['c', 'cpp'])
+        endif
+else
+        add_project_arguments('-DRELEASE_BUILD', language: ['c', 'cpp'])
+endif

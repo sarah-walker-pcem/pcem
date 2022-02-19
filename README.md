@@ -16,53 +16,50 @@ You will need the following libraries and buildtools (and their dependencies):
 - SDL2
 - wxWidgets 3.x
 - OpenAL
-- CMake
-- Ninja (Recommended, but you can use a Makefile generator if you prefer)
+- Meson
+- Ninja
 
 Open a terminal window, navigate to the PCem directory then enter:
-### Linux/BSD
 ```
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release .
+meson --buildtype release build
+cd build
 ninja
+meson install --destdir=install
 ```
 
-### Windows (MSYS2)
+then `./install/bin/pcem` to run.
+
+The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`.
+
+Meson configure options are :
 ```
-cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_BUILD_TYPE=Release .
-ninja
+  --buildtype release        : Generate release build. Recommended for regular use.
+  --buildtype debug          : Compile with debugging enabled.
+  -Duse-networking=true      : Build with networking support.
+  -Duse-pcap-networking=true : Build with pcap networking support. (On by default needs USE_NETWORKING to compile) Requires libpcap
+  -Duse-alsa=true            : Build with support for MIDI output through ALSA. Requires libasound.
+  -Duse-plugin-engine=true   : Build with plugin support. Builds libpcem-plugin-api and links PCem with it.
 ```
 
-then `./src/pcem` to run.
-
-The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
-
-configure options are :
+If you are using --buildtype debug, there are some more debug options you can enable if needed
 ```
-  -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
-  -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
-  -DUSE_NETWORKING=ON        : Build with networking support.
-  -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (On by default needs USE_NETWORKING to compile) Requires libpcap
-  -DUSE_ALSA=ON              : Build with support for MIDI output through ALSA. Requires libasound.
-  -DPLUGIN_ENGINE=ON         : Build with plugin support. Builds libpcem-plugin-api and links PCem with it.
-```
-
-If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
-```
-  -DPCEM_SLIRP_DEBUG=ON           : Build PCem with SLIRP_DEBUG debug output
-  -DPCEM_RECOMPILER_DEBUG=ON      : Build PCem with RECOMPILER_DEBUG debug output
-  -DPCEM_NE2000_DEBUG=ON          : Build PCem with NE2000_DEBUG debug output
-  -DPCEM_EMU8K_DEBUG_REGISTERS=ON : Build PCem with EMU8K_DEBUG_REGISTERS debug output
-  -DPCEM_SB_DSP_RECORD_DEBUG=ON   : Build PCem with SB_DSP_RECORD_DEBUG debug output
-  -DPCEM_MACH64_DEBUG=ON          : Build PCem with MACH64_DEBUG debug output
-  -DPCEM_DEBUG_EXTRA=ON           : Build PCem with DEBUG_EXTRA debug output
+  -Dslirp-debug=true           : Build PCem with SLIRP_DEBUG debug output
+  -Drecompiler-debug=true      : Build PCem with RECOMPILER_DEBUG debug output
+  -Dne2000-debug=true          : Build PCem with NE2000_DEBUG debug output
+  -Demu8k-debug-registers=true : Build PCem with EMU8K_DEBUG_REGISTERS debug output
+  -Dsb-dsp-record-debug=true   : Build PCem with SB_DSP_RECORD_DEBUG debug output
+  -Dmach64-debug=true          : Build PCem with MACH64_DEBUG debug output
+  -Dplugin-debug=true          : Build PCem with PLUGIN_DEBUG debug output
+  -Dextra-debug=true           : Build PCem with DEBUG_EXTRA debug output
+  -Dprinter-debug=true         : Build PCem with PRINTER_DEBUG debug output
 ```
 
-They are some extra modules you can add if you build with `-DUSE_EXPERIMENTAL=ON`. These modules are untested.
+They are some extra modules you can add if you build with `-Dallow-experimental-code=true`. These modules are untested.
 incomplete, and may or may not be in a future build of PCem. We do not provide builds with these enabled as
 well.
 ```
-  -DUSE_EXPERIMENTAL_PGC=ON       : Build PCem with Professional Graphics Controller support.
-  -DUSE_EXPERIMENTAL_PRINTER=ON   : Build PCem with Printer support. Requires freetype.
+  -Duse-experimental-pdc=true       : Build PCem with Professional Graphics Controller support.
+  -Duse-experimental-printer=true   : Build PCem with Printer support. Requires freetype.
 ``` 
 The menu is a pop-up menu in the Linux/BSD port. Right-click on the main window when mouse is not
 captured.

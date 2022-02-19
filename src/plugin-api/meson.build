@@ -26,7 +26,8 @@ pcem_pluginapi_src = files(
         )
 
 if get_option('use-plugin-engine')
-        # Create Library Here and link to main EXE
+        pcem_plugin_api = shared_library('pcem', sources: pcem_pluginapi_src, dependencies: pcem_dependencies, include_directories: pcem_include_dirs, install: true)
+        pcem_project_libraries += pcem_plugin_api
 else
         pcem_src += pcem_pluginapi_src
 endif
