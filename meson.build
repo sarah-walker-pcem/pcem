@@ -26,4 +26,4 @@ add_project_arguments('-fcommon', language: ['c', 'cpp'])
 subdir('docs')
 subdir('src')
 
-install_subdir('nvr', install_dir: get_option('datadir') / 'nvr/default', strip_directory : true)
+install_subdir('nvr', install_dir: get_option('datadir') / 'pcem/nvr/default', strip_directory : true)

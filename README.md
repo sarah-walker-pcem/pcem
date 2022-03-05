@@ -24,7 +24,7 @@ Open a terminal window, navigate to the PCem directory then enter:
 meson --buildtype release build
 cd build
 ninja
-meson install --destdir=install
+DESTDIR="$(pwd)"/install meson install
 ```
 
 then `./install/bin/pcem` to run.
