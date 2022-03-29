@@ -21,8 +21,11 @@ set(PCEM_CPU_TYPE ${CMAKE_SYSTEM_PROCESSOR})
 
 if(${PCEM_CPU_TYPE} STREQUAL "i386")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
-        set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -msse2")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
 endif()
+
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -mstackrealign -fno-strict-aliasing")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -mstackrealign -fno-strict-aliasing")
 
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
 set(PCEM_DEFINES PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
