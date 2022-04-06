@@ -110,6 +110,8 @@ include_directories(${SDL2_INCLUDE_DIRS})
 find_package(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})
 
+include(apple.cmake)
+
 if(WIN32)
         set(wxWidgets_CONFIGURATION mswu)
 endif()
@@ -133,3 +135,4 @@ add_subdirectory(src)
 if(USE_EXPERIMENTAL)
         add_subdirectory(experimental)
 endif()
+

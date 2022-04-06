@@ -73,3 +73,13 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
                 wx-ui/wx.rc
                 )
 endif()
+
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+	set(PCEM_SRC ${PCEM_SRC}
+		wx-ui/wx-sdl2-display.c
+	)
+
+  add_compile_definitions(PCEM_RENDER_WITH_TIMER PCEM_RENDER_TIMER_LOOP)
+
+endif()
