@@ -6,6 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 include(${CMAKE_SOURCE_DIR}/includes/includes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
 
 # TODO: This whole thing is jank, replace with a real way to determine cpu type
 if(WIN32)
@@ -110,11 +111,6 @@ include_directories(${SDL2_INCLUDE_DIRS})
 find_package(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})
 
-include(apple.cmake)
-
-if(WIN32)
-        set(wxWidgets_CONFIGURATION mswu)
-endif()
 find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
 include(${wxWidgets_USE_FILE})
 
@@ -123,7 +119,7 @@ if(USE_ALSA)
         include_directories(${ALSA_INCLUDE_DIRS})
 endif()
 
-if(USE_PCAP_NETWORKING)
+if(USE_NETWORKING AND USE_PCAP_NETWORKING)
         find_package(PCAP REQUIRED)
         include_directories(${PCAP_INCLUDE_DIR})
 endif()
