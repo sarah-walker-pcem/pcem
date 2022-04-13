@@ -1,4 +1,4 @@
-#define  _WIN32_WINNT 0x0501
+#define _WIN32_WINNT 0x0501
 #include <SDL2/SDL.h>
 #include "video.h"
 #include "wx-sdl2-video.h"
@@ -28,12 +28,12 @@ static HMENU menu = 0;
 static RAWINPUTDEVICE device;
 static uint16_t scancode_map[65536];
 
-SDL_mutex* rendererMutex;
-SDL_cond* rendererCond;
-SDL_Thread* renderthread = NULL;
+SDL_mutex *rendererMutex;
+SDL_cond *rendererCond;
+SDL_Thread *renderthread = NULL;
 
-SDL_Window* window = NULL;
-SDL_Window* dummy_window = NULL;
+SDL_Window *window = NULL;
+SDL_Window *dummy_window = NULL;
 
 int rendering = 0;
 
@@ -43,8 +43,8 @@ extern int pause;
 extern int video_scale;
 extern int take_screenshot;
 
-void* window_ptr;
-void* menu_ptr;
+void *window_ptr;
+void *menu_ptr;
 
 SDL_Rect remembered_rect;
 int remembered_mouse_x = 0;
@@ -79,8 +79,8 @@ extern void toggle_fullscreen();
 
 void display_resize(int width, int height)
 {
-        winsizex = width*(video_scale+1) >> 1;
-        winsizey = height*(video_scale+1) >> 1;
+        winsizex = width * (video_scale + 1) >> 1;
+        winsizey = height * (video_scale + 1) >> 1;
 
         SDL_Rect rect;
         rect.x = rect.y = 0;
@@ -110,7 +110,7 @@ int is_fullscreen()
         if (window)
         {
                 int flags = SDL_GetWindowFlags(window);
-                return (flags&SDL_WINDOW_FULLSCREEN) || (flags&SDL_WINDOW_FULLSCREEN_DESKTOP);
+                return (flags & SDL_WINDOW_FULLSCREEN) || (flags & SDL_WINDOW_FULLSCREEN_DESKTOP);
         }
         return 0;
 }
@@ -121,34 +121,34 @@ UINT16 convert_scan_code(UINT16 scan_code)
 {
         switch (scan_code)
         {
-                case 0xE001:
+        case 0xE001:
                 return 0xF001;
-                case 0xE002:
+        case 0xE002:
                 return 0xF002;
-                case 0xE005:
+        case 0xE005:
                 return 0xF005;
-                case 0xE006:
+        case 0xE006:
                 return 0xF006;
-                case 0xE007:
+        case 0xE007:
                 return 0xF007;
-                case 0xE071:
+        case 0xE071:
                 return 0xF008;
-                case 0xE072:
+        case 0xE072:
                 return 0xF009;
-                case 0xE07F:
+        case 0xE07F:
                 return 0xF00A;
-                case 0xE0E1:
+        case 0xE0E1:
                 return 0xF00B;
-                case 0xE0EE:
+        case 0xE0EE:
                 return 0xF00C;
-                case 0xE0F1:
+        case 0xE0F1:
                 return 0xF00D;
-                case 0xE0FE:
+        case 0xE0FE:
                 return 0xF00E;
-                case 0xE0EF:
+        case 0xE0EF:
                 return 0xF00F;
 
-                default:
+        default:
                 return scan_code;
         }
 }
@@ -175,16 +175,16 @@ void get_registry_key_map()
            HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout */
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, 1, &hKey) == ERROR_SUCCESS)
         {
-                if(RegQueryValueEx(hKey, valueName, NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS)
+                if (RegQueryValueEx(hKey, valueName, NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS)
                 {
-                        UINT32 *bufEx2 = (UINT32 *) buf;
+                        UINT32 *bufEx2 = (UINT32 *)buf;
                         int scMapCount = bufEx2[2];
                         pclog("%lu scan code mappings found!\n", scMapCount);
                         if ((bufSize != 0) && (scMapCount != 0))
                         {
-                                UINT16 *bufEx = (UINT16 *) (buf + 12);
+                                UINT16 *bufEx = (UINT16 *)(buf + 12);
                                 pclog("More than zero scan code mappings found, processing...\n");
-                                for (j = 0; j < scMapCount*2; j += 2)
+                                for (j = 0; j < scMapCount * 2; j += 2)
                                 {
                                         /* Each scan code is 32-bit: 16 bits of remapped scan code,
                                            and 16 bits of original scan code. */
@@ -204,24 +204,29 @@ void get_registry_key_map()
         pclog("Done preparing!\n");
 }
 
-LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
+LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
         if (nCode < 0 || nCode != HC_ACTION || (!mousecapture && !video_fullscreen))
-                return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam);
+                return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
 
-        KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*)lParam;
+        KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
 
-        if (p->vkCode == VK_TAB && p->flags & LLKHF_ALTDOWN) return 1; //disable alt-tab
-        if (p->vkCode == VK_SPACE && p->flags & LLKHF_ALTDOWN) return 1; //disable alt-tab
-        if((p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN)) return 1;//disable windows keys
-        if (p->vkCode == VK_ESCAPE && p->flags & LLKHF_ALTDOWN) return 1;//disable alt-escape
-        BOOL bControlKeyDown = GetAsyncKeyState (VK_CONTROL) >> ((sizeof(SHORT) * 8) - 1);//checks ctrl key pressed
-        if (p->vkCode == VK_ESCAPE && bControlKeyDown) return 1; //disable ctrl-escape
+        if (p->vkCode == VK_TAB && p->flags & LLKHF_ALTDOWN)
+                return 1; // disable alt-tab
+        if (p->vkCode == VK_SPACE && p->flags & LLKHF_ALTDOWN)
+                return 1; // disable alt-tab
+        if ((p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN))
+                return 1; // disable windows keys
+        if (p->vkCode == VK_ESCAPE && p->flags & LLKHF_ALTDOWN)
+                return 1;                                                                 // disable alt-escape
+        BOOL bControlKeyDown = GetAsyncKeyState(VK_CONTROL) >> ((sizeof(SHORT) * 8) - 1); // checks ctrl key pressed
+        if (p->vkCode == VK_ESCAPE && bControlKeyDown)
+                return 1; // disable ctrl-escape
 
-        return CallNextHookEx( hKeyboardHook, nCode, wParam, lParam );
+        return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
 }
 
-LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
         switch (message)
         {
@@ -274,19 +279,18 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         }
                 }
                 free(raw);
-
         }
         break;
         case WM_SETFOCUS:
-                infocus=1;
-        break;
+                infocus = 1;
+                break;
         case WM_KILLFOCUS:
-                infocus=0;
+                infocus = 0;
                 if (is_fullscreen())
                         window_dowindowed = 1;
                 window_doinputrelease = 1;
                 memset(rawinputkey, 0, sizeof(rawinputkey));
-        break;
+                break;
         case WM_CLOSE:
         case WM_DESTROY:
         case WM_KEYDOWN:
@@ -302,14 +306,14 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         default:
                 break;
         }
-        return DefWindowProc (hwnd, message, wParam, lParam);
+        return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
 LRESULT CALLBACK subWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
         switch (message)
         {
-                default:
+        default:
                 return DefWindowProc(hwnd, message, wParam, lParam);
         }
         return 0;
@@ -336,7 +340,7 @@ void display_close()
         SDL_Quit();
 }
 
-void display_start(void* wnd_ptr)
+void display_start(void *wnd_ptr)
 {
         window_ptr = wnd_ptr;
         menu_ptr = wx_getmenu(wnd_ptr);
@@ -359,138 +363,141 @@ void display_stop()
         SDL_DestroyCond(rendererCond);
         SDL_DetachThread(renderthread);
         releasemouse();
-
 }
 
-void sdl_set_window_title(const char* title) {
+void sdl_set_window_title(const char *title)
+{
         if (hwnd && !is_fullscreen())
                 SetWindowText(hwnd, title);
 }
 
-int get_border_size(int* top, int* left, int* bottom, int* right)
+int get_border_size(int *top, int *left, int *bottom, int *right)
 {
         int res = SDL_GetWindowBordersSize(window, top, left, bottom, right);
-        if (top) *top -= GetSystemMetrics(SM_CYMENUSIZE);
+        if (top)
+                *top -= GetSystemMetrics(SM_CYMENUSIZE);
 
         return res;
 }
 
-static const struct {
+static const struct
+{
         SDL_Scancode sdl;
         int system;
 } SDLScancodeToSystemScancode[] = {
-                { SDL_SCANCODE_A, 0x1e },
-                { SDL_SCANCODE_B, 0x30 },
-                { SDL_SCANCODE_C, 0x2e },
-                { SDL_SCANCODE_D, 0x20 },
-                { SDL_SCANCODE_E, 0x12 },
-                { SDL_SCANCODE_F, 0x21 },
-                { SDL_SCANCODE_G, 0x22 },
-                { SDL_SCANCODE_H, 0x23 },
-                { SDL_SCANCODE_I, 0x17 },
-                { SDL_SCANCODE_J, 0x24 },
-                { SDL_SCANCODE_K, 0x25 },
-                { SDL_SCANCODE_L, 0x26 },
-                { SDL_SCANCODE_M, 0x32 },
-                { SDL_SCANCODE_N, 0x31 },
-                { SDL_SCANCODE_O, 0x18 },
-                { SDL_SCANCODE_P, 0x19 },
-                { SDL_SCANCODE_Q, 0x10 },
-                { SDL_SCANCODE_R, 0x13 },
-                { SDL_SCANCODE_S, 0x1f },
-                { SDL_SCANCODE_T, 0x14 },
-                { SDL_SCANCODE_U, 0x16 },
-                { SDL_SCANCODE_V, 0x2f },
-                { SDL_SCANCODE_W, 0x11 },
-                { SDL_SCANCODE_X, 0x2d },
-                { SDL_SCANCODE_Y, 0x15 },
-                { SDL_SCANCODE_Z, 0x2c },
-                { SDL_SCANCODE_0, 0x0B },
-                { SDL_SCANCODE_1, 0x02 },
-                { SDL_SCANCODE_2, 0x03 },
-                { SDL_SCANCODE_3, 0x04 },
-                { SDL_SCANCODE_4, 0x05 },
-                { SDL_SCANCODE_5, 0x06 },
-                { SDL_SCANCODE_6, 0x07 },
-                { SDL_SCANCODE_7, 0x08 },
-                { SDL_SCANCODE_8, 0x09 },
-                { SDL_SCANCODE_9, 0x0A },
-                { SDL_SCANCODE_GRAVE, 0x29 },
-                { SDL_SCANCODE_MINUS, 0x0c },
-                { SDL_SCANCODE_EQUALS, 0x0d },
-                { SDL_SCANCODE_NONUSBACKSLASH, 0x56 },
-                { SDL_SCANCODE_BACKSLASH, 0x2b },
-                { SDL_SCANCODE_BACKSPACE, 0x0e },
-                { SDL_SCANCODE_SPACE, 0x39 },
-                { SDL_SCANCODE_TAB, 0x0f },
-                { SDL_SCANCODE_CAPSLOCK, 0x3a },
-                { SDL_SCANCODE_LSHIFT, 0x2a },
-                { SDL_SCANCODE_LCTRL, 0x1d },
-                { SDL_SCANCODE_LGUI, 0xdb },
-                { SDL_SCANCODE_LALT, 0x38 },
-                { SDL_SCANCODE_RSHIFT, 0x36 },
-                { SDL_SCANCODE_RCTRL, 0x9d },
-                { SDL_SCANCODE_RGUI, 0xdc },
-                { SDL_SCANCODE_RALT, 0xb8 },
-                { SDL_SCANCODE_SYSREQ, 0x54 },
-                { SDL_SCANCODE_APPLICATION, 0xdd },
-                { SDL_SCANCODE_RETURN, 0x1c },
-                { SDL_SCANCODE_ESCAPE, 0x01 },
-                { SDL_SCANCODE_F1, 0x3B },
-                { SDL_SCANCODE_F2, 0x3C },
-                { SDL_SCANCODE_F3, 0x3D },
-                { SDL_SCANCODE_F4, 0x3e },
-                { SDL_SCANCODE_F5, 0x3f },
-                { SDL_SCANCODE_F6, 0x40 },
-                { SDL_SCANCODE_F7, 0x41 },
-                { SDL_SCANCODE_F8, 0x42 },
-                { SDL_SCANCODE_F9, 0x43 },
-                { SDL_SCANCODE_F10, 0x44 },
-                { SDL_SCANCODE_F11, 0x57 },
-                { SDL_SCANCODE_F12, 0x58 },
-                { SDL_SCANCODE_SCROLLLOCK, 0x46 },
-                { SDL_SCANCODE_LEFTBRACKET, 0x1a },
-                { SDL_SCANCODE_RIGHTBRACKET, 0x1b },
-                { SDL_SCANCODE_INSERT, 0xd2 },
-                { SDL_SCANCODE_HOME, 0xc7 },
-                { SDL_SCANCODE_PAGEUP, 0xc9 },
-                { SDL_SCANCODE_DELETE, 0xd3 },
-                { SDL_SCANCODE_END, 0xcf },
-                { SDL_SCANCODE_PAGEDOWN, 0xd1 },
-                { SDL_SCANCODE_UP, 0xc8 },
-                { SDL_SCANCODE_LEFT, 0xcb },
-                { SDL_SCANCODE_DOWN, 0xd0 },
-                { SDL_SCANCODE_RIGHT, 0xcd },
-                { SDL_SCANCODE_NUMLOCKCLEAR, 0x45 },
-                { SDL_SCANCODE_KP_DIVIDE, 0xb5 },
-                { SDL_SCANCODE_KP_MULTIPLY, 0x37 },
-                { SDL_SCANCODE_KP_MINUS, 0x4a },
-                { SDL_SCANCODE_KP_PLUS, 0x4e },
-                { SDL_SCANCODE_KP_ENTER, 0x9c },
-                { SDL_SCANCODE_KP_PERIOD, 0x53 },
-                { SDL_SCANCODE_KP_0, 0x52 },
-                { SDL_SCANCODE_KP_1, 0x4f },
-                { SDL_SCANCODE_KP_2, 0x50 },
-                { SDL_SCANCODE_KP_3, 0x51 },
-                { SDL_SCANCODE_KP_4, 0x48 },
-                { SDL_SCANCODE_KP_5, 0x4c },
-                { SDL_SCANCODE_KP_6, 0x4d },
-                { SDL_SCANCODE_KP_7, 0x47 },
-                { SDL_SCANCODE_KP_8, 0x48 },
-                { SDL_SCANCODE_KP_9, 0x49 },
-                { SDL_SCANCODE_SEMICOLON, 0x27 },
-                { SDL_SCANCODE_APOSTROPHE, 0x28 },
-                { SDL_SCANCODE_COMMA, 0x33 },
-                { SDL_SCANCODE_PERIOD, 0x34 },
-                { SDL_SCANCODE_SLASH, 0x35 },
-                { SDL_SCANCODE_PRINTSCREEN, 0xb7 }
-};
+    {SDL_SCANCODE_A, 0x1e},
+    {SDL_SCANCODE_B, 0x30},
+    {SDL_SCANCODE_C, 0x2e},
+    {SDL_SCANCODE_D, 0x20},
+    {SDL_SCANCODE_E, 0x12},
+    {SDL_SCANCODE_F, 0x21},
+    {SDL_SCANCODE_G, 0x22},
+    {SDL_SCANCODE_H, 0x23},
+    {SDL_SCANCODE_I, 0x17},
+    {SDL_SCANCODE_J, 0x24},
+    {SDL_SCANCODE_K, 0x25},
+    {SDL_SCANCODE_L, 0x26},
+    {SDL_SCANCODE_M, 0x32},
+    {SDL_SCANCODE_N, 0x31},
+    {SDL_SCANCODE_O, 0x18},
+    {SDL_SCANCODE_P, 0x19},
+    {SDL_SCANCODE_Q, 0x10},
+    {SDL_SCANCODE_R, 0x13},
+    {SDL_SCANCODE_S, 0x1f},
+    {SDL_SCANCODE_T, 0x14},
+    {SDL_SCANCODE_U, 0x16},
+    {SDL_SCANCODE_V, 0x2f},
+    {SDL_SCANCODE_W, 0x11},
+    {SDL_SCANCODE_X, 0x2d},
+    {SDL_SCANCODE_Y, 0x15},
+    {SDL_SCANCODE_Z, 0x2c},
+    {SDL_SCANCODE_0, 0x0B},
+    {SDL_SCANCODE_1, 0x02},
+    {SDL_SCANCODE_2, 0x03},
+    {SDL_SCANCODE_3, 0x04},
+    {SDL_SCANCODE_4, 0x05},
+    {SDL_SCANCODE_5, 0x06},
+    {SDL_SCANCODE_6, 0x07},
+    {SDL_SCANCODE_7, 0x08},
+    {SDL_SCANCODE_8, 0x09},
+    {SDL_SCANCODE_9, 0x0A},
+    {SDL_SCANCODE_GRAVE, 0x29},
+    {SDL_SCANCODE_MINUS, 0x0c},
+    {SDL_SCANCODE_EQUALS, 0x0d},
+    {SDL_SCANCODE_NONUSBACKSLASH, 0x56},
+    {SDL_SCANCODE_BACKSLASH, 0x2b},
+    {SDL_SCANCODE_BACKSPACE, 0x0e},
+    {SDL_SCANCODE_SPACE, 0x39},
+    {SDL_SCANCODE_TAB, 0x0f},
+    {SDL_SCANCODE_CAPSLOCK, 0x3a},
+    {SDL_SCANCODE_LSHIFT, 0x2a},
+    {SDL_SCANCODE_LCTRL, 0x1d},
+    {SDL_SCANCODE_LGUI, 0xdb},
+    {SDL_SCANCODE_LALT, 0x38},
+    {SDL_SCANCODE_RSHIFT, 0x36},
+    {SDL_SCANCODE_RCTRL, 0x9d},
+    {SDL_SCANCODE_RGUI, 0xdc},
+    {SDL_SCANCODE_RALT, 0xb8},
+    {SDL_SCANCODE_SYSREQ, 0x54},
+    {SDL_SCANCODE_APPLICATION, 0xdd},
+    {SDL_SCANCODE_RETURN, 0x1c},
+    {SDL_SCANCODE_ESCAPE, 0x01},
+    {SDL_SCANCODE_F1, 0x3B},
+    {SDL_SCANCODE_F2, 0x3C},
+    {SDL_SCANCODE_F3, 0x3D},
+    {SDL_SCANCODE_F4, 0x3e},
+    {SDL_SCANCODE_F5, 0x3f},
+    {SDL_SCANCODE_F6, 0x40},
+    {SDL_SCANCODE_F7, 0x41},
+    {SDL_SCANCODE_F8, 0x42},
+    {SDL_SCANCODE_F9, 0x43},
+    {SDL_SCANCODE_F10, 0x44},
+    {SDL_SCANCODE_F11, 0x57},
+    {SDL_SCANCODE_F12, 0x58},
+    {SDL_SCANCODE_SCROLLLOCK, 0x46},
+    {SDL_SCANCODE_LEFTBRACKET, 0x1a},
+    {SDL_SCANCODE_RIGHTBRACKET, 0x1b},
+    {SDL_SCANCODE_INSERT, 0xd2},
+    {SDL_SCANCODE_HOME, 0xc7},
+    {SDL_SCANCODE_PAGEUP, 0xc9},
+    {SDL_SCANCODE_DELETE, 0xd3},
+    {SDL_SCANCODE_END, 0xcf},
+    {SDL_SCANCODE_PAGEDOWN, 0xd1},
+    {SDL_SCANCODE_UP, 0xc8},
+    {SDL_SCANCODE_LEFT, 0xcb},
+    {SDL_SCANCODE_DOWN, 0xd0},
+    {SDL_SCANCODE_RIGHT, 0xcd},
+    {SDL_SCANCODE_NUMLOCKCLEAR, 0x45},
+    {SDL_SCANCODE_KP_DIVIDE, 0xb5},
+    {SDL_SCANCODE_KP_MULTIPLY, 0x37},
+    {SDL_SCANCODE_KP_MINUS, 0x4a},
+    {SDL_SCANCODE_KP_PLUS, 0x4e},
+    {SDL_SCANCODE_KP_ENTER, 0x9c},
+    {SDL_SCANCODE_KP_PERIOD, 0x53},
+    {SDL_SCANCODE_KP_0, 0x52},
+    {SDL_SCANCODE_KP_1, 0x4f},
+    {SDL_SCANCODE_KP_2, 0x50},
+    {SDL_SCANCODE_KP_3, 0x51},
+    {SDL_SCANCODE_KP_4, 0x48},
+    {SDL_SCANCODE_KP_5, 0x4c},
+    {SDL_SCANCODE_KP_6, 0x4d},
+    {SDL_SCANCODE_KP_7, 0x47},
+    {SDL_SCANCODE_KP_8, 0x48},
+    {SDL_SCANCODE_KP_9, 0x49},
+    {SDL_SCANCODE_SEMICOLON, 0x27},
+    {SDL_SCANCODE_APOSTROPHE, 0x28},
+    {SDL_SCANCODE_COMMA, 0x33},
+    {SDL_SCANCODE_PERIOD, 0x34},
+    {SDL_SCANCODE_SLASH, 0x35},
+    {SDL_SCANCODE_PRINTSCREEN, 0xb7}};
 
 int sdl_scancode(SDL_Scancode scancode)
 {
         int i;
-        for (i = 0; i < SDL_arraysize(SDLScancodeToSystemScancode); ++i) {
-                if (SDLScancodeToSystemScancode[i].sdl == scancode) {
+        for (i = 0; i < SDL_arraysize(SDLScancodeToSystemScancode); ++i)
+        {
+                if (SDLScancodeToSystemScancode[i].sdl == scancode)
+                {
                         return SDLScancodeToSystemScancode[i].system;
                 }
         }
@@ -544,32 +551,32 @@ void window_setup()
 int window_create()
 {
         int i;
-        WNDCLASSEX wincl;        /* Data structure for the windowclass */
+        WNDCLASSEX wincl; /* Data structure for the windowclass */
 
         hinstance = (HINSTANCE)GetModuleHandle(NULL);
         /* The Window structure */
         wincl.hInstance = hinstance;
         wincl.lpszClassName = szClassName;
-        wincl.lpfnWndProc = WindowProcedure;      /* This function is called by windows */
-        wincl.style = CS_DBLCLKS;                 /* Catch double-clicks */
-        wincl.cbSize = sizeof (WNDCLASSEX);
+        wincl.lpfnWndProc = WindowProcedure; /* This function is called by windows */
+        wincl.style = CS_DBLCLKS;            /* Catch double-clicks */
+        wincl.cbSize = sizeof(WNDCLASSEX);
 
         /* Use default icon and mouse-pointer */
-        wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
-        wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
-        wincl.hCursor = NULL;//LoadCursor (NULL, IDC_ARROW);
-        wincl.lpszMenuName = NULL;                 /* No menu */
-        wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
-        wincl.cbWndExtra = 0;                      /* structure or the window instance */
+        wincl.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+        wincl.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+        wincl.hCursor = NULL;      // LoadCursor (NULL, IDC_ARROW);
+        wincl.lpszMenuName = NULL; /* No menu */
+        wincl.cbClsExtra = 0;      /* No extra bytes after the window class */
+        wincl.cbWndExtra = 0;      /* structure or the window instance */
         /* Use Windows's default color as the background of the window */
-        wincl.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
+        wincl.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
 
         /* Register the window class, and if it fails quit the program */
         if (!RegisterClassEx(&wincl))
                 return 0;
 
         wincl.lpszClassName = szSubClassName;
-        wincl.lpfnWndProc = subWindowProcedure;      /* This function is called by windows */
+        wincl.lpfnWndProc = subWindowProcedure; /* This function is called by windows */
 
         if (!RegisterClassEx(&wincl))
                 return 0;
@@ -592,19 +599,19 @@ int window_create()
         }
 
         /* The class is registered, let's create the program*/
-        hwnd = CreateWindowEx (
-                0,                   /* Extended possibilites for variation */
-                szClassName,         /* Classname */
-                "PCem " PCEM_VERSION_STRING,   /* Title Text */
-                WS_OVERLAPPEDWINDOW&~WS_SIZEBOX, /* default window */
-                CW_USEDEFAULT,       /* Windows decides the position */
-                CW_USEDEFAULT,       /* where the window ends up on the screen */
-                640+(GetSystemMetrics(SM_CXFIXEDFRAME)*2),                 /* The programs width */
-                480+(GetSystemMetrics(SM_CYFIXEDFRAME)*2)+GetSystemMetrics(SM_CYMENUSIZE)+GetSystemMetrics(SM_CYCAPTION)+1,                 /* and height in pixels */
-                HWND_DESKTOP,        /* The window is a child-window to desktop */
-                menu,                /* Menu */
-                hinstance,           /* Program Instance handler */
-                NULL                 /* No Window Creation data */
+        hwnd = CreateWindowEx(
+            0,                                                                                                                    /* Extended possibilites for variation */
+            szClassName,                                                                                                          /* Classname */
+            "PCem " PCEM_VERSION_STRING,                                                                                          /* Title Text */
+            WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX,                                                                                    /* default window */
+            CW_USEDEFAULT,                                                                                                        /* Windows decides the position */
+            CW_USEDEFAULT,                                                                                                        /* where the window ends up on the screen */
+            640 + (GetSystemMetrics(SM_CXFIXEDFRAME) * 2),                                                                        /* The programs width */
+            480 + (GetSystemMetrics(SM_CYFIXEDFRAME) * 2) + GetSystemMetrics(SM_CYMENUSIZE) + GetSystemMetrics(SM_CYCAPTION) + 1, /* and height in pixels */
+            HWND_DESKTOP,                                                                                                         /* The window is a child-window to desktop */
+            menu,                                                                                                                 /* Menu */
+            hinstance,                                                                                                            /* Program Instance handler */
+            NULL                                                                                                                  /* No Window Creation data */
         );
 
         /* Make the window visible on the screen */
@@ -621,7 +628,7 @@ int window_create()
         else
                 pclog("Raw input registration failed!\n");
 
-        hKeyboardHook = SetWindowsHookEx( WH_KEYBOARD_LL,  LowLevelKeyboardProc, GetModuleHandle(NULL), 0 );
+        hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 
         if (requested_render_driver.sdl_window_params & SDL_WINDOW_OPENGL)
         {
@@ -640,8 +647,8 @@ int window_create()
         {
                 char message[200];
                 sprintf(message,
-                                "SDL window could not be created! Error: %s\n",
-                                SDL_GetError());
+                        "SDL window could not be created! Error: %s\n",
+                        SDL_GetError());
                 wx_messagebox(window_ptr, message, "SDL Error", WX_MB_OK);
                 return 0;
         }
@@ -671,7 +678,8 @@ void window_close()
         menu = 0;
         SetMenu(hwnd, 0);
 
-        if (window) {
+        if (window)
+        {
                 SDL_GetWindowPosition(window, &rect.x, &rect.y);
                 SDL_GetWindowSize(window, &rect.w, &rect.h);
                 get_border_size(&border_y, &border_x, 0, 0);
@@ -689,13 +697,12 @@ void window_close()
         }
         dummy_window = NULL;
 
-        UnhookWindowsHookEx( hKeyboardHook );
+        UnhookWindowsHookEx(hKeyboardHook);
         DestroyWindow(hwnd);
         hwnd = NULL;
 
         UnregisterClass(szSubClassName, hinstance);
         UnregisterClass(szClassName, hinstance);
-
 }
 
 int render()
@@ -732,9 +739,10 @@ int render()
                 device_force_redraw();
                 video_wait_for_blit();
         }
-        while(SDL_PollEvent(&event))
+        while (SDL_PollEvent(&event))
         {
-                switch (event.type) {
+                switch (event.type)
+                {
                 case SDL_MOUSEBUTTONUP:
                         if (!mousecapture)
                         {
@@ -749,7 +757,8 @@ int render()
                                 window_doinputrelease = 1;
                         break;
                 case SDL_MOUSEWHEEL:
-                        if (mousecapture) mouse_wheel_update(event.wheel.y);
+                        if (mousecapture)
+                                mouse_wheel_update(event.wheel.y);
                         break;
                 case SDL_WINDOWEVENT:
                         if (event.window.event == SDL_WINDOWEVENT_CLOSE)
@@ -760,20 +769,20 @@ int render()
                         if (window_remember)
                         {
                                 int flags = SDL_GetWindowFlags(window);
-                                if (!(flags&SDL_WINDOW_FULLSCREEN) && !(flags&SDL_WINDOW_FULLSCREEN_DESKTOP))
+                                if (!(flags & SDL_WINDOW_FULLSCREEN) && !(flags & SDL_WINDOW_FULLSCREEN_DESKTOP))
                                 {
                                         if (event.window.event == SDL_WINDOWEVENT_MOVED)
                                         {
                                                 get_border_size(&border_y, &border_x, 0, 0);
-                                                window_x = event.window.data1-border_x;
-                                                window_y = event.window.data2-border_y;
+                                                window_x = event.window.data1 - border_x;
+                                                window_y = event.window.data2 - border_y;
                                         }
                                         else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
                                         {
                                                 window_w = event.window.data1;
                                                 window_h = event.window.data2;
                                         }
-                                        //save_window_pos = 1;
+                                        // save_window_pos = 1;
                                 }
                         }
 
@@ -781,8 +790,8 @@ int render()
                 }
         }
         if ((rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEDOWN)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_3)]) &&
-                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]) &&
-                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LALT)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RALT)]))
+            (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]) &&
+            (rawinputkey[sdl_scancode(SDL_SCANCODE_LALT)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RALT)]))
                 trigger_fullscreen = 1;
         else if (trigger_fullscreen)
         {
@@ -790,16 +799,16 @@ int render()
                 toggle_fullscreen();
         }
         else if ((rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEUP)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_9)]) &&
-                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]) &&
-                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LALT)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RALT)]))
+                 (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]) &&
+                 (rawinputkey[sdl_scancode(SDL_SCANCODE_LALT)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RALT)]))
                 trigger_screenshot = 1;
         else if (trigger_screenshot)
         {
                 trigger_screenshot = 0;
                 take_screenshot = 1;
         }
-        else if ((event.key.keysym.scancode == SDL_SCANCODE_END || event.key.keysym.scancode == SDL_SCANCODE_KP_1) &&
-                        (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]))
+        else if ((rawinputkey[sdl_scancode(SDL_SCANCODE_END)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_1)]) &&
+                 (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]))
                 trigger_inputrelease = 1;
         else if (trigger_inputrelease)
         {
@@ -849,7 +858,8 @@ int render()
                 SDL_SetWindowFullscreen(window, video_fullscreen_mode == 0 ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN);
                 device_force_redraw();
         }
-        if (window_doinputgrab) {
+        if (window_doinputgrab)
+        {
                 window_doinputgrab = 0;
                 mousecapture = 1;
                 SDL_GetRelativeMouseState(0, 0);
@@ -860,10 +870,11 @@ int render()
         {
                 SDL_Rect rect;
                 SDL_GetWindowSize(window, &rect.w, &rect.h);
-                SDL_WarpMouseInWindow(window, rect.w/2, rect.h/2);
+                SDL_WarpMouseInWindow(window, rect.w / 2, rect.h / 2);
         }
 
-        if (window_doinputrelease) {
+        if (window_doinputrelease)
+        {
                 window_doinputrelease = 0;
                 releasemouse();
         }
@@ -882,9 +893,11 @@ int render()
         {
                 int flags = SDL_GetWindowFlags(window);
                 win_doresize = 0;
-                if (!vid_resize || (flags&SDL_WINDOW_FULLSCREEN)) {
+                if (!vid_resize || (flags & SDL_WINDOW_FULLSCREEN))
+                {
                         SDL_GetWindowSize(window, &rect.w, &rect.h);
-                        if (rect.w != winsizex || rect.h != winsizey) {
+                        if (rect.w != winsizex || rect.h != winsizey)
+                        {
                                 SDL_GetWindowPosition(window, &rect.x, &rect.y);
                                 SDL_SetWindowSize(window, winsizex, winsizey);
                                 SDL_SetWindowPosition(window, rect.x, rect.y);
@@ -893,15 +906,17 @@ int render()
                 }
         }
 
-        if (sdl_renderer_update(window)) sdl_renderer_present(window);
+        if (sdl_renderer_update(window))
+                sdl_renderer_present(window);
 
         end_time = timer_read();
         render_time += end_time - start_time;
 
         ++render_frames;
         uint32_t ticks = SDL_GetTicks();
-        if (ticks-render_frame_time >= 1000) {
-                render_fps = render_frames/((ticks-render_frame_time)/1000.0);
+        if (ticks - render_frame_time >= 1000)
+        {
+                render_fps = render_frames / ((ticks - render_frame_time) / 1000.0);
                 render_frames = 0;
                 render_frame_time = ticks;
         }
@@ -909,7 +924,7 @@ int render()
         return 1;
 }
 
-int renderer_thread(void* params)
+int renderer_thread(void *params)
 {
         int internal_rendering;
 
@@ -920,7 +935,8 @@ int renderer_thread(void* params)
         window_setup();
 
         rendering = 1;
-        while (rendering) {
+        while (rendering)
+        {
 
                 if (!window_create())
                         rendering = 0;
@@ -944,7 +960,7 @@ int renderer_thread(void* params)
         return SDL_TRUE;
 }
 
-void* timer = 0;
+void *timer = 0;
 
 void render_timer()
 {
