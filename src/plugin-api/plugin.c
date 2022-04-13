@@ -40,7 +40,11 @@ void load_plugins()
                 tinydir_file file;
                 tinydir_readfile(&dir, &file);
 
-                if (!strcmp(file.extension, "pcem"))
+#if defined(linux)
+                if (!strcmp(file.extension, "so"))
+#elif defined(WIN32)
+                if (!strcmp(file.extension, "dll"))
+#endif
                 {
                         pclog("plugin loading: %s\n", file.name);
                         void (* initialize_loaded_plugin)();

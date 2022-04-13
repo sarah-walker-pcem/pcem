@@ -20,3 +20,10 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
                 cdrom/cdrom-ioctl.c
                 )
 endif()
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        set(PCEM_SRC ${PCEM_SRC} ${PCEM_SRC_CDROM}
+                cdrom/cdrom-ioctl-osx.c
+                )
+endif()
+

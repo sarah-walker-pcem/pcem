@@ -1,0 +1,51 @@
+pcem_private_api += files(
+        'private/bswap.h',
+        'private/fdi2raw.h',
+        'private/filters.h',
+        'private/ibm.h',
+        'private/io.h',
+        'private/pch.h',
+        'private/pgc_palettes.h',
+        'private/plat-dinput.h',
+        'private/plat-joystick.h',
+        'private/plat-keyboard.h',
+        'private/plat-midi.h',
+        'private/plat-mouse.h',
+        'private/pzx.h',
+        'private/resources.h',
+        'private/rtc.h',
+        'private/rtc_tc8521.h',
+        'private/scamp.h',
+        'private/thread.h',
+        'private/timer.h'
+        )
+
+pcem_include_dirs = include_directories(
+        'private',
+        'private/bus',
+        'private/cdrom',
+        'private/codegen',
+        'private/cpu',
+        'private/devices',
+        'private/disc',
+        'private/flash',
+        'private/floppy',
+        'private/hdd',
+        'private/ide',
+        'private/joystick',
+        'private/keyboard',
+        'private/lpt',
+        'private/memory',
+        'private/mfm',
+        'private/models',
+        'private/mouse',
+        'private/networking',
+        'private/plugin-api',
+        'private/scsi',
+        'private/sound',
+        'private/video',
+        'private/wx-ui',
+        'public'
+        )
+
+install_subdir('public', install_dir: get_option('includedir') / 'pcem', strip_directory : true)

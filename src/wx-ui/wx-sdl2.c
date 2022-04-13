@@ -513,11 +513,11 @@ int pc_main(int argc, char** argv)
                 return FALSE;
 
         /* set up default paths */
-        sprintf(s, "%s%s%c%s%s", pcem_path, "roms/", get_path_separator(), INST_PREFIX, "/share/pcem/roms/");
+        sprintf(s, "%s%s%c%s", pcem_path, "roms/", get_path_separator(), "/usr/share/pcem/roms/");
         set_default_roms_paths(s);
         append_filename(s, pcem_path, "nvr/", 511);
         set_default_nvr_path(s);
-        append_filename(s, INST_PREFIX, "/share/pcem/nvr/default/", 512);
+        append_filename(s, "/usr/share/pcem/", "nvr/default/", 512);
         set_default_nvr_default_path(s);
         append_filename(s, pcem_path, "configs/", 511);
         set_default_configs_path(s);
