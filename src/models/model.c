@@ -1,6 +1,6 @@
-#include "ibm.h"
-#include "cpu.h"
 #include "model.h"
+#include "cpu.h"
+#include "ibm.h"
 #include "io.h"
 #include "mouse.h"
 
@@ -11,13 +11,13 @@
 #include "acer386sx.h"
 #include "ali1429.h"
 #include "amstrad.h"
+#include "cassette.h"
 #include "cbm_io.h"
 #include "cmd640.h"
 #include "compaq.h"
 #include "cs8230.h"
 #include "dells200.h"
 #include "device.h"
-#include "cassette.h"
 #include "dma.h"
 #include "f82c710_upc.h"
 #include "fdc.h"
@@ -68,14 +68,14 @@
 #include "sound_ps1.h"
 #include "sound_pssj.h"
 #include "sound_sn76489.h"
-#include "superxt.h"
 #include "sst39sf010.h"
+#include "superxt.h"
 #include "tandy_eeprom.h"
 #include "tandy_rom.h"
 #include "um8669f.h"
 #include "vid_pcjr.h"
-#include "vid_tandy.h"
 #include "vid_t1000.h"
+#include "vid_tandy.h"
 #include "vl82c480.h"
 #include "vt82c586b.h"
 #include "w83877tf.h"
@@ -86,127 +86,116 @@
 
 #include <pcem/devices.h>
 
-void             xt_init();
-void           pcjr_init();
-void        tandy1k_init();
-void     tandy1ksl2_init();
-void            ams_init();
-void         pc5086_init();
-void         europc_init();
-void         olim24_init();
-void             at_init();
-void         ibm_at_init();
-void         at_cbm_init();
-void       dells200_init();
-void     deskpro386_init();
-void      pb_l300sx_init();
-void      ps1_m2011_init();
-void      ps1_m2121_init();
-void      ps1_m2133_init(void);
-void    ps2_m30_286_init();
-void   ps2_model_50_init();
+void xt_init();
+void pcjr_init();
+void tandy1k_init();
+void tandy1ksl2_init();
+void ams_init();
+void pc5086_init();
+void europc_init();
+void olim24_init();
+void at_init();
+void ibm_at_init();
+void at_cbm_init();
+void dells200_init();
+void deskpro386_init();
+void pb_l300sx_init();
+void ps1_m2011_init();
+void ps1_m2121_init();
+void ps1_m2133_init(void);
+void ps2_m30_286_init();
+void ps2_model_50_init();
 void ps2_model_55sx_init();
-void   ps2_model_70_init();
-void   ps2_model_80_init();
-void        at_neat_init();
-void       at_scamp_init();
-void        at_scat_init();
-void      at_scatsx_init();
-void   at_acer386sx_init();
-void     at_wd76c10_init();
-void      at_cs8230_init();
-void     at_ali1429_init();
-void    at_headland_init();
-void     at_opti495_init();
-void      at_sis496_init();
-void       at_p55va_init();
-void     at_p55tvp4_init();
-void      at_i430vx_init();
-void      at_batman_init();
-void    at_endeavor_init();
-void     at_p55t2p4_init();
-void     xt_laserxt_init();
-void      at_t3100e_init();
-void       xt_t1000_init();
-void       xt_t1200_init();
-void    at_sl82c460_init();
-void       at_zappa_init();
-void      at_pb410a_init();
-void      at_pb520r_init();
-void       at_pb570_init();
-void      compaq_xt_init();
-void      xt_xi8088_init();
-void      xt_zenith_init();
-void        at_mvp3_init();
-void     at_vs440fx_init();
-void     at_ga686bx_init();
+void ps2_model_70_init();
+void ps2_model_80_init();
+void at_neat_init();
+void at_scamp_init();
+void at_scat_init();
+void at_scatsx_init();
+void at_acer386sx_init();
+void at_wd76c10_init();
+void at_cs8230_init();
+void at_ali1429_init();
+void at_headland_init();
+void at_opti495_init();
+void at_sis496_init();
+void at_p55va_init();
+void at_p55tvp4_init();
+void at_i430vx_init();
+void at_batman_init();
+void at_endeavor_init();
+void at_p55t2p4_init();
+void xt_laserxt_init();
+void at_t3100e_init();
+void xt_t1000_init();
+void xt_t1200_init();
+void at_sl82c460_init();
+void at_zappa_init();
+void at_pb410a_init();
+void at_pb520r_init();
+void at_pb570_init();
+void compaq_xt_init();
+void xt_xi8088_init();
+void xt_zenith_init();
+void at_mvp3_init();
+void at_vs440fx_init();
+void at_ga686bx_init();
 
 int AMSTRAD, AT, PCI, TANDY, MCA;
 
-int model_getromset()
-{
+int model_getromset() {
         return models[model]->id;
 }
 
-int model_getromset_from_model(int model)
-{
+int model_getromset_from_model(int model) {
         return models[model]->id;
 }
 
-int model_getmodel(int romset)
-{
-	int c = 0;
-	
-	while (models[c]->id != -1)
-	{
-		if (models[c]->id == romset)
-			return c;
-		c++;
-	}
-	
-	return 0;
+int model_getmodel(int romset) {
+        int c = 0;
+
+        while (models[c]->id != -1) {
+                if (models[c]->id == romset)
+                        return c;
+                c++;
+        }
+
+        return 0;
 }
 
-char *model_getname()
-{
+char *model_getname() {
         return models[model]->name;
 }
 
-char *model_get_internal_name()
-{
+char *model_get_internal_name() {
         return models[model]->internal_name;
 }
 
-int model_get_model_from_internal_name(char *s)
-{
-	int c = 0;
-	
-	while (models[c] != NULL)
-	{
-		if (!strcmp(models[c]->internal_name, s))
-			return c;
-		c++;
-	}
-	
-	return 0;
+int model_get_model_from_internal_name(char *s) {
+        int c = 0;
+
+        while (models[c] != NULL) {
+                if (!strcmp(models[c]->internal_name, s))
+                        return c;
+                c++;
+        }
+
+        return 0;
 }
 
-int model_has_fixed_gfx(int model)
-{
+int model_has_fixed_gfx(int model) {
         int gfx_flags = models[model]->flags & MODEL_GFX_MASK;
-        
+
         return (gfx_flags == MODEL_GFX_FIXED);
 }
 
-int model_has_optional_gfx(int model)
-{
+int model_has_optional_gfx(int model) {
         int gfx_flags = models[model]->flags & MODEL_GFX_MASK;
-        
+
         return (gfx_flags == MODEL_GFX_DISABLE_HW || gfx_flags == MODEL_GFX_DISABLE_SW);
 }
 
-void common_init()
-{
+void common_init() {
         dma_init();
         fdc_add();
         lpt_init();
@@ -216,28 +205,25 @@ void common_init()
         serial2_init(0x2f8, 3, 1);
 }
 
-void xt_init()
-{
+void xt_init() {
         common_init();
         mem_add_bios();
         pit_set_out_func(&pit, 1, pit_refresh_timer_xt);
         keyboard_xt_init();
-	nmi_init();
+        nmi_init();
         device_add(&gameport_device);
-	if (romset == ROM_IBMPC)
-		device_add(&cassette_device);
+        if (romset == ROM_IBMPC)
+                device_add(&cassette_device);
 }
 
-void compaq_xt_init()
-{
+void compaq_xt_init() {
         xt_init();
         lpt1_remove();
         lpt2_remove();
         lpt1_init(0x3bc);
 }
 
-void pcjr_init()
-{
+void pcjr_init() {
         mem_add_bios();
         fdc_add_pcjr();
         pic_init();
@@ -246,12 +232,11 @@ void pcjr_init()
         serial1_init(0x2f8, 3, 1);
         keyboard_pcjr_init();
         device_add(&sn76489_device);
-	nmi_mask = 0x80;
-	device_add(&cassette_device);
+        nmi_mask = 0x80;
+        device_add(&cassette_device);
 }
 
-void tandy1k_init()
-{
+void tandy1k_init() {
         TANDY = 1;
         common_init();
         mem_add_bios();
@@ -260,26 +245,24 @@ void tandy1k_init()
                 device_add(&sn76489_device);
         else
                 device_add(&ncr8496_device);
-	nmi_init();
-	if (romset != ROM_TANDY)
+        nmi_init();
+        if (romset != ROM_TANDY)
                 device_add(&tandy_eeprom_device);
         device_add(&gameport_device);
 }
-void tandy1ksl2_init()
-{
-//        TANDY = 1;
+void tandy1ksl2_init() {
+        //        TANDY = 1;
         common_init();
         mem_add_bios();
         keyboard_tandy_init();
         device_add(&pssj_device);
-	nmi_init();
+        nmi_init();
         device_add(&tandy_rom_device);
         device_add(&tandy_eeprom_device);
         device_add(&gameport_device);
 }
 
-void ams_init()
-{
+void ams_init() {
         AMSTRAD = 1;
         common_init();
         mem_add_bios();
@@ -292,41 +275,37 @@ void ams_init()
         device_add(&gameport_device);
 }
 
-void pc5086_init()
-{
+void pc5086_init() {
         xt_init();
-        lpt1_remove();      /* remove LPT ports, they will be enabled by 82C710 */
+        lpt1_remove(); /* remove LPT ports, they will be enabled by 82C710 */
         lpt2_remove();
-        serial1_remove();   /* remove COM ports, they will be enabled by 82C710 */
+        serial1_remove(); /* remove COM ports, they will be enabled by 82C710 */
         serial2_remove();
         device_add(&nvr_device);
-	    fdc_set_dskchg_activelow();
+        fdc_set_dskchg_activelow();
         superxt_init();
 }
 
-void europc_init()
-{
+void europc_init() {
         common_init();
         mem_add_bios();
         jim_init();
         keyboard_xt_init();
-	nmi_init();
+        nmi_init();
         device_add(&gameport_device);
 }
 
-void olim24_init()
-{
+void olim24_init() {
         common_init();
         mem_add_bios();
         keyboard_olim24_init();
         device_add(&nvr_device);
         olivetti_m24_init();
-	nmi_init();
+        nmi_init();
         device_add(&gameport_device);
 }
 
-void xt_laserxt_init()
-{
+void xt_laserxt_init() {
         xt_init();
         laserxt_init();
 }
@@ -347,8 +326,7 @@ void xt_zenith_init() /* [8088] Zenith Data Systems SupersPort */
         nmi_init();
 }
 
-void xt_xi8088_init()
-{
+void xt_xi8088_init() {
         common_init();
         mem_add_bios();
         keyboard_at_init();
@@ -360,8 +338,7 @@ void xt_xi8088_init()
         device_add(&sst_39sf010_device);
 }
 
-void at_init()
-{
+void at_init() {
         AT = 1;
         common_init();
         mem_add_bios();
@@ -374,32 +351,27 @@ void at_init()
         nmi_mask = 0;
 }
 
-void ibm_at_init()
-{
+void ibm_at_init() {
         at_init();
         mem_remap_top_384k();
 }
 
-void at_cbm_init()
-{
+void at_cbm_init() {
         at_init();
         cbm_io_init();
 }
 
-void deskpro386_init()
-{
+void deskpro386_init() {
         at_init();
         compaq_init();
 }
 
-void dells200_init()
-{
+void dells200_init() {
         at_init();
         dells200_chipset_init();
 }
 
-void ps1_common_init()
-{
+void ps1_common_init() {
         AT = 1;
         common_init();
         mem_add_bios();
@@ -414,44 +386,39 @@ void ps1_common_init()
         device_add(&gameport_201_device);
 }
 
-void ps1_m2011_init()
-{
+void ps1_m2011_init() {
         ps1_common_init();
         ps1mb_init();
         mem_remap_top_384k();
 }
 
-void ps1_m2121_init()
-{
+void ps1_m2121_init() {
         ps1_common_init();
         ps1mb_m2121_init();
         fdc_set_ps1();
 }
 
-void ps1_m2133_init(void)
-{
+void ps1_m2133_init(void) {
         at_init();
         vl82c480_init();
         ps1mb_m2133_init();
 }
 
-void ps2_m30_286_init()
-{
+void ps2_m30_286_init() {
         AT = 1;
         common_init();
         mem_add_bios();
         pit_set_out_func(&pit, 1, pit_refresh_timer_at);
         dma16_init();
         keyboard_at_init();
-//        mouse_ps2_init();
+        //        mouse_ps2_init();
         device_add(&nvr_device);
         pic2_init();
         ps2board_init();
         fdc_set_dskchg_activelow();
 }
 
-static void ps2_common_init()
-{
+static void ps2_common_init() {
         AT = 1;
         common_init();
         mem_add_bios();
@@ -459,115 +426,97 @@ static void ps2_common_init()
         ps2_dma_init();
         keyboard_at_init();
         keyboard_at_init_ps2();
-//        mouse_ps2_init();
+        //        mouse_ps2_init();
         device_add(&nvr_device);
         pic2_init();
 
         pit_ps2_init();
 
-	nmi_mask = 0x80;
+        nmi_mask = 0x80;
 }
 
-void ps2_model_50_init()
-{
+void ps2_model_50_init() {
         ps2_common_init();
         ps2_mca_board_model_50_init();
 }
 
-void ps2_model_55sx_init()
-{
+void ps2_model_55sx_init() {
         ps2_common_init();
         ps2_mca_board_model_55sx_init();
 }
 
-void ps2_model_70_init()
-{
+void ps2_model_70_init() {
         ps2_common_init();
         ps2_mca_board_model_70_type34_init(romset == ROM_IBMPS2_M70_TYPE4);
 }
 
-void ps2_model_80_init()
-{
+void ps2_model_80_init() {
         ps2_common_init();
         ps2_mca_board_model_80_type2_init();
 }
 
-void at_neat_init()
-{
+void at_neat_init() {
         at_init();
         neat_init();
 }
 
-void at_scamp_init()
-{
+void at_scamp_init() {
         at_init();
         scamp_init();
 }
 
-void at_scat_init()
-{
+void at_scat_init() {
         at_init();
         scat_init();
 }
 
-void at_scatsx_init()
-{
+void at_scatsx_init() {
         at_init();
         scatsx_init();
 }
 
-void at_acer386sx_init()
-{
+void at_acer386sx_init() {
         at_init();
         acer386sx_init();
 }
 
-void at_wd76c10_init()
-{
+void at_wd76c10_init() {
         at_init();
         wd76c10_init();
 }
 
-void at_headland_init()
-{
+void at_headland_init() {
         at_init();
         headland_init();
 }
 
-void at_opti495_init()
-{
+void at_opti495_init() {
         at_init();
         opti495_init();
 }
 
-void at_cs8230_init()
-{
+void at_cs8230_init() {
         at_init();
         cs8230_init();
 }
 
-void at_ali1429_init()
-{
+void at_ali1429_init() {
         at_init();
         ali1429_init();
 }
 
-void pb_l300sx_init()
-{
+void pb_l300sx_init() {
         at_init();
         acc2036_init();
 }
 
-void at_pb410a_init()
-{
+void at_pb410a_init() {
         at_init();
         acc2168_init();
         acc3221_init();
 }
 
-
-void at_sis496_init()
-{
+void at_sis496_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0xb);
@@ -576,14 +525,12 @@ void at_sis496_init()
         device_add(&sis496_device);
 }
 
-void at_sl82c460_init()
-{
+void at_sl82c460_init() {
         at_init();
         sl82c460_init();
 }
 
-void at_batman_init()
-{
+void at_batman_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_2);
         pci_slot(0xc);
@@ -595,8 +542,7 @@ void at_batman_init()
         intel_batman_init();
         device_add(&intel_flash_bxt_ami_device);
 }
-void at_pb520r_init()
-{
+void at_pb520r_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_2);
         pci_slot(0xc);
@@ -609,8 +555,7 @@ void at_pb520r_init()
         intel_batman_init();
         device_add(&intel_flash_bxt_ami_device);
 }
-void at_endeavor_init()
-{
+void at_endeavor_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0xd);
@@ -623,8 +568,7 @@ void at_endeavor_init()
         intel_endeavor_init();
         device_add(&intel_flash_bxt_ami_device);
 }
-void at_pb570_init()
-{
+void at_pb570_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0x11);
@@ -635,8 +579,7 @@ void at_pb570_init()
         intel_endeavor_init();
         device_add(&intel_flash_bxt_ami_device);
 }
-void at_zappa_init()
-{
+void at_zappa_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0xd);
@@ -650,8 +593,7 @@ void at_zappa_init()
         device_add(&intel_flash_bxt_ami_device);
 }
 
-void at_p55va_init()
-{
+void at_p55va_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0x08);
@@ -664,8 +606,7 @@ void at_p55va_init()
         device_add(&intel_flash_bxt_device);
 }
 
-void at_p55tvp4_init()
-{
+void at_p55tvp4_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0x0C);
@@ -678,8 +619,7 @@ void at_p55tvp4_init()
         device_add(&intel_flash_bxt_device);
 }
 
-void at_i430vx_init()
-{
+void at_i430vx_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0x11);
@@ -692,8 +632,7 @@ void at_i430vx_init()
         device_add(&intel_flash_bxt_device);
 }
 
-void at_p55t2p4_init()
-{
+void at_p55t2p4_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0x0C);
@@ -706,8 +645,7 @@ void at_p55t2p4_init()
         device_add(&intel_flash_bxt_device);
 }
 
-void at_mvp3_init()
-{
+void at_mvp3_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(8);
@@ -719,8 +657,7 @@ void at_mvp3_init()
         device_add(&sst_39sf010_device);
 }
 
-void at_vs440fx_init()
-{
+void at_vs440fx_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0xb);
@@ -730,12 +667,11 @@ void at_vs440fx_init()
         i440fx_init();
         piix_init(7, 0xb, 0xf, 0x11, 0x13, i440fx_reset);
         pc87307_init(0x2e);
-//        i440fx_init();
+        //        i440fx_init();
         device_add(&intel_flash_28fb200bxt_device);
 }
 
-void at_ga686bx_init()
-{
+void at_ga686bx_init() {
         at_init();
         pci_init(PCI_CONFIG_TYPE_1);
         pci_slot(0x8);
@@ -748,12 +684,11 @@ void at_ga686bx_init()
         device_add(&intel_flash_28f002bc_device);
 }
 
-void model_init()
-{
+void model_init() {
         pclog("Initting as %s\n", model_getname());
         AMSTRAD = AT = PCI = TANDY = MCA = 0;
         ide_set_bus_master(NULL, NULL, NULL, NULL);
-        
+
         models[model]->init();
         if (models[model]->device)
                 device_add(models[model]->device);
@@ -879,8 +814,7 @@ MODEL m_vs440fx = {"[Socket 8] Intel VS440FX", ROM_VS440FX, "vs440fx", {{"Intel"
 /* Slot 1 PC's */
 MODEL m_ga686bx = {"[Slot 1] Gigabyte GA-686BX", ROM_GA686BX, "ga686bx", {{"Intel", cpus_Slot1_100MHz}, {"VIA", cpus_VIA_100MHz}}, MODEL_GFX_NONE | MODEL_AT | MODEL_PCI | MODEL_PS2 | MODEL_HAS_IDE, 8, 512, 8, at_ga686bx_init, NULL};
 
-void model_init_builtin()
-{
+void model_init_builtin() {
         /* 8088 PC's */
         pcem_add_model(&m_amixt);
         pcem_add_model(&m_ataripc3);

@@ -3,5 +3,6 @@
     "files.associations": {
         "*.xrc": "xml"
     },
-    "editor.tabSize": 8
+    "editor.tabSize": 8,
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, UseTab: Never, IndentWidth: 8, TabWidth: 8, BreakBeforeBraces: Attach, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false, ColumnLimit: 0, AccessModifierOffset: -4 }",
 }

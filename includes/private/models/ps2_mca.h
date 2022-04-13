@@ -7,5 +7,4 @@ void ps2_mca_board_model_80_type2_init();
 
 void ps2_cache_clean();
 
-
 #endif /* _PS2_MCA_H_ */

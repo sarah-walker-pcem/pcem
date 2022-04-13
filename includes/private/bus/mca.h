@@ -7,5 +7,4 @@ uint8_t mca_read(uint16_t port);
 void mca_write(uint16_t port, uint8_t val);
 void mca_reset(void);
 
-
 #endif /* _MCA_H_ */

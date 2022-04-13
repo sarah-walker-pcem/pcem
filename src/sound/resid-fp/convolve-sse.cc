@@ -16,17 +16,16 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //  ---------------------------------------------------------------------------
-#include <stdint.h>
 #include "resid-fp/sid.h"
+#include <stdint.h>
 
 #if (RESID_USE_SSE == 1)
 
 #include <xmmintrin.h>
 
-float convolve_sse(const float* a, const float* b, int n)
-{
+float convolve_sse(const float *a, const float *b, int n) {
         float out = 0.f;
-        __m128 out4 = { 0, 0, 0, 0 };
+        __m128 out4 = {0, 0, 0, 0};
 
         /* examine if we can use aligned loads on both pointers */
         int diff = (int)(a - b) & 0xf;
@@ -35,31 +34,25 @@ float convolve_sse(const float* a, const float* b, int n)
         unsigned int a_align = (unsigned int)(uintptr_t)a & 0xf;
 
         /* advance if necessary. We can't let n fall < 0, so no while (n --). */
-        while (n > 0 && a_align != 0 && a_align != 16)
-        {
+        while (n > 0 && a_align != 0 && a_align != 16) {
                 out += (*(a++)) * (*(b++));
                 --n;
                 a_align += 4;
         }
 
         int n4 = n / 4;
-        if (diff == 0)
-        {
-                for (int i = 0; i < n4; i++)
-                {
+        if (diff == 0) {
+                for (int i = 0; i < n4; i++) {
                         out4 = _mm_add_ps(out4, _mm_mul_ps(_mm_load_ps(a), _mm_load_ps(b)));
                         a += 4;
                         b += 4;
                 }
-        }
-        else
-        {
+        } else {
                 /* XXX loadu is 4x slower than load, at least. We could at 4x memory
                  * use prepare versions of b aligned for any a alignment. We could
                  * also issue aligned loads and shuffle the halves at each iteration.
                  * Initial results indicate only very small improvements. */
-                for (int i = 0; i < n4; i++)
-                {
+                for (int i = 0; i < n4; i++) {
                         out4 = _mm_add_ps(out4, _mm_mul_ps(_mm_load_ps(a), _mm_loadu_ps(b)));
                         a += 4;
                         b += 4;

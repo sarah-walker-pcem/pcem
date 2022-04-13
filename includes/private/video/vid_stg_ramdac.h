@@ -1,7 +1,6 @@
 #ifndef _VID_STG_RAMDAC_H_
 #define _VID_STG_RAMDAC_H_
-typedef struct stg_ramdac_t
-{
+typedef struct stg_ramdac_t {
         int magic_count;
         uint8_t command;
         int index;
@@ -10,6 +9,5 @@ typedef struct stg_ramdac_t
 
 void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t *ramdac, svga_t *svga);
 uint8_t stg_ramdac_in(uint16_t addr, stg_ramdac_t *ramdac, svga_t *svga);
-
 
 #endif /* _VID_STG_RAMDAC_H_ */

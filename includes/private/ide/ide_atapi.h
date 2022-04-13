@@ -4,8 +4,7 @@
 #include "scsi.h"
 
 /*ATAPI stuff*/
-typedef struct ATAPI
-{
+typedef struct ATAPI {
         int (*ready)(void);
         int (*medium_changed)(void);
         int (*readtoc)(uint8_t *b, uint8_t starttrack, int msf, int maxlen, int single);
@@ -31,29 +30,28 @@ extern ATAPI *atapi;
 
 void atapi_discchanged();
 
-typedef struct atapi_device_t
-{
+typedef struct atapi_device_t {
         scsi_bus_t bus;
-        
+
         uint8_t command[12];
         int command_pos;
-        
+
         int state;
-        
+
         int max_transfer_len;
-        
+
         uint8_t data[65536];
         int data_read_pos, data_write_pos;
-        
+
         int bus_state;
-        
+
         struct IDE *ide;
 
         int board;
         uint8_t *atastat;
         uint8_t *error;
         int *cylinder;
-        
+
         int use_dma;
 } atapi_device_t;
 

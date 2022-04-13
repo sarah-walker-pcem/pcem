@@ -19,12 +19,12 @@ int drive_type[2];
 
 int curdrive = 0;
 
-//char discfns[2][260] = {"", ""};
+// char discfns[2][260] = {"", ""};
 int defaultwriteprot = 0;
 
 int fdc_ready;
 
-int drive_empty[2] = { 1, 1 };
+int drive_empty[2] = {1, 1};
 int disc_changed[2];
 
 int motorspin;
@@ -46,44 +46,42 @@ void (*fdc_indexpulse)();*/
 
 static struct
 {
-        char* ext;
-        void (* load)(int drive, char* fn);
-        void (* close)(int drive);
+        char *ext;
+        void (*load)(int drive, char *fn);
+        void (*close)(int drive);
         int size;
-}
-        loaders[] =
-        {
-                { "IMG", img_load, img_close, -1 },
-                { "IMA", img_load, img_close, -1 },
-                { "360", img_load, img_close, -1 },
-                { "XDF", img_load, img_close, -1 },
-                { "FDI", fdi_load, fdi_close, -1 },
-                { 0, 0, 0 }
-        };
+} loaders[] =
+    {
+        {"IMG", img_load, img_close, -1},
+        {"IMA", img_load, img_close, -1},
+        {"360", img_load, img_close, -1},
+        {"XDF", img_load, img_close, -1},
+        {"FDI", fdi_load, fdi_close, -1},
+        {0, 0, 0}};
 
 static int driveloaders[4];
 
-void disc_load(int drive, char* fn)
-{
+void disc_load(int drive, char *fn) {
         int c = 0, size;
-        char* p;
-        FILE* f;
-//        pclog("disc_load %i %s\n", drive, fn);
-//        setejecttext(drive, "");
-        if (!fn) return;
+        char *p;
+        FILE *f;
+        //        pclog("disc_load %i %s\n", drive, fn);
+        //        setejecttext(drive, "");
+        if (!fn)
+                return;
         p = get_extension(fn);
-        if (!p) return;
-//        setejecttext(drive, fn);
+        if (!p)
+                return;
+        //        setejecttext(drive, fn);
         pclog("Loading :%i %s %s\n", drive, fn, p);
         f = fopen(fn, "rb");
-        if (!f) return;
+        if (!f)
+                return;
         fseek(f, -1, SEEK_END);
         size = ftell(f) + 1;
         fclose(f);
-        while (loaders[c].ext)
-        {
-                if (!strcasecmp(p, loaders[c].ext) && (size == loaders[c].size || loaders[c].size == -1))
-                {
+        while (loaders[c].ext) {
+                if (!strcasecmp(p, loaders[c].ext) && (size == loaders[c].size || loaders[c].size == -1)) {
                         pclog("Loading as %s\n", p);
                         driveloaders[drive] = c;
                         loaders[c].load(drive, fn);
@@ -100,10 +98,10 @@ void disc_load(int drive, char* fn)
         discfns[drive][0] = 0;
 }
 
-void disc_close(int drive)
-{
-//        pclog("disc_close %i\n", drive);
-        if (loaders[driveloaders[drive]].close) loaders[driveloaders[drive]].close(drive);
+void disc_close(int drive) {
+        //        pclog("disc_close %i\n", drive);
+        if (loaders[driveloaders[drive]].close)
+                loaders[driveloaders[drive]].close(drive);
         drive_empty[drive] = 1;
         discfns[drive][0] = 0;
         drives[drive].hole = NULL;
@@ -118,41 +116,33 @@ void disc_close(int drive)
 int disc_notfound = 0;
 static int disc_period = 32;
 
-int disc_hole(int drive)
-{
+int disc_hole(int drive) {
         drive ^= fdd_swap;
 
-        if (drive < 2 && drives[drive].hole)
-        {
+        if (drive < 2 && drives[drive].hole) {
                 return drives[drive].hole(drive);
-        }
-        else
-        {
+        } else {
                 return 0;
         }
 }
 
-void disc_poll()
-{
+void disc_poll() {
         timer_advance_u64(&disc_poll_timer, disc_period * TIMER_USEC);
 
         if (disc_drivesel < 2 && drives[disc_drivesel].poll)
                 drives[disc_drivesel].poll();
 
-        if (disc_notfound)
-        {
+        if (disc_notfound) {
                 disc_notfound--;
                 if (!disc_notfound)
                         fdc_notfound(FDC_STATUS_AM_NOT_FOUND);
         }
 }
 
-int disc_get_bitcell_period(int rate)
-{
+int disc_get_bitcell_period(int rate) {
         int bit_rate = 0;
 
-        switch (rate)
-        {
+        switch (rate) {
         case 0: /*High density*/
                 bit_rate = 500;
                 break;
@@ -170,16 +160,13 @@ int disc_get_bitcell_period(int rate)
         return 1000000 / bit_rate * 2; /*Bitcell period in ns*/
 }
 
-void disc_set_rate(int drive, int drvden, int rate)
-{
-        switch (rate)
-        {
+void disc_set_rate(int drive, int drvden, int rate) {
+        switch (rate) {
         case 0: /*High density*/
                 disc_period = 16;
                 break;
         case 1:
-                switch (drvden)
-                {
+                switch (drvden) {
                 case 0: /*Double density (360 rpm)*/
                         disc_period = 26;
                         break;
@@ -199,16 +186,14 @@ void disc_set_rate(int drive, int drvden, int rate)
         }
 }
 
-void disc_reset()
-{
+void disc_reset() {
         int drive;
 
         curdrive = 0;
         disc_period = 32;
         timer_add(&disc_poll_timer, disc_poll, NULL, 0);
 
-        for (drive = 0; drive < 2; drive++)
-        {
+        for (drive = 0; drive < 2; drive++) {
                 if (loaders[driveloaders[drive]].close)
                         loaders[driveloaders[drive]].close(drive);
                 drive_empty[drive] = 1;
@@ -222,25 +207,22 @@ void disc_reset()
         }
 }
 
-void disc_init()
-{
+void disc_init() {
         disc_reset();
 }
 
-int oldtrack[2] = { 0, 0 };
-void disc_seek(int drive, int track)
-{
-//        pclog("disc_seek: drive=%i track=%i\n", drive, track);
+int oldtrack[2] = {0, 0};
+void disc_seek(int drive, int track) {
+        //        pclog("disc_seek: drive=%i track=%i\n", drive, track);
         if (drive < 2 && drives[drive].seek)
                 drives[drive].seek(drive, track);
-//        if (track != oldtrack[drive])
-//                fdc_discchange_clear(drive);
-//        ddnoise_seek(track - oldtrack[drive]);
-//        oldtrack[drive] = track;
+        //        if (track != oldtrack[drive])
+        //                fdc_discchange_clear(drive);
+        //        ddnoise_seek(track - oldtrack[drive]);
+        //        oldtrack[drive] = track;
 }
 
-void disc_readsector(int drive, int sector, int track, int side, int density, int sector_size)
-{
+void disc_readsector(int drive, int sector, int track, int side, int density, int sector_size) {
         drive ^= fdd_swap;
 
         if (drive < 2 && drives[drive].readsector)
@@ -249,8 +231,7 @@ void disc_readsector(int drive, int sector, int track, int side, int density, in
                 disc_notfound = 1000;
 }
 
-void disc_writesector(int drive, int sector, int track, int side, int density, int sector_size)
-{
+void disc_writesector(int drive, int sector, int track, int side, int density, int sector_size) {
         drive ^= fdd_swap;
 
         if (drive < 2 && drives[drive].writesector)
@@ -259,16 +240,14 @@ void disc_writesector(int drive, int sector, int track, int side, int density, i
                 disc_notfound = 1000;
 }
 
-void disc_readaddress(int drive, int track, int side, int density)
-{
+void disc_readaddress(int drive, int track, int side, int density) {
         drive ^= fdd_swap;
 
         if (drive < 2 && drives[drive].readaddress)
                 drives[drive].readaddress(drive, track, side, density);
 }
 
-void disc_format(int drive, int track, int side, int density, uint8_t fill)
-{
+void disc_format(int drive, int track, int side, int density, uint8_t fill) {
         drive ^= fdd_swap;
 
         if (drive < 2 && drives[drive].format)
@@ -277,23 +256,20 @@ void disc_format(int drive, int track, int side, int density, uint8_t fill)
                 disc_notfound = 1000;
 }
 
-void disc_stop(int drive)
-{
+void disc_stop(int drive) {
         drive ^= fdd_swap;
 
         if (drive < 2 && drives[drive].stop)
                 drives[drive].stop(drive);
 }
 
-void disc_set_drivesel(int drive)
-{
+void disc_set_drivesel(int drive) {
         drive ^= fdd_swap;
 
         disc_drivesel = drive;
 }
 
-void disc_set_motor_enable(int motor_enable)
-{
+void disc_set_motor_enable(int motor_enable) {
         if (motor_enable && !motoron)
                 timer_set_delay_u64(&disc_poll_timer, disc_period * TIMER_USEC);
         else if (!motor_enable)

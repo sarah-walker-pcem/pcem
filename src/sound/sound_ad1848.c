@@ -1,31 +1,27 @@
-#include <math.h>
-#include "ibm.h"
+#include "sound_ad1848.h"
 #include "dma.h"
+#include "ibm.h"
 #include "pic.h"
 #include "sound.h"
-#include "sound_ad1848.h"
 #include "x86.h"
+#include <math.h>
 
 static int ad1848_vols_6bits[64];
 static uint32_t ad1848_vols_5bits_aux_gain[32];
 
-void ad1848_setirq(ad1848_t* ad1848, int irq)
-{
+void ad1848_setirq(ad1848_t *ad1848, int irq) {
         ad1848->irq = irq;
 }
 
-void ad1848_setdma(ad1848_t* ad1848, int dma)
-{
+void ad1848_setdma(ad1848_t *ad1848, int dma) {
         ad1848->dma = dma;
 }
 
-uint8_t ad1848_read(uint16_t addr, void* p)
-{
-        ad1848_t* ad1848 = (ad1848_t*)p;
+uint8_t ad1848_read(uint16_t addr, void *p) {
+        ad1848_t *ad1848 = (ad1848_t *)p;
         uint8_t temp = 0xff;
 
-        switch (addr & 3)
-        {
+        switch (addr & 3) {
         case 0: /*Index*/
                 temp = ad1848->index | ad1848->trd | ad1848->mce;
                 break;
@@ -36,24 +32,22 @@ uint8_t ad1848_read(uint16_t addr, void* p)
                 temp = ad1848->status;
                 break;
         }
-//        if ((addr & 3) == 1 && (ad1848->index & 0x1f) > 0x0f)
-//                pclog("ad1848_read_EXTENDED - addr %04X %04X(%08X):%08X return %02X\n", addr, CS, cs, cpu_state.pc, temp);
-//        else
-//                pclog("ad1848_read - addr %04X %04X(%08X):%08X return %02X\n", addr, CS, cs, cpu_state.pc, temp);
+        //        if ((addr & 3) == 1 && (ad1848->index & 0x1f) > 0x0f)
+        //                pclog("ad1848_read_EXTENDED - addr %04X %04X(%08X):%08X return %02X\n", addr, CS, cs, cpu_state.pc, temp);
+        //        else
+        //                pclog("ad1848_read - addr %04X %04X(%08X):%08X return %02X\n", addr, CS, cs, cpu_state.pc, temp);
         return temp;
 }
 
-void ad1848_write(uint16_t addr, uint8_t val, void* p)
-{
-        ad1848_t* ad1848 = (ad1848_t*)p;
+void ad1848_write(uint16_t addr, uint8_t val, void *p) {
+        ad1848_t *ad1848 = (ad1848_t *)p;
         double freq;
         uint32_t new_cd_vol_l, new_cd_vol_r;
-//        if ((addr & 3) == 0 && (val & 0x1f) > 0x0f)
-//                pclog("ad1848_write_EXTENDED - addr %04X val %02X  %04X(%08X):%08X\n", addr, val, CS, cs, cpu_state.pc);
-//        else
-//                pclog("ad1848_write - addr %04X val %02X  %04X(%08X):%08X\n", addr, val, CS, cs, cpu_state.pc);
-        switch (addr & 3)
-        {
+        //        if ((addr & 3) == 0 && (val & 0x1f) > 0x0f)
+        //                pclog("ad1848_write_EXTENDED - addr %04X val %02X  %04X(%08X):%08X\n", addr, val, CS, cs, cpu_state.pc);
+        //        else
+        //                pclog("ad1848_write - addr %04X val %02X  %04X(%08X):%08X\n", addr, val, CS, cs, cpu_state.pc);
+        switch (addr & 3) {
         case 0: /*Index*/
                 if (ad1848->regs[12] & 0x40 && ad1848->type == AD1848_TYPE_CS4231)
                         ad1848->index = val & 0x1f; // cs4231a extended mode enabled
@@ -63,12 +57,10 @@ void ad1848_write(uint16_t addr, uint8_t val, void* p)
                 ad1848->mce = val & 0x40;
                 break;
         case 1:
-                switch (ad1848->index)
-                {
+                switch (ad1848->index) {
                 case 8:
                         freq = (val & 1) ? 16934400 : 24576000;
-                        switch ((val >> 1) & 7)
-                        {
+                        switch ((val >> 1) & 7) {
                         case 0:
                                 freq /= 3072;
                                 break;
@@ -99,16 +91,14 @@ void ad1848_write(uint16_t addr, uint8_t val, void* p)
                         break;
 
                 case 9:
-                        if (!ad1848->enable && (val & 0x41) == 0x01)
-                        {
+                        if (!ad1848->enable && (val & 0x41) == 0x01) {
                                 if (ad1848->timer_latch)
                                         timer_set_delay_u64(&ad1848->timer, ad1848->timer_latch);
                                 else
                                         timer_set_delay_u64(&ad1848->timer, TIMER_USEC);
                         }
                         ad1848->enable = ((val & 0x41) == 0x01);
-                        if (!ad1848->enable)
-                        {
+                        if (!ad1848->enable) {
                                 timer_disable(&ad1848->timer);
                                 ad1848->out_l = ad1848->out_r = 0;
                         }
@@ -149,23 +139,19 @@ void ad1848_write(uint16_t addr, uint8_t val, void* p)
         }
 }
 
-void ad1848_speed_changed(ad1848_t* ad1848)
-{
+void ad1848_speed_changed(ad1848_t *ad1848) {
         ad1848->timer_latch = (uint64_t)((double)TIMER_USEC * (1000000.0 / (double)ad1848->freq));
 }
 
-void ad1848_update(ad1848_t* ad1848)
-{
-        for (; ad1848->pos < sound_pos_global; ad1848->pos++)
-        {
+void ad1848_update(ad1848_t *ad1848) {
+        for (; ad1848->pos < sound_pos_global; ad1848->pos++) {
                 ad1848->buffer[ad1848->pos * 2] = ad1848->out_l;
                 ad1848->buffer[ad1848->pos * 2 + 1] = ad1848->out_r;
         }
 }
 
-static void ad1848_poll(void* p)
-{
-        ad1848_t* ad1848 = (ad1848_t*)p;
+static void ad1848_poll(void *p) {
+        ad1848_t *ad1848 = (ad1848_t *)p;
 
         if (ad1848->timer_latch)
                 timer_advance_u64(&ad1848->timer, ad1848->timer_latch);
@@ -174,12 +160,10 @@ static void ad1848_poll(void* p)
 
         ad1848_update(ad1848);
         // TODO: line in, mic, etc...
-        if (ad1848->enable)
-        {
+        if (ad1848->enable) {
                 int32_t temp;
 
-                switch (ad1848->regs[8] & 0x70)
-                {
+                switch (ad1848->regs[8] & 0x70) {
                 case 0x00: /*Mono, 8-bit PCM*/
                         ad1848->out_l = ad1848->out_r = (dma_channel_read(ad1848->dma) ^ 0x80) * 256;
                         break;
@@ -210,11 +194,9 @@ static void ad1848_poll(void* p)
                 else
                         ad1848->out_r = (ad1848->out_r * ad1848_vols_6bits[ad1848->regs[7] & 0x3f]) >> 16;
 
-                if (ad1848->count < 0)
-                {
+                if (ad1848->count < 0) {
                         ad1848->count = ad1848->regs[15] | (ad1848->regs[14] << 8);
-                        if (!(ad1848->status & 0x01))
-                        {
+                        if (!(ad1848->status & 0x01)) {
                                 ad1848->status |= 0x01;
                                 if (ad1848->regs[0xa] & 2)
                                         picint(1 << ad1848->irq);
@@ -222,18 +204,15 @@ static void ad1848_poll(void* p)
                 }
 
                 ad1848->count--;
-//                pclog("ad1848_poll : enable %X %X  %X %X  %X %X\n", ad1848->pcm_buffer[0][ad1848->pos], ad1848->pcm_buffer[1][ad1848->pos], ad1848->out_l[0], ad1848->out_r[0], ad1848->out_l[1], ad1848->out_r[1]);
-        }
-        else
-        {
+                //                pclog("ad1848_poll : enable %X %X  %X %X  %X %X\n", ad1848->pcm_buffer[0][ad1848->pos], ad1848->pcm_buffer[1][ad1848->pos], ad1848->out_l[0], ad1848->out_r[0], ad1848->out_l[1], ad1848->out_r[1]);
+        } else {
                 ad1848->out_l = ad1848->out_r = 0;
                 sound_set_cd_volume(0, 0);
-//                pclog("ad1848_poll : not enable\n");
+                //                pclog("ad1848_poll : not enable\n");
         }
 }
 
-void ad1848_init(ad1848_t* ad1848, int type)
-{
+void ad1848_init(ad1848_t *ad1848, int type) {
         int c;
         double attenuation;
 
@@ -258,43 +237,51 @@ void ad1848_init(ad1848_t* ad1848, int type)
         ad1848->regs[13] = 0;
         ad1848->regs[14] = ad1848->regs[15] = 0;
 
-        if (ad1848->type == AD1848_TYPE_CS4231)
-        {
+        if (ad1848->type == AD1848_TYPE_CS4231) {
                 ad1848->regs[0x12] = ad1848->regs[0x13] = 0x80; // AZT2316A CD
-                ad1848->regs[0x1A] = 0x80; // AZT2316A Mic
+                ad1848->regs[0x1A] = 0x80;                      // AZT2316A Mic
         }
 
         ad1848->out_l = 0;
         ad1848->out_r = 0;
 
-        for (c = 0; c < 64; c++)
-        {
+        for (c = 0; c < 64; c++) {
                 attenuation = 0.0;
-                if (c & 0x01) attenuation -= 1.5;
-                if (c & 0x02) attenuation -= 3.0;
-                if (c & 0x04) attenuation -= 6.0;
-                if (c & 0x08) attenuation -= 12.0;
-                if (c & 0x10) attenuation -= 24.0;
-                if (c & 0x20) attenuation -= 48.0;
+                if (c & 0x01)
+                        attenuation -= 1.5;
+                if (c & 0x02)
+                        attenuation -= 3.0;
+                if (c & 0x04)
+                        attenuation -= 6.0;
+                if (c & 0x08)
+                        attenuation -= 12.0;
+                if (c & 0x10)
+                        attenuation -= 24.0;
+                if (c & 0x20)
+                        attenuation -= 48.0;
 
                 attenuation = pow(10, attenuation / 10);
 
                 ad1848_vols_6bits[c] = (int)(attenuation * 65536);
-//                pclog("ad1848_vols_6bits %i = %f %i\n", c, attenuation, ad1848_vols_6bits[c]);
+                //                pclog("ad1848_vols_6bits %i = %f %i\n", c, attenuation, ad1848_vols_6bits[c]);
         }
-        for (c = 0; c < 32; c++)
-        {
+        for (c = 0; c < 32; c++) {
                 attenuation = 12.0;
-                if (c & 0x01) attenuation -= 1.5;
-                if (c & 0x02) attenuation -= 3.0;
-                if (c & 0x04) attenuation -= 6.0;
-                if (c & 0x08) attenuation -= 12.0;
-                if (c & 0x10) attenuation -= 24.0;
+                if (c & 0x01)
+                        attenuation -= 1.5;
+                if (c & 0x02)
+                        attenuation -= 3.0;
+                if (c & 0x04)
+                        attenuation -= 6.0;
+                if (c & 0x08)
+                        attenuation -= 12.0;
+                if (c & 0x10)
+                        attenuation -= 24.0;
 
                 attenuation = pow(10, attenuation / 10);
 
                 ad1848_vols_5bits_aux_gain[c] = (int)(attenuation * 65536);
-//                pclog("ad1848_vols_5bits_aux_gain %i = %f %i\n", c, attenuation, ad1848_vols_5bits_aux_gain[c]);
+                //                pclog("ad1848_vols_5bits_aux_gain %i = %f %i\n", c, attenuation, ad1848_vols_5bits_aux_gain[c]);
         }
 
         timer_add(&ad1848->timer, ad1848_poll, ad1848, 0);

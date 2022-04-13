@@ -18,22 +18,23 @@
 //  ---------------------------------------------------------------------------
 
 #include "resid-fp/sid.h"
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 
-extern float convolve(const float* a, const float* b, int n);
-extern float convolve_sse(const float* a, const float* b, int n);
+extern float convolve(const float *a, const float *b, int n);
+extern float convolve_sse(const float *a, const float *b, int n);
 
-enum host_cpu_feature
-{
-        HOST_CPU_MMX = 1, HOST_CPU_SSE = 2, HOST_CPU_SSE2 = 4, HOST_CPU_SSE3 = 8
+enum host_cpu_feature {
+        HOST_CPU_MMX = 1,
+        HOST_CPU_SSE = 2,
+        HOST_CPU_SSE2 = 4,
+        HOST_CPU_SSE3 = 8
 };
 
 /* This code is appropriate for 32-bit and 64-bit x86 CPUs. */
 #if defined(__x86_64__) || defined(__i386__) || defined(_MSC_VER)
 
-struct cpu_x86_regs_s
-{
+struct cpu_x86_regs_s {
         unsigned int eax;
         unsigned int ebx;
         unsigned int ecx;
@@ -41,8 +42,7 @@ struct cpu_x86_regs_s
 };
 typedef struct cpu_x86_regs_s cpu_x86_regs_t;
 
-static cpu_x86_regs_t get_cpuid_regs(unsigned int index)
-{
+static cpu_x86_regs_t get_cpuid_regs(unsigned int index) {
         cpu_x86_regs_t retval;
 
 #if defined(_MSC_VER) /* MSVC assembly */
@@ -56,28 +56,27 @@ static cpu_x86_regs_t get_cpuid_regs(unsigned int index)
         }
 #else /* GNU assembly */
         asm("movl %1, %%eax; cpuid; movl %%eax, %0;"
-        : "=m" (retval.eax)
-        : "r"  (index)
-        : "eax", "ebx", "ecx", "edx");
+            : "=m"(retval.eax)
+            : "r"(index)
+            : "eax", "ebx", "ecx", "edx");
         asm("movl %1, %%eax; cpuid; movl %%ebx, %0;"
-        : "=m" (retval.ebx)
-        : "r"  (index)
-        : "eax", "ebx", "ecx", "edx");
+            : "=m"(retval.ebx)
+            : "r"(index)
+            : "eax", "ebx", "ecx", "edx");
         asm("movl %1, %%eax; cpuid; movl %%ecx, %0;"
-        : "=m" (retval.ecx)
-        : "r"  (index)
-        : "eax", "ebx", "ecx", "edx");
+            : "=m"(retval.ecx)
+            : "r"(index)
+            : "eax", "ebx", "ecx", "edx");
         asm("movl %1, %%eax; cpuid; movl %%edx, %0;"
-        : "=m" (retval.edx)
-        : "r"  (index)
-        : "eax", "ebx", "ecx", "edx");
+            : "=m"(retval.edx)
+            : "r"(index)
+            : "eax", "ebx", "ecx", "edx");
 #endif
 
         return retval;
 }
 
-static int host_cpu_features_by_cpuid(void)
-{
+static int host_cpu_features_by_cpuid(void) {
         cpu_x86_regs_t regs = get_cpuid_regs(1);
 
         int features = 0;
@@ -93,8 +92,7 @@ static int host_cpu_features_by_cpuid(void)
         return features;
 }
 
-static int host_cpu_features(void)
-{
+static int host_cpu_features(void) {
         static int features = 0;
         static int features_detected = 0;
 /* 32-bit only */
@@ -124,8 +122,8 @@ static int host_cpu_features(void)
 #endif
 #if defined(__i386__) /* GNU assembly */
         asm("pushfl; popl %%eax; movl %%eax, %0; xorl $0x200000, %%eax; pushl %%eax; popfl; pushfl; popl %%eax; movl %%eax, %1; pushl %0; popfl "
-            : "=r" (temp1),
-            "=r" (temp2)
+            : "=r"(temp1),
+              "=r"(temp2)
             :
             : "eax");
 #endif
@@ -133,14 +131,13 @@ static int host_cpu_features(void)
         temp1 &= 0x200000;
         temp2 &= 0x200000;
         if (temp1 == temp2) {
-          /* no cpuid support, so we can't test for SSE availability -> false */
-          return 0;
+                /* no cpuid support, so we can't test for SSE availability -> false */
+                return 0;
         }
 #endif
 
         /* find the highest supported cpuid function, returned in %eax */
-        if (get_cpuid_regs(0).eax < 1)
-        {
+        if (get_cpuid_regs(0).eax < 1) {
                 /* no cpuid 1 function, we can't test for features -> no features */
                 return 0;
         }
@@ -150,21 +147,18 @@ static int host_cpu_features(void)
 }
 
 #else /* !__x86_64__ && !__i386__ && !_MSC_VER */
-static int host_cpu_features(void)
-{
-  return 0;
+static int host_cpu_features(void) {
+        return 0;
 }
 #endif
 
-float SIDFP::kinked_dac(const int x, const float nonlinearity, const int max)
-{
+float SIDFP::kinked_dac(const int x, const float nonlinearity, const int max) {
         float value = 0.f;
 
         int bit = 1;
         float weight = 1.f;
         const float dir = 2.0f * nonlinearity;
-        for (int i = 0; i < max; i++)
-        {
+        for (int i = 0; i < max; i++) {
                 if (x & bit)
                         value += weight;
                 bit <<= 1;
@@ -177,8 +171,7 @@ float SIDFP::kinked_dac(const int x, const float nonlinearity, const int max)
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-SIDFP::SIDFP()
-{
+SIDFP::SIDFP() {
 #if (RESID_USE_SSE == 1)
         can_use_sse = (host_cpu_features() & HOST_CPU_SSE) != 0;
 #else
@@ -204,8 +197,7 @@ SIDFP::SIDFP()
 // ----------------------------------------------------------------------------
 // Destructor.
 // ----------------------------------------------------------------------------
-SIDFP::~SIDFP()
-{
+SIDFP::~SIDFP() {
         delete[] sample;
         delete[] fir;
 }
@@ -213,10 +205,8 @@ SIDFP::~SIDFP()
 // ----------------------------------------------------------------------------
 // Set chip model.
 // ----------------------------------------------------------------------------
-void SIDFP::set_chip_model(chip_model model)
-{
-        for (int i = 0; i < 3; i++)
-        {
+void SIDFP::set_chip_model(chip_model model) {
+        for (int i = 0; i < 3; i++) {
                 voice[i].set_chip_model(model);
         }
 
@@ -225,10 +215,8 @@ void SIDFP::set_chip_model(chip_model model)
 }
 
 /* nonlinear DAC support, set 1 for 8580 / no effect, about 0.96 otherwise */
-void SIDFP::set_voice_nonlinearity(float nl)
-{
-        for (int i = 0; i < 3; i++)
-        {
+void SIDFP::set_voice_nonlinearity(float nl) {
+        for (int i = 0; i < 3; i++) {
                 voice[i].set_nonlinearity(nl);
         }
 }
@@ -236,10 +224,8 @@ void SIDFP::set_voice_nonlinearity(float nl)
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void SIDFP::reset()
-{
-        for (int i = 0; i < 3; i++)
-        {
+void SIDFP::reset() {
+        for (int i = 0; i < 3; i++) {
                 voice[i].reset();
         }
         filter.reset();
@@ -255,15 +241,13 @@ void SIDFP::reset()
 // Note that to mix in an external audio signal, the signal should be
 // resampled to 1MHz first to avoid sampling noise.
 // ----------------------------------------------------------------------------
-void SIDFP::input(int sample)
-{
+void SIDFP::input(int sample) {
         // Voice outputs are 20 bits. Scale up to match three voices in order
         // to facilitate simulation of the MOS8580 "digi boost" hardware hack.
         ext_in = (float)((sample << 4) * 3);
 }
 
-float SIDFP::output()
-{
+float SIDFP::output() {
         const float range = 1 << 15;
         return extfilt.output() / (4095.f * 255.f * 3.f * 1.5f / range);
 }
@@ -285,10 +269,8 @@ float SIDFP::output()
 // value instead). With this in mind we return the last value written to
 // any SID register for $2000 cycles without modeling the bit fading.
 // ----------------------------------------------------------------------------
-reg8 SIDFP::read(reg8 offset)
-{
-        switch (offset)
-        {
+reg8 SIDFP::read(reg8 offset) {
+        switch (offset) {
         case 0x19:
                 return potx.readPOT();
         case 0x1a:
@@ -305,13 +287,11 @@ reg8 SIDFP::read(reg8 offset)
 // ----------------------------------------------------------------------------
 // Write registers.
 // ----------------------------------------------------------------------------
-void SIDFP::write(reg8 offset, reg8 value)
-{
+void SIDFP::write(reg8 offset, reg8 value) {
         bus_value = value;
         bus_value_ttl = 0x4000;
 
-        switch (offset)
-        {
+        switch (offset) {
         case 0x00:
                 voice[0].wave.writeFREQ_LO(value);
                 break;
@@ -395,20 +375,17 @@ void SIDFP::write(reg8 offset, reg8 value)
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-SIDFP::State::State()
-{
+SIDFP::State::State() {
         int i;
 
-        for (i = 0; i < 0x20; i++)
-        {
+        for (i = 0; i < 0x20; i++) {
                 sid_register[i] = 0;
         }
 
         bus_value = 0;
         bus_value_ttl = 0;
 
-        for (i = 0; i < 3; i++)
-        {
+        for (i = 0; i < 3; i++) {
                 accumulator[i] = 0;
                 shift_register[i] = 0x7ffff8;
                 rate_counter[i] = 0;
@@ -424,25 +401,19 @@ SIDFP::State::State()
 // ----------------------------------------------------------------------------
 // Read state.
 // ----------------------------------------------------------------------------
-SIDFP::State SIDFP::read_state()
-{
+SIDFP::State SIDFP::read_state() {
         State state;
         int i, j;
 
-        for (i = 0, j = 0; i < 3; i++, j += 7)
-        {
-                WaveformGeneratorFP& wave = voice[i].wave;
-                EnvelopeGeneratorFP& envelope = voice[i].envelope;
+        for (i = 0, j = 0; i < 3; i++, j += 7) {
+                WaveformGeneratorFP &wave = voice[i].wave;
+                EnvelopeGeneratorFP &envelope = voice[i].envelope;
                 state.sid_register[j + 0] = wave.freq & 0xff;
                 state.sid_register[j + 1] = wave.freq >> 8;
                 state.sid_register[j + 2] = wave.pw & 0xff;
                 state.sid_register[j + 3] = wave.pw >> 8;
                 state.sid_register[j + 4] =
-                        (wave.waveform << 4)
-                        | (wave.test ? 0x08 : 0)
-                        | (wave.ring_mod ? 0x04 : 0)
-                        | (wave.sync ? 0x02 : 0)
-                        | (envelope.gate ? 0x01 : 0);
+                    (wave.waveform << 4) | (wave.test ? 0x08 : 0) | (wave.ring_mod ? 0x04 : 0) | (wave.sync ? 0x02 : 0) | (envelope.gate ? 0x01 : 0);
                 state.sid_register[j + 5] = (envelope.attack << 4) | envelope.decay;
                 state.sid_register[j + 6] = (envelope.sustain << 4) | envelope.release;
         }
@@ -451,25 +422,20 @@ SIDFP::State SIDFP::read_state()
         state.sid_register[j++] = filter.fc >> 3;
         state.sid_register[j++] = (filter.res << 4) | filter.filt;
         state.sid_register[j++] =
-                (filter.voice3off ? 0x80 : 0)
-                | (filter.hp_bp_lp << 4)
-                | filter.vol;
+            (filter.voice3off ? 0x80 : 0) | (filter.hp_bp_lp << 4) | filter.vol;
 
         // These registers are superfluous, but included for completeness.
-        for (; j < 0x1d; j++)
-        {
+        for (; j < 0x1d; j++) {
                 state.sid_register[j] = read(j);
         }
-        for (; j < 0x20; j++)
-        {
+        for (; j < 0x20; j++) {
                 state.sid_register[j] = 0;
         }
 
         state.bus_value = bus_value;
         state.bus_value_ttl = bus_value_ttl;
 
-        for (i = 0; i < 3; i++)
-        {
+        for (i = 0; i < 3; i++) {
                 state.accumulator[i] = voice[i].wave.accumulator;
                 state.shift_register[i] = voice[i].wave.shift_register;
                 state.rate_counter[i] = voice[i].envelope.rate_counter;
@@ -487,20 +453,17 @@ SIDFP::State SIDFP::read_state()
 // ----------------------------------------------------------------------------
 // Write state.
 // ----------------------------------------------------------------------------
-void SIDFP::write_state(const State& state)
-{
+void SIDFP::write_state(const State &state) {
         int i;
 
-        for (i = 0; i <= 0x18; i++)
-        {
+        for (i = 0; i <= 0x18; i++) {
                 write(i, state.sid_register[i]);
         }
 
         bus_value = state.bus_value;
         bus_value_ttl = state.bus_value_ttl;
 
-        for (i = 0; i < 3; i++)
-        {
+        for (i = 0; i < 3; i++) {
                 voice[i].wave.accumulator = state.accumulator[i];
                 voice[i].wave.shift_register = state.shift_register[i];
                 voice[i].envelope.rate_counter = state.rate_counter[i];
@@ -516,16 +479,14 @@ void SIDFP::write_state(const State& state)
 // ----------------------------------------------------------------------------
 // Enable filter.
 // ----------------------------------------------------------------------------
-void SIDFP::enable_filter(bool enable)
-{
+void SIDFP::enable_filter(bool enable) {
         filter.enable_filter(enable);
 }
 
 // ----------------------------------------------------------------------------
 // Enable external filter.
 // ----------------------------------------------------------------------------
-void SIDFP::enable_external_filter(bool enable)
-{
+void SIDFP::enable_external_filter(bool enable) {
         extfilt.enable_filter(enable);
 }
 
@@ -533,8 +494,7 @@ void SIDFP::enable_external_filter(bool enable)
 // I0() computes the 0th order modified Bessel function of the first kind.
 // This function is originally from resample-1.5/filterkit.c by J. O. Smith.
 // ----------------------------------------------------------------------------
-double SIDFP::I0(double x)
-{
+double SIDFP::I0(double x) {
         // Max error acceptable in I0 could be 1e-6, which gives that 96 dB already.
         // I'm overspecify these errors to get a beautiful FFT dump of the FIR.
         const double I0e = 1e-10;
@@ -545,8 +505,7 @@ double SIDFP::I0(double x)
         sum = u = n = 1;
         halfx = x / 2.0;
 
-        do
-        {
+        do {
                 temp = halfx / n++;
                 u *= temp * temp;
                 sum += u;
@@ -554,7 +513,6 @@ double SIDFP::I0(double x)
 
         return sum;
 }
-
 
 // ----------------------------------------------------------------------------
 // Setting of SID sampling parameters.
@@ -570,7 +528,7 @@ double SIDFP::I0(double x)
 // E.g. provided a clock frequency of ~ 1MHz, the sample frequency can not
 // be set lower than ~ 8kHz. A lower sample frequency would make the
 // resampling code overfill its 16k sample ring buffer.
-// 
+//
 // The end of passband frequency is also limited:
 //   pass_freq <= 0.9*sample_freq/2
 
@@ -579,8 +537,7 @@ double SIDFP::I0(double x)
 // not overfilled.
 // ----------------------------------------------------------------------------
 bool SIDFP::set_sampling_parameters(float clock_freq, sampling_method method,
-        float sample_freq, float pass_freq)
-{
+                                    float sample_freq, float pass_freq) {
         clock_frequency = clock_freq;
         sampling = method;
 
@@ -592,8 +549,7 @@ bool SIDFP::set_sampling_parameters(float clock_freq, sampling_method method,
         sample_prev = 0;
 
         // FIR initialization is only necessary for resampling.
-        if (method != SAMPLE_RESAMPLE_INTERPOLATE)
-        {
+        if (method != SAMPLE_RESAMPLE_INTERPOLATE) {
                 delete[] sample;
                 delete[] fir;
                 sample = 0;
@@ -656,32 +612,28 @@ bool SIDFP::set_sampling_parameters(float clock_freq, sampling_method method,
         double wc = (pass_freq + transition_bandwidth / 2) / sample_freq * M_PI * 2;
 
         // Calculate fir_RES FIR tables for linear interpolation.
-        for (int i = 0; i < fir_RES; i++)
-        {
+        for (int i = 0; i < fir_RES; i++) {
                 double j_offset = double(i) / fir_RES;
                 // Calculate FIR table. This is the sinc function, weighted by the
                 // Kaiser window.
-                for (int j = 0; j < fir_N; j++)
-                {
+                for (int j = 0; j < fir_N; j++) {
                         double jx = j - fir_N / 2. - j_offset;
                         double wt = wc * jx / f_cycles_per_sample;
                         double temp = jx / (fir_N / 2);
                         double Kaiser =
-                                fabs(temp) <= 1 ? I0(beta * sqrt(1 - temp * temp)) / I0beta : 0;
+                            fabs(temp) <= 1 ? I0(beta * sqrt(1 - temp * temp)) / I0beta : 0;
                         double sincwt =
-                                fabs(wt) >= 1e-8 ? sin(wt) / wt : 1;
+                            fabs(wt) >= 1e-8 ? sin(wt) / wt : 1;
                         fir[i * fir_N + j] = (float)(f_samples_per_cycle * wc / M_PI * sincwt * Kaiser);
                 }
         }
 
         // Allocate sample buffer.
-        if (!sample)
-        {
+        if (!sample) {
                 sample = new float[RINGSIZE * 2];
         }
         // Clear sample buffer.
-        for (int j = 0; j < RINGSIZE * 2; j++)
-        {
+        for (int j = 0; j < RINGSIZE * 2; j++) {
                 sample[j] = 0;
         }
         sample_index = 0;
@@ -701,18 +653,14 @@ bool SIDFP::set_sampling_parameters(float clock_freq, sampling_method method,
 // that any adjustment of the sampling frequency will change the
 // characteristics of the resampling filter, since the filter is not rebuilt.
 // ----------------------------------------------------------------------------
-void SIDFP::adjust_sampling_frequency(float sample_freq)
-{
+void SIDFP::adjust_sampling_frequency(float sample_freq) {
         cycles_per_sample = clock_frequency / sample_freq;
 }
 
-void SIDFP::age_bus_value(cycle_count n)
-{
-        if (bus_value_ttl != 0)
-        {
+void SIDFP::age_bus_value(cycle_count n) {
+        if (bus_value_ttl != 0) {
                 bus_value_ttl -= n;
-                if (bus_value_ttl <= 0)
-                {
+                if (bus_value_ttl <= 0) {
                         bus_value = 0;
                         bus_value_ttl = 0;
                 }
@@ -722,25 +670,21 @@ void SIDFP::age_bus_value(cycle_count n)
 // ----------------------------------------------------------------------------
 // SID clocking - 1 cycle.
 // ----------------------------------------------------------------------------
-void SIDFP::clock()
-{
+void SIDFP::clock() {
         int i;
 
         // Clock amplitude modulators.
-        for (i = 0; i < 3; i++)
-        {
+        for (i = 0; i < 3; i++) {
                 voice[i].envelope.clock();
         }
 
         // Clock oscillators.
-        for (i = 0; i < 3; i++)
-        {
+        for (i = 0; i < 3; i++) {
                 voice[i].wave.clock();
         }
 
         // Synchronize oscillators.
-        for (i = 0; i < 3; i++)
-        {
+        for (i = 0; i < 3; i++) {
                 voice[i].wave.synchronize();
         }
 
@@ -760,15 +704,13 @@ void SIDFP::clock()
 //   write(dsp, buf, bufindex*2);
 //   bufindex = 0;
 // }
-// 
+//
 // ----------------------------------------------------------------------------
-int SIDFP::clock(cycle_count& delta_t, short* buf, int n, int interleave)
-{
+int SIDFP::clock(cycle_count &delta_t, short *buf, int n, int interleave) {
         /* XXX I assume n is generally large enough for delta_t here... */
         age_bus_value(delta_t);
         int res;
-        switch (sampling)
-        {
+        switch (sampling) {
         default:
         case SAMPLE_INTERPOLATE:
                 res = clock_interpolate(delta_t, buf, n, interleave);
@@ -794,30 +736,24 @@ int SIDFP::clock(cycle_count& delta_t, short* buf, int n, int interleave)
 // sampling noise.
 // ----------------------------------------------------------------------------
 RESID_INLINE
-int SIDFP::clock_interpolate(cycle_count& delta_t, short* buf, int n,
-        int interleave)
-{
+int SIDFP::clock_interpolate(cycle_count &delta_t, short *buf, int n,
+                             int interleave) {
         int s = 0;
         int i;
 
-        for (;;)
-        {
+        for (;;) {
                 float next_sample_offset = sample_offset + cycles_per_sample;
                 int delta_t_sample = (int)next_sample_offset;
-                if (delta_t_sample > delta_t)
-                {
+                if (delta_t_sample > delta_t) {
                         break;
                 }
-                if (s >= n)
-                {
+                if (s >= n) {
                         return s;
                 }
-                for (i = 0; i < delta_t_sample - 1; i++)
-                {
+                for (i = 0; i < delta_t_sample - 1; i++) {
                         clock();
                 }
-                if (i < delta_t_sample)
-                {
+                if (i < delta_t_sample) {
                         sample_prev = output();
                         clock();
                 }
@@ -829,24 +765,19 @@ int SIDFP::clock_interpolate(cycle_count& delta_t, short* buf, int n,
                 int v = (int)(sample_prev + (sample_offset * (sample_now - sample_prev)));
                 // Saturated arithmetics to guard against 16 bit sample overflow.
                 const int half = 1 << 15;
-                if (v >= half)
-                {
+                if (v >= half) {
                         v = half - 1;
-                }
-                else if (v < -half)
-                {
+                } else if (v < -half) {
                         v = -half;
                 }
                 buf[s++ * interleave] = v;
                 sample_prev = sample_now;
         }
 
-        for (i = 0; i < delta_t - 1; i++)
-        {
+        for (i = 0; i < delta_t - 1; i++) {
                 clock();
         }
-        if (i < delta_t)
-        {
+        if (i < delta_t) {
                 sample_prev = output();
                 clock();
         }
@@ -892,13 +823,11 @@ int SIDFP::clock_interpolate(cycle_count& delta_t, short* buf, int n,
 // implementation dependent in the C++ standard.
 // ----------------------------------------------------------------------------
 RESID_INLINE
-int SIDFP::clock_resample_interpolate(cycle_count& delta_t, short* buf, int n,
-        int interleave)
-{
+int SIDFP::clock_resample_interpolate(cycle_count &delta_t, short *buf, int n,
+                                      int interleave) {
         int s = 0;
 
-        for (;;)
-        {
+        for (;;) {
                 float next_sample_offset = sample_offset + cycles_per_sample;
                 /* full clocks left to next sample */
                 int delta_t_sample = (int)next_sample_offset;
@@ -906,8 +835,7 @@ int SIDFP::clock_resample_interpolate(cycle_count& delta_t, short* buf, int n,
                         break;
 
                 /* clock forward delta_t_sample samples */
-                for (int i = 0; i < delta_t_sample; i++)
-                {
+                for (int i = 0; i < delta_t_sample; i++) {
                         clock();
                         sample[sample_index] = sample[sample_index + RINGSIZE] = output();
                         ++sample_index;
@@ -925,24 +853,23 @@ int SIDFP::clock_resample_interpolate(cycle_count& delta_t, short* buf, int n,
                 fir_offset_rmd -= (float)fir_offset;
 
                 /* find fir_N most recent samples, plus one extra in case the FIR wraps. */
-                float* sample_start = sample + sample_index - fir_N + RINGSIZE - 1;
+                float *sample_start = sample + sample_index - fir_N + RINGSIZE - 1;
 
                 float v1 =
 #if (RESID_USE_SSE == 1)
-                        can_use_sse ? convolve_sse(sample_start, fir + fir_offset * fir_N, fir_N) :
+                    can_use_sse ? convolve_sse(sample_start, fir + fir_offset * fir_N, fir_N) :
 #endif
                                 convolve(sample_start, fir + fir_offset * fir_N, fir_N);
 
                 // Use next FIR table, wrap around to first FIR table using
                 // previous sample.
-                if (++fir_offset == fir_RES)
-                {
+                if (++fir_offset == fir_RES) {
                         fir_offset = 0;
                         ++sample_start;
                 }
                 float v2 =
 #if (RESID_USE_SSE == 1)
-                        can_use_sse ? convolve_sse(sample_start, fir + fir_offset * fir_N, fir_N) :
+                    can_use_sse ? convolve_sse(sample_start, fir + fir_offset * fir_N, fir_N) :
 #endif
                                 convolve(sample_start, fir + fir_offset * fir_N, fir_N);
 
@@ -952,12 +879,9 @@ int SIDFP::clock_resample_interpolate(cycle_count& delta_t, short* buf, int n,
 
                 // Saturated arithmetics to guard against 16 bit sample overflow.
                 const int half = 1 << 15;
-                if (v >= half)
-                {
+                if (v >= half) {
                         v = half - 1;
-                }
-                else if (v < -half)
-                {
+                } else if (v < -half) {
                         v = -half;
                 }
 
@@ -965,8 +889,7 @@ int SIDFP::clock_resample_interpolate(cycle_count& delta_t, short* buf, int n,
         }
 
         /* clock forward delta_t samples */
-        for (int i = 0; i < delta_t; i++)
-        {
+        for (int i = 0; i < delta_t; i++) {
                 clock();
                 sample[sample_index] = sample[sample_index + RINGSIZE] = output();
                 ++sample_index;

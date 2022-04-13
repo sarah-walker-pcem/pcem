@@ -1,18 +1,17 @@
 #include "ibm.h"
 
-#include "x86.h"
-#include "x86_flags.h"
 #include "386_common.h"
-#include "x87.h"
 #include "codegen.h"
 #include "codegen_accumulate.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"
 #include "codegen_ops_fpu_arith.h"
 #include "codegen_ops_helpers.h"
+#include "x86.h"
+#include "x86_flags.h"
+#include "x87.h"
 
-uint32_t ropFLDs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFLDs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -24,10 +23,9 @@ uint32_t ropFLDs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         uop_MOV_IMM(ir, IREG_tag(-1), TAG_VALID);
         fpu_PUSH(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFLDd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFLDd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -39,11 +37,10 @@ uint32_t ropFLDd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         uop_MOV_IMM(ir, IREG_tag(-1), TAG_VALID);
         fpu_PUSH(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
 
-uint32_t ropFSTs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFSTs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -53,10 +50,9 @@ uint32_t ropFSTs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         codegen_check_seg_write(block, ir, target_seg);
         uop_MEM_STORE_SINGLE(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_ST(0));
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFSTPs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFSTPs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -68,10 +64,9 @@ uint32_t ropFSTPs(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
         fpu_POP(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFSTd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFSTd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -82,10 +77,9 @@ uint32_t ropFSTd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         CHECK_SEG_LIMITS(block, ir, target_seg, IREG_eaaddr, 7);
         uop_MEM_STORE_DOUBLE(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_ST(0));
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFSTPd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFSTPd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -98,12 +92,10 @@ uint32_t ropFSTPd(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
         fpu_POP(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
 
-
-uint32_t ropFILDw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFILDw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -116,10 +108,9 @@ uint32_t ropFILDw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_MOV_IMM(ir, IREG_tag(-1), TAG_VALID);
         fpu_PUSH(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFILDl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFILDl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -132,10 +123,9 @@ uint32_t ropFILDl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_MOV_IMM(ir, IREG_tag(-1), TAG_VALID);
         fpu_PUSH(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFILDq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFILDq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -148,11 +138,10 @@ uint32_t ropFILDq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_MOV_IMM(ir, IREG_tag(-1), TAG_VALID | TAG_UINT64);
         fpu_PUSH(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
 
-uint32_t ropFISTw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFISTw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -164,10 +153,9 @@ uint32_t ropFISTw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0_W);
         uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFISTPw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFISTPw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -180,10 +168,9 @@ uint32_t ropFISTPw(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
         fpu_POP(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFISTl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFISTl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -195,10 +182,9 @@ uint32_t ropFISTl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_temp0);
         uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFISTPl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFISTPl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -211,10 +197,9 @@ uint32_t ropFISTPl(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
         fpu_POP(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFISTPq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFISTPq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -227,5 +212,5 @@ uint32_t ropFISTPq(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t f
         uop_MOV_IMM(ir, IREG_tag(0), TAG_EMPTY);
         fpu_POP(block, ir);
 
-        return op_pc+1;
+        return op_pc + 1;
 }

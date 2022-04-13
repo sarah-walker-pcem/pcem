@@ -1,27 +1,26 @@
 /*AH1542C firmware notes :
-        
+
   d1a - command dispatch
   193c - send data
   1954 - get data
 
   FW data - 164e
-  
+
   BIOS command table - f4b*/
-#include <stdlib.h>
-#include "ibm.h"
+#include "scsi_aha1540.h"
 #include "device.h"
+#include "ibm.h"
 #include "io.h"
 #include "mem.h"
 #include "nvr.h"
 #include "pic.h"
 #include "rom.h"
 #include "scsi.h"
-#include "scsi_aha1540.h"
 #include "timer.h"
+#include <stdlib.h>
 
 int primed = 0;
-typedef enum
-{
+typedef enum {
         SCSI_AHA1542C,
         SCSI_BT545S
 } scsi_type_t;
@@ -31,8 +30,7 @@ typedef enum
   - Command state - foreground command processing
   - CCB state - CCB/mailbox processing - triggered by commands 0x02/0x82
   - SCSI state - SCSI bus handling / data transfer*/
-typedef enum
-{
+typedef enum {
         CMD_STATE_RESET,
         CMD_STATE_IDLE,
         CMD_STATE_GET_PARAMS,
@@ -40,8 +38,7 @@ typedef enum
         CMD_STATE_SEND_RESULT
 } cmd_state_t;
 
-typedef enum
-{
+typedef enum {
         CCB_STATE_IDLE,
         CCB_STATE_SEND_COMMAND,
         CCB_STATE_WAIT_COMMAND,
@@ -49,8 +46,7 @@ typedef enum
         CCB_STATE_WAIT_REQUEST_SENSE
 } ccb_state_t;
 
-typedef enum
-{
+typedef enum {
         SCSI_STATE_IDLE,
         SCSI_STATE_SELECT,
         SCSI_STATE_SELECT_FAILED,
@@ -63,14 +59,12 @@ typedef enum
         SCSI_STATE_READ_MESSAGE
 } scsi_state_t;
 
-typedef enum
-{
+typedef enum {
         MB_FORMAT_4,
         MB_FORMAT_8
 } mb_format_t;
 
-typedef struct aha154x_t
-{
+typedef struct aha154x_t {
         rom_t bios_rom;
         mem_mapping_t mapping;
         uint32_t bios_addr;
@@ -193,110 +187,104 @@ typedef struct aha154x_t
 } aha154x_t;
 
 #define STATUS_INVDCMD 0x01
-#define STATUS_DF      0x04
-#define STATUS_CDF     0x08
-#define STATUS_IDLE    0x10
-#define STATUS_INIT    0x20
-#define STATUS_STST    0x80
+#define STATUS_DF 0x04
+#define STATUS_CDF 0x08
+#define STATUS_IDLE 0x10
+#define STATUS_INIT 0x20
+#define STATUS_STST 0x80
 
-#define CTRL_BRST  0x10
-#define CTRL_IRST  0x20
-#define CTRL_SRST  0x40
+#define CTRL_BRST 0x10
+#define CTRL_IRST 0x20
+#define CTRL_SRST 0x40
 #define CTRL_RESET 0x80
 
-#define ISR_MBIF    0x01
-#define ISR_MBOA    0x02
-#define ISR_HACC    0x04
+#define ISR_MBIF 0x01
+#define ISR_MBOA 0x02
+#define ISR_HACC 0x04
 #define ISR_ANYINTR 0x80
 
-#define COMMAND_NOP                       0x00
-#define COMMAND_MAILBOX_INITIALIZATION    0x01
-#define COMMAND_START_SCSI_COMMAND        0x02
-#define COMMAND_START_BIOS_COMMAND        0x03
-#define COMMAND_ADAPTER_INQUIRY           0x04
-#define COMMAND_MAILBOX_OUT_IRQ_ENA       0x05
-#define COMMAND_SET_SELECTION_TIMEOUT     0x06
-#define COMMAND_SET_BUS_ON_TIME           0x07
-#define COMMAND_SET_BUS_OFF_TIME          0x08
-#define COMMAND_SET_AT_BUS_SPEED          0x09
+#define COMMAND_NOP 0x00
+#define COMMAND_MAILBOX_INITIALIZATION 0x01
+#define COMMAND_START_SCSI_COMMAND 0x02
+#define COMMAND_START_BIOS_COMMAND 0x03
+#define COMMAND_ADAPTER_INQUIRY 0x04
+#define COMMAND_MAILBOX_OUT_IRQ_ENA 0x05
+#define COMMAND_SET_SELECTION_TIMEOUT 0x06
+#define COMMAND_SET_BUS_ON_TIME 0x07
+#define COMMAND_SET_BUS_OFF_TIME 0x08
+#define COMMAND_SET_AT_BUS_SPEED 0x09
 #define COMMAND_INQUIRE_INSTALLED_DEVICES 0x0a
-#define COMMAND_RETURN_CONFIG_DATA        0x0b
-#define COMMAND_RETURN_SETUP_DATA         0x0d
-#define COMMAND_WRITE_CHANNEL_2_BUF       0x1a
-#define COMMAND_READ_CHANNEL_2_BUF        0x1b
-#define COMMAND_ECHO                      0x1f
+#define COMMAND_RETURN_CONFIG_DATA 0x0b
+#define COMMAND_RETURN_SETUP_DATA 0x0d
+#define COMMAND_WRITE_CHANNEL_2_BUF 0x1a
+#define COMMAND_READ_CHANNEL_2_BUF 0x1b
+#define COMMAND_ECHO 0x1f
 
-#define COMMAND_ADAPTEC_PROGRAM_EEPROM      0x22
-#define COMMAND_ADAPTEC_RETURN_EEPROM_DATA  0x23
-#define COMMAND_ADAPTEC_SET_SHADOW_PARAMS   0x24
-#define COMMAND_ADAPTEC_BIOS_MAILBOX_INIT   0x25
-#define COMMAND_ADAPTEC_SET_BIOS_BANK_1     0x26
-#define COMMAND_ADAPTEC_SET_BIOS_BANK_2     0x27
-#define COMMAND_ADAPTEC_GET_EXT_BIOS_INFO   0x28
-#define COMMAND_ENABLE_MAILBOX_INTERFACE    0x29
+#define COMMAND_ADAPTEC_PROGRAM_EEPROM 0x22
+#define COMMAND_ADAPTEC_RETURN_EEPROM_DATA 0x23
+#define COMMAND_ADAPTEC_SET_SHADOW_PARAMS 0x24
+#define COMMAND_ADAPTEC_BIOS_MAILBOX_INIT 0x25
+#define COMMAND_ADAPTEC_SET_BIOS_BANK_1 0x26
+#define COMMAND_ADAPTEC_SET_BIOS_BANK_2 0x27
+#define COMMAND_ADAPTEC_GET_EXT_BIOS_INFO 0x28
+#define COMMAND_ENABLE_MAILBOX_INTERFACE 0x29
 #define COMMAND_ADAPTEC_START_BIOS_SCSI_CMD 0x82
 
-#define COMMAND_BUSLOGIC_22                  0x22
-#define COMMAND_BUSLOGIC_81                  0x81
-#define COMMAND_BUSLOGIC_84                  0x84
-#define COMMAND_BUSLOGIC_85                  0x85
-#define COMMAND_BUSLOGIC_ADAPTER_MODEL_NR    0x8b
+#define COMMAND_BUSLOGIC_22 0x22
+#define COMMAND_BUSLOGIC_81 0x81
+#define COMMAND_BUSLOGIC_84 0x84
+#define COMMAND_BUSLOGIC_85 0x85
+#define COMMAND_BUSLOGIC_ADAPTER_MODEL_NR 0x8b
 #define COMMAND_BUSLOGIC_INQUIRY_SYNC_PERIOD 0x8c
 #define COMMAND_BUSLOGIC_EXTENDED_SETUP_INFO 0x8d
-#define COMMAND_BUSLOGIC_STRICT_RR           0x8f
-#define COMMAND_BUSLOGIC_SET_CCB_FORMAT      0x96
+#define COMMAND_BUSLOGIC_STRICT_RR 0x8f
+#define COMMAND_BUSLOGIC_SET_CCB_FORMAT 0x96
 
-#define COMMAND_FREE_CCB  0
+#define COMMAND_FREE_CCB 0
 #define COMMAND_START_CCB 1
 #define COMMAND_ABORT_CCB 2
 
-#define CCB_INITIATOR                         0
-#define CCB_INITIATOR_SCATTER_GATHER          2
-#define CCB_INITIATOR_RESIDUAL                3
+#define CCB_INITIATOR 0
+#define CCB_INITIATOR_SCATTER_GATHER 2
+#define CCB_INITIATOR_RESIDUAL 3
 #define CCB_INITIATOR_SCATTER_GATHER_RESIDUAL 4
 
-#define CCB_SENSE_14   0x00
+#define CCB_SENSE_14 0x00
 #define CCB_SENSE_NONE 0x01
 
-#define MBI_CCB_COMPLETE            0x01
-#define MBI_CCB_ABORTED             0x02
+#define MBI_CCB_COMPLETE 0x01
+#define MBI_CCB_ABORTED 0x02
 #define MBI_CCB_COMPLETE_WITH_ERROR 0x04
 
-#define HOST_STATUS_COMMAND_COMPLETE   0x00
+#define HOST_STATUS_COMMAND_COMPLETE 0x00
 #define HOST_STATUS_SELECTION_TIME_OUT 0x11
 
 #define POLL_TIME_US 10
 #define MAX_BYTES_TRANSFERRED_PER_POLL 50
 /*10us poll period with 50 bytes transferred per poll = 5MB/sec*/
 
-static void aha1542c_eeprom_save(aha154x_t* scsi);
-static void process_cmd(aha154x_t* scsi);
+static void aha1542c_eeprom_save(aha154x_t *scsi);
+static void process_cmd(aha154x_t *scsi);
 
-static void set_irq(aha154x_t* scsi, uint8_t val)
-{
+static void set_irq(aha154x_t *scsi, uint8_t val) {
         picint(1 << scsi->irq);
         scsi->isr |= val | ISR_ANYINTR;
 }
 
-static void clear_irq(aha154x_t* scsi)
-{
+static void clear_irq(aha154x_t *scsi) {
         picintc(1 << scsi->irq);
 }
 
-static void aha154x_out(uint16_t port, uint8_t val, void* p)
-{
-        aha154x_t* scsi = (aha154x_t*)p;
+static void aha154x_out(uint16_t port, uint8_t val, void *p) {
+        aha154x_t *scsi = (aha154x_t *)p;
 
-        if (CS != 0xc800)
-        {
-//                pclog("aha154x_out: port=%04x val=%02x %04x:%04x %i\n", port, val, CS, cpu_state.pc, scsi->cmd_state);
+        if (CS != 0xc800) {
+                //                pclog("aha154x_out: port=%04x val=%02x %04x:%04x %i\n", port, val, CS, cpu_state.pc, scsi->cmd_state);
         }
 
-        switch (port & 3)
-        {
+        switch (port & 3) {
         case 0: /*Control register*/
-                if (val & CTRL_RESET)
-                {
+                if (val & CTRL_RESET) {
                         scsi->isr = 0;
                         clear_irq(scsi);
                         scsi->status = STATUS_STST;
@@ -308,12 +296,11 @@ static void aha154x_out(uint16_t port, uint8_t val, void* p)
                         scsi->current_mbi = 0;
                         scsi->mbo_irq_enable = 0;
                 }
-                if (val & CTRL_SRST)
-                {
+                if (val & CTRL_SRST) {
                         scsi->isr = 0;
                         clear_irq(scsi);
                         scsi->status = STATUS_INIT;
-//                        pclog("software reset\n");
+                        //                        pclog("software reset\n");
                         scsi->cmd_state = CMD_STATE_IDLE;
                         scsi->ccb_state = CCB_STATE_IDLE;
                         scsi->scsi_state = SCSI_STATE_IDLE;
@@ -321,19 +308,17 @@ static void aha154x_out(uint16_t port, uint8_t val, void* p)
                         scsi->current_mbi = 0;
                         scsi->mbo_irq_enable = 0;
                 }
-                if (val & CTRL_IRST)
-                {
+                if (val & CTRL_IRST) {
                         scsi->isr = 0;
                         clear_irq(scsi);
-//                        update_irq(scsi);
+                        //                        update_irq(scsi);
                         if (scsi->type == SCSI_AHA1542C)
                                 scsi->status &= ~STATUS_INVDCMD;
                 }
-                if (val & CTRL_BRST)
-                {
+                if (val & CTRL_BRST) {
                         scsi->ccb_state = CCB_STATE_IDLE;
                         scsi->scsi_state = SCSI_STATE_IDLE;
-//                        output = 3;
+                        //                        output = 3;
                 }
                 break;
 
@@ -342,10 +327,10 @@ static void aha154x_out(uint16_t port, uint8_t val, void* p)
                         break;
                 if (scsi->type == SCSI_BT545S)
                         scsi->status &= ~STATUS_INVDCMD;
-//                        fatal("Write command reg while full\n");
+                //                        fatal("Write command reg while full\n");
                 scsi->status |= STATUS_CDF;
                 scsi->cmd_data = val;
-//                pclog("Write command %02x %04x(%08x):%08x\n", val, CS,cs,cpu_state.pc);
+                //                pclog("Write command %02x %04x(%08x):%08x\n", val, CS,cs,cpu_state.pc);
                 process_cmd(scsi);
                 break;
 
@@ -356,15 +341,13 @@ static void aha154x_out(uint16_t port, uint8_t val, void* p)
         }
 }
 
-static uint8_t aha154x_in(uint16_t port, void* p)
-{
-        aha154x_t* scsi = (aha154x_t*)p;
+static uint8_t aha154x_in(uint16_t port, void *p) {
+        aha154x_t *scsi = (aha154x_t *)p;
         uint8_t temp = 0xff;
 
-//        if (primed)
-//                output = 3;
-        switch (port & 3)
-        {
+        //        if (primed)
+        //                output = 3;
+        switch (port & 3) {
         case 0: /*Status register*/
                 temp = scsi->status;
                 if (scsi->cmd_state == CMD_STATE_IDLE && scsi->ccb_state == CCB_STATE_IDLE && scsi->scsi_state == SCSI_STATE_IDLE)
@@ -372,8 +355,8 @@ static uint8_t aha154x_in(uint16_t port, void* p)
                 break;
 
         case 1: /*Data in register*/
-/*                if (!(scsi->status & STATUS_DF))
-                        fatal("Read data in while empty\n");*/
+                /*                if (!(scsi->status & STATUS_DF))
+                                        fatal("Read data in while empty\n");*/
                 scsi->status &= ~STATUS_DF;
                 temp = scsi->data_in;
                 break;
@@ -388,11 +371,9 @@ static uint8_t aha154x_in(uint16_t port, void* p)
         case 3: /*???*/
                 if (scsi->type == SCSI_BT545S)
                         temp = 0x29; /*BT-545S BIOS expects this to return not zero or 0xff for six consecutive reads*/
-                else
-                {
+                else {
                         scsi->reg3_idx++;
-                        switch (scsi->reg3_idx & 3)
-                        {
+                        switch (scsi->reg3_idx & 3) {
                         case 0:
                                 temp = 'A';
                                 break;
@@ -409,24 +390,20 @@ static uint8_t aha154x_in(uint16_t port, void* p)
                 }
                 break;
         }
-        if (CS != 0xc800)
-        {
-//                pclog("aha154x_in: port=%04x val=%02x %04x(%08x):%04x %i %i\n", port, temp, CS, cs, cpu_state.pc, ins, scsi->cmd_state);
+        if (CS != 0xc800) {
+                //                pclog("aha154x_in: port=%04x val=%02x %04x(%08x):%04x %i %i\n", port, temp, CS, cs, cpu_state.pc, ins, scsi->cmd_state);
         }
 
         return temp;
 }
 
-static int wait_for_bus(scsi_bus_t* bus, int state, int req_needed)
-{
+static int wait_for_bus(scsi_bus_t *bus, int state, int req_needed) {
         int c;
 
-        for (c = 0; c < 20; c++)
-        {
+        for (c = 0; c < 20; c++) {
                 int bus_state = scsi_bus_read(bus);
 
-                if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) == state && (bus_state & BUS_BSY))
-                {
+                if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) == state && (bus_state & BUS_BSY)) {
                         if (!req_needed || (bus_state & BUS_REQ))
                                 return 1;
                 }
@@ -435,24 +412,21 @@ static int wait_for_bus(scsi_bus_t* bus, int state, int req_needed)
         return 0;
 }
 
-static void process_cdb(aha154x_t* scsi)
-{
+static void process_cdb(aha154x_t *scsi) {
         int c;
         uint8_t temp;
 
         scsi->ccb.opcode = mem_readb_phys(scsi->ccb.addr);
-        switch (scsi->ccb.opcode)
-        {
+        switch (scsi->ccb.opcode) {
         case CCB_INITIATOR:
         case CCB_INITIATOR_RESIDUAL:
                 temp = mem_readb_phys(scsi->ccb.addr + 0x01);
-//                pclog("Read addr+ctrl %02x %06x\n", temp, scsi->ccb.addr+0x01);
+                //                pclog("Read addr+ctrl %02x %06x\n", temp, scsi->ccb.addr+0x01);
                 scsi->ccb.transfer_dir = (temp >> 3) & 3;
                 scsi->ccb.scsi_cmd_len = mem_readb_phys(scsi->ccb.addr + 0x02);
                 scsi->ccb.req_sense_len = mem_readb_phys(scsi->ccb.addr + 0x03);
 
-                if (scsi->mb_format == MB_FORMAT_4)
-                {
+                if (scsi->mb_format == MB_FORMAT_4) {
                         scsi->ccb.lun = temp & 7;
                         scsi->ccb.target_id = (temp >> 5) & 7;
 
@@ -460,20 +434,18 @@ static void process_cdb(aha154x_t* scsi)
                         scsi->ccb.data_pointer = mem_readb_phys(scsi->ccb.addr + 0x09) | (mem_readb_phys(scsi->ccb.addr + 0x08) << 8) | (mem_readb_phys(scsi->ccb.addr + 0x07) << 16);
                         scsi->ccb.link_pointer = mem_readb_phys(scsi->ccb.addr + 0x0c) | (mem_readb_phys(scsi->ccb.addr + 0x0b) << 8) | (mem_readb_phys(scsi->ccb.addr + 0x0a) << 16);
                         scsi->ccb.link_id = mem_readb_phys(scsi->ccb.addr + 0x0d);
-                }
-                else
-                {
+                } else {
                         scsi->ccb.data_len = mem_readl_phys(scsi->ccb.addr + 0x04);
                         scsi->ccb.data_pointer = mem_readl_phys(scsi->ccb.addr + 0x08);
 
                         scsi->ccb.target_id = mem_readb_phys(scsi->ccb.addr + 0x10);
                         scsi->ccb.lun = mem_readb_phys(scsi->ccb.addr + 0x11) & 0x1f;
-//                        pclog("Target ID = %02x  addr=%08x len=%08x\n", scsi->ccb.target_id, scsi->ccb.data_pointer, scsi->ccb.data_len);
+                        //                        pclog("Target ID = %02x  addr=%08x len=%08x\n", scsi->ccb.target_id, scsi->ccb.data_pointer, scsi->ccb.data_len);
                 }
                 for (c = 0; c < scsi->ccb.scsi_cmd_len; c++)
                         scsi->ccb.cdb[c] = mem_readb_phys(scsi->ccb.addr + 0x12 + c);
-//                pclog("CCB_INITIATOR: target=%i lun=%i\n", scsi->ccb.target_id, scsi->ccb.lun);
-//                pclog("  scsi_len=%i data_len=%06x data_pointer=%06x\n", scsi->ccb.scsi_cmd_len, scsi->ccb.data_len, scsi->ccb.data_pointer);
+                //                pclog("CCB_INITIATOR: target=%i lun=%i\n", scsi->ccb.target_id, scsi->ccb.lun);
+                //                pclog("  scsi_len=%i data_len=%06x data_pointer=%06x\n", scsi->ccb.scsi_cmd_len, scsi->ccb.data_len, scsi->ccb.data_pointer);
                 scsi->ccb_state = CCB_STATE_SEND_COMMAND;
                 scsi->ccb.status = 0;
                 scsi->ccb.from_mailbox = 1;
@@ -483,15 +455,14 @@ static void process_cdb(aha154x_t* scsi)
 
         case CCB_INITIATOR_SCATTER_GATHER:
         case CCB_INITIATOR_SCATTER_GATHER_RESIDUAL:
-//                pclog("Scatter-gather : %08x %08x %08x %08x %08x  %i  %02x\n", mem_readl_phys(scsi->ccb.addr),mem_readl_phys(scsi->ccb.addr+4),mem_readl_phys(scsi->ccb.addr+8),mem_readl_phys(scsi->ccb.addr+12),mem_readl_phys(scsi->ccb.addr+16), scsi->mb_format == MB_FORMAT_4,  scsi->ccb.opcode);
+                //                pclog("Scatter-gather : %08x %08x %08x %08x %08x  %i  %02x\n", mem_readl_phys(scsi->ccb.addr),mem_readl_phys(scsi->ccb.addr+4),mem_readl_phys(scsi->ccb.addr+8),mem_readl_phys(scsi->ccb.addr+12),mem_readl_phys(scsi->ccb.addr+16), scsi->mb_format == MB_FORMAT_4,  scsi->ccb.opcode);
                 temp = mem_readb_phys(scsi->ccb.addr + 0x01);
-//                pclog("Read addr+ctrl %02x %06x\n", temp, scsi->ccb.addr+0x01);
+                //                pclog("Read addr+ctrl %02x %06x\n", temp, scsi->ccb.addr+0x01);
                 scsi->ccb.transfer_dir = (temp >> 3) & 3;
                 scsi->ccb.scsi_cmd_len = mem_readb_phys(scsi->ccb.addr + 0x02);
                 scsi->ccb.req_sense_len = mem_readb_phys(scsi->ccb.addr + 0x03);
 
-                if (scsi->mb_format == MB_FORMAT_4)
-                {
+                if (scsi->mb_format == MB_FORMAT_4) {
                         scsi->ccb.lun = temp & 7;
                         scsi->ccb.target_id = (temp >> 5) & 7;
 
@@ -503,9 +474,7 @@ static void process_cdb(aha154x_t* scsi)
 
                         scsi->ccb.link_pointer = mem_readb_phys(scsi->ccb.addr + 0x0c) | (mem_readb_phys(scsi->ccb.addr + 0x0b) << 8) | (mem_readb_phys(scsi->ccb.addr + 0x0a) << 16);
                         scsi->ccb.link_id = mem_readb_phys(scsi->ccb.addr + 0x0d);
-                }
-                else
-                {
+                } else {
                         scsi->ccb.data_seg_list_len = mem_readl_phys(scsi->ccb.addr + 0x04);
                         scsi->ccb.data_seg_list_pointer = mem_readl_phys(scsi->ccb.addr + 0x08);
                         scsi->ccb.data_seg_list_idx = 0;
@@ -514,39 +483,33 @@ static void process_cdb(aha154x_t* scsi)
 
                         scsi->ccb.target_id = mem_readb_phys(scsi->ccb.addr + 0x10);
                         scsi->ccb.lun = mem_readb_phys(scsi->ccb.addr + 0x11) & 0x1f;
-//                        pclog("Target ID = %02x\n", scsi->ccb.target_id);
+                        //                        pclog("Target ID = %02x\n", scsi->ccb.target_id);
                 }
                 for (c = 0; c < scsi->ccb.scsi_cmd_len; c++)
                         scsi->ccb.cdb[c] = mem_readb_phys(scsi->ccb.addr + 0x12 + c);
-//                pclog("CCB_INITIATOR_SCATTER_GATHER: target=%i lun=%i\n", scsi->ccb.target_id, scsi->ccb.lun);
-//                pclog("  scsi_len=%i data_len=%06x data_pointer=%06x\n", scsi->ccb.scsi_cmd_len, scsi->ccb.data_len, scsi->ccb.data_pointer);
+                //                pclog("CCB_INITIATOR_SCATTER_GATHER: target=%i lun=%i\n", scsi->ccb.target_id, scsi->ccb.lun);
+                //                pclog("  scsi_len=%i data_len=%06x data_pointer=%06x\n", scsi->ccb.scsi_cmd_len, scsi->ccb.data_len, scsi->ccb.data_pointer);
                 scsi->ccb_state = CCB_STATE_SEND_COMMAND;
                 scsi->ccb.status = 0;
                 scsi->ccb.from_mailbox = 1;
                 scsi->ccb.residual = (scsi->ccb.opcode == CCB_INITIATOR_SCATTER_GATHER_RESIDUAL);
 
-                if (scsi->ccb.residual)
-                {
+                if (scsi->ccb.residual) {
                         /*Read total data length from scatter list, to use when calculating residual*/
                         uint32_t addr = scsi->ccb.data_seg_list_pointer;
 
                         scsi->ccb.total_data_len = 0;
 
-                        if (scsi->mb_format == MB_FORMAT_4)
-                        {
-                                for (c = 0; c < scsi->ccb.data_seg_list_len; c += 6)
-                                {
+                        if (scsi->mb_format == MB_FORMAT_4) {
+                                for (c = 0; c < scsi->ccb.data_seg_list_len; c += 6) {
                                         uint32_t len = mem_readb_phys(addr + c + 2) |
                                                        (mem_readb_phys(addr + c + 1) << 8) |
                                                        (mem_readb_phys(addr + c) << 16);
 
                                         scsi->ccb.total_data_len += len;
                                 }
-                        }
-                        else
-                        {
-                                for (c = 0; c < scsi->ccb.data_seg_list_len; c += 6)
-                                {
+                        } else {
+                                for (c = 0; c < scsi->ccb.data_seg_list_len; c += 6) {
                                         uint32_t len = mem_readl_phys(addr + c);
 
                                         scsi->ccb.total_data_len += len;
@@ -561,13 +524,11 @@ static void process_cdb(aha154x_t* scsi)
         pclog("Start CCB at %06x\n", scsi->ccb.addr);
 }
 
-static void process_cmd(aha154x_t* scsi)
-{
+static void process_cmd(aha154x_t *scsi) {
         uint32_t addr;
         int c;
 
-        switch (scsi->cmd_state)
-        {
+        switch (scsi->cmd_state) {
         case CMD_STATE_RESET:
                 scsi->status = STATUS_INIT;
                 scsi->cmd_state = CMD_STATE_IDLE;
@@ -575,19 +536,17 @@ static void process_cmd(aha154x_t* scsi)
                 break;
 
         case CMD_STATE_IDLE:
-                if (scsi->status & STATUS_CDF)
-                {
+                if (scsi->status & STATUS_CDF) {
                         int invalid = 0;
 
                         scsi->status &= ~STATUS_CDF;
 
                         scsi->command = scsi->cmd_data;
                         pclog("New command %02x\n", scsi->command);
-//                        if (scsi->command == 0x22)
-//                                fatal("Here\n");
-//                                output = 3;
-                        switch (scsi->command)
-                        {
+                        //                        if (scsi->command == 0x22)
+                        //                                fatal("Here\n");
+                        //                                output = 3;
+                        switch (scsi->command) {
                         case COMMAND_NOP:
                         case COMMAND_START_SCSI_COMMAND:
                         case COMMAND_ADAPTER_INQUIRY:
@@ -633,11 +592,10 @@ static void process_cmd(aha154x_t* scsi)
                         case 0x22:
                                 if (scsi->type == SCSI_AHA1542C)
                                         scsi->command_len = 35; /*COMMAND_ADAPTEC_PROGRAM_EEPROM*/
-                                else
-                                {
-//                                        scsi->command_len = 1;  /*COMMAND_BUSLOGIC_22*/
+                                else {
+                                        //                                        scsi->command_len = 1;  /*COMMAND_BUSLOGIC_22*/
                                         pclog("Get 22\n");
-//                                        scsi->command_len = 0;
+                                        //                                        scsi->command_len = 0;
                                         invalid = 1;
                                         primed = 1;
                                 }
@@ -700,20 +658,17 @@ static void process_cmd(aha154x_t* scsi)
                                         invalid = 1;
                                 break;
 
-/*                                case 0x40: case 0x42: case 0x44: case 0xff:
-                                invalid = 1;
-                                break;*/
+                                /*                                case 0x40: case 0x42: case 0x44: case 0xff:
+                                                                invalid = 1;
+                                                                break;*/
 
                         default:
-                                if (scsi->type == SCSI_AHA1542C)
-                                {
+                                if (scsi->type == SCSI_AHA1542C) {
                                         if ((scsi->command > 0xd && scsi->command < 0x1a) || (scsi->command > 0x2a && scsi->command != 0x82))
                                                 invalid = 1;
                                         else
                                                 fatal("Bad AHA154x command %02x\n", scsi->command);
-                                }
-                                else
-                                {
+                                } else {
                                         if (scsi->command > 0x22 && (scsi->command < 0xfa || scsi->command > 0xfc) &&
                                             !(scsi->command >= 0x81 && scsi->command <= 0x9d) &&
                                             scsi->command != 0xda && scsi->command != 0xdc)
@@ -724,33 +679,28 @@ static void process_cmd(aha154x_t* scsi)
                                 break;
                         }
 
-                        if (invalid)
-                        {
+                        if (invalid) {
                                 scsi->status |= STATUS_INVDCMD;
                                 set_irq(scsi, ISR_HACC);
                                 scsi->cmd_state = CMD_STATE_IDLE;
-                        }
-                        else if (!scsi->command_len)
+                        } else if (!scsi->command_len)
                                 scsi->cmd_state = CMD_STATE_CMD_IN_PROGRESS;
-                        else
-                        {
+                        else {
                                 scsi->cmd_state = CMD_STATE_GET_PARAMS;
                                 scsi->cur_param = 0;
                         }
                 }
-                if (scsi->cmd_state != CMD_STATE_CMD_IN_PROGRESS)
-                {
-//                        pclog("Command not fallthrough\n");
+                if (scsi->cmd_state != CMD_STATE_CMD_IN_PROGRESS) {
+                        //                        pclog("Command not fallthrough\n");
                         break;
                 }
-//                pclog("Command fallthrough\n");
+                //                pclog("Command fallthrough\n");
                 /*Fallthrough*/
 
         case CMD_STATE_CMD_IN_PROGRESS:
-                switch (scsi->command)
-                {
+                switch (scsi->command) {
                 case COMMAND_NOP:
-//                        pclog("NOP complete\n");
+                        //                        pclog("NOP complete\n");
                         set_irq(scsi, ISR_HACC);
                         scsi->cmd_state = CMD_STATE_IDLE;
                         break;
@@ -780,18 +730,15 @@ static void process_cmd(aha154x_t* scsi)
                                 break;
                         if (!scsi->bios_cmd_state)
                                 pclog("Start BIOS command %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
-                                        scsi->params[0], scsi->params[1], scsi->params[2], scsi->params[3], scsi->params[4],
-                                        scsi->params[5], scsi->params[6], scsi->params[7], scsi->params[8], scsi->params[9]);
-                        if (scsi->params[0] >= 0x16)
-                        {
+                                      scsi->params[0], scsi->params[1], scsi->params[2], scsi->params[3], scsi->params[4],
+                                      scsi->params[5], scsi->params[6], scsi->params[7], scsi->params[8], scsi->params[9]);
+                        if (scsi->params[0] >= 0x16) {
                                 /*Only commands below 0x16 are implemented*/
                                 scsi->status |= STATUS_INVDCMD;
                                 set_irq(scsi, ISR_HACC);
                                 scsi->cmd_state = CMD_STATE_IDLE;
-                        }
-                        else
-                                switch (scsi->params[0])
-                                {
+                        } else
+                                switch (scsi->params[0]) {
                                 case 0x00: /*Reset Disk System*/
                                         scsi->data_in = 0;
                                         set_irq(scsi, ISR_HACC);
@@ -807,10 +754,8 @@ static void process_cmd(aha154x_t* scsi)
                                         break;
 
                                 case 0x02: /*Read Sector(s) Into Memory*/
-                                        switch (scsi->bios_cmd_state)
-                                        {
-                                        case 0:
-                                        {
+                                        switch (scsi->bios_cmd_state) {
+                                        case 0: {
                                                 int sector = scsi->params[5];
                                                 int head = (scsi->params[4] & 0xf) | ((scsi->params[3] & 3) << 4);
                                                 int cylinder = (scsi->params[3] >> 2) | ((scsi->params[2] & 0xf) << 6);
@@ -831,7 +776,8 @@ static void process_cmd(aha154x_t* scsi)
                                                 scsi->ccb.lun = 0;
                                                 scsi->ccb.target_id = scsi->params[1] & 7;
                                                 scsi->ccb.scsi_cmd_len = 10;
-                                                scsi->ccb.data_pointer = scsi->params[9] | (scsi->params[8] << 8) | (scsi->params[7] << 16);;
+                                                scsi->ccb.data_pointer = scsi->params[9] | (scsi->params[8] << 8) | (scsi->params[7] << 16);
+                                                ;
                                                 scsi->ccb.data_len = 512 * scsi->params[6];
                                                 scsi->ccb.req_sense_len = CCB_SENSE_14;
                                                 scsi->ccb_state = CCB_STATE_SEND_COMMAND;
@@ -850,10 +796,8 @@ static void process_cmd(aha154x_t* scsi)
                                         break;
 
                                 case 0x03: /*Write Disk Sector(s)*/
-                                        switch (scsi->bios_cmd_state)
-                                        {
-                                        case 0:
-                                        {
+                                        switch (scsi->bios_cmd_state) {
+                                        case 0: {
                                                 int sector = scsi->params[5];
                                                 int head = (scsi->params[4] & 0xf) | ((scsi->params[3] & 3) << 4);
                                                 int cylinder = (scsi->params[3] >> 2) | ((scsi->params[2] & 0xf) << 6);
@@ -873,7 +817,8 @@ static void process_cmd(aha154x_t* scsi)
                                                 scsi->ccb.lun = 0;
                                                 scsi->ccb.target_id = scsi->params[1] & 7;
                                                 scsi->ccb.scsi_cmd_len = 10;
-                                                scsi->ccb.data_pointer = scsi->params[9] | (scsi->params[8] << 8) | (scsi->params[7] << 16);;
+                                                scsi->ccb.data_pointer = scsi->params[9] | (scsi->params[8] << 8) | (scsi->params[7] << 16);
+                                                ;
                                                 scsi->ccb.data_len = 512 * scsi->params[6];
                                                 scsi->ccb.req_sense_len = CCB_SENSE_14;
                                                 scsi->ccb_state = CCB_STATE_SEND_COMMAND;
@@ -892,10 +837,8 @@ static void process_cmd(aha154x_t* scsi)
                                         break;
 
                                 case 0x04: /*Verify Disk Sector(s)*/
-                                        switch (scsi->bios_cmd_state)
-                                        {
-                                        case 0:
-                                        {
+                                        switch (scsi->bios_cmd_state) {
+                                        case 0: {
                                                 int sector = scsi->params[5];
                                                 int head = (scsi->params[4] & 0xf) | ((scsi->params[3] & 3) << 4);
                                                 int cylinder = (scsi->params[3] >> 2) | ((scsi->params[2] & 0xf) << 6);
@@ -915,7 +858,8 @@ static void process_cmd(aha154x_t* scsi)
                                                 scsi->ccb.lun = 0;
                                                 scsi->ccb.target_id = scsi->params[1] & 7;
                                                 scsi->ccb.scsi_cmd_len = 10;
-                                                scsi->ccb.data_pointer = scsi->params[9] | (scsi->params[8] << 8) | (scsi->params[7] << 16);;
+                                                scsi->ccb.data_pointer = scsi->params[9] | (scsi->params[8] << 8) | (scsi->params[7] << 16);
+                                                ;
                                                 scsi->ccb.data_len = 512 * scsi->params[6];
                                                 scsi->ccb.req_sense_len = CCB_SENSE_14;
                                                 scsi->ccb_state = CCB_STATE_SEND_COMMAND;
@@ -947,8 +891,7 @@ static void process_cmd(aha154x_t* scsi)
                                         break;
 
                                 case 0x08: /*Get Drive Parameters*/
-                                        switch (scsi->bios_cmd_state)
-                                        {
+                                        switch (scsi->bios_cmd_state) {
                                         case 0:
                                                 scsi->ccb.cdb[0] = SCSI_READ_CAPACITY_10;
                                                 scsi->ccb.cdb[1] = 0;
@@ -1000,8 +943,7 @@ static void process_cmd(aha154x_t* scsi)
                                         break;
 
                                 case 0x15: /*Get Disk Type*/
-                                        switch (scsi->bios_cmd_state)
-                                        {
+                                        switch (scsi->bios_cmd_state) {
                                         case 0:
                                                 scsi->ccb.cdb[0] = SCSI_INQUIRY;
                                                 scsi->ccb.cdb[1] = 0;
@@ -1020,8 +962,7 @@ static void process_cmd(aha154x_t* scsi)
                                                 scsi->bios_cmd_state++;
                                                 break;
                                         case 1:
-                                                if (scsi->int_buffer[0] & 0x1f)
-                                                {
+                                                if (scsi->int_buffer[0] & 0x1f) {
                                                         /*Not a direct-access device*/
                                                         fatal("Not a direct-access device\n");
                                                 }
@@ -1060,7 +1001,7 @@ static void process_cmd(aha154x_t* scsi)
                                         default:
                                                 fatal("Get Disk Type state %i\n", scsi->bios_cmd_state);
                                         }
-                                        //fatal("data_pointer %06x\n", scsi->ccb.data_pointer);
+                                        // fatal("data_pointer %06x\n", scsi->ccb.data_pointer);
                                         break;
 
                                 default:
@@ -1072,15 +1013,12 @@ static void process_cmd(aha154x_t* scsi)
                         break;
 
                 case COMMAND_ADAPTER_INQUIRY:
-                        if (scsi->type == SCSI_BT545S)
-                        {
+                        if (scsi->type == SCSI_BT545S) {
                                 scsi->result[0] = 0x41;
                                 scsi->result[1] = 0x41; /*Standard model*/
                                 scsi->result[2] = 0x33; /*Firmware revision*/
                                 scsi->result[3] = 0x33;
-                        }
-                        else
-                        {
+                        } else {
                                 scsi->result[0] = 0x44; /*AHA-1542CF*/
                                 scsi->result[1] = 0x30;
                                 scsi->result[2] = 0x30; /*Firmware revision*/
@@ -1149,36 +1087,33 @@ static void process_cmd(aha154x_t* scsi)
 
                 case COMMAND_RETURN_SETUP_DATA:
                         pclog("Return setup data %i  %02x %06x\n", scsi->params[0], scsi->mbc, scsi->mba);
-                        scsi->result[0] = 0x00; /*SPS*/
-                        scsi->result[1] = scsi->atbs; /*AT bus speed*/
-                        scsi->result[2] = scsi->bon; /*BON*/
-                        scsi->result[3] = scsi->boff; /*BOFF*/
-                        scsi->result[4] = scsi->mbc; /*DS:E8 - mailbox count*/
-                        scsi->result[5] = scsi->mba >> 16; /*DS:DA - set by command 0x81?*/
-                        scsi->result[6] = scsi->mba >> 8; /*DS:DB*/
+                        scsi->result[0] = 0x00;             /*SPS*/
+                        scsi->result[1] = scsi->atbs;       /*AT bus speed*/
+                        scsi->result[2] = scsi->bon;        /*BON*/
+                        scsi->result[3] = scsi->boff;       /*BOFF*/
+                        scsi->result[4] = scsi->mbc;        /*DS:E8 - mailbox count*/
+                        scsi->result[5] = scsi->mba >> 16;  /*DS:DA - set by command 0x81?*/
+                        scsi->result[6] = scsi->mba >> 8;   /*DS:DB*/
                         scsi->result[7] = scsi->mba & 0xff; /*DS:DC*/
-                        scsi->result[8] = 0x00; /*STA0*/
-                        scsi->result[9] = 0x00; /*STA1*/
-                        scsi->result[10] = 0x00; /*STA2*/
-                        scsi->result[11] = 0x00; /*STA3*/
-                        scsi->result[12] = 0x00; /*STA4*/
-                        scsi->result[13] = 0x00; /*STA5*/
-                        scsi->result[14] = 0x00; /*STA6*/
-                        scsi->result[15] = 0x00; /*STA7*/
-                        scsi->result[16] = 0x00; /*DS (DS:1e5b)*/
-                        if (scsi->type == SCSI_BT545S)
-                        {
+                        scsi->result[8] = 0x00;             /*STA0*/
+                        scsi->result[9] = 0x00;             /*STA1*/
+                        scsi->result[10] = 0x00;            /*STA2*/
+                        scsi->result[11] = 0x00;            /*STA3*/
+                        scsi->result[12] = 0x00;            /*STA4*/
+                        scsi->result[13] = 0x00;            /*STA5*/
+                        scsi->result[14] = 0x00;            /*STA6*/
+                        scsi->result[15] = 0x00;            /*STA7*/
+                        scsi->result[16] = 0x00;            /*DS (DS:1e5b)*/
+                        if (scsi->type == SCSI_BT545S) {
                                 scsi->result[17] = 0x42; /*Firmware version*/
                                 scsi->result[18] = 0x44;
                                 scsi->result[19] = 0x41;
-                        }
-                        else
-                        {
+                        } else {
                                 for (c = 0; c < 20; c++)
                                         scsi->result[c + 17] = 0; /*Customer signature*/
-                                scsi->result[37] = 0; /*Auto-retry*/
-                                scsi->result[38] = 0; /*Board switches*/
-                                scsi->result[39] = 0xa3; /*Checksum*/
+                                scsi->result[37] = 0;             /*Auto-retry*/
+                                scsi->result[38] = 0;             /*Board switches*/
+                                scsi->result[39] = 0xa3;          /*Checksum*/
                                 scsi->result[40] = 0xc2;
                                 scsi->result[41] = scsi->bios_mba >> 16;
                                 scsi->result[42] = scsi->bios_mba >> 8;
@@ -1212,11 +1147,9 @@ static void process_cmd(aha154x_t* scsi)
                         break;
 
                 case 0x22:
-                        if (scsi->type == SCSI_AHA1542C)
-                        {
+                        if (scsi->type == SCSI_AHA1542C) {
                                 /*COMMAND_ADAPTEC_PROGRAM_EEPROM*/
-                                for (c = 0; c < scsi->params[1]; c++)
-                                {
+                                for (c = 0; c < scsi->params[1]; c++) {
                                         pclog("EEPROM %02x = %02x\n", (scsi->params[2] + c) & 0xff, scsi->params[c + 3]);
                                         scsi->eeprom[(scsi->params[2] + c) & 0xff] = scsi->params[c + 3];
                                 }
@@ -1228,27 +1161,24 @@ static void process_cmd(aha154x_t* scsi)
                                 aha1542c_eeprom_save(scsi);
                                 set_irq(scsi, ISR_HACC);
                                 scsi->cmd_state = CMD_STATE_IDLE;
-                        }
-                        else
-                        {
+                        } else {
                                 /*COMMAND_BUSLOGIC_22*/
                                 pclog("BUSLOGIC_22\n");
                                 set_irq(scsi, ISR_HACC);
                                 scsi->cmd_state = CMD_STATE_IDLE;
                                 primed = 1;
-//                                scsi->result[0] = 1 << scsi->dma; /*DMA7*/
-//                                scsi->result[1] = 1 << (scsi->irq-9); /*IRQ10*/
-//                                scsi->result[2] = scsi->host_id; /*SCSI ID*/
-//                                scsi->cmd_state = CMD_STATE_SEND_RESULT;
-//                                scsi->result_pos = 0;
-//                                scsi->result_len = 3;
+                                //                                scsi->result[0] = 1 << scsi->dma; /*DMA7*/
+                                //                                scsi->result[1] = 1 << (scsi->irq-9); /*IRQ10*/
+                                //                                scsi->result[2] = scsi->host_id; /*SCSI ID*/
+                                //                                scsi->cmd_state = CMD_STATE_SEND_RESULT;
+                                //                                scsi->result_pos = 0;
+                                //                                scsi->result_len = 3;
                         }
                         break;
 
                 case COMMAND_ADAPTEC_RETURN_EEPROM_DATA:
                         pclog("Return EEPROM data %02x %02x %02x\n", scsi->params[0], scsi->params[1], scsi->params[2]);
-                        for (c = 0; c < scsi->params[1]; c++)
-                        {
+                        for (c = 0; c < scsi->params[1]; c++) {
                                 scsi->result[c] = scsi->eeprom[(scsi->params[2] + c) & 0xff];
                                 pclog("  EEPROM data %02x %02x\n", (scsi->params[2] + c) & 0xff, scsi->result[c]);
                         }
@@ -1364,12 +1294,12 @@ static void process_cmd(aha154x_t* scsi)
                         scsi->result[1] = scsi->bios_addr >> 12; /*BIOS addr*/
                         scsi->result[2] = 0x00;
                         scsi->result[3] = 0x20;
-                        scsi->result[4] = 0x00; /*DS:E8 >> 3*/
-                        scsi->result[5] = 0x00; /*DS:DA - set by command 0x81?*/
-                        scsi->result[6] = 0x00; /*DS:DB*/
-                        scsi->result[7] = 0x00; /*DS:DC*/
-                        scsi->result[8] = 0x00; /*DS:DD*/
-                        scsi->result[9] = 0x33; /*FFFF:9*/
+                        scsi->result[4] = 0x00;  /*DS:E8 >> 3*/
+                        scsi->result[5] = 0x00;  /*DS:DA - set by command 0x81?*/
+                        scsi->result[6] = 0x00;  /*DS:DB*/
+                        scsi->result[7] = 0x00;  /*DS:DC*/
+                        scsi->result[8] = 0x00;  /*DS:DD*/
+                        scsi->result[9] = 0x33;  /*FFFF:9*/
                         scsi->result[10] = 0x33; /*FFFF:A*/
                         scsi->result[11] = 0x31; /*FFFF:B*/
                         scsi->cmd_state = CMD_STATE_SEND_RESULT;
@@ -1395,8 +1325,7 @@ static void process_cmd(aha154x_t* scsi)
                 break;
 
         case CMD_STATE_GET_PARAMS:
-                if (scsi->status & STATUS_CDF)
-                {
+                if (scsi->status & STATUS_CDF) {
                         scsi->status &= ~STATUS_CDF;
 
                         scsi->params[scsi->cur_param++] = scsi->cmd_data;
@@ -1407,16 +1336,12 @@ static void process_cmd(aha154x_t* scsi)
                 break;
 
         case CMD_STATE_SEND_RESULT:
-                if (!(scsi->status & STATUS_DF))
-                {
-                        if (scsi->result_pos == scsi->result_len)
-                        {
+                if (!(scsi->status & STATUS_DF)) {
+                        if (scsi->result_pos == scsi->result_len) {
                                 set_irq(scsi, ISR_HACC);
                                 scsi->cmd_state = CMD_STATE_IDLE;
                                 pclog("Command complete\n");
-                        }
-                        else
-                        {
+                        } else {
                                 scsi->status |= STATUS_DF;
                                 scsi->data_in = scsi->result[scsi->result_pos++];
                                 pclog("Return data %02x  %i %i\n", scsi->data_in, scsi->result_pos - 1, scsi->result_len);
@@ -1429,37 +1354,29 @@ static void process_cmd(aha154x_t* scsi)
         }
 }
 
-static void process_ccb(aha154x_t* scsi)
-{
+static void process_ccb(aha154x_t *scsi) {
         int c;
 
-        switch (scsi->ccb_state)
-        {
+        switch (scsi->ccb_state) {
         case CCB_STATE_IDLE:
-                if (!(scsi->status & STATUS_INIT) && scsi->mbo_req)
-                {
-//                        pclog("mbo_req %i\n", scsi->mbc);
-                        for (c = 0; c < scsi->mbc; c++)
-                        {
+                if (!(scsi->status & STATUS_INIT) && scsi->mbo_req) {
+                        //                        pclog("mbo_req %i\n", scsi->mbc);
+                        for (c = 0; c < scsi->mbc; c++) {
                                 uint32_t ccb;
                                 uint8_t command;
 
-                                if (scsi->mb_format == MB_FORMAT_4)
-                                {
+                                if (scsi->mb_format == MB_FORMAT_4) {
                                         uint32_t mbo = mem_readl_phys(scsi->mba + c * 4);
                                         command = mbo & 0xff;
                                         ccb = (mbo >> 24) | ((mbo >> 8) & 0xff00) | ((mbo << 8) & 0xff0000);
-//                                        pclog("MBO%02x = %08x\n", c, mbo);
-                                }
-                                else
-                                {
+                                        //                                        pclog("MBO%02x = %08x\n", c, mbo);
+                                } else {
                                         ccb = mem_readl_phys(scsi->mba + c * 8);
                                         command = mem_readb_phys(scsi->mba + c * 8 + 7);
-//                                        pclog("MBO%02x = %08x %02x\n", c, ccb, command);
+                                        //                                        pclog("MBO%02x = %08x %02x\n", c, ccb, command);
                                 }
 
-                                if (command == COMMAND_START_CCB)
-                                {
+                                if (command == COMMAND_START_CCB) {
                                         pclog("Start CCB %08x %i\n", ccb, c);
 
                                         scsi->current_mbo = c;
@@ -1470,25 +1387,20 @@ static void process_ccb(aha154x_t* scsi)
 
                                         scsi->mbo_req--;
 
-                                        //set_irq(scsi, ISR_HACC);
+                                        // set_irq(scsi, ISR_HACC);
                                         break;
-                                }
-                                else if (command == COMMAND_ABORT_CCB)
-                                {
-//                                        fatal("Abort command\n");
+                                } else if (command == COMMAND_ABORT_CCB) {
+                                        //                                        fatal("Abort command\n");
                                         scsi->mbo_req--;
 
-                                        if (scsi->mb_format == MB_FORMAT_4)
-                                        {
+                                        if (scsi->mb_format == MB_FORMAT_4) {
                                                 mem_writeb_phys(scsi->mba + c * 8, 0);
 
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4, MBI_CCB_ABORTED);
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 1, ccb >> 16);
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 2, ccb >> 8);
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 3, ccb & 0xff);
-                                        }
-                                        else
-                                        {
+                                        } else {
                                                 mem_writeb_phys(scsi->mba + c * 8 + 7, 0);
 
                                                 mem_writel_phys(scsi->mba_i + scsi->current_mbi * 8, ccb);
@@ -1503,10 +1415,8 @@ static void process_ccb(aha154x_t* scsi)
                                 }
                         }
                 }
-                if (scsi->bios_mbo_inited && scsi->bios_mbo_req)
-                {
-                        for (c = 0; c < scsi->bios_mbc; c++)
-                        {
+                if (scsi->bios_mbo_inited && scsi->bios_mbo_req) {
+                        for (c = 0; c < scsi->bios_mbc; c++) {
                                 uint32_t ccb;
                                 uint8_t command;
 
@@ -1514,8 +1424,7 @@ static void process_ccb(aha154x_t* scsi)
                                 command = mbo & 0xff;
                                 ccb = (mbo >> 24) | ((mbo >> 8) & 0xff00) | ((mbo << 8) & 0xff0000);
 
-                                if (command == COMMAND_START_CCB)
-                                {
+                                if (command == COMMAND_START_CCB) {
                                         pclog("Start BIOS CCB %08x %i\n", ccb, c);
 
                                         scsi->current_mbo = c;
@@ -1535,24 +1444,20 @@ static void process_ccb(aha154x_t* scsi)
         case CCB_STATE_SEND_COMMAND:
                 if (scsi->scsi_state != SCSI_STATE_IDLE)
                         break; /*Wait until SCSI state machine is ready for new command*/
-                for (c = 0; c < scsi->ccb.scsi_cmd_len; c++)
-                {
+                for (c = 0; c < scsi->ccb.scsi_cmd_len; c++) {
                         scsi->cdb.data[c] = scsi->ccb.cdb[c];
-//                        pclog(" CDB[%02x]=%02x\n", c, scsi->cdb.data[c]);
+                        //                        pclog(" CDB[%02x]=%02x\n", c, scsi->cdb.data[c]);
                 }
                 scsi->cdb.len = scsi->ccb.scsi_cmd_len;
                 scsi->cdb.idx = 0;
-                if (scsi->ccb.opcode == CCB_INITIATOR_SCATTER_GATHER || scsi->ccb.opcode == CCB_INITIATOR_SCATTER_GATHER_RESIDUAL)
-                {
+                if (scsi->ccb.opcode == CCB_INITIATOR_SCATTER_GATHER || scsi->ccb.opcode == CCB_INITIATOR_SCATTER_GATHER_RESIDUAL) {
                         scsi->cdb.data_seg_list_len = scsi->ccb.data_seg_list_len;
                         scsi->cdb.data_seg_list_pointer = scsi->ccb.data_seg_list_pointer;
                         scsi->cdb.data_seg_list_idx = 0;
                         scsi->cdb.scatter_gather = 1;
                         scsi->cdb.data_len = 0;
                         scsi->cdb.data_idx = 0;
-                }
-                else
-                {
+                } else {
                         scsi->cdb.data_pointer = scsi->ccb.data_pointer;
                         scsi->cdb.data_len = scsi->ccb.data_len;
                         scsi->cdb.scatter_gather = 0;
@@ -1565,22 +1470,16 @@ static void process_ccb(aha154x_t* scsi)
                 break;
 
         case CCB_STATE_WAIT_COMMAND:
-                if (scsi->scsi_state == SCSI_STATE_SELECT_FAILED)
-                {
+                if (scsi->scsi_state == SCSI_STATE_SELECT_FAILED) {
                         pclog("Command select has failed\n");
-                        if (scsi->ccb.from_mailbox)
-                        {
+                        if (scsi->ccb.from_mailbox) {
                                 mem_writeb_phys(scsi->ccb.addr + 0xe, HOST_STATUS_SELECTION_TIME_OUT);
 
-                                if (scsi->mb_format == MB_FORMAT_4)
-                                {
-                                        if (scsi->current_mbo_is_bios)
-                                        {
+                                if (scsi->mb_format == MB_FORMAT_4) {
+                                        if (scsi->current_mbo_is_bios) {
                                                 mem_writeb_phys(scsi->bios_mba + scsi->current_mbo * 4, COMMAND_FREE_CCB);
                                                 mem_writeb_phys(scsi->ccb.addr + 0xd, MBI_CCB_COMPLETE_WITH_ERROR);
-                                        }
-                                        else
-                                        {
+                                        } else {
                                                 mem_writeb_phys(scsi->mba + scsi->current_mbo * 4, COMMAND_FREE_CCB);
 
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4, MBI_CCB_COMPLETE_WITH_ERROR);
@@ -1588,9 +1487,7 @@ static void process_ccb(aha154x_t* scsi)
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 2, scsi->ccb.addr >> 8);
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 3, scsi->ccb.addr & 0xff);
                                         }
-                                }
-                                else
-                                {
+                                } else {
                                         if (scsi->current_mbo_is_bios)
                                                 fatal("MBO_IS_BIOS MB_FORMAT_8\n");
                                         mem_writeb_phys(scsi->mba + scsi->current_mbo * 8 + 7, COMMAND_FREE_CCB);
@@ -1599,17 +1496,15 @@ static void process_ccb(aha154x_t* scsi)
                                         mem_writel_phys(scsi->mba_i + scsi->current_mbi * 8 + 4, MBI_CCB_COMPLETE_WITH_ERROR << 24);
                                 }
 
-                                if (!scsi->current_mbo_is_bios)
-                                {
+                                if (!scsi->current_mbo_is_bios) {
                                         scsi->current_mbi++;
                                         if (scsi->current_mbi >= scsi->mbc)
                                                 scsi->current_mbi = 0;
                                         set_irq(scsi, (scsi->mbo_irq_enable ? ISR_MBOA : 0) | ISR_MBIF);
-                                }
-                                else if (scsi->mbo_irq_enable)
+                                } else if (scsi->mbo_irq_enable)
                                         set_irq(scsi, ISR_MBOA);
                         }
-//                        set_irq(scsi, ISR_HACC);
+                        //                        set_irq(scsi, ISR_HACC);
                         scsi->ccb_state = CCB_STATE_IDLE;
                         scsi->scsi_state = SCSI_STATE_IDLE;
                         break;
@@ -1622,37 +1517,30 @@ static void process_ccb(aha154x_t* scsi)
                 break;
 
         case CCB_STATE_SEND_REQUEST_SENSE:
-                if (scsi->ccb.req_sense_len == CCB_SENSE_NONE)
-                {
-//                        pclog("No sense data\n");
-                        if (scsi->ccb.from_mailbox)
-                        {
+                if (scsi->ccb.req_sense_len == CCB_SENSE_NONE) {
+                        //                        pclog("No sense data\n");
+                        if (scsi->ccb.from_mailbox) {
                                 uint32_t residue = scsi->ccb.total_data_len - scsi->ccb.bytes_transferred;
 
-//                                pclog("Residue=%08x %x %x    %i MBI=%i\n", residue, scsi->ccb.total_data_len, scsi->ccb.bytes_transferred, scsi->ccb.residual, scsi->current_mbi);
+                                //                                pclog("Residue=%08x %x %x    %i MBI=%i\n", residue, scsi->ccb.total_data_len, scsi->ccb.bytes_transferred, scsi->ccb.residual, scsi->current_mbi);
                                 mem_writeb_phys(scsi->ccb.addr + 0xe, HOST_STATUS_COMMAND_COMPLETE);
                                 mem_writeb_phys(scsi->ccb.addr + 0xf, scsi->ccb.status);
 
-                                if (scsi->mb_format == MB_FORMAT_4)
-                                {
-                                        if (scsi->ccb.residual)
-                                        {
+                                if (scsi->mb_format == MB_FORMAT_4) {
+                                        if (scsi->ccb.residual) {
                                                 mem_writeb_phys(scsi->ccb.addr + 0x4, residue >> 16);
                                                 mem_writeb_phys(scsi->ccb.addr + 0x5, residue >> 8);
                                                 mem_writeb_phys(scsi->ccb.addr + 0x6, residue & 0xff);
                                         }
 
-                                        if (scsi->current_mbo_is_bios)
-                                        {
+                                        if (scsi->current_mbo_is_bios) {
                                                 mem_writeb_phys(scsi->bios_mba + scsi->current_mbo * 4, COMMAND_FREE_CCB);
 
                                                 if (scsi->ccb.status == STATUS_GOOD)
                                                         mem_writeb_phys(scsi->ccb.addr + 0xd, MBI_CCB_COMPLETE);
                                                 else
                                                         mem_writeb_phys(scsi->ccb.addr + 0xd, MBI_CCB_COMPLETE_WITH_ERROR);
-                                        }
-                                        else
-                                        {
+                                        } else {
                                                 mem_writeb_phys(scsi->mba + scsi->current_mbo * 4, COMMAND_FREE_CCB);
 
                                                 if (scsi->ccb.status == STATUS_GOOD)
@@ -1663,9 +1551,7 @@ static void process_ccb(aha154x_t* scsi)
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 2, scsi->ccb.addr >> 8);
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 3, scsi->ccb.addr & 0xff);
                                         }
-                                }
-                                else
-                                {
+                                } else {
                                         if (scsi->current_mbo_is_bios)
                                                 fatal("MBO_IS_BIOS MB_FORMAT_8\n");
 
@@ -1681,14 +1567,12 @@ static void process_ccb(aha154x_t* scsi)
                                                 mem_writel_phys(scsi->mba_i + scsi->current_mbi * 8 + 4, (MBI_CCB_COMPLETE_WITH_ERROR << 24) | (scsi->ccb.status << 8));
                                 }
 
-                                if (!scsi->current_mbo_is_bios)
-                                {
+                                if (!scsi->current_mbo_is_bios) {
                                         scsi->current_mbi++;
                                         if (scsi->current_mbi >= scsi->mbc)
                                                 scsi->current_mbi = 0;
                                         set_irq(scsi, (scsi->mbo_irq_enable ? ISR_MBOA : 0) | ISR_MBIF);
-                                }
-                                else if (scsi->mbo_irq_enable)
+                                } else if (scsi->mbo_irq_enable)
                                         set_irq(scsi, ISR_MBOA);
                         }
                         scsi->ccb_state = CCB_STATE_IDLE;
@@ -1721,36 +1605,30 @@ static void process_ccb(aha154x_t* scsi)
                 if (scsi->scsi_state != SCSI_STATE_IDLE)
                         break; /*Wait until SCSI state machine has completed command*/
 
-                if (scsi->ccb.from_mailbox)
-                {
+                if (scsi->ccb.from_mailbox) {
                         uint32_t residue = scsi->ccb.total_data_len - scsi->ccb.bytes_transferred;
-//                        pclog("residue=%x %x %x\n", residue, scsi->ccb.total_data_len, scsi->ccb.bytes_transferred);
+                        //                        pclog("residue=%x %x %x\n", residue, scsi->ccb.total_data_len, scsi->ccb.bytes_transferred);
                         mem_writeb_phys(scsi->ccb.addr + 0xe, HOST_STATUS_COMMAND_COMPLETE);
                         mem_writeb_phys(scsi->ccb.addr + 0xf, scsi->ccb.status);
 
-                        if (scsi->mb_format == MB_FORMAT_4)
-                        {
-                                if (scsi->ccb.residual)
-                                {
+                        if (scsi->mb_format == MB_FORMAT_4) {
+                                if (scsi->ccb.residual) {
                                         mem_writeb_phys(scsi->ccb.addr + 0x4, residue >> 16);
                                         mem_writeb_phys(scsi->ccb.addr + 0x5, residue >> 8);
                                         mem_writeb_phys(scsi->ccb.addr + 0x6, residue & 0xff);
                                 }
 
-                                if (scsi->current_mbo_is_bios)
-                                {
+                                if (scsi->current_mbo_is_bios) {
                                         mem_writeb_phys(scsi->bios_mba + scsi->current_mbo * 4, COMMAND_FREE_CCB);
 
                                         if (scsi->ccb.status == STATUS_GOOD)
                                                 mem_writeb_phys(scsi->ccb.addr + 0xd, MBI_CCB_COMPLETE);
                                         else
                                                 mem_writeb_phys(scsi->ccb.addr + 0xd, MBI_CCB_COMPLETE_WITH_ERROR);
-                                }
-                                else
-                                {
+                                } else {
                                         mem_writeb_phys(scsi->mba + scsi->current_mbo * 4, COMMAND_FREE_CCB);
 
-//                        pclog("CCB status %02x\n", scsi->ccb.status);
+                                        //                        pclog("CCB status %02x\n", scsi->ccb.status);
                                         if (scsi->ccb.status == STATUS_GOOD)
                                                 mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4, MBI_CCB_COMPLETE);
                                         else
@@ -1759,9 +1637,7 @@ static void process_ccb(aha154x_t* scsi)
                                         mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 2, scsi->ccb.addr >> 8);
                                         mem_writeb_phys(scsi->mba_i + scsi->current_mbi * 4 + 3, scsi->ccb.addr & 0xff);
                                 }
-                        }
-                        else
-                        {
+                        } else {
                                 if (scsi->current_mbo_is_bios)
                                         fatal("MBO_IS_BIOS MB_FORMAT_8\n");
 
@@ -1777,17 +1653,15 @@ static void process_ccb(aha154x_t* scsi)
                                         mem_writel_phys(scsi->mba_i + scsi->current_mbi * 8 + 4, (MBI_CCB_COMPLETE_WITH_ERROR << 24) | (scsi->ccb.status << 8));
                         }
 
-                        if (!scsi->current_mbo_is_bios)
-                        {
+                        if (!scsi->current_mbo_is_bios) {
                                 scsi->current_mbi++;
                                 if (scsi->current_mbi >= scsi->mbc)
                                         scsi->current_mbi = 0;
                                 set_irq(scsi, (scsi->mbo_irq_enable ? ISR_MBOA : 0) | ISR_MBIF);
-                        }
-                        else if (scsi->mbo_irq_enable)
+                        } else if (scsi->mbo_irq_enable)
                                 set_irq(scsi, ISR_MBOA);
                 }
-//                pclog("CCB_STATE_WAIT_REQUEST_SENSE over %i\n", scsi->ccb.from_mailbox);
+                //                pclog("CCB_STATE_WAIT_REQUEST_SENSE over %i\n", scsi->ccb.from_mailbox);
                 scsi->ccb_state = CCB_STATE_IDLE;
                 break;
 
@@ -1796,38 +1670,33 @@ static void process_ccb(aha154x_t* scsi)
         }
 }
 
-static void process_scsi(aha154x_t* scsi)
-{
+static void process_scsi(aha154x_t *scsi) {
         int c;
         int bytes_transferred = 0;
 
-        switch (scsi->scsi_state)
-        {
+        switch (scsi->scsi_state) {
         case SCSI_STATE_IDLE:
                 break;
 
         case SCSI_STATE_SELECT:
                 scsi->cdb.last_status = 0;
-//                pclog("Select target ID %i\n", scsi->ccb.target_id);
+                //                pclog("Select target ID %i\n", scsi->ccb.target_id);
                 scsi_bus_update(&scsi->bus, BUS_SEL | BUS_SETDATA(1 << scsi->ccb.target_id));
-                if (!(scsi_bus_read(&scsi->bus) & BUS_BSY) || scsi->ccb.target_id > 6)
-                {
+                if (!(scsi_bus_read(&scsi->bus) & BUS_BSY) || scsi->ccb.target_id > 6) {
                         pclog("STATE_SCSI_SELECT failed to select target %i\n", scsi->ccb.target_id);
                         scsi->scsi_state = SCSI_STATE_SELECT_FAILED;
                         break;
                 }
 
                 scsi_bus_update(&scsi->bus, 0);
-                if (!(scsi_bus_read(&scsi->bus) & BUS_BSY))
-                {
+                if (!(scsi_bus_read(&scsi->bus) & BUS_BSY)) {
                         pclog("STATE_SCSI_SELECT failed to select target %i 2\n", scsi->ccb.target_id);
                         scsi->scsi_state = SCSI_STATE_SELECT_FAILED;
                         break;
                 }
 
                 /*Device should now be selected*/
-                if (!wait_for_bus(&scsi->bus, BUS_CD, 1))
-                {
+                if (!wait_for_bus(&scsi->bus, BUS_CD, 1)) {
                         pclog("Device failed to request command\n");
                         scsi->scsi_state = SCSI_STATE_SELECT_FAILED;
                         break;
@@ -1840,12 +1709,10 @@ static void process_scsi(aha154x_t* scsi)
                 break;
 
         case SCSI_STATE_SEND_COMMAND:
-                while (scsi->cdb.idx < scsi->cdb.len && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL)
-                {
+                while (scsi->cdb.idx < scsi->cdb.len && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL) {
                         int bus_out;
 
-                        for (c = 0; c < 20; c++)
-                        {
+                        for (c = 0; c < 20; c++) {
                                 int bus_state = scsi_bus_read(&scsi->bus);
 
                                 if (!(bus_state & BUS_BSY))
@@ -1855,16 +1722,15 @@ static void process_scsi(aha154x_t* scsi)
                                 if (bus_state & BUS_REQ)
                                         break;
                         }
-                        if (c == 20)
-                        {
+                        if (c == 20) {
                                 pclog("SEND_COMMAND timed out\n");
                                 break;
                         }
 
                         bus_out = BUS_SETDATA(scsi->cdb.data[scsi->cdb.idx]);
-//                        pclog("  Command send %02x %i\n", scsi->cdb.data[scsi->cdb.idx], scsi->cdb.len);
-//                        if (!scsi->cdb.idx && scsi->cdb.data[scsi->cdb.idx] == 0x25 && scsi->current_mbo == 1)
-//                                output = 3;
+                        //                        pclog("  Command send %02x %i\n", scsi->cdb.data[scsi->cdb.idx], scsi->cdb.len);
+                        //                        if (!scsi->cdb.idx && scsi->cdb.data[scsi->cdb.idx] == 0x25 && scsi->current_mbo == 1)
+                        //                                output = 3;
                         scsi->cdb.idx++;
                         bytes_transferred++;
 
@@ -1877,36 +1743,33 @@ static void process_scsi(aha154x_t* scsi)
 
         case SCSI_STATE_NEXT_PHASE:
                 /*Wait for SCSI command to move to next phase*/
-                for (c = 0; c < 20; c++)
-                {
+                for (c = 0; c < 20; c++) {
                         int bus_state = scsi_bus_read(&scsi->bus);
 
                         if (!(bus_state & BUS_BSY))
                                 fatal("NEXT_PHASE - dropped BSY waiting\n");
 
-                        if (bus_state & BUS_REQ)
-                        {
+                        if (bus_state & BUS_REQ) {
                                 int bus_out;
-//                                pclog("SCSI next phase - %x\n", bus_state);
-                                switch (bus_state & (BUS_IO | BUS_CD | BUS_MSG))
-                                {
+                                //                                pclog("SCSI next phase - %x\n", bus_state);
+                                switch (bus_state & (BUS_IO | BUS_CD | BUS_MSG)) {
                                 case 0:
-//                                        pclog("Move to write data\n");
+                                        //                                        pclog("Move to write data\n");
                                         scsi->scsi_state = SCSI_STATE_WRITE_DATA;
                                         break;
 
                                 case BUS_IO:
-//                                        pclog("Move to read data\n");
+                                        //                                        pclog("Move to read data\n");
                                         scsi->scsi_state = SCSI_STATE_READ_DATA;
                                         break;
 
                                 case (BUS_CD | BUS_IO):
-//                                        pclog("Move to read status\n");
+                                        //                                        pclog("Move to read status\n");
                                         scsi->scsi_state = SCSI_STATE_READ_STATUS;
                                         break;
 
                                 case (BUS_CD | BUS_IO | BUS_MSG):
-//                                        pclog("Move to read message\n");
+                                        //                                        pclog("Move to read message\n");
                                         scsi->scsi_state = SCSI_STATE_READ_MESSAGE;
                                         break;
 
@@ -1927,15 +1790,13 @@ static void process_scsi(aha154x_t* scsi)
 
         case SCSI_STATE_END_PHASE:
                 /*Wait for SCSI command to move to next phase*/
-                for (c = 0; c < 20; c++)
-                {
+                for (c = 0; c < 20; c++) {
                         int bus_state = scsi_bus_read(&scsi->bus);
 
-                        if (!(bus_state & BUS_BSY))
-                        {
+                        if (!(bus_state & BUS_BSY)) {
                                 pclog("END_PHASE - dropped BSY waiting\n");
-//                                if (scsi->ccb.req_sense_len == CCB_SENSE_NONE)
-//                                        fatal("No sense data\n");
+                                //                                if (scsi->ccb.req_sense_len == CCB_SENSE_NONE)
+                                //                                        fatal("No sense data\n");
                                 scsi->scsi_state = SCSI_STATE_IDLE;
                                 break;
                         }
@@ -1946,27 +1807,23 @@ static void process_scsi(aha154x_t* scsi)
                 break;
 
         case SCSI_STATE_READ_DATA:
-//pclog("READ_DATA %i,%i %i\n", scsi->cdb.data_idx,scsi->cdb.data_len, scsi->cdb.scatter_gather);
-                while (scsi->cdb.data_idx < scsi->cdb.data_len && scsi->scsi_state == SCSI_STATE_READ_DATA && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL)
-                {
+                // pclog("READ_DATA %i,%i %i\n", scsi->cdb.data_idx,scsi->cdb.data_len, scsi->cdb.scatter_gather);
+                while (scsi->cdb.data_idx < scsi->cdb.data_len && scsi->scsi_state == SCSI_STATE_READ_DATA && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL) {
                         int d;
 
-                        for (d = 0; d < 20; d++)
-                        {
+                        for (d = 0; d < 20; d++) {
                                 int bus_state = scsi_bus_read(&scsi->bus);
 
                                 if (!(bus_state & BUS_BSY))
                                         fatal("READ_DATA - dropped BSY waiting\n");
 
-                                if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) != BUS_IO)
-                                {
+                                if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) != BUS_IO) {
                                         pclog("READ_DATA - changed phase\n");
                                         scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
                                         break;
                                 }
 
-                                if (bus_state & BUS_REQ)
-                                {
+                                if (bus_state & BUS_REQ) {
                                         uint8_t data = BUS_GETDATA(bus_state);
                                         int bus_out = 0;
 
@@ -1977,7 +1834,7 @@ static void process_scsi(aha154x_t* scsi)
                                         scsi->cdb.data_idx++;
                                         scsi->cdb.bytes_transferred++;
 
-//                                        pclog("Read data %02x %i %06x\n", data, scsi->cdb.data_idx, scsi->cdb.data_pointer + scsi->cdb.data_idx);
+                                        //                                        pclog("Read data %02x %i %06x\n", data, scsi->cdb.data_idx, scsi->cdb.data_pointer + scsi->cdb.data_idx);
                                         scsi_bus_update(&scsi->bus, bus_out | BUS_ACK);
                                         scsi_bus_update(&scsi->bus, bus_out & ~BUS_ACK);
                                         break;
@@ -1986,16 +1843,12 @@ static void process_scsi(aha154x_t* scsi)
 
                         bytes_transferred++;
                 }
-                if (scsi->cdb.data_idx == scsi->cdb.data_len)
-                {
-                        if (scsi->cdb.scatter_gather)
-                        {
+                if (scsi->cdb.data_idx == scsi->cdb.data_len) {
+                        if (scsi->cdb.scatter_gather) {
                                 if (scsi->cdb.data_seg_list_idx >= scsi->cdb.data_seg_list_len)
                                         scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
-                                else
-                                {
-                                        if (scsi->mb_format == MB_FORMAT_4)
-                                        {
+                                else {
+                                        if (scsi->mb_format == MB_FORMAT_4) {
                                                 scsi->cdb.data_len = mem_readb_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx + 2) |
                                                                      (mem_readb_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx + 1) << 8) |
                                                                      (mem_readb_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx) << 16);
@@ -2004,45 +1857,38 @@ static void process_scsi(aha154x_t* scsi)
                                                                          (mem_readb_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx + 3) << 16);
                                                 scsi->cdb.data_idx = 0;
                                                 scsi->cdb.data_seg_list_idx += 6;
-                                        }
-                                        else
-                                        {
+                                        } else {
                                                 scsi->cdb.data_len = mem_readl_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx);
                                                 scsi->cdb.data_pointer = mem_readl_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx + 4);
                                                 scsi->cdb.data_idx = 0;
                                                 scsi->cdb.data_seg_list_idx += 8;
-//                                                output = 3;
+                                                //                                                output = 3;
                                         }
                                         pclog("Got scatter gather %08x %08x\n", scsi->cdb.data_pointer, scsi->cdb.data_len);
                                 }
-                        }
-                        else
+                        } else
                                 scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
                 }
                 break;
 
         case SCSI_STATE_WRITE_DATA:
-                while (scsi->cdb.data_idx < scsi->cdb.data_len && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL)
-                {
+                while (scsi->cdb.data_idx < scsi->cdb.data_len && bytes_transferred < MAX_BYTES_TRANSFERRED_PER_POLL) {
                         int d;
 
-                        for (d = 0; d < 20; d++)
-                        {
+                        for (d = 0; d < 20; d++) {
                                 int bus_state = scsi_bus_read(&scsi->bus);
 
                                 if (!(bus_state & BUS_BSY))
                                         fatal("WRITE_DATA - dropped BSY waiting\n");
 
-                                if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) != 0)
-                                {
+                                if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) != 0) {
                                         pclog("WRITE_DATA - changed phase\n");
                                         scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
                                         break;
                                 }
 
-                                if (bus_state & BUS_REQ)
-                                {
-                                        uint8_t data;// = BUS_GETDATA(bus_state);
+                                if (bus_state & BUS_REQ) {
+                                        uint8_t data; // = BUS_GETDATA(bus_state);
                                         int bus_out;
 
                                         if (scsi->cdb.data_pointer == -1)
@@ -2052,7 +1898,7 @@ static void process_scsi(aha154x_t* scsi)
                                         scsi->cdb.data_idx++;
                                         scsi->cdb.bytes_transferred++;
 
-//                                        pclog("Write data %02x %i\n", data, scsi->cdb.data_idx);
+                                        //                                        pclog("Write data %02x %i\n", data, scsi->cdb.data_idx);
                                         bus_out = BUS_SETDATA(data);
                                         scsi_bus_update(&scsi->bus, bus_out | BUS_ACK);
                                         scsi_bus_update(&scsi->bus, bus_out & ~BUS_ACK);
@@ -2062,16 +1908,12 @@ static void process_scsi(aha154x_t* scsi)
 
                         bytes_transferred++;
                 }
-                if (scsi->cdb.data_idx == scsi->cdb.data_len)
-                {
-                        if (scsi->cdb.scatter_gather)
-                        {
+                if (scsi->cdb.data_idx == scsi->cdb.data_len) {
+                        if (scsi->cdb.scatter_gather) {
                                 if (scsi->cdb.data_seg_list_idx >= scsi->cdb.data_seg_list_len)
                                         scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
-                                else
-                                {
-                                        if (scsi->mb_format == MB_FORMAT_4)
-                                        {
+                                else {
+                                        if (scsi->mb_format == MB_FORMAT_4) {
                                                 scsi->cdb.data_len = mem_readb_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx + 2) |
                                                                      (mem_readb_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx + 1) << 8) |
                                                                      (mem_readb_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx) << 16);
@@ -2080,9 +1922,7 @@ static void process_scsi(aha154x_t* scsi)
                                                                          (mem_readb_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx + 3) << 16);
                                                 scsi->cdb.data_idx = 0;
                                                 scsi->cdb.data_seg_list_idx += 6;
-                                        }
-                                        else
-                                        {
+                                        } else {
                                                 scsi->cdb.data_len = mem_readl_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx);
                                                 scsi->cdb.data_pointer = mem_readl_phys(scsi->cdb.data_seg_list_pointer + scsi->cdb.data_seg_list_idx + 4);
                                                 scsi->cdb.data_idx = 0;
@@ -2090,33 +1930,29 @@ static void process_scsi(aha154x_t* scsi)
                                         }
                                         pclog("Got scatter gather %08x %08x\n", scsi->cdb.data_pointer, scsi->cdb.data_len);
                                 }
-                        }
-                        else
+                        } else
                                 scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
                 }
                 break;
 
         case SCSI_STATE_READ_STATUS:
-                for (c = 0; c < 20; c++)
-                {
+                for (c = 0; c < 20; c++) {
                         int bus_state = scsi_bus_read(&scsi->bus);
 
                         if (!(bus_state & BUS_BSY))
                                 fatal("READ_STATUS - dropped BSY waiting\n");
 
-                        if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) != (BUS_CD | BUS_IO))
-                        {
+                        if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) != (BUS_CD | BUS_IO)) {
                                 pclog("READ_STATUS - changed phase\n");
                                 scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
                                 break;
                         }
 
-                        if (bus_state & BUS_REQ)
-                        {
+                        if (bus_state & BUS_REQ) {
                                 uint8_t status = BUS_GETDATA(bus_state);
                                 int bus_out = 0;
 
-//                                pclog("Read status %02x\n", status);
+                                //                                pclog("Read status %02x\n", status);
                                 if (scsi->ccb.from_mailbox)
                                         mem_writeb_phys(scsi->ccb.addr + 0xf, status);
                                 scsi->cdb.last_status = status;
@@ -2131,31 +1967,27 @@ static void process_scsi(aha154x_t* scsi)
                 break;
 
         case SCSI_STATE_READ_MESSAGE:
-                for (c = 0; c < 20; c++)
-                {
+                for (c = 0; c < 20; c++) {
                         int bus_state = scsi_bus_read(&scsi->bus);
 
                         if (!(bus_state & BUS_BSY))
                                 fatal("READ_MESSAGE - dropped BSY waiting\n");
 
-                        if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) != (BUS_CD | BUS_IO | BUS_MSG))
-                        {
+                        if ((bus_state & (BUS_IO | BUS_CD | BUS_MSG)) != (BUS_CD | BUS_IO | BUS_MSG)) {
                                 pclog("READ_MESSAGE - changed phase\n");
                                 scsi->scsi_state = SCSI_STATE_NEXT_PHASE;
                                 break;
                         }
 
-                        if (bus_state & BUS_REQ)
-                        {
+                        if (bus_state & BUS_REQ) {
                                 uint8_t msg = BUS_GETDATA(bus_state);
                                 int bus_out = 0;
 
-//                                pclog("Read message %02x\n", msg);
+                                //                                pclog("Read message %02x\n", msg);
                                 scsi_bus_update(&scsi->bus, bus_out | BUS_ACK);
                                 scsi_bus_update(&scsi->bus, bus_out & ~BUS_ACK);
 
-                                switch (msg)
-                                {
+                                switch (msg) {
                                 case MSG_COMMAND_COMPLETE:
                                         scsi->scsi_state = SCSI_STATE_END_PHASE;
                                         break;
@@ -2173,21 +2005,19 @@ static void process_scsi(aha154x_t* scsi)
         }
 }
 
-static void aha154x_callback(void* p)
-{
-        aha154x_t* scsi = (aha154x_t*)p;
+static void aha154x_callback(void *p) {
+        aha154x_t *scsi = (aha154x_t *)p;
 
         timer_advance_u64(&scsi->timer, TIMER_USEC * POLL_TIME_US);
 
-//        pclog("poll %i\n", scsi->cmd_state);
+        //        pclog("poll %i\n", scsi->cmd_state);
         process_cmd(scsi);
         process_ccb(scsi);
         process_scsi(scsi);
 }
 
-static uint8_t aha1542c_read(uint32_t addr, void* p)
-{
-        aha154x_t* scsi = (aha154x_t*)p;
+static uint8_t aha1542c_read(uint32_t addr, void *p) {
+        aha154x_t *scsi = (aha154x_t *)p;
         uint8_t temp = 0xff;
 
         addr &= 0x3fff;
@@ -2203,9 +2033,8 @@ static uint8_t aha1542c_read(uint32_t addr, void* p)
 
         return temp;
 }
-static void aha1542c_write(uint32_t addr, uint8_t val, void* p)
-{
-        aha154x_t* scsi = (aha154x_t*)p;
+static void aha1542c_write(uint32_t addr, uint8_t val, void *p) {
+        aha154x_t *scsi = (aha154x_t *)p;
 
         addr &= 0x3fff;
 
@@ -2213,14 +2042,12 @@ static void aha1542c_write(uint32_t addr, uint8_t val, void* p)
                 scsi->shadow_ram[addr] = val;
 }
 
-static void aha1542c_eeprom_load(aha154x_t* scsi, char* fn)
-{
-        FILE* f;
+static void aha1542c_eeprom_load(aha154x_t *scsi, char *fn) {
+        FILE *f;
 
         strcpy(scsi->fn, fn);
         f = nvrfopen(scsi->fn, "rb");
-        if (!f)
-        {
+        if (!f) {
                 memset(scsi->eeprom, 0, 35);
                 return;
         }
@@ -2228,9 +2055,8 @@ static void aha1542c_eeprom_load(aha154x_t* scsi, char* fn)
         fclose(f);
 }
 
-static void aha1542c_eeprom_save(aha154x_t* scsi)
-{
-        FILE* f = nvrfopen(scsi->fn, "wb");
+static void aha1542c_eeprom_save(aha154x_t *scsi) {
+        FILE *f = nvrfopen(scsi->fn, "wb");
 
         if (!f)
                 return;
@@ -2239,13 +2065,11 @@ static void aha1542c_eeprom_save(aha154x_t* scsi)
 }
 
 static uint16_t port_sw_mapping[8] =
-        {
-                0x330, 0x334, 0x230, 0x234, 0x130, 0x134, -1, -1
-        };
+    {
+        0x330, 0x334, 0x230, 0x234, 0x130, 0x134, -1, -1};
 
-static void* scsi_aha1542c_init(char* bios_fn)
-{
-        aha154x_t* scsi = malloc(sizeof(aha154x_t));
+static void *scsi_aha1542c_init(char *bios_fn) {
+        aha154x_t *scsi = malloc(sizeof(aha154x_t));
         uint32_t addr;
         int c;
         memset(scsi, 0, sizeof(aha154x_t));
@@ -2255,9 +2079,9 @@ static void* scsi_aha1542c_init(char* bios_fn)
 
         addr = device_get_config_int("bios_addr");
         mem_mapping_add(&scsi->mapping, addr, 0x4000,
-                aha1542c_read, NULL, NULL,
-                aha1542c_write, NULL, NULL,
-                scsi->bios_rom.rom, 0, scsi);
+                        aha1542c_read, NULL, NULL,
+                        aha1542c_write, NULL, NULL,
+                        scsi->bios_rom.rom, 0, scsi);
 
         scsi->status = 0;
         scsi->cmd_state = CMD_STATE_IDLE;
@@ -2268,13 +2092,11 @@ static void* scsi_aha1542c_init(char* bios_fn)
 
         addr = device_get_config_int("addr");
         io_sethandler(addr, 0x0004,
-                aha154x_in, NULL, NULL,
-                aha154x_out, NULL, NULL,
-                scsi);
-        for (c = 0; c < 8; c++)
-        {
-                if (port_sw_mapping[c] == addr)
-                {
+                      aha154x_in, NULL, NULL,
+                      aha154x_out, NULL, NULL,
+                      scsi);
+        for (c = 0; c < 8; c++) {
+                if (port_sw_mapping[c] == addr) {
                         scsi->dipsw = c;
                         break;
                 }
@@ -2294,9 +2116,8 @@ static void* scsi_aha1542c_init(char* bios_fn)
         return scsi;
 }
 
-static void* scsi_bt545s_init(char* bios_fn)
-{
-        aha154x_t* scsi = malloc(sizeof(aha154x_t));
+static void *scsi_bt545s_init(char *bios_fn) {
+        aha154x_t *scsi = malloc(sizeof(aha154x_t));
         uint32_t addr;
         memset(scsi, 0, sizeof(aha154x_t));
 
@@ -2313,9 +2134,9 @@ static void* scsi_bt545s_init(char* bios_fn)
 
         addr = device_get_config_int("addr");
         io_sethandler(addr, 0x0004,
-                aha154x_in, NULL, NULL,
-                aha154x_out, NULL, NULL,
-                scsi);
+                      aha154x_in, NULL, NULL,
+                      aha154x_out, NULL, NULL,
+                      scsi);
 
         scsi_bus_init(&scsi->bus);
 
@@ -2328,296 +2149,174 @@ static void* scsi_bt545s_init(char* bios_fn)
         return scsi;
 }
 
-static void scsi_aha1542c_close(void* p)
-{
-        aha154x_t* scsi = (aha154x_t*)p;
+static void scsi_aha1542c_close(void *p) {
+        aha154x_t *scsi = (aha154x_t *)p;
 
         scsi_bus_close(&scsi->bus);
 
         free(scsi);
 }
 
-static int scsi_aha1542c_available()
-{
+static int scsi_aha1542c_available() {
         return rom_present("adaptec_aha1542c_bios_534201-00.bin");
 }
 
-static int scsi_bt545s_available()
-{
+static int scsi_bt545s_available() {
         return rom_present("BusLogic_BT-545S_U15_27128_5002026-4.50.bin");
 }
 
 static device_config_t aha1542c_config[] =
-        {
-                {
-                        .name = "addr",
-                        .description = "Address",
-                        .type = CONFIG_SELECTION,
-                        .selection =
-                                {
-                                        {
-                                                .description = "130",
-                                                .value = 0x130
-                                        },
-                                        {
-                                                .description = "134",
-                                                .value = 0x134
-                                        },
-                                        {
-                                                .description = "230",
-                                                .value = 0x230
-                                        },
-                                        {
-                                                .description = "234",
-                                                .value = 0x234
-                                        },
-                                        {
-                                                .description = "330",
-                                                .value = 0x330
-                                        },
-                                        {
-                                                .description = "334",
-                                                .value = 0x334
-                                        },
-                                        {
-                                                .description = ""
-                                        }
-                                },
-                        .default_int = 0x334
-                },
-                {
-                        .name = "bios_addr",
-                        .description = "BIOS address",
-                        .type = CONFIG_SELECTION,
-                        .selection =
-                                {
-                                        {
-                                                .description = "C8000",
-                                                .value = 0xc8000
-                                        },
-                                        {
-                                                .description = "CC000",
-                                                .value = 0xcc000
-                                        },
-                                        {
-                                                .description = "D0000",
-                                                .value = 0xd0000
-                                        },
-                                        {
-                                                .description = "D4000",
-                                                .value = 0xd4000
-                                        },
-                                        {
-                                                .description = "D8000",
-                                                .value = 0xd8000
-                                        },
-                                        {
-                                                .description = "DC000",
-                                                .value = 0xdc000
-                                        },
-                                        {
-                                                .description = ""
-                                        }
-                                },
-                        .default_int = 0xdc000
-                },
-                {
-                        .type = -1
-                }
-        };
+    {
+        {.name = "addr",
+         .description = "Address",
+         .type = CONFIG_SELECTION,
+         .selection =
+             {
+                 {.description = "130",
+                  .value = 0x130},
+                 {.description = "134",
+                  .value = 0x134},
+                 {.description = "230",
+                  .value = 0x230},
+                 {.description = "234",
+                  .value = 0x234},
+                 {.description = "330",
+                  .value = 0x330},
+                 {.description = "334",
+                  .value = 0x334},
+                 {.description = ""}},
+         .default_int = 0x334},
+        {.name = "bios_addr",
+         .description = "BIOS address",
+         .type = CONFIG_SELECTION,
+         .selection =
+             {
+                 {.description = "C8000",
+                  .value = 0xc8000},
+                 {.description = "CC000",
+                  .value = 0xcc000},
+                 {.description = "D0000",
+                  .value = 0xd0000},
+                 {.description = "D4000",
+                  .value = 0xd4000},
+                 {.description = "D8000",
+                  .value = 0xd8000},
+                 {.description = "DC000",
+                  .value = 0xdc000},
+                 {.description = ""}},
+         .default_int = 0xdc000},
+        {.type = -1}};
 
 static device_config_t bt545s_config[] =
-        {
-                {
-                        .name = "addr",
-                        .description = "Address",
-                        .type = CONFIG_SELECTION,
-                        .selection =
-                                {
-                                        {
-                                                .description = "130",
-                                                .value = 0x130
-                                        },
-                                        {
-                                                .description = "134",
-                                                .value = 0x134
-                                        },
-                                        {
-                                                .description = "230",
-                                                .value = 0x230
-                                        },
-                                        {
-                                                .description = "234",
-                                                .value = 0x234
-                                        },
-                                        {
-                                                .description = "330",
-                                                .value = 0x330
-                                        },
-                                        {
-                                                .description = "334",
-                                                .value = 0x334
-                                        },
-                                        {
-                                                .description = ""
-                                        }
-                                },
-                        .default_int = 0x334
-                },
-                {
-                        .name = "bios_addr",
-                        .description = "BIOS address",
-                        .type = CONFIG_SELECTION,
-                        .selection =
-                                {
-                                        {
-                                                .description = "C8000",
-                                                .value = 0xc8000
-                                        },
-                                        {
-                                                .description = "D8000",
-                                                .value = 0xd8000
-                                        },
-                                        {
-                                                .description = "DC000",
-                                                .value = 0xdc000
-                                        },
-                                        {
-                                                .description = ""
-                                        }
-                                },
-                        .default_int = 0xdc000
-                },
-                {
-                        .name = "irq",
-                        .description = "IRQ",
-                        .type = CONFIG_SELECTION,
-                        .selection =
-                                {
-                                        {
-                                                .description = "IRQ 9",
-                                                .value = 9
-                                        },
-                                        {
-                                                .description = "IRQ 10",
-                                                .value = 10
-                                        },
-                                        {
-                                                .description = "IRQ 11",
-                                                .value = 11
-                                        },
-                                        {
-                                                .description = "IRQ 12",
-                                                .value = 12
-                                        },
-                                        {
-                                                .description = "IRQ 14",
-                                                .value = 14
-                                        },
-                                        {
-                                                .description = "IRQ 15",
-                                                .value = 15
-                                        },
-                                        {
-                                                .description = ""
-                                        }
-                                },
-                        .default_int = 10
-                },
-                {
-                        .name = "dma",
-                        .description = "DMA",
-                        .type = CONFIG_SELECTION,
-                        .selection =
-                                {
-                                        {
-                                                .description = "DMA 5",
-                                                .value = 5
-                                        },
-                                        {
-                                                .description = "DMA 6",
-                                                .value = 6
-                                        },
-                                        {
-                                                .description = "DMA 7",
-                                                .value = 7
-                                        },
-                                        {
-                                                .description = ""
-                                        }
-                                },
-                        .default_int = 7
-                },
-                {
-                        .name = "host_id",
-                        .description = "Host ID",
-                        .type = CONFIG_SELECTION,
-                        .selection =
-                                {
-                                        {
-                                                .description = "ID 0",
-                                                .value = 0
-                                        },
-                                        {
-                                                .description = "ID 1",
-                                                .value = 1
-                                        },
-                                        {
-                                                .description = "ID 2",
-                                                .value = 2
-                                        },
-                                        {
-                                                .description = "ID 3",
-                                                .value = 3
-                                        },
-                                        {
-                                                .description = "ID 4",
-                                                .value = 4
-                                        },
-                                        {
-                                                .description = "ID 5",
-                                                .value = 5
-                                        },
-                                        {
-                                                .description = "ID 6",
-                                                .value = 6
-                                        },
-                                        {
-                                                .description = "ID 7",
-                                                .value = 7
-                                        },
-                                        {
-                                                .description = ""
-                                        }
-                                },
-                        .default_int = 7
-                },
-                {
-                        .type = -1
-                }
-        };
+    {
+        {.name = "addr",
+         .description = "Address",
+         .type = CONFIG_SELECTION,
+         .selection =
+             {
+                 {.description = "130",
+                  .value = 0x130},
+                 {.description = "134",
+                  .value = 0x134},
+                 {.description = "230",
+                  .value = 0x230},
+                 {.description = "234",
+                  .value = 0x234},
+                 {.description = "330",
+                  .value = 0x330},
+                 {.description = "334",
+                  .value = 0x334},
+                 {.description = ""}},
+         .default_int = 0x334},
+        {.name = "bios_addr",
+         .description = "BIOS address",
+         .type = CONFIG_SELECTION,
+         .selection =
+             {
+                 {.description = "C8000",
+                  .value = 0xc8000},
+                 {.description = "D8000",
+                  .value = 0xd8000},
+                 {.description = "DC000",
+                  .value = 0xdc000},
+                 {.description = ""}},
+         .default_int = 0xdc000},
+        {.name = "irq",
+         .description = "IRQ",
+         .type = CONFIG_SELECTION,
+         .selection =
+             {
+                 {.description = "IRQ 9",
+                  .value = 9},
+                 {.description = "IRQ 10",
+                  .value = 10},
+                 {.description = "IRQ 11",
+                  .value = 11},
+                 {.description = "IRQ 12",
+                  .value = 12},
+                 {.description = "IRQ 14",
+                  .value = 14},
+                 {.description = "IRQ 15",
+                  .value = 15},
+                 {.description = ""}},
+         .default_int = 10},
+        {.name = "dma",
+         .description = "DMA",
+         .type = CONFIG_SELECTION,
+         .selection =
+             {
+                 {.description = "DMA 5",
+                  .value = 5},
+                 {.description = "DMA 6",
+                  .value = 6},
+                 {.description = "DMA 7",
+                  .value = 7},
+                 {.description = ""}},
+         .default_int = 7},
+        {.name = "host_id",
+         .description = "Host ID",
+         .type = CONFIG_SELECTION,
+         .selection =
+             {
+                 {.description = "ID 0",
+                  .value = 0},
+                 {.description = "ID 1",
+                  .value = 1},
+                 {.description = "ID 2",
+                  .value = 2},
+                 {.description = "ID 3",
+                  .value = 3},
+                 {.description = "ID 4",
+                  .value = 4},
+                 {.description = "ID 5",
+                  .value = 5},
+                 {.description = "ID 6",
+                  .value = 6},
+                 {.description = "ID 7",
+                  .value = 7},
+                 {.description = ""}},
+         .default_int = 7},
+        {.type = -1}};
 
 device_t scsi_aha1542c_device =
-        {
-                "Adaptec AHA-1542C (SCSI)",
-                DEVICE_AT,
-                scsi_aha1542c_init,
-                scsi_aha1542c_close,
-                scsi_aha1542c_available,
-                NULL,
-                NULL,
-                NULL,
-                aha1542c_config
-        };
+    {
+        "Adaptec AHA-1542C (SCSI)",
+        DEVICE_AT,
+        scsi_aha1542c_init,
+        scsi_aha1542c_close,
+        scsi_aha1542c_available,
+        NULL,
+        NULL,
+        NULL,
+        aha1542c_config};
 device_t scsi_bt545s_device =
-        {
-                "BusLogic BT-545S (SCSI)",
-                DEVICE_AT,
-                scsi_bt545s_init,
-                scsi_aha1542c_close,
-                scsi_bt545s_available,
-                NULL,
-                NULL,
-                NULL,
-                bt545s_config
-        };
+    {
+        "BusLogic BT-545S (SCSI)",
+        DEVICE_AT,
+        scsi_bt545s_init,
+        scsi_aha1542c_close,
+        scsi_bt545s_available,
+        NULL,
+        NULL,
+        NULL,
+        bt545s_config};

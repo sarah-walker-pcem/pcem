@@ -19,8 +19,7 @@
 
 #include "resid-fp/pot.h"
 
-reg8 PotentiometerFP::readPOT()
-{
+reg8 PotentiometerFP::readPOT() {
         // NB! Not modeled.
         return 0xff;
 }

@@ -1,19 +1,18 @@
 /*ET4000 emulation*/
-#include <stdlib.h>
-#include "ibm.h"
 #include "device.h"
+#include "ibm.h"
 #include "io.h"
 #include "mem.h"
 #include "rom.h"
-#include "video.h"
 #include "vid_svga.h"
 #include "vid_svga_render.h"
 #include "vid_unk_ramdac.h"
+#include "video.h"
+#include <stdlib.h>
 
 #include "vid_et4000.h"
 
-typedef struct et4000_t
-{
+typedef struct et4000_t {
         svga_t svga;
         unk_ramdac_t ramdac;
 
@@ -33,34 +32,31 @@ typedef struct et4000_t
 } et4000_t;
 
 static uint8_t crtc_mask[0x40] =
-        {
-                0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0xff, 0xff, 0xff, 0x0f, 0xff, 0xff, 0xff, 0xff,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-        };
+    {
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 0xff, 0x0f, 0xff, 0xff, 0xff, 0xff,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-void et4000_kasan_out(uint16_t addr, uint8_t val, void* p);
-uint8_t et4000_kasan_in(uint16_t addr, void* p);
+void et4000_kasan_out(uint16_t addr, uint8_t val, void *p);
+uint8_t et4000_kasan_in(uint16_t addr, void *p);
 
-void et4000_out(uint16_t addr, uint8_t val, void* p)
-{
-        et4000_t* et4000 = (et4000_t*)p;
-        svga_t* svga = &et4000->svga;
+void et4000_out(uint16_t addr, uint8_t val, void *p) {
+        et4000_t *et4000 = (et4000_t *)p;
+        svga_t *svga = &et4000->svga;
 
         uint8_t old;
 
         if (((addr & 0xFFF0) == 0x3D0 || (addr & 0xFFF0) == 0x3B0) && !(svga->miscout & 1))
                 addr ^= 0x60;
 
-//        pclog("ET4000 out %04X %02X\n", addr, val);
+        //        pclog("ET4000 out %04X %02X\n", addr, val);
 
-        switch (addr)
-        {
+        switch (addr) {
         case 0x3C6:
         case 0x3C7:
         case 0x3C8:
@@ -72,16 +68,14 @@ void et4000_out(uint16_t addr, uint8_t val, void* p)
                 svga->write_bank = (val & 0xf) * 0x10000;
                 svga->read_bank = ((val >> 4) & 0xf) * 0x10000;
                 et4000->banking = val;
-//                pclog("Banking write %08X %08X %02X\n", svga->write_bank, svga->read_bank, val);
+                //                pclog("Banking write %08X %08X %02X\n", svga->write_bank, svga->read_bank, val);
                 return;
 
         case 0x3cf:
-                if ((svga->gdcaddr & 15) == 6)
-                {
+                if ((svga->gdcaddr & 15) == 6) {
                         old = svga->gdcreg[6];
                         svga_out(addr, val, svga);
-                        if ((old & 0xc) != 0 && (val & 0xc) == 0)
-                        {
+                        if ((old & 0xc) != 0 && (val & 0xc) == 0) {
                                 /*override mask - ET4000 supports linear 128k at A0000*/
                                 svga->banked_mask = 0x1ffff;
                         }
@@ -100,10 +94,8 @@ void et4000_out(uint16_t addr, uint8_t val, void* p)
                 old = svga->crtc[svga->crtcreg];
                 val &= crtc_mask[svga->crtcreg];
                 svga->crtc[svga->crtcreg] = val;
-                if (old != val)
-                {
-                        if (svga->crtcreg < 0xE || svga->crtcreg > 0x10)
-                        {
+                if (old != val) {
+                        if (svga->crtcreg < 0xE || svga->crtcreg > 0x10) {
                                 svga->fullchange = changeframecount;
                                 svga_recalctimings(svga);
                         }
@@ -113,14 +105,12 @@ void et4000_out(uint16_t addr, uint8_t val, void* p)
         svga_out(addr, val, svga);
 }
 
-void et4000k_out(uint16_t addr, uint8_t val, void* p)
-{
-        et4000_t* et4000 = (et4000_t*)p;
+void et4000k_out(uint16_t addr, uint8_t val, void *p) {
+        et4000_t *et4000 = (et4000_t *)p;
 
-//        pclog("ET4000k out %04X %02X\n", addr, val);
+        //        pclog("ET4000k out %04X %02X\n", addr, val);
 
-        switch (addr)
-        {
+        switch (addr) {
         case 0x22CB:
                 et4000->port_22cb_val = (et4000->port_22cb_val & 0xF0) | (val & 0x0F);
                 et4000->get_korean_font_enabled = val & 7;
@@ -128,8 +118,7 @@ void et4000k_out(uint16_t addr, uint8_t val, void* p)
                         et4000->get_korean_font_index = 0;
                 break;
         case 0x22CF:
-                switch (et4000->get_korean_font_enabled)
-                {
+                switch (et4000->get_korean_font_enabled) {
                 case 1:
                         et4000->get_korean_font_base = ((val & 0x7F) << 7) | (et4000->get_korean_font_base & 0x7F);
                         break;
@@ -137,10 +126,8 @@ void et4000k_out(uint16_t addr, uint8_t val, void* p)
                         et4000->get_korean_font_base = (et4000->get_korean_font_base & 0x3F80) | (val & 0x7F) | (((val ^ 0x80) & 0x80) << 8);
                         break;
                 case 3:
-                        if ((et4000->port_32cb_val & 0x30) == 0x20 && (et4000->get_korean_font_base & 0x7F) > 0x20 && (et4000->get_korean_font_base & 0x7F) < 0x7F)
-                        {
-                                switch (et4000->get_korean_font_base & 0x3F80)
-                                {
+                        if ((et4000->port_32cb_val & 0x30) == 0x20 && (et4000->get_korean_font_base & 0x7F) > 0x20 && (et4000->get_korean_font_base & 0x7F) < 0x7F) {
+                                switch (et4000->get_korean_font_base & 0x3F80) {
                                 case 0x2480:
                                         if (et4000->get_korean_font_index < 16)
                                                 fontdatksc5601_user[(et4000->get_korean_font_base & 0x7F) - 0x20][et4000->get_korean_font_index] = val;
@@ -169,25 +156,18 @@ void et4000k_out(uint16_t addr, uint8_t val, void* p)
         }
 }
 
-void et4000_kasan_out(uint16_t addr, uint8_t val, void* p)
-{
-        et4000_t* et4000 = (et4000_t*)p;
+void et4000_kasan_out(uint16_t addr, uint8_t val, void *p) {
+        et4000_t *et4000 = (et4000_t *)p;
 
-//        pclog("ET4000k out %04X %02X\n", addr, val);
+        //        pclog("ET4000k out %04X %02X\n", addr, val);
 
-
-        if (addr == 0x258)
-        {
-                //pclog("Write port %04X to %02X at %04X:%04X\n", addr, val, CS, cpu_state.oldpc);
+        if (addr == 0x258) {
+                // pclog("Write port %04X to %02X at %04X:%04X\n", addr, val, CS, cpu_state.oldpc);
                 et4000->kasan_cfg_index = val;
-        }
-        else if (addr == 0x259)
-        {
-                //pclog("Write port %04X to %02X at %04X:%04X\n", addr, val, CS, cpu_state.oldpc);
-                if (et4000->kasan_cfg_index >= 0xF0)
-                {
-                        switch (et4000->kasan_cfg_index - 0xF0)
-                        {
+        } else if (addr == 0x259) {
+                // pclog("Write port %04X to %02X at %04X:%04X\n", addr, val, CS, cpu_state.oldpc);
+                if (et4000->kasan_cfg_index >= 0xF0) {
+                        switch (et4000->kasan_cfg_index - 0xF0) {
                         case 0:
                                 if (et4000->kasan_cfg_regs[4] & 8)
                                         val = (val & 0xFC) | (et4000->kasan_cfg_regs[0] & 3);
@@ -200,7 +180,7 @@ void et4000_kasan_out(uint16_t addr, uint8_t val, void* p)
                                 io_removehandler(et4000->kasan_access_addr, 0x0008, et4000_kasan_in, NULL, NULL, et4000_kasan_out, NULL, NULL, et4000);
                                 et4000->kasan_access_addr = (et4000->kasan_cfg_regs[2] << 8) | et4000->kasan_cfg_regs[1];
                                 io_sethandler(et4000->kasan_access_addr, 0x0008, et4000_kasan_in, NULL, NULL, et4000_kasan_out, NULL, NULL, et4000);
-                                //pclog("Set font access address to %04X\n", et4000->kasan_access_addr);
+                                // pclog("Set font access address to %04X\n", et4000->kasan_access_addr);
                                 break;
                         case 4:
                                 if (et4000->kasan_cfg_regs[0] & 0x20)
@@ -222,48 +202,36 @@ void et4000_kasan_out(uint16_t addr, uint8_t val, void* p)
                                 break;
                         }
                 }
-        }
-        else if (addr >= et4000->kasan_access_addr && addr < et4000->kasan_access_addr + 8)
-        {
-                switch (addr - ((et4000->kasan_cfg_regs[2] << 8) | (et4000->kasan_cfg_regs[1])))
-                {
+        } else if (addr >= et4000->kasan_access_addr && addr < et4000->kasan_access_addr + 8) {
+                switch (addr - ((et4000->kasan_cfg_regs[2] << 8) | (et4000->kasan_cfg_regs[1]))) {
                 case 0:
-                        if (et4000->kasan_cfg_regs[0] & 2)
-                        {
+                        if (et4000->kasan_cfg_regs[0] & 2) {
                                 et4000->get_korean_font_index = ((val & 1) << 4) | ((val & 0x1E) >> 1);
                                 et4000->get_korean_font_base = (et4000->get_korean_font_base & ~7) | (val >> 5);
                         }
                         break;
                 case 1:
-                        if (et4000->kasan_cfg_regs[0] & 2)
-                        {
+                        if (et4000->kasan_cfg_regs[0] & 2) {
                                 et4000->get_korean_font_base = (et4000->get_korean_font_base & ~0x7F8) | (val << 3);
                         }
                         break;
                 case 2:
-                        if (et4000->kasan_cfg_regs[0] & 2)
-                        {
+                        if (et4000->kasan_cfg_regs[0] & 2) {
                                 et4000->get_korean_font_base = (et4000->get_korean_font_base & ~0x7F800) | ((val & 7) << 11);
                         }
                         break;
                 case 3:
                 case 4:
                 case 5:
-                        if (et4000->kasan_cfg_regs[0] & 1)
-                        {
+                        if (et4000->kasan_cfg_regs[0] & 1) {
                                 et4000->kasan_font_data[addr - (((et4000->kasan_cfg_regs[2] << 8) | (et4000->kasan_cfg_regs[1])) + 3)] = val;
                         }
                         break;
                 case 6:
-                        if ((et4000->kasan_cfg_regs[0] & 1) && (et4000->kasan_font_data[3] & !val & 0x80) && (et4000->get_korean_font_base & 0x7F) >= 0x20
-                            && (et4000->get_korean_font_base & 0x7F) < 0x7F)
-                        {
-                                if (((et4000->get_korean_font_base >> 7) & 0x7F) == (et4000->svga.ksc5601_udc_area_msb[0] & 0x7F) && (et4000->svga.ksc5601_udc_area_msb[0] & 0x80))
-                                {
+                        if ((et4000->kasan_cfg_regs[0] & 1) && (et4000->kasan_font_data[3] & !val & 0x80) && (et4000->get_korean_font_base & 0x7F) >= 0x20 && (et4000->get_korean_font_base & 0x7F) < 0x7F) {
+                                if (((et4000->get_korean_font_base >> 7) & 0x7F) == (et4000->svga.ksc5601_udc_area_msb[0] & 0x7F) && (et4000->svga.ksc5601_udc_area_msb[0] & 0x80)) {
                                         fontdatksc5601_user[(et4000->get_korean_font_base & 0x7F) - 0x20][et4000->get_korean_font_index] = et4000->kasan_font_data[2];
-                                }
-                                else if (((et4000->get_korean_font_base >> 7) & 0x7F) == (et4000->svga.ksc5601_udc_area_msb[1] & 0x7F) && (et4000->svga.ksc5601_udc_area_msb[1] & 0x80))
-                                {
+                                } else if (((et4000->get_korean_font_base >> 7) & 0x7F) == (et4000->svga.ksc5601_udc_area_msb[1] & 0x7F) && (et4000->svga.ksc5601_udc_area_msb[1] & 0x80)) {
                                         fontdatksc5601_user[96 + (et4000->get_korean_font_base & 0x7F) - 0x20][et4000->get_korean_font_index] = et4000->kasan_font_data[2];
                                 }
                         }
@@ -272,28 +240,25 @@ void et4000_kasan_out(uint16_t addr, uint8_t val, void* p)
                 default:
                         break;
                 }
-                //pclog("Write port %04X at %04X:%04X\n", addr, CS, cpu_state.oldpc);
-        }
-        else
-        {
+                // pclog("Write port %04X at %04X:%04X\n", addr, CS, cpu_state.oldpc);
+        } else {
                 et4000_out(addr, val, p);
         }
 }
 
-uint8_t et4000_in(uint16_t addr, void* p)
-{
-        et4000_t* et4000 = (et4000_t*)p;
-        svga_t* svga = &et4000->svga;
+uint8_t et4000_in(uint16_t addr, void *p) {
+        et4000_t *et4000 = (et4000_t *)p;
+        svga_t *svga = &et4000->svga;
 
         if (((addr & 0xFFF0) == 0x3D0 || (addr & 0xFFF0) == 0x3B0) && !(svga->miscout & 1))
                 addr ^= 0x60;
 
-//        if (addr != 0x3da) pclog("IN ET4000 %04X\n", addr);
+        //        if (addr != 0x3da) pclog("IN ET4000 %04X\n", addr);
 
-        switch (addr)
-        {
+        switch (addr) {
         case 0x3C5:
-                if ((svga->seqaddr & 0xf) == 7) return svga->seqregs[svga->seqaddr & 0xf] | 4;
+                if ((svga->seqaddr & 0xf) == 7)
+                        return svga->seqregs[svga->seqaddr & 0xf] | 4;
                 break;
 
         case 0x3C6:
@@ -312,31 +277,24 @@ uint8_t et4000_in(uint16_t addr, void* p)
         return svga_in(addr, svga);
 }
 
-uint8_t et4000k_in(uint16_t addr, void* p)
-{
+uint8_t et4000k_in(uint16_t addr, void *p) {
         uint8_t val = 0xFF;
-        et4000_t* et4000 = (et4000_t*)p;
+        et4000_t *et4000 = (et4000_t *)p;
 
-//        if (addr != 0x3da) pclog("IN ET4000 %04X\n", addr);
+        //        if (addr != 0x3da) pclog("IN ET4000 %04X\n", addr);
 
-        switch (addr)
-        {
+        switch (addr) {
         case 0x22CB:
                 return et4000->port_22cb_val;
         case 0x22CF:
                 val = 0;
-                switch (et4000->get_korean_font_enabled)
-                {
+                switch (et4000->get_korean_font_enabled) {
                 case 3:
-                        if ((et4000->port_32cb_val & 0x30) == 0x30)
-                        {
+                        if ((et4000->port_32cb_val & 0x30) == 0x30) {
                                 val = fontdatksc5601[et4000->get_korean_font_base][et4000->get_korean_font_index++];
                                 et4000->get_korean_font_index &= 0x1F;
-                        }
-                        else if ((et4000->port_32cb_val & 0x30) == 0x20 && (et4000->get_korean_font_base & 0x7F) > 0x20 && (et4000->get_korean_font_base & 0x7F) < 0x7F)
-                        {
-                                switch (et4000->get_korean_font_base & 0x3F80)
-                                {
+                        } else if ((et4000->port_32cb_val & 0x30) == 0x20 && (et4000->get_korean_font_base & 0x7F) > 0x20 && (et4000->get_korean_font_base & 0x7F) < 0x7F) {
+                                switch (et4000->get_korean_font_base & 0x3F80) {
                                 case 0x2480:
                                         if (et4000->get_korean_font_index < 16)
                                                 val = fontdatksc5601_user[(et4000->get_korean_font_base & 0x7F) - 0x20][et4000->get_korean_font_index];
@@ -366,75 +324,66 @@ uint8_t et4000k_in(uint16_t addr, void* p)
         return et4000_in(addr, p);
 }
 
-uint8_t et4000_kasan_in(uint16_t addr, void* p)
-{
+uint8_t et4000_kasan_in(uint16_t addr, void *p) {
         uint8_t val = 0xFF;
-        et4000_t* et4000 = (et4000_t*)p;
+        et4000_t *et4000 = (et4000_t *)p;
 
-        if (addr == 0x258)
-        {
-                //pclog("Read port %04X at %04X:%04X\n", addr, CS, cpu_state.oldpc);
+        if (addr == 0x258) {
+                // pclog("Read port %04X at %04X:%04X\n", addr, CS, cpu_state.oldpc);
                 val = et4000->kasan_cfg_index;
-        }
-        else if (addr == 0x259)
-        {
-                //pclog("Read port %04X at %04X:%04X\n", addr, CS, cpu_state.oldpc);
-                if (et4000->kasan_cfg_index >= 0xF0)
-                {
+        } else if (addr == 0x259) {
+                // pclog("Read port %04X at %04X:%04X\n", addr, CS, cpu_state.oldpc);
+                if (et4000->kasan_cfg_index >= 0xF0) {
                         val = et4000->kasan_cfg_regs[et4000->kasan_cfg_index - 0xF0];
                         if (et4000->kasan_cfg_index == 0xF4 && et4000->kasan_cfg_regs[0] & 0x20)
                                 val |= 0x80;
                 }
-        }
-        else if (addr >= et4000->kasan_access_addr && addr < et4000->kasan_access_addr + 8)
-        {
-                switch (addr - ((et4000->kasan_cfg_regs[2] << 8) | (et4000->kasan_cfg_regs[1])))
-                {
+        } else if (addr >= et4000->kasan_access_addr && addr < et4000->kasan_access_addr + 8) {
+                switch (addr - ((et4000->kasan_cfg_regs[2] << 8) | (et4000->kasan_cfg_regs[1]))) {
                 case 2:
                         val = 0;
                         break;
                 case 5:
-                        if (((et4000->get_korean_font_base >> 7) & 0x7F) == (et4000->svga.ksc5601_udc_area_msb[0] & 0x7F) && (et4000->svga.ksc5601_udc_area_msb[0] & 0x80))
-                        {
+                        if (((et4000->get_korean_font_base >> 7) & 0x7F) == (et4000->svga.ksc5601_udc_area_msb[0] & 0x7F) && (et4000->svga.ksc5601_udc_area_msb[0] & 0x80)) {
                                 val = fontdatksc5601_user[(et4000->get_korean_font_base & 0x7F) - 0x20][et4000->get_korean_font_index];
-                        }
-                        else if (((et4000->get_korean_font_base >> 7) & 0x7F) == (et4000->svga.ksc5601_udc_area_msb[1] & 0x7F) && (et4000->svga.ksc5601_udc_area_msb[1] & 0x80))
-                        {
+                        } else if (((et4000->get_korean_font_base >> 7) & 0x7F) == (et4000->svga.ksc5601_udc_area_msb[1] & 0x7F) && (et4000->svga.ksc5601_udc_area_msb[1] & 0x80)) {
                                 val = fontdatksc5601_user[96 + (et4000->get_korean_font_base & 0x7F) - 0x20][et4000->get_korean_font_index];
-                        }
-                        else
-                        {
+                        } else {
                                 val = fontdatksc5601[et4000->get_korean_font_base][et4000->get_korean_font_index];
                         }
                         break;
                 default:
                         break;
                 }
-                //pclog(stderr, "Read port %04X at %04X:%04X\n", addr, CS, cpu_state.oldpc);
-        }
-        else
-        {
+                // pclog(stderr, "Read port %04X at %04X:%04X\n", addr, CS, cpu_state.oldpc);
+        } else {
                 val = et4000_in(addr, p);
         }
         return val;
 }
 
-void et4000_recalctimings(svga_t* svga)
-{
+void et4000_recalctimings(svga_t *svga) {
         svga->ma_latch |= (svga->crtc[0x33] & 3) << 16;
-        if (svga->crtc[0x35] & 1) svga->vblankstart += 0x400;
-        if (svga->crtc[0x35] & 2) svga->vtotal += 0x400;
-        if (svga->crtc[0x35] & 4) svga->dispend += 0x400;
-        if (svga->crtc[0x35] & 8) svga->vsyncstart += 0x400;
-        if (svga->crtc[0x35] & 0x10) svga->split += 0x400;
-        if (!svga->rowoffset) svga->rowoffset = 0x100;
-        if (svga->crtc[0x3f] & 1) svga->htotal += 256;
-        if (svga->attrregs[0x16] & 0x20) svga->hdisp <<= 1;
+        if (svga->crtc[0x35] & 1)
+                svga->vblankstart += 0x400;
+        if (svga->crtc[0x35] & 2)
+                svga->vtotal += 0x400;
+        if (svga->crtc[0x35] & 4)
+                svga->dispend += 0x400;
+        if (svga->crtc[0x35] & 8)
+                svga->vsyncstart += 0x400;
+        if (svga->crtc[0x35] & 0x10)
+                svga->split += 0x400;
+        if (!svga->rowoffset)
+                svga->rowoffset = 0x100;
+        if (svga->crtc[0x3f] & 1)
+                svga->htotal += 256;
+        if (svga->attrregs[0x16] & 0x20)
+                svga->hdisp <<= 1;
 
-//        pclog("Rowoffset %i\n",svga_rowoffset);
+        //        pclog("Rowoffset %i\n",svga_rowoffset);
 
-        switch (((svga->miscout >> 2) & 3) | ((svga->crtc[0x34] << 1) & 4))
-        {
+        switch (((svga->miscout >> 2) & 3) | ((svga->crtc[0x34] << 1) & 4)) {
         case 0:
         case 1:
                 break;
@@ -449,8 +398,7 @@ void et4000_recalctimings(svga_t* svga)
                 break;
         }
 
-        switch (svga->bpp)
-        {
+        switch (svga->bpp) {
         case 15:
         case 16:
                 svga->hdisp /= 2;
@@ -461,34 +409,28 @@ void et4000_recalctimings(svga_t* svga)
         }
 }
 
-void et4000k_recalctimings(svga_t* svga)
-{
-        et4000_t* et4000 = (et4000_t*)svga->p;
+void et4000k_recalctimings(svga_t *svga) {
+        et4000_t *et4000 = (et4000_t *)svga->p;
 
         et4000_recalctimings(svga);
 
-        if (svga->render == svga_render_text_80 && ((svga->crtc[0x37] & 0x0A) == 0x0A))
-        {
-                if (et4000->port_32cb_val & 0x80)
-                {
+        if (svga->render == svga_render_text_80 && ((svga->crtc[0x37] & 0x0A) == 0x0A)) {
+                if (et4000->port_32cb_val & 0x80) {
                         svga->ma_latch -= 2;
                         svga->ca_adj = -2;
                 }
-                if ((et4000->port_32cb_val & 0xB4) == ((svga->crtc[0x37] & 3) == 2 ? 0xB4 : 0xB0))
-                {
+                if ((et4000->port_32cb_val & 0xB4) == ((svga->crtc[0x37] & 3) == 2 ? 0xB4 : 0xB0)) {
                         svga->render = svga_render_text_80_ksc5601;
                 }
         }
 }
 
-void et4000_kasan_recalctimings(svga_t* svga)
-{
-        et4000_t* et4000 = (et4000_t*)svga->p;
+void et4000_kasan_recalctimings(svga_t *svga) {
+        et4000_t *et4000 = (et4000_t *)svga->p;
 
         et4000_recalctimings(svga);
 
-        if (svga->render == svga_render_text_80 && (et4000->kasan_cfg_regs[0] & 8))
-        {
+        if (svga->render == svga_render_text_80 && (et4000->kasan_cfg_regs[0] & 8)) {
                 svga->ma_latch -= 3;
                 svga->ca_adj = (et4000->kasan_cfg_regs[0] >> 6) - 3;
                 svga->ksc5601_sbyte_mask = (et4000->kasan_cfg_regs[0] & 4) << 5;
@@ -497,9 +439,8 @@ void et4000_kasan_recalctimings(svga_t* svga)
         }
 }
 
-void* et4000_init()
-{
-        et4000_t* et4000 = malloc(sizeof(et4000_t));
+void *et4000_init() {
+        et4000_t *et4000 = malloc(sizeof(et4000_t));
         memset(et4000, 0, sizeof(et4000_t));
 
         rom_init(&et4000->bios_rom, "et4000.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
@@ -507,19 +448,18 @@ void* et4000_init()
         io_sethandler(0x03c0, 0x0020, et4000_in, NULL, NULL, et4000_out, NULL, NULL, et4000);
 
         svga_init(&et4000->svga, et4000, 1 << 20, /*1mb*/
-                et4000_recalctimings,
-                et4000_in, et4000_out,
-                NULL,
-                NULL);
+                  et4000_recalctimings,
+                  et4000_in, et4000_out,
+                  NULL,
+                  NULL);
 
         et4000->svga.packed_chain4 = 1;
 
         return et4000;
 }
 
-void* et4000k_init()
-{
-        et4000_t* et4000 = malloc(sizeof(et4000_t));
+void *et4000k_init() {
+        et4000_t *et4000 = malloc(sizeof(et4000_t));
         memset(et4000, 0, sizeof(et4000_t));
 
         rom_init(&et4000->bios_rom, "tgkorvga.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
@@ -534,10 +474,10 @@ void* et4000k_init()
         et4000->port_32cb_val = 0;
 
         svga_init(&et4000->svga, et4000, 1 << 20, /*1mb*/
-                et4000k_recalctimings,
-                et4000k_in, et4000k_out,
-                NULL,
-                NULL);
+                  et4000k_recalctimings,
+                  et4000k_in, et4000k_out,
+                  NULL,
+                  NULL);
 
         et4000->svga.ksc5601_sbyte_mask = 0x80;
         et4000->svga.ksc5601_udc_area_msb[0] = 0xC9;
@@ -550,10 +490,9 @@ void* et4000k_init()
         return et4000;
 }
 
-void* et4000_kasan_init()
-{
+void *et4000_kasan_init() {
         int i;
-        et4000_t* et4000 = malloc(sizeof(et4000_t));
+        et4000_t *et4000 = malloc(sizeof(et4000_t));
         memset(et4000, 0, sizeof(et4000_t));
 
         rom_init(&et4000->bios_rom, "et4000_kasan16.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
@@ -564,10 +503,10 @@ void* et4000_kasan_init()
         io_sethandler(0x0258, 0x0002, et4000_kasan_in, NULL, NULL, et4000_kasan_out, NULL, NULL, et4000);
 
         svga_init(&et4000->svga, et4000, 1 << 20, /*1mb*/
-                et4000_kasan_recalctimings,
-                et4000_in, et4000_out,
-                NULL,
-                NULL);
+                  et4000_kasan_recalctimings,
+                  et4000_in, et4000_out,
+                  NULL,
+                  NULL);
 
         et4000->svga.ksc5601_sbyte_mask = 0;
         et4000->kasan_cfg_index = 0;
@@ -596,83 +535,75 @@ void* et4000_kasan_init()
         return et4000;
 }
 
-static int et4000_available()
-{
+static int et4000_available() {
         return rom_present("et4000.bin");
 }
 
-static int et4000k_available()
-{
-        return rom_present("tgkorvga.bin") && rom_present("tg_ksc5601.rom");;
+static int et4000k_available() {
+        return rom_present("tgkorvga.bin") && rom_present("tg_ksc5601.rom");
+        ;
 }
 
-static int et4000_kasan_available()
-{
-        return rom_present("et4000_kasan16.bin") && rom_present("kasan_ksc5601.rom");;
+static int et4000_kasan_available() {
+        return rom_present("et4000_kasan16.bin") && rom_present("kasan_ksc5601.rom");
+        ;
 }
 
-void et4000_close(void* p)
-{
-        et4000_t* et4000 = (et4000_t*)p;
+void et4000_close(void *p) {
+        et4000_t *et4000 = (et4000_t *)p;
 
         svga_close(&et4000->svga);
 
         free(et4000);
 }
 
-void et4000_speed_changed(void* p)
-{
-        et4000_t* et4000 = (et4000_t*)p;
+void et4000_speed_changed(void *p) {
+        et4000_t *et4000 = (et4000_t *)p;
 
         svga_recalctimings(&et4000->svga);
 }
 
-void et4000_force_redraw(void* p)
-{
-        et4000_t* et4000 = (et4000_t*)p;
+void et4000_force_redraw(void *p) {
+        et4000_t *et4000 = (et4000_t *)p;
 
         et4000->svga.fullchange = changeframecount;
 }
 
-void et4000_add_status_info(char* s, int max_len, void* p)
-{
-        et4000_t* et4000 = (et4000_t*)p;
+void et4000_add_status_info(char *s, int max_len, void *p) {
+        et4000_t *et4000 = (et4000_t *)p;
 
         svga_add_status_info(s, max_len, &et4000->svga);
 }
 
 device_t et4000_device =
-        {
-                "Tseng Labs ET4000AX",
-                0,
-                et4000_init,
-                et4000_close,
-                et4000_available,
-                et4000_speed_changed,
-                et4000_force_redraw,
-                et4000_add_status_info
-        };
+    {
+        "Tseng Labs ET4000AX",
+        0,
+        et4000_init,
+        et4000_close,
+        et4000_available,
+        et4000_speed_changed,
+        et4000_force_redraw,
+        et4000_add_status_info};
 
 device_t et4000k_device =
-        {
-                "Trigem Korean VGA(Tseng Labs ET4000AX)",
-                0,
-                et4000k_init,
-                et4000_close,
-                et4000k_available,
-                et4000_speed_changed,
-                et4000_force_redraw,
-                et4000_add_status_info
-        };
+    {
+        "Trigem Korean VGA(Tseng Labs ET4000AX)",
+        0,
+        et4000k_init,
+        et4000_close,
+        et4000k_available,
+        et4000_speed_changed,
+        et4000_force_redraw,
+        et4000_add_status_info};
 
 device_t et4000_kasan_device =
-        {
-                "Kasan Hangulmadang-16(Tseng Labs ET4000AX)",
-                0,
-                et4000_kasan_init,
-                et4000_close,
-                et4000_kasan_available,
-                et4000_speed_changed,
-                et4000_force_redraw,
-                et4000_add_status_info
-        };
+    {
+        "Kasan Hangulmadang-16(Tseng Labs ET4000AX)",
+        0,
+        et4000_kasan_init,
+        et4000_close,
+        et4000_kasan_available,
+        et4000_speed_changed,
+        et4000_force_redraw,
+        et4000_add_status_info};

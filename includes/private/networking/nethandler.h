@@ -1,7 +1,7 @@
 #ifndef _NETHANDLER_H_
 #define _NETHANDLER_H_
 
-//void vlan_handler(int (*can_receive)(void *p), void (*receive)(void *p, const uint8_t *buf, int size), void *p);
+// void vlan_handler(int (*can_receive)(void *p), void (*receive)(void *p, const uint8_t *buf, int size), void *p);
 void vlan_handler(void (*poller)(void *p), void *p);
 
 extern int network_card_current;
@@ -20,8 +20,7 @@ void closepcap();
 
 void vlan_reset();
 
-enum
-{
+enum {
         NET_SLIRP = 0,
         NET_PCAP = 1
 };

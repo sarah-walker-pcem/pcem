@@ -198,5 +198,4 @@ void host_x86_XOR8_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_XOR16_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_XOR32_REG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
-
 #endif /* _CODEGEN_BACKEND_X86_64_OPS_H_ */

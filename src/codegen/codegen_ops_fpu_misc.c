@@ -1,18 +1,17 @@
 #include "ibm.h"
 
-#include "x86.h"
-#include "x86_flags.h"
 #include "386_common.h"
-#include "x87.h"
 #include "codegen.h"
 #include "codegen_accumulate.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"
 #include "codegen_ops_fpu_misc.h"
 #include "codegen_ops_helpers.h"
+#include "x86.h"
+#include "x86_flags.h"
+#include "x87.h"
 
-uint32_t ropFFREE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFFREE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int dest_reg = fetchdat & 7;
 
         uop_FP_ENTER(ir);
@@ -21,8 +20,7 @@ uint32_t ropFFREE(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         return op_pc;
 }
 
-uint32_t ropFLD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFLD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int src_reg = fetchdat & 7;
 
         uop_FP_ENTER(ir);
@@ -34,8 +32,7 @@ uint32_t ropFLD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetc
         return op_pc;
 }
 
-uint32_t ropFST(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFST(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int dest_reg = fetchdat & 7;
 
         uop_FP_ENTER(ir);
@@ -45,8 +42,7 @@ uint32_t ropFST(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetc
 
         return op_pc;
 }
-uint32_t ropFSTP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFSTP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int dest_reg = fetchdat & 7;
 
         uop_FP_ENTER(ir);
@@ -58,8 +54,7 @@ uint32_t ropFSTP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
         return op_pc;
 }
 
-uint32_t ropFSTCW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFSTCW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -69,10 +64,9 @@ uint32_t ropFSTCW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         codegen_check_seg_write(block, ir, target_seg);
         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_NPXC);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFSTSW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFSTSW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         x86seg *target_seg;
 
         uop_FP_ENTER(ir);
@@ -82,18 +76,16 @@ uint32_t ropFSTSW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
         codegen_check_seg_write(block, ir, target_seg);
         uop_MEM_STORE_REG(ir, ireg_seg_base(target_seg), IREG_eaaddr, IREG_NPXS);
 
-        return op_pc+1;
+        return op_pc + 1;
 }
-uint32_t ropFSTSW_AX(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFSTSW_AX(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         uop_FP_ENTER(ir);
         uop_MOV(ir, IREG_AX, IREG_NPXS);
-        
+
         return op_pc;
 }
 
-uint32_t ropFXCH(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropFXCH(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int dest_reg = fetchdat & 7;
 
         uop_FP_ENTER(ir);

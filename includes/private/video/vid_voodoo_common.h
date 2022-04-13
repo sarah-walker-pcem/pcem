@@ -12,15 +12,13 @@
 #define CLAMP(x) (((x) < 0) ? 0 : (((x) > 0xff) ? 0xff : (x)))
 #define CLAMP16(x) (((x) < 0) ? 0 : (((x) > 0xffff) ? 0xffff : (x)))
 
-
 #define LOD_MAX 8
 
 #define TEX_DIRTY_SHIFT 10
 
 #define TEX_CACHE_MAX 64
 
-enum
-{
+enum {
         VOODOO_1 = 0,
         VOODOO_SB50,
         VOODOO_2,
@@ -28,24 +26,20 @@ enum
         VOODOO_3
 };
 
-typedef union int_float
-{
+typedef union int_float {
         uint32_t i;
         float f;
 } int_float;
 
-typedef struct rgb_t
-{
+typedef struct rgb_t {
         uint8_t b, g, r;
         uint8_t pad;
 } rgb_t;
-typedef struct rgba8_t
-{
+typedef struct rgba8_t {
         uint8_t b, g, r, a;
 } rgba8_t;
 
-typedef union rgba_u
-{
+typedef union rgba_u {
         struct
         {
                 uint8_t b, g, r, a;
@@ -58,19 +52,18 @@ typedef union rgba_u
 #define FIFO_ENTRY_SIZE (1 << 31)
 
 #define FIFO_ENTRIES (voodoo->fifo_write_idx - voodoo->fifo_read_idx)
-#define FIFO_FULL    ((voodoo->fifo_write_idx - voodoo->fifo_read_idx) >= FIFO_SIZE-4)
-#define FIFO_EMPTY   (voodoo->fifo_read_idx == voodoo->fifo_write_idx)
+#define FIFO_FULL ((voodoo->fifo_write_idx - voodoo->fifo_read_idx) >= FIFO_SIZE - 4)
+#define FIFO_EMPTY (voodoo->fifo_read_idx == voodoo->fifo_write_idx)
 
 #define FIFO_TYPE 0xff000000
 #define FIFO_ADDR 0x00ffffff
 
-enum
-{
-        FIFO_INVALID      = (0x00 << 24),
-        FIFO_WRITEL_REG   = (0x01 << 24),
-        FIFO_WRITEW_FB    = (0x02 << 24),
-        FIFO_WRITEL_FB    = (0x03 << 24),
-        FIFO_WRITEL_TEX   = (0x04 << 24),
+enum {
+        FIFO_INVALID = (0x00 << 24),
+        FIFO_WRITEL_REG = (0x01 << 24),
+        FIFO_WRITEW_FB = (0x02 << 24),
+        FIFO_WRITEL_FB = (0x03 << 24),
+        FIFO_WRITEL_TEX = (0x04 << 24),
         FIFO_WRITEL_2DREG = (0x05 << 24)
 };
 
@@ -79,8 +72,8 @@ enum
 #define PARAM_ENTRY_SIZE (1 << 31)
 
 #define PARAM_ENTRIES(x) (voodoo->params_write_idx - voodoo->params_read_idx[x])
-#define PARAM_FULL(x)    ((voodoo->params_write_idx - voodoo->params_read_idx[x]) >= PARAM_SIZE)
-#define PARAM_EMPTY(x)   (voodoo->params_read_idx[x] == voodoo->params_write_idx)
+#define PARAM_FULL(x) ((voodoo->params_write_idx - voodoo->params_read_idx[x]) >= PARAM_SIZE)
+#define PARAM_EMPTY(x) (voodoo->params_read_idx[x] == voodoo->params_write_idx)
 
 typedef struct
 {
@@ -88,17 +81,16 @@ typedef struct
         uint32_t val;
 } fifo_entry_t;
 
-typedef struct voodoo_params_t
-{
+typedef struct voodoo_params_t {
         int command;
 
         int32_t vertexAx, vertexAy, vertexBx, vertexBy, vertexCx, vertexCy;
 
         uint32_t startR, startG, startB, startZ, startA;
 
-         int32_t dBdX, dGdX, dRdX, dAdX, dZdX;
+        int32_t dBdX, dGdX, dRdX, dAdX, dZdX;
 
-         int32_t dBdY, dGdY, dRdY, dAdY, dZdY;
+        int32_t dBdY, dGdY, dRdY, dAdY, dZdY;
 
         int64_t startW, dWdX, dWdY;
 
@@ -133,14 +125,14 @@ typedef struct voodoo_params_t
 
         uint32_t texBaseAddr[2], texBaseAddr1[2], texBaseAddr2[2], texBaseAddr38[2];
 
-        uint32_t tex_base[2][LOD_MAX+2];
-        uint32_t tex_end[2][LOD_MAX+2];
+        uint32_t tex_base[2][LOD_MAX + 2];
+        uint32_t tex_end[2][LOD_MAX + 2];
         int tex_width[2];
-        int tex_w_mask[2][LOD_MAX+2];
-        int tex_w_nmask[2][LOD_MAX+2];
-        int tex_h_mask[2][LOD_MAX+2];
-        int tex_shift[2][LOD_MAX+2];
-        int tex_lod[2][LOD_MAX+2];
+        int tex_w_mask[2][LOD_MAX + 2];
+        int tex_w_nmask[2][LOD_MAX + 2];
+        int tex_h_mask[2][LOD_MAX + 2];
+        int tex_shift[2][LOD_MAX + 2];
+        int tex_lod[2][LOD_MAX + 2];
         int tex_entry[2];
         int detail_max[2], detail_bias[2], detail_scale[2];
 
@@ -163,8 +155,7 @@ typedef struct voodoo_params_t
         int row_width, aux_row_width;
 } voodoo_params_t;
 
-typedef struct texture_t
-{
+typedef struct texture_t {
         uint32_t base;
         uint32_t tLOD;
         volatile int refcount, refcount_r[4];
@@ -174,8 +165,7 @@ typedef struct texture_t
         uint32_t *data;
 } texture_t;
 
-typedef struct vert_t
-{
+typedef struct vert_t {
         float sVx, sVy;
         float sRed, sGreen, sBlue, sAlpha;
         float sVz, sWb;
@@ -183,14 +173,12 @@ typedef struct vert_t
         float sW1, sS1, sT1;
 } vert_t;
 
-typedef struct clip_t
-{
+typedef struct clip_t {
         int x_min, x_max;
         int y_min, y_max;
 } clip_t;
 
-typedef struct voodoo_t
-{
+typedef struct voodoo_t {
         mem_mapping_t mapping;
 
         int pci_enable;
@@ -222,7 +210,7 @@ typedef struct voodoo_t
 
         int row_width, aux_row_width;
         int block_width;
-        
+
         int col_tiled, aux_tiled;
 
         uint8_t *fb_mem, *tex_mem[2];
@@ -321,9 +309,9 @@ typedef struct voodoo_t
         int flush;
 
         int scrfilter;
-	int scrfilterEnabled;
-	int scrfilterThreshold;
-	int scrfilterThresholdOld;
+        int scrfilterEnabled;
+        int scrfilterThreshold;
+        int scrfilterThresholdOld;
 
         uint32_t last_write_addr;
 
@@ -354,7 +342,7 @@ typedef struct voodoo_t
         uint32_t bltCommand;
 
         uint32_t leftOverlayBuf;
-        
+
         struct
         {
                 int dst_x, dst_y;
@@ -382,7 +370,7 @@ typedef struct voodoo_t
                 uint32_t srcFormat;
                 uint32_t srcSize;
                 uint32_t srcXY;
-                
+
                 uint32_t colorPattern[64];
 
                 int bres_error_0, bres_error_1;
@@ -401,11 +389,11 @@ typedef struct voodoo_t
                 int srcX, srcY;
                 int src_stride;
                 int old_srcX;
-                
+
                 /*Used for handling packed 24bpp host data*/
                 int host_data_remainder;
                 uint32_t old_host_data;
-                
+
                 /*Polyfill coordinates*/
                 int lx[2], rx[2];
                 int ly[2], ry[2];
@@ -417,7 +405,7 @@ typedef struct voodoo_t
                 int lx_cur, rx_cur;
 
                 clip_t clip[2];
-                
+
                 uint8_t host_data[16384];
                 int host_data_count;
                 int host_data_size_src, host_data_size_dest;
@@ -428,20 +416,20 @@ typedef struct voodoo_t
                 int line_pix_pos, line_bit_pos;
                 int line_rep_cnt, line_bit_mask_size;
         } banshee_blt;
-        
+
         struct
         {
                 uint32_t vidOverlayStartCoords;
                 uint32_t vidOverlayEndScreenCoords;
                 uint32_t vidOverlayDudx, vidOverlayDudxOffsetSrcWidth;
                 uint32_t vidOverlayDvdy, vidOverlayDvdyOffset;
-                //uint32_t vidDesktopOverlayStride;
-                
+                // uint32_t vidDesktopOverlayStride;
+
                 int start_x, start_y;
                 int end_x, end_y;
                 int size_x, size_y;
                 int overlay_bytes;
-                
+
                 unsigned int src_y;
         } overlay;
 
@@ -455,7 +443,7 @@ typedef struct voodoo_t
 
         int fb_write_buffer, fb_draw_buffer;
         int buffer_cutoff;
-        
+
         uint32_t tile_base, tile_stride;
         int tile_stride_shift, tile_x, tile_x_real;
 
@@ -485,15 +473,13 @@ typedef struct voodoo_t
         void *codegen_data;
 
         struct voodoo_set_t *set;
-        
-        
+
         uint8_t *vram, *changedvram;
-        
+
         void *p;
 } voodoo_t;
 
-typedef struct voodoo_set_t
-{
+typedef struct voodoo_set_t {
         voodoo_t *voodoos[2];
 
         mem_mapping_t snoop_mapping;
@@ -501,9 +487,7 @@ typedef struct voodoo_set_t
         int nr_cards;
 } voodoo_set_t;
 
-
 extern rgba8_t rgb332[0x100], ai44[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000], ai88[0x10000];
-
 
 void voodoo_generate_vb_filters(voodoo_t *voodoo, int fcr, int fcg);
 
@@ -512,6 +496,5 @@ void voodoo_update_ncc(voodoo_t *voodoo, int tmu);
 
 void *voodoo_2d3d_card_init(int type);
 void voodoo_card_close(voodoo_t *voodoo);
-
 
 #endif /* _VID_VOODOO_COMMON_H_ */

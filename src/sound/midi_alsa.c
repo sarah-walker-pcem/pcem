@@ -1,7 +1,7 @@
-#include <alsa/asoundlib.h>
-#include "ibm.h"
 #include "config.h"
+#include "ibm.h"
 #include "plat-midi.h"
+#include <alsa/asoundlib.h>
 
 #define MAX_MIDI_DEVICES 128
 
@@ -17,10 +17,9 @@ static int midi_device_count = 0;
 
 static int midi_queried = 0;
 
-static snd_rawmidi_t* midiout = NULL;
+static snd_rawmidi_t *midiout = NULL;
 
-static void midi_query()
-{
+static void midi_query() {
         int status;
         int card = -1;
 
@@ -32,27 +31,22 @@ static void midi_query()
         if (card < 0)
                 return; /*No cards*/
 
-        while (card >= 0)
-        {
-                char* shortname;
+        while (card >= 0) {
+                char *shortname;
 
-                if ((status = snd_card_get_name(card, &shortname)) >= 0)
-                {
-                        snd_ctl_t* ctl;
+                if ((status = snd_card_get_name(card, &shortname)) >= 0) {
+                        snd_ctl_t *ctl;
                         char name[32];
 
                         sprintf(name, "hw:%i", card);
 
-                        if ((status = snd_ctl_open(&ctl, name, 0)) >= 0)
-                        {
+                        if ((status = snd_ctl_open(&ctl, name, 0)) >= 0) {
                                 int device = -1;
 
-                                do
-                                {
+                                do {
                                         status = snd_ctl_rawmidi_next_device(ctl, &device);
-                                        if (status >= 0 && device != -1)
-                                        {
-                                                snd_rawmidi_info_t* info;
+                                        if (status >= 0 && device != -1) {
+                                                snd_rawmidi_info_t *info;
                                                 int sub_nr, sub;
 
                                                 snd_rawmidi_info_alloca(&info);
@@ -62,12 +56,10 @@ static void midi_query()
                                                 sub_nr = snd_rawmidi_info_get_subdevices_count(info);
                                                 pclog("sub_nr=%i\n", sub_nr);
 
-                                                for (sub = 0; sub < sub_nr; sub++)
-                                                {
+                                                for (sub = 0; sub < sub_nr; sub++) {
                                                         snd_rawmidi_info_set_subdevice(info, sub);
 
-                                                        if (snd_ctl_rawmidi_info(ctl, info) == 0)
-                                                        {
+                                                        if (snd_ctl_rawmidi_info(ctl, info) == 0) {
                                                                 pclog("%s: MIDI device=%i:%i:%i\n", shortname, card, device, sub);
 
                                                                 midi_devices[midi_device_count].card = card;
@@ -89,8 +81,7 @@ static void midi_query()
         }
 }
 
-void midi_init()
-{
+void midi_init() {
         char portname[32];
         int midi_id;
 
@@ -104,17 +95,14 @@ void midi_init()
                 midi_devices[midi_id].sub);
         pclog("Opening MIDI port %s\n", portname);
 
-        if (snd_rawmidi_open(NULL, &midiout, portname, SND_RAWMIDI_SYNC) < 0)
-        {
+        if (snd_rawmidi_open(NULL, &midiout, portname, SND_RAWMIDI_SYNC) < 0) {
                 pclog("Failed to open MIDI\n");
                 return;
         }
 }
 
-void midi_close()
-{
-        if (midiout != NULL)
-        {
+void midi_close() {
+        if (midiout != NULL) {
                 snd_rawmidi_close(midiout);
                 midiout = NULL;
         }
@@ -122,16 +110,14 @@ void midi_close()
 
 static int midi_pos, midi_len;
 static uint8_t midi_command[4];
-static int midi_lengths[8] = { 3, 3, 3, 3, 2, 2, 3, 1 };
+static int midi_lengths[8] = {3, 3, 3, 3, 2, 2, 3, 1};
 static int midi_insysex;
 static uint8_t midi_sysex_data[65536];
 
-void midi_write(uint8_t val)
-{
-        //pclog("Write MIDI %02x\n", val);
+void midi_write(uint8_t val) {
+        // pclog("Write MIDI %02x\n", val);
 
-        if ((val & 0x80) && !(val == 0xf7 && midi_insysex))
-        {
+        if ((val & 0x80) && !(val == 0xf7 && midi_insysex)) {
                 midi_pos = 0;
                 midi_len = midi_lengths[(val >> 4) & 7];
                 midi_command[0] = midi_command[1] = midi_command[2] = midi_command[3] = 0;
@@ -139,49 +125,42 @@ void midi_write(uint8_t val)
                         midi_insysex = 1;
         }
 
-        if (midi_insysex)
-        {
+        if (midi_insysex) {
                 midi_sysex_data[midi_pos++] = val;
 
-                if (val == 0xf7 || midi_pos >= 65536)
-                {
-/*			pclog("MIDI send sysex %i: ", midi_pos);
-			for (int i = 0; i < midi_pos; i++)
-				pclog("%02x ", midi_sysex_data[i]);
-			pclog("\n");*/
+                if (val == 0xf7 || midi_pos >= 65536) {
+                        /*			pclog("MIDI send sysex %i: ", midi_pos);
+                                                for (int i = 0; i < midi_pos; i++)
+                                                        pclog("%02x ", midi_sysex_data[i]);
+                                                pclog("\n");*/
                         snd_rawmidi_write(midiout, midi_sysex_data, midi_pos);
-//			pclog("Sent sysex\n");
+                        //			pclog("Sent sysex\n");
                         midi_insysex = 0;
                 }
                 return;
         }
 
-        if (midi_len)
-        {
-                if (midi_pos < 3)
-                {
+        if (midi_len) {
+                if (midi_pos < 3) {
                         midi_command[midi_pos] = val;
 
                         midi_pos++;
 
-                        if (midi_pos == midi_len)
-                        {
-//				pclog("MIDI send %i: %02x %02x %02x %02x\n", midi_len, midi_command[0], midi_command[1], midi_command[2], midi_command[3]);
+                        if (midi_pos == midi_len) {
+                                //				pclog("MIDI send %i: %02x %02x %02x %02x\n", midi_len, midi_command[0], midi_command[1], midi_command[2], midi_command[3]);
                                 snd_rawmidi_write(midiout, midi_command, midi_len);
                         }
                 }
         }
 }
 
-int midi_get_num_devs()
-{
+int midi_get_num_devs() {
         if (!midi_queried)
                 midi_query();
 
         return midi_device_count;
 }
 
-void midi_get_dev_name(int num, char* s)
-{
+void midi_get_dev_name(int num, char *s) {
         strcpy(s, midi_devices[num].name);
 }

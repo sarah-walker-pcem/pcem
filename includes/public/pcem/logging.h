@@ -3,7 +3,7 @@
 
 #define printf pclog
 extern void pclog(const char *format, ...);
-extern void error(const char* format, ...);
+extern void error(const char *format, ...);
 extern void fatal(const char *format, ...);
 extern void warning(const char *format, ...);
 

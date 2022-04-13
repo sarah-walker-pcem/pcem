@@ -3,5 +3,4 @@
 
 void acc2168_init();
 
-
 #endif /* _ACC2168_H_ */

@@ -39,7 +39,7 @@ struct shader_texture {
         int min_filter;
         int mag_filter;
         int wrap_mode;
-        void* data;
+        void *data;
         int mipmap;
 };
 
@@ -133,7 +133,7 @@ struct glsl_shader {
         struct shader_parameter parameters[MAX_PARAMETERS];
 
         struct shader_pass prev_scene;
-        struct shader_prev prev[MAX_PREV+1];
+        struct shader_prev prev[MAX_PREV + 1];
 
         int last_prev_update;
         int has_prev;

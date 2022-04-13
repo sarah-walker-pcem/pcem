@@ -1,23 +1,21 @@
-#include "ibm.h"
-#include "x86.h"
+#include "codegen_ops_helpers.h"
 #include "386_common.h"
 #include "codegen.h"
 #include "codegen_ir.h"
 #include "codegen_ir_defs.h"
 #include "codegen_reg.h"
-#include "codegen_ops_helpers.h"
+#include "ibm.h"
+#include "x86.h"
 
-void LOAD_IMMEDIATE_FROM_RAM_16_unaligned(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr)
-{
+void LOAD_IMMEDIATE_FROM_RAM_16_unaligned(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr) {
         /*Word access that crosses two pages. Perform reads from both pages, shift and combine*/
         uop_MOVZX_REG_PTR_8(ir, IREG_temp3_W, get_ram_ptr(addr));
-        uop_MOVZX_REG_PTR_8(ir, dest_reg, get_ram_ptr(addr+1));
+        uop_MOVZX_REG_PTR_8(ir, dest_reg, get_ram_ptr(addr + 1));
         uop_SHL_IMM(ir, IREG_temp3_W, IREG_temp3_W, 8);
         uop_OR(ir, dest_reg, dest_reg, IREG_temp3_W);
 }
 
-void LOAD_IMMEDIATE_FROM_RAM_32_unaligned(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr)
-{
+void LOAD_IMMEDIATE_FROM_RAM_32_unaligned(codeblock_t *block, ir_data_t *ir, int dest_reg, uint32_t addr) {
         /*Dword access that crosses two pages. Perform reads from both pages, shift and combine*/
         uop_MOV_REG_PTR(ir, dest_reg, get_ram_ptr(addr & ~3));
         uop_MOV_REG_PTR(ir, IREG_temp3, get_ram_ptr((addr + 4) & ~3));
@@ -29,8 +27,7 @@ void LOAD_IMMEDIATE_FROM_RAM_32_unaligned(codeblock_t *block, ir_data_t *ir, int
 #define UNROLL_MAX_REG_REFERENCES 200
 #define UNROLL_MAX_UOPS 1000
 #define UNROLL_MAX_COUNT 10
-int codegen_can_unroll_full(codeblock_t *block, ir_data_t *ir, uint32_t next_pc, uint32_t dest_addr)
-{
+int codegen_can_unroll_full(codeblock_t *block, ir_data_t *ir, uint32_t next_pc, uint32_t dest_addr) {
         int start;
         int max_unroll;
         int first_instruction;
@@ -40,25 +37,21 @@ int codegen_can_unroll_full(codeblock_t *block, ir_data_t *ir, uint32_t next_pc,
         start = codegen_get_instruction_uop(block, dest_addr, &first_instruction, &TOP);
 
         /*Couldn't find any uOPs corresponding to the destination instruction*/
-        if (start == -1)
-        {
+        if (start == -1) {
                 /*Is instruction jumping to itself?*/
-                if (dest_addr != cpu_state.oldpc)
-                {
-//                        pclog("Couldn't find start. start_pc=%08x end_pc=%08x dest_pc=%08x wr_pos=%i loop_size=%i\n", block->pc-cs, next_pc, dest_addr, ir->wr_pos, ir->wr_pos-start);
+                if (dest_addr != cpu_state.oldpc) {
+                        //                        pclog("Couldn't find start. start_pc=%08x end_pc=%08x dest_pc=%08x wr_pos=%i loop_size=%i\n", block->pc-cs, next_pc, dest_addr, ir->wr_pos, ir->wr_pos-start);
                         return 0;
-                }
-                else
-                {
+                } else {
                         start = ir->wr_pos;
                         TOP = cpu_state.TOP;
                 }
         }
-        
+
         if (TOP != cpu_state.TOP)
                 return 0;
 
-        max_unroll = UNROLL_MAX_UOPS / ((ir->wr_pos-start)+6);
+        max_unroll = UNROLL_MAX_UOPS / ((ir->wr_pos - start) + 6);
         if (max_unroll > (UNROLL_MAX_REG_REFERENCES / max_version_refcount))
                 max_unroll = (UNROLL_MAX_REG_REFERENCES / max_version_refcount);
         if (max_unroll > UNROLL_MAX_COUNT)

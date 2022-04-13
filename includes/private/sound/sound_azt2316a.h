@@ -5,5 +5,4 @@ extern device_t azt1605_device;
 
 void azt2316a_enable_wss(uint8_t enable, void *p);
 
-
 #endif /* _SOUND_AZT2316A_H_ */

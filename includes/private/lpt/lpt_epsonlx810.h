@@ -9,7 +9,7 @@ extern char printer_path[512];
 #ifdef __cplusplus
 extern "C" {
 #endif
-        int wx_image_save_fullpath(const char* fullpath, const char* format, unsigned char* rgba, int width, int height, int alpha);
+int wx_image_save_fullpath(const char *fullpath, const char *format, unsigned char *rgba, int width, int height, int alpha);
 #ifdef __cplusplus
 }
 #endif
