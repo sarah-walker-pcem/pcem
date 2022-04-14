@@ -8,5 +8,4 @@ void zip_load(char *fn);
 void zip_eject();
 int zip_loaded();
 
-
 #endif /* _SCSI_ZIP_H_ */

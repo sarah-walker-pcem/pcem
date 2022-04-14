@@ -17,13 +17,12 @@ int mouse_get_type(int mouse);
 
 #define MOUSE_TYPE_3BUTTON (1 << 31)
 
-typedef struct
-{
-        char name[80];
-        void *(*init)();
-        void (*close)(void *p);
-        void (*poll)(int x, int y, int z, int b, void *p);
-        int type;
+typedef struct {
+	char name[80];
+	void *(*init)();
+	void (*close)(void *p);
+	void (*poll)(int x, int y, int z, int b, void *p);
+	int type;
 } mouse_t;
 
 extern int mouse_type;

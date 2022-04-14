@@ -4,49 +4,47 @@
 struct scsi_bus_t;
 struct atapi_device_t;
 
-typedef struct scsi_device_t
-{
-        void *(*init)(struct scsi_bus_t *bus, int id);
-        void *(*atapi_init)(struct scsi_bus_t *bus, int id, struct atapi_device_t *atapi_dev);
-        void (*close)(void *p);
-        void (*reset)(void *p);
-        
-        void (*start_command)(void *p);
-        int (*command)(uint8_t *cdb, void *p);
-        
-        uint8_t (*get_status)(void *p);
-        uint8_t (*get_sense_key)(void *p);
-        int (*get_bytes_required)(void *p);
-        
-        void (*atapi_identify)(uint16_t *buffer, void *p);
-        int (*atapi_set_feature)(uint8_t feature, uint8_t val, void *p);
-        
-        uint8_t (*read)(void *p);
-        void (*write)(uint8_t val, void *p);
-        int (*read_complete)(void *p);
-        int (*write_complete)(void *p);
+typedef struct scsi_device_t {
+	void *(*init)(struct scsi_bus_t *bus, int id);
+	void *(*atapi_init)(struct scsi_bus_t *bus, int id, struct atapi_device_t *atapi_dev);
+	void (*close)(void *p);
+	void (*reset)(void *p);
+
+	void (*start_command)(void *p);
+	int (*command)(uint8_t *cdb, void *p);
+
+	uint8_t (*get_status)(void *p);
+	uint8_t (*get_sense_key)(void *p);
+	int (*get_bytes_required)(void *p);
+
+	void (*atapi_identify)(uint16_t *buffer, void *p);
+	int (*atapi_set_feature)(uint8_t feature, uint8_t val, void *p);
+
+	uint8_t (*read)(void *p);
+	void (*write)(uint8_t val, void *p);
+	int (*read_complete)(void *p);
+	int (*write_complete)(void *p);
 } scsi_device_t;
 
 #define CDB_MAX_LEN 20
 
-typedef struct scsi_bus_t
-{
-        int state;
-        int new_state;
-        int clear_req;
-        uint32_t bus_in, bus_out;
-        int dev_id;
+typedef struct scsi_bus_t {
+	int state;
+	int new_state;
+	int clear_req;
+	uint32_t bus_in, bus_out;
+	int dev_id;
 
-        int command_pos;
-        uint8_t command[CDB_MAX_LEN];
-        
-        scsi_device_t *devices[8];
-        void *device_data[8];
-        
-        int change_state_delay;
-        int new_req_delay;
-        
-        int is_atapi;
+	int command_pos;
+	uint8_t command[CDB_MAX_LEN];
+
+	scsi_device_t *devices[8];
+	void *device_data[8];
+
+	int change_state_delay;
+	int new_req_delay;
+
+	int is_atapi;
 } scsi_bus_t;
 
 //int scsi_add_data(uint8_t val);
@@ -111,23 +109,22 @@ void scsi_bus_reset(scsi_bus_t *bus);
 
 void scsi_bus_atapi_init(scsi_bus_t *bus, scsi_device_t *device, int id, struct atapi_device_t *atapi_dev);
 
-#define KEY_NONE			0
-#define KEY_NOT_READY			2
+#define KEY_NONE                        0
+#define KEY_NOT_READY                        2
 #define KEY_ILLEGAL_REQ                 5
-#define KEY_UNIT_ATTENTION		6
+#define KEY_UNIT_ATTENTION                6
 #define KEY_DATA_PROTECT                7
 
-#define ASC_AUDIO_PLAY_OPERATION	0x00
-#define ASC_ILLEGAL_OPCODE		0x20
-#define	ASC_LBA_OUT_OF_RANGE            0x21
-#define	ASC_INV_FIELD_IN_CMD_PACKET	0x24
+#define ASC_AUDIO_PLAY_OPERATION        0x00
+#define ASC_ILLEGAL_OPCODE                0x20
+#define        ASC_LBA_OUT_OF_RANGE            0x21
+#define        ASC_INV_FIELD_IN_CMD_PACKET        0x24
 #define ASC_INVALID_LUN                 0x25
 #define ASC_WRITE_PROTECT               0x27
-#define ASC_MEDIUM_MAY_HAVE_CHANGED	0x28
-#define ASC_MEDIUM_NOT_PRESENT		0x3a
-#define ASC_DATA_PHASE_ERROR		0x4b
-#define ASC_ILLEGAL_MODE_FOR_THIS_TRACK	0x64
-
+#define ASC_MEDIUM_MAY_HAVE_CHANGED        0x28
+#define ASC_MEDIUM_NOT_PRESENT                0x3a
+#define ASC_DATA_PHASE_ERROR                0x4b
+#define ASC_ILLEGAL_MODE_FOR_THIS_TRACK        0x64
 
 #define SCSI_PHASE_DATA_OUT    0
 #define SCSI_PHASE_DATA_IN     BUS_IO

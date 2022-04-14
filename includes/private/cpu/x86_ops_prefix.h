@@ -88,79 +88,84 @@ op_seg(SS_REPNE, cpu_state.seg_ss, x86_opcodes_REPNE, x86_opcodes)
 
 static int op_66(uint32_t fetchdat) /*Data size select*/
 {
-        fetchdat = fastreadl(cs + cpu_state.pc);
-        if (cpu_state.abrt) return 1;
-        cpu_state.pc++;
+	fetchdat = fastreadl(cs + cpu_state.pc);
+	if (cpu_state.abrt)
+		return 1;
+	cpu_state.pc++;
 
-        cpu_state.op32 = ((use32 & 0x100) ^ 0x100) | (cpu_state.op32 & 0x200);
-        CLOCK_CYCLES(2);
-        PREFETCH_PREFIX();
-        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	cpu_state.op32 = ((use32 & 0x100) ^ 0x100) | (cpu_state.op32 & 0x200);
+	CLOCK_CYCLES(2);
+	PREFETCH_PREFIX();
+	return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
 static int op_67(uint32_t fetchdat) /*Address size select*/
 {
-        fetchdat = fastreadl(cs + cpu_state.pc);
-        if (cpu_state.abrt) return 1;
-        cpu_state.pc++;
+	fetchdat = fastreadl(cs + cpu_state.pc);
+	if (cpu_state.abrt)
+		return 1;
+	cpu_state.pc++;
 
-        cpu_state.op32 = ((use32 & 0x200) ^ 0x200) | (cpu_state.op32 & 0x100);
-        CLOCK_CYCLES(2);
-        PREFETCH_PREFIX();
-        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	cpu_state.op32 = ((use32 & 0x200) ^ 0x200) | (cpu_state.op32 & 0x100);
+	CLOCK_CYCLES(2);
+	PREFETCH_PREFIX();
+	return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
 
 static int op_66_REPE(uint32_t fetchdat) /*Data size select*/
 {
-        fetchdat = fastreadl(cs + cpu_state.pc);
-        if (cpu_state.abrt) return 1;
-        cpu_state.pc++;
+	fetchdat = fastreadl(cs + cpu_state.pc);
+	if (cpu_state.abrt)
+		return 1;
+	cpu_state.pc++;
 
-        cpu_state.op32 = ((use32 & 0x100) ^ 0x100) | (cpu_state.op32 & 0x200);
-        CLOCK_CYCLES(2);
-        PREFETCH_PREFIX();
-        if (x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32])
-                return x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);        
+	cpu_state.op32 = ((use32 & 0x100) ^ 0x100) | (cpu_state.op32 & 0x200);
+	CLOCK_CYCLES(2);
+	PREFETCH_PREFIX();
+	if (x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32])
+		return x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
 static int op_67_REPE(uint32_t fetchdat) /*Address size select*/
 {
-        fetchdat = fastreadl(cs + cpu_state.pc);
-        if (cpu_state.abrt) return 1;
-        cpu_state.pc++;
+	fetchdat = fastreadl(cs + cpu_state.pc);
+	if (cpu_state.abrt)
+		return 1;
+	cpu_state.pc++;
 
-        cpu_state.op32 = ((use32 & 0x200) ^ 0x200) | (cpu_state.op32 & 0x100);
-        CLOCK_CYCLES(2);
-        PREFETCH_PREFIX();
-        if (x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32])
-                return x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);        
+	cpu_state.op32 = ((use32 & 0x200) ^ 0x200) | (cpu_state.op32 & 0x100);
+	CLOCK_CYCLES(2);
+	PREFETCH_PREFIX();
+	if (x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32])
+		return x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
 static int op_66_REPNE(uint32_t fetchdat) /*Data size select*/
 {
-        fetchdat = fastreadl(cs + cpu_state.pc);
-        if (cpu_state.abrt) return 1;
-        cpu_state.pc++;
+	fetchdat = fastreadl(cs + cpu_state.pc);
+	if (cpu_state.abrt)
+		return 1;
+	cpu_state.pc++;
 
-        cpu_state.op32 = ((use32 & 0x100) ^ 0x100) | (cpu_state.op32 & 0x200);
-        CLOCK_CYCLES(2);
-        PREFETCH_PREFIX();
-        if (x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32])
-                return x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);        
+	cpu_state.op32 = ((use32 & 0x100) ^ 0x100) | (cpu_state.op32 & 0x200);
+	CLOCK_CYCLES(2);
+	PREFETCH_PREFIX();
+	if (x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32])
+		return x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
 static int op_67_REPNE(uint32_t fetchdat) /*Address size select*/
 {
-        fetchdat = fastreadl(cs + cpu_state.pc);
-        if (cpu_state.abrt) return 1;
-        cpu_state.pc++;
+	fetchdat = fastreadl(cs + cpu_state.pc);
+	if (cpu_state.abrt)
+		return 1;
+	cpu_state.pc++;
 
-        cpu_state.op32 = ((use32 & 0x200) ^ 0x200) | (cpu_state.op32 & 0x100);
-        CLOCK_CYCLES(2);
-        PREFETCH_PREFIX();
-        if (x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32])
-                return x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);        
+	cpu_state.op32 = ((use32 & 0x200) ^ 0x200) | (cpu_state.op32 & 0x100);
+	CLOCK_CYCLES(2);
+	PREFETCH_PREFIX();
+	if (x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32])
+		return x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
-
 
 #endif /* _X86_OPS_PREFIX_H_ */

@@ -26,7 +26,7 @@ uint64_t mvhd_to_be64(uint64_t val);
  * \return true if the buffer begins with "conectix"
  * \return false if the buffer does not begin with "conectix"
  */
-bool mvhd_is_conectix_str(const void* buffer);
+bool mvhd_is_conectix_str(const void *buffer);
 
 /**
  * \brief Generate a raw 16 byte UUID
@@ -74,37 +74,37 @@ time_t vhd_get_created_time(MVHDMeta *vhdm);
  * 
  * \return a FILE pointer if successful, NULL otherwise. If NULL, check the value of err
  */
-FILE* mvhd_fopen(const char* path, const char* mode, int* err);
+FILE *mvhd_fopen(const char *path, const char *mode, int *err);
 
-void mvhd_set_encoding_err(int encoding_retval, int* err);
+void mvhd_set_encoding_err(int encoding_retval, int *err);
 
 /**
  * \brief Generate VHD footer checksum
  * 
  * \param [in] vhdm MiniVHD data structure
  */
-uint32_t mvhd_gen_footer_checksum(MVHDFooter* footer);
+uint32_t mvhd_gen_footer_checksum(MVHDFooter *footer);
 
 /**
  * \brief Generate VHD sparse header checksum
  * 
  * \param [in] vhdm MiniVHD data structure
  */
-uint32_t mvhd_gen_sparse_checksum(MVHDSparseHeader* header);
+uint32_t mvhd_gen_sparse_checksum(MVHDSparseHeader *header);
 
 /**
  * \brief Get current position in file stream
  * 
  * This is a portable version of the POSIX ftello64(). * 
  */
-int64_t mvhd_ftello64(FILE* stream);
+int64_t mvhd_ftello64(FILE *stream);
 
 /**
  * \brief Reposition the file stream's position
  * 
  * This is a portable version of the POSIX fseeko64(). * 
  */
-int mvhd_fseeko64(FILE* stream, int64_t offset, int origin);
+int mvhd_fseeko64(FILE *stream, int64_t offset, int origin);
 
 /**
  * \brief Calculate the CRC32 of a data buffer.
@@ -116,7 +116,7 @@ int mvhd_fseeko64(FILE* stream, int64_t offset, int origin);
  * 
  * \return The CRC32 of the data buffer
  */
-uint32_t mvhd_crc32(const void* data, size_t n_bytes);
+uint32_t mvhd_crc32(const void *data, size_t n_bytes);
 
 /**
  * \brief Calculate the file modification timestamp.
@@ -129,5 +129,5 @@ uint32_t mvhd_crc32(const void* data, size_t n_bytes);
  * \return The file modified timestamp, in VHD compatible timestamp.
  * 'err' will be set to non-zero on error
  */
-uint32_t mvhd_file_mod_timestamp(const char* path, int *err);
+uint32_t mvhd_file_mod_timestamp(const char *path, int *err);
 #endif

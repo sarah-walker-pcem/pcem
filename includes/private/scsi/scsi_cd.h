@@ -24,5 +24,4 @@ char *cd_model_from_config(char *config);
 
 extern char *cd_model;
 
-
 #endif /* _SCSI_CD_H_ */

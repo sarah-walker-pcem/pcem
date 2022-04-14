@@ -14,5 +14,4 @@ void img_poll();
 
 extern int bpb_disable;
 
-
 #endif /* _DISC_IMG_H_ */

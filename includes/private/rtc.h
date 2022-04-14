@@ -3,22 +3,21 @@
 #define BCD(X) (((X) % 10) | (((X) / 10) << 4))
 #define DCB(X) ((((X) & 0xF0) >> 4) * 10 + ((X) & 0x0F))
 
-enum RTC_ADDR
-{
-        RTC_SECONDS,
-        RTC_ALARMSECONDS,
-        RTC_MINUTES,
-        RTC_ALARMMINUTES,
-        RTC_HOURS,
-        RTC_ALARMHOURS,
-        RTC_DOW,
-        RTC_DOM,
-        RTC_MONTH,
-        RTC_YEAR,
-        RTC_REGA,
-        RTC_REGB,
-        RTC_REGC,
-        RTC_REGD
+enum RTC_ADDR {
+	RTC_SECONDS,
+	RTC_ALARMSECONDS,
+	RTC_MINUTES,
+	RTC_ALARMMINUTES,
+	RTC_HOURS,
+	RTC_ALARMHOURS,
+	RTC_DOW,
+	RTC_DOM,
+	RTC_MONTH,
+	RTC_YEAR,
+	RTC_REGA,
+	RTC_REGB,
+	RTC_REGC,
+	RTC_REGD
 };
 
 /*      The century register at location 32h is a BCD register designed to automatically load the BCD value 20 as the year register changes from 99 to 00.
@@ -29,8 +28,7 @@ enum RTC_ADDR
 #define RTC_AMPM 0b10000000
 
 /*      Register A bitflags */
-enum RTC_RA_BITS 
-{
+enum RTC_RA_BITS {
 /*      Rate Selector (RS0)
 
         These four rate-selection bits select one of the 13 taps on the 15-stage divider or disable the divider output.
@@ -43,14 +41,14 @@ enum RTC_RA_BITS
 
         Table 3 lists the periodic interrupt rates and the square wave frequencies that can be chosen with the RS bits.
         These four read/write bits are not affected by !RESET. */
-        RTC_RS = 0b1111,
+	RTC_RS = 0b1111,
 /*      DV0
 
         These three bits are used to turn the oscillator on or off and to reset the countdown chain.
         A pattern of 010 is the only combination of bits that turn the oscillator on and allow the RTC to keep time.
         A pattern of 11x enables the oscillator but holds the countdown chain in reset.
         The next update occurs at 500ms after a pattern of 010 is written to DV0, DV1, and DV2. */
-        RTC_DV0 = 0b1110000,
+	RTC_DV0 = 0b1110000,
 /*      Update-In-Progress (UIP)
 
         This bit is a status flag that can be monitored. When the UIP bit is a 1, the update transfer occurs soon.
@@ -58,12 +56,11 @@ enum RTC_RA_BITS
         The time, calendar, and alarm information in RAM is fully available for access when the UIP bit is 0.
         The UIP bit is read-only and is not affected by !RESET.
         Writing the SET bit in Register B to a 1 inhibits any update transfer and clears the UIP status bit. */
-        RTC_UIP = 0b10000000
+	RTC_UIP = 0b10000000
 };
 
 /*      Register B bitflags */
-enum RTC_RB_BITS 
-{
+enum RTC_RB_BITS {
 /*      Daylight Saving Enable (DSE)
 
         This bit is a read/write bit that enables two daylight saving adjustments when DSE is set to 1.
@@ -72,76 +69,75 @@ enum RTC_RB_BITS
         When DSE is enabled, the internal logic test for the first/last Sunday condition at midnight.
         If the DSE bit is not set when the test occurs, the daylight saving function does not operate correctly.
         These adjustments do not occur when the DSE bit is 0. This bit is not affected by internal functions or !RESET. */
-        RTC_DSE = 0b1,
+	RTC_DSE = 0b1,
 /*      24/12
 
         The 24/12 control bit establishes the format of the hours byte. A 1 indicates the 24-hour mode and a 0 indicates the 12-hour mode.
         This bit is read/write and is not affected by internal functions or !RESET. */
-        RTC_2412 = 0b10,
+	RTC_2412 = 0b10,
 /*      Data Mode (DM)
 
         This bit indicates whether time and calendar information is in binary or BCD format.
         The DM bit is set by the program to the appropriate format and can be read as required.
         This bit is not modified by internal functions or !RESET. A 1 in DM signifies binary data, while a 0 in DM specifies BCD data. */
-        RTC_DM = 0b100,
+	RTC_DM = 0b100,
 /*      Square-Wave Enable (SQWE)
 
         When this bit is set to 1, a square-wave signal at the frequency set by the rate-selection bits RS3-RS0 is driven out on the SQW pin.
         When the SQWE bit is set to 0, the SQW pin is held low. SQWE is a read/write bit and is cleared by !RESET.
         SQWE is low if disabled, and is high impedance when VCC is below VPF. SQWE is cleared to 0 on !RESET. */
-        RTC_SQWE = 0b1000,
+	RTC_SQWE = 0b1000,
 /*      Update-Ended Interrupt Enable (UIE)
 
         This bit is a read/write bit that enables the update-end flag (UF) bit in Register C to assert !IRQ.
         The !RESET pin going low or the SET bit going high clears the UIE bit.
         The internal functions of the device do not affect the UIE bit, but is cleared to 0 on !RESET. */
-        RTC_UIE = 0b10000,
+	RTC_UIE = 0b10000,
 /*      Alarm Interrupt Enable (AIE)
 
         This bit is a read/write bit that, when set to 1, permits the alarm flag (AF) bit in Register C to assert !IRQ.
         An alarm interrupt occurs for each second that the three time bytes equal the three alarm bytes, including a don't-care alarm code of binary 11XXXXXX.
         The AF bit does not initiate the !IRQ signal when the AIE bit is set to 0.
         The internal functions of the device do not affect the AIE bit, but is cleared to 0 on !RESET. */
-        RTC_AIE = 0b100000,
+	RTC_AIE = 0b100000,
 /*      Periodic Interrupt Enable (PIE)
 
         The PIE bit is a read/write bit that allows the periodic interrupt flag (PF) bit in Register C to drive the !IRQ pin low.
         When the PIE bit is set to 1, periodic interrupts are generated by driving the !IRQ pin low at a rate specified by the RS3-RS0 bits of Register A.
         A 0 in the PIE bit blocks the !IRQ output from being driven by a periodic interrupt, but the PF bit is still set at the periodic rate.
         PIE is not modified by any internal device functions, but is cleared to 0 on !RESET. */
-        RTC_PIE = 0b1000000,
+	RTC_PIE = 0b1000000,
 /*      SET
 
         When the SET bit is 0, the update transfer functions normally by advancing the counts once per second.
         When the SET bit is written to 1, any update transfer is inhibited, and the program can initialize the time and calendar bytes without an update
         occurring in the midst of initializing. Read cycles can be executed in a similar manner. SET is a read/write bit and is not affected by !RESET or
         internal functions of the device. */
-        RTC_SET = 0b10000000
+	RTC_SET = 0b10000000
 };
 
 /*      Register C bitflags */
-enum RTC_RC_BITS 
-{
+enum RTC_RC_BITS {
 /*      Unused
 
         These bits are unused in Register C. These bits always read 0 and cannot be written. */
-        RTC_RC = 0b1111,
+	RTC_RC = 0b1111,
 /*      Update-Ended Interrupt Flag (UF)
 
         This bit is set after each update cycle. When the UIE bit is set to 1, the 1 in UF causes the IRQF bit to be a 1, which asserts the !IRQ pin.
         This bit can be cleared by reading Register C or with a !RESET. */
-        RTC_UF = 0b10000,
+	RTC_UF = 0b10000,
 /*      Alarm Interrupt Flag (AF)
 
         A 1 in the AF bit indicates that the current time has matched the alarm time.
         If the AIE bit is also 1, the !IRQ pin goes low and a 1 appears in the IRQF bit. This bit can be cleared by reading Register C or with a !RESET. */
-        RTC_AF = 0b100000,
+	RTC_AF = 0b100000,
 /*      Periodic Interrupt Flag (PF)
 
         This bit is read-only and is set to 1 when an edge is detected on the selected tap of the divider chain.
         The RS3 through RS0 bits establish the periodic rate. PF is set to 1 independent of the state of the PIE bit.
         When both PF and PIE are 1s, the !IRQ signal is active and sets the IRQF bit. This bit can be cleared by reading Register C or with a !RESET. */
-        RTC_PF = 0b1000000,
+	RTC_PF = 0b1000000,
 /*      Interrupt Request Flag (IRQF)
 
         The interrupt request flag (IRQF) is set to a 1 when one or more of the following are true:
@@ -151,22 +147,21 @@ enum RTC_RC_BITS
 
         Any time the IRQF bit is a 1, the !IRQ pin is driven low.
         All flag bits are cleared after Register C is read by the program or when the !RESET pin is low. */
-        RTC_IRQF = 0b10000000
+	RTC_IRQF = 0b10000000
 };
 
 /*      Register D bitflags */
-enum RTC_RD_BITS 
-{
+enum RTC_RD_BITS {
 /*      Unused
 
         The remaining bits of Register D are not usable. They cannot be written and they always read 0. */
-        RTC_RD = 0b1111111,
+	RTC_RD = 0b1111111,
 /*      Valid RAM and Time (VRT)
 
         This bit indicates the condition of the battery connected to the VBAT pin. This bit is not writeable and should always be 1 when read.
         If a 0 is ever present, an exhausted internal lithium energy source is indicated and both the contents of the RTC data and RAM data are questionable.
         This bit is unaffected by !RESET. */
-        RTC_VRT = 0b10000000
+	RTC_VRT = 0b10000000
 };
 
 void rtc_tick();
@@ -174,6 +169,5 @@ void time_update(uint8_t *nvrram, int reg);
 void time_get(uint8_t *nvrram);
 void time_internal_set_nvrram(uint8_t *nvrram);
 void time_internal_sync(uint8_t *nvrram);
-
 
 #endif /* _RTC_H_ */

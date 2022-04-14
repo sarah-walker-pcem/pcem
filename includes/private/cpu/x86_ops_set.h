@@ -38,5 +38,4 @@ opSET(NL)
 opSET(LE)
 opSET(NLE)
 
-
 #endif /* _X86_OPS_SET_H_ */

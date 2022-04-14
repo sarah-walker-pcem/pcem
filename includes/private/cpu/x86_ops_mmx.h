@@ -32,23 +32,19 @@
         }                                                               \
         x87_set_mmx()
 
-static int opEMMS(uint32_t fetchdat)
-{
-        if (!cpu_has_feature(CPU_FEATURE_MMX))
-        {
-                cpu_state.pc = cpu_state.oldpc;
-                x86illegal();
-                return 1;
-        }
-        if (cr0 & 0xc)
-        {
-                x86_int(7);
-                return 1;
-        }
-        x87_emms();
-        CLOCK_CYCLES(100); /*Guess*/
-        return 0;
+static int opEMMS(uint32_t fetchdat) {
+	if (!cpu_has_feature(CPU_FEATURE_MMX)) {
+		cpu_state.pc = cpu_state.oldpc;
+		x86illegal();
+		return 1;
+	}
+	if (cr0 & 0xc) {
+		x86_int(7);
+		return 1;
+	}
+	x87_emms();
+	CLOCK_CYCLES(100); /*Guess*/
+	return 0;
 }
-
 
 #endif /* _X86_OPS_MMX_H_ */

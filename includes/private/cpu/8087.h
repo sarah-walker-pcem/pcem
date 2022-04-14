@@ -16,59 +16,50 @@
 #define CHECK_WRITE(seg, addr_lo, addr_hi)
 #define PREFETCH_RUN(timing, bytes, rmdat, a, b, c, d, e)
 
-static uint32_t readmeml(uint32_t seg, uint32_t addr)
-{
-        return readmemw(seg, addr) | (readmemw(seg, addr+2) << 16);
+static uint32_t readmeml(uint32_t seg, uint32_t addr) {
+	return readmemw(seg, addr) | (readmemw(seg, addr + 2) << 16);
 }
-static uint64_t readmemq(uint32_t seg, uint32_t addr)
-{
-        return (uint64_t)readmemw(seg, addr) | ((uint64_t)readmemw(seg, addr+2) << 16) |
-                        ((uint64_t)readmemw(seg, addr+4) << 32) |
-                        ((uint64_t)readmemw(seg, addr+6) << 48);
+static uint64_t readmemq(uint32_t seg, uint32_t addr) {
+	return (uint64_t)readmemw(seg, addr) | ((uint64_t)readmemw(seg, addr + 2) << 16) |
+		((uint64_t)readmemw(seg, addr + 4) << 32) |
+		((uint64_t)readmemw(seg, addr + 6) << 48);
 }
 
-static void writememb_8087(uint32_t seg, uint32_t addr, uint8_t val)
-{
-        writememb(seg+addr, val);
+static void writememb_8087(uint32_t seg, uint32_t addr, uint8_t val) {
+	writememb(seg + addr, val);
 }
-static void writememl(uint32_t seg, uint32_t addr, uint32_t val)
-{
-        writememw(seg, addr, val & 0xffff);
-        writememw(seg, addr+2, (val >> 16) & 0xffff);
+static void writememl(uint32_t seg, uint32_t addr, uint32_t val) {
+	writememw(seg, addr, val & 0xffff);
+	writememw(seg, addr + 2, (val >> 16) & 0xffff);
 }
-static void writememq(uint32_t seg, uint32_t addr, uint64_t val)
-{
-        writememw(seg, addr, val & 0xffff);
-        writememw(seg, addr+2, (val >> 16) & 0xffff);
-        writememw(seg, addr+4, (val >> 32) & 0xffff);
-        writememw(seg, addr+6, (val >> 48) & 0xffff);
+static void writememq(uint32_t seg, uint32_t addr, uint64_t val) {
+	writememw(seg, addr, val & 0xffff);
+	writememw(seg, addr + 2, (val >> 16) & 0xffff);
+	writememw(seg, addr + 4, (val >> 32) & 0xffff);
+	writememw(seg, addr + 6, (val >> 48) & 0xffff);
 }
 
-static inline uint32_t geteal()
-{
-        if (cpu_mod == 3)
-                fatal("geteal cpu_mod==3\n");
-        return readmeml(easeg, cpu_state.eaaddr);
+static inline uint32_t geteal() {
+	if (cpu_mod == 3)
+		fatal("geteal cpu_mod==3\n");
+	return readmeml(easeg, cpu_state.eaaddr);
 }
-static inline uint64_t geteaq()
-{
-        if (cpu_mod == 3)
-                fatal("geteaq cpu_mod==3\n");
-        return readmemq(easeg, cpu_state.eaaddr);
+static inline uint64_t geteaq() {
+	if (cpu_mod == 3)
+		fatal("geteaq cpu_mod==3\n");
+	return readmemq(easeg, cpu_state.eaaddr);
 }
-static inline void seteal(uint32_t val)
-{
-        if (cpu_mod == 3)
-                fatal("seteal cpu_mod==3\n");
-        else
-                writememl(easeg, cpu_state.eaaddr, val);
+static inline void seteal(uint32_t val) {
+	if (cpu_mod == 3)
+		fatal("seteal cpu_mod==3\n");
+	else
+		writememl(easeg, cpu_state.eaaddr, val);
 }
-static inline void seteaq(uint64_t val)
-{
-        if (cpu_mod == 3)
-                fatal("seteaq cpu_mod==3\n");
-        else
-                writememq(easeg, cpu_state.eaaddr, val);
+static inline void seteaq(uint64_t val) {
+	if (cpu_mod == 3)
+		fatal("seteaq cpu_mod==3\n");
+	else
+		writememq(easeg, cpu_state.eaaddr, val);
 }
 
 #define flags_rebuild()

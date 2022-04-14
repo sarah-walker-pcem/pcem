@@ -231,261 +231,284 @@
                 }                                                                       \
         }
 
-static int opC0_a16(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint8_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
-        PREFETCH_PREFIX();
-        temp = geteab();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_b(c, 0);
-        return 0;
+static int opC0_a16(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint8_t temp, temp2;
+
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = readmemb(cs, cpu_state.pc) & 31;
+	cpu_state.pc++;
+	PREFETCH_PREFIX();
+	temp = geteab();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_b(c, 0);
+	return 0;
 }
-static int opC0_a32(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint8_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
-        PREFETCH_PREFIX();
-        temp = geteab();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_b(c, 1);
-        return 0;
+static int opC0_a32(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint8_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = readmemb(cs, cpu_state.pc) & 31;
+	cpu_state.pc++;
+	PREFETCH_PREFIX();
+	temp = geteab();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_b(c, 1);
+	return 0;
 }
-static int opC1_w_a16(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint16_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
-        PREFETCH_PREFIX();
-        temp = geteaw();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_w(c, 0);
-        return 0;
+static int opC1_w_a16(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint16_t temp, temp2;
+
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = readmemb(cs, cpu_state.pc) & 31;
+	cpu_state.pc++;
+	PREFETCH_PREFIX();
+	temp = geteaw();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_w(c, 0);
+	return 0;
 }
-static int opC1_w_a32(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint16_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
-        PREFETCH_PREFIX();
-        temp = geteaw();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_w(c, 1);
-        return 0;
+static int opC1_w_a32(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint16_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = readmemb(cs, cpu_state.pc) & 31;
+	cpu_state.pc++;
+	PREFETCH_PREFIX();
+	temp = geteaw();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_w(c, 1);
+	return 0;
 }
-static int opC1_l_a16(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint32_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
-        PREFETCH_PREFIX();
-        temp = geteal();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_l(c, 0);
-        return 0;
+static int opC1_l_a16(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint32_t temp, temp2;
+
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = readmemb(cs, cpu_state.pc) & 31;
+	cpu_state.pc++;
+	PREFETCH_PREFIX();
+	temp = geteal();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_l(c, 0);
+	return 0;
 }
-static int opC1_l_a32(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint32_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = readmemb(cs, cpu_state.pc) & 31; cpu_state.pc++;
-        PREFETCH_PREFIX();
-        temp = geteal();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_l(c, 1);
-        return 0;
+static int opC1_l_a32(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint32_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = readmemb(cs, cpu_state.pc) & 31;
+	cpu_state.pc++;
+	PREFETCH_PREFIX();
+	temp = geteal();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_l(c, 1);
+	return 0;
 }
 
-static int opD0_a16(uint32_t fetchdat)
-{
-        int c = 1;
-        int tempc;
-        uint8_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        temp = geteab();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_b(c, 0);
-        return 0;
+static int opD0_a16(uint32_t fetchdat) {
+	int c = 1;
+	int tempc;
+	uint8_t temp, temp2;
+
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	temp = geteab();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_b(c, 0);
+	return 0;
 }
-static int opD0_a32(uint32_t fetchdat)
-{
-        int c = 1;
-        int tempc;
-        uint8_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        temp = geteab();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_b(c, 1);
-        return 0;
+static int opD0_a32(uint32_t fetchdat) {
+	int c = 1;
+	int tempc;
+	uint8_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	temp = geteab();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_b(c, 1);
+	return 0;
 }
-static int opD1_w_a16(uint32_t fetchdat)
-{
-        int c = 1;
-        int tempc;
-        uint16_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        temp = geteaw();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_w(c, 0);
-        return 0;
+static int opD1_w_a16(uint32_t fetchdat) {
+	int c = 1;
+	int tempc;
+	uint16_t temp, temp2;
+
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	temp = geteaw();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_w(c, 0);
+	return 0;
 }
-static int opD1_w_a32(uint32_t fetchdat)
-{
-        int c = 1;
-        int tempc;
-        uint16_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        temp = geteaw();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_w(c, 1);
-        return 0;
+static int opD1_w_a32(uint32_t fetchdat) {
+	int c = 1;
+	int tempc;
+	uint16_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	temp = geteaw();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_w(c, 1);
+	return 0;
 }
-static int opD1_l_a16(uint32_t fetchdat)
-{
-        int c = 1;
-        int tempc;
-        uint32_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        temp = geteal();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_l(c, 0);
-        return 0;
+static int opD1_l_a16(uint32_t fetchdat) {
+	int c = 1;
+	int tempc;
+	uint32_t temp, temp2;
+
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	temp = geteal();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_l(c, 0);
+	return 0;
 }
-static int opD1_l_a32(uint32_t fetchdat)
-{
-        int c = 1;
-        int tempc;
-        uint32_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        temp = geteal();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_l(c, 1);
-        return 0;
+static int opD1_l_a32(uint32_t fetchdat) {
+	int c = 1;
+	int tempc;
+	uint32_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	temp = geteal();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_l(c, 1);
+	return 0;
 }
 
-static int opD2_a16(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint8_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = CL & 31;
-        temp = geteab();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_b(c, 0);
-        return 0;
-}
-static int opD2_a32(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint8_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = CL & 31;
-        temp = geteab();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_b(c, 1);
-        return 0;
-}
-static int opD3_w_a16(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint16_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = CL & 31;
-        temp = geteaw();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_w(c, 0);
-        return 0;
-}
-static int opD3_w_a32(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint16_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = CL & 31;
-        temp = geteaw();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_w(c, 1);
-        return 0;
-}
-static int opD3_l_a16(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint32_t temp, temp2;
-        
-        fetch_ea_16(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = CL & 31;
-        temp = geteal();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_l(c, 0);
-        return 0;
-}
-static int opD3_l_a32(uint32_t fetchdat)
-{
-        int c;
-        int tempc;
-        uint32_t temp, temp2;
-        
-        fetch_ea_32(fetchdat);
-        if (cpu_mod != 3)
-                SEG_CHECK_WRITE(cpu_state.ea_seg);
-        c = CL & 31;
-        temp = geteal();                if (cpu_state.abrt) return 1;
-        OP_SHIFT_l(c, 1);
-        return 0;
-}
+static int opD2_a16(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint8_t temp, temp2;
 
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = CL & 31;
+	temp = geteab();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_b(c, 0);
+	return 0;
+}
+static int opD2_a32(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint8_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = CL & 31;
+	temp = geteab();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_b(c, 1);
+	return 0;
+}
+static int opD3_w_a16(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint16_t temp, temp2;
+
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = CL & 31;
+	temp = geteaw();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_w(c, 0);
+	return 0;
+}
+static int opD3_w_a32(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint16_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = CL & 31;
+	temp = geteaw();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_w(c, 1);
+	return 0;
+}
+static int opD3_l_a16(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint32_t temp, temp2;
+
+	fetch_ea_16(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = CL & 31;
+	temp = geteal();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_l(c, 0);
+	return 0;
+}
+static int opD3_l_a32(uint32_t fetchdat) {
+	int c;
+	int tempc;
+	uint32_t temp, temp2;
+
+	fetch_ea_32(fetchdat);
+	if (cpu_mod != 3)
+		SEG_CHECK_WRITE(cpu_state.ea_seg);
+	c = CL & 31;
+	temp = geteal();
+	if (cpu_state.abrt)
+		return 1;
+	OP_SHIFT_l(c, 1);
+	return 0;
+}
 
 #define SHLD_w()                                                                \
         if (count)                                                              \
@@ -512,7 +535,6 @@ static int opD3_l_a32(uint32_t fetchdat)
                 flags_rebuild();                                                \
                 if (tempc) cpu_state.flags |= C_FLAG;                                     \
         }
-
 
 #define SHRD_w()                                                                \
         if (count)                                                              \
@@ -596,11 +618,10 @@ static int opD3_l_a32(uint32_t fetchdat)
                 PREFETCH_RUN(3, 3, rmdat, 0,(cpu_mod == 3) ? 0:1,0,(cpu_mod == 3) ? 0:1, 1); \
                 return 0;                                                       \
         }
-              
+
 opSHxD(SHLD_w)
 opSHxD(SHLD_l)
 opSHxD(SHRD_w)
 opSHxD(SHRD_l)
-
 
 #endif /* _X86_OPS_SHIFT_H_ */

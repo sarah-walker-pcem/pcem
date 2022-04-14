@@ -664,34 +664,33 @@ static int opREP_SCASL_ ## size(uint32_t fetchdat)                              
 REP_OPS(a16, CX, SI, DI)
 REP_OPS(a32, ECX, ESI, EDI)
 REP_OPS_CMPS_SCAS(a16_NE, CX, SI, DI, 0)
-REP_OPS_CMPS_SCAS(a16_E,  CX, SI, DI, 1)
+REP_OPS_CMPS_SCAS(a16_E, CX, SI, DI, 1)
 REP_OPS_CMPS_SCAS(a32_NE, ECX, ESI, EDI, 0)
-REP_OPS_CMPS_SCAS(a32_E,  ECX, ESI, EDI, 1)
+REP_OPS_CMPS_SCAS(a32_E, ECX, ESI, EDI, 1)
 
-static int opREPNE(uint32_t fetchdat)
-{
-        fetchdat = fastreadl(cs + cpu_state.pc);
-        if (cpu_state.abrt) return 1;
-        cpu_state.pc++;
+static int opREPNE(uint32_t fetchdat) {
+	fetchdat = fastreadl(cs + cpu_state.pc);
+	if (cpu_state.abrt)
+		return 1;
+	cpu_state.pc++;
 
-        CLOCK_CYCLES(2);
-        PREFETCH_PREFIX();
-        if (x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32])
-                return x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	CLOCK_CYCLES(2);
+	PREFETCH_PREFIX();
+	if (x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32])
+		return x86_opcodes_REPNE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
-static int opREPE(uint32_t fetchdat)
-{       
-        fetchdat = fastreadl(cs + cpu_state.pc);
-        if (cpu_state.abrt) return 1;
-        cpu_state.pc++;
+static int opREPE(uint32_t fetchdat) {
+	fetchdat = fastreadl(cs + cpu_state.pc);
+	if (cpu_state.abrt)
+		return 1;
+	cpu_state.pc++;
 
-        CLOCK_CYCLES(2);
-        PREFETCH_PREFIX();
-        if (x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32])
-                return x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
-        return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	CLOCK_CYCLES(2);
+	PREFETCH_PREFIX();
+	if (x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32])
+		return x86_opcodes_REPE[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
+	return x86_opcodes[(fetchdat & 0xff) | cpu_state.op32](fetchdat >> 8);
 }
-
 
 #endif /* _X86_OPS_REP_H_ */

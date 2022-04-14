@@ -11,13 +11,12 @@
  * path might look like this "/var/log/", which consists of two segments "var"
  * and "log".
  */
-struct cwk_segment
-{
-  const char *path;
-  const char *segments;
-  const char *begin;
-  const char *end;
-  size_t size;
+struct cwk_segment {
+	const char *path;
+	const char *segments;
+	const char *begin;
+	const char *end;
+	size_t size;
 };
 
 /**
@@ -28,21 +27,19 @@ struct cwk_segment
  * CWK_CURRENT - "./" current folder segment
  * CWK_BACK - "../" relative back navigation segment
  */
-enum cwk_segment_type
-{
-  CWK_NORMAL,
-  CWK_CURRENT,
-  CWK_BACK
+enum cwk_segment_type {
+	CWK_NORMAL,
+	CWK_CURRENT,
+	CWK_BACK
 };
 
 /**
  * @brief Determines the style which is used for the path parsing and
  * generation.
  */
-enum cwk_path_style
-{
-  CWK_STYLE_WINDOWS,
-  CWK_STYLE_UNIX
+enum cwk_path_style {
+	CWK_STYLE_WINDOWS,
+	CWK_STYLE_UNIX
 };
 
 /**
@@ -64,7 +61,7 @@ enum cwk_path_style
  * @return Returns the total amount of characters of the new absolute path.
  */
 size_t cwk_path_get_absolute(const char *base, const char *path, char *buffer,
-  size_t buffer_size);
+			     size_t buffer_size);
 
 /**
  * @brief Generates a relative path based on a base.
@@ -84,7 +81,7 @@ size_t cwk_path_get_absolute(const char *base, const char *path, char *buffer,
  * @return Returns the total amount of characters of the full path.
  */
 size_t cwk_path_get_relative(const char *base_directory, const char *path,
-  char *buffer, size_t buffer_size);
+			     char *buffer, size_t buffer_size);
 
 /**
  * @brief Joins two paths together.
@@ -104,7 +101,7 @@ size_t cwk_path_get_relative(const char *base_directory, const char *path,
  * @return Returns the total amount of characters of the full, combined path.
  */
 size_t cwk_path_join(const char *path_a, const char *path_b, char *buffer,
-  size_t buffer_size);
+		     size_t buffer_size);
 
 /**
  * @brief Joins multiple paths together.
@@ -124,7 +121,7 @@ size_t cwk_path_join(const char *path_a, const char *path_b, char *buffer,
  * @return Returns the total amount of characters of the full, combined path.
  */
 size_t cwk_path_join_multiple(const char **paths, char *buffer,
-  size_t buffer_size);
+			      size_t buffer_size);
 
 /**
  * @brief Determines the root of a path.
@@ -156,7 +153,7 @@ void cwk_path_get_root(const char *path, size_t *length);
  * @return Returns the total amount of characters of the new path.
  */
 size_t cwk_path_change_root(const char *path, const char *new_root,
-  char *buffer, size_t buffer_size);
+			    char *buffer, size_t buffer_size);
 
 /**
  * @brief Determine whether the path is absolute or not.
@@ -194,7 +191,7 @@ bool cwk_path_is_relative(const char *path);
  * @param length The output of the length of the basename.
  */
 void cwk_path_get_basename(const char *path, const char **basename,
-  size_t *length);
+			   size_t *length);
 
 /**
  * @brief Changes the basename of a file path.
@@ -215,7 +212,7 @@ void cwk_path_get_basename(const char *path, const char **basename,
  * truncated.
  */
 size_t cwk_path_change_basename(const char *path, const char *new_basename,
-  char *buffer, size_t buffer_size);
+				char *buffer, size_t buffer_size);
 
 /**
  * @brief Gets the dirname of a file path.
@@ -246,7 +243,7 @@ void cwk_path_get_dirname(const char *path, size_t *length);
  * @return Returns true if an extension is found or false otherwise.
  */
 bool cwk_path_get_extension(const char *path, const char **extension,
-  size_t *length);
+			    size_t *length);
 
 /**
  * @brief Determines whether the file path has an extension.
@@ -280,7 +277,7 @@ bool cwk_path_has_extension(const char *path);
  * truncated.
  */
 size_t cwk_path_change_extension(const char *path, const char *new_extension,
-  char *buffer, size_t buffer_size);
+				 char *buffer, size_t buffer_size);
 
 /**
  * @brief Creates a normalized version of the path.
@@ -384,7 +381,7 @@ bool cwk_path_get_previous_segment(struct cwk_segment *segment);
  * @return Returns the type of the segment.
  */
 enum cwk_segment_type cwk_path_get_segment_type(
-  const struct cwk_segment *segment);
+	const struct cwk_segment *segment);
 
 /**
  * @brief Changes the content of a segment.
@@ -404,7 +401,7 @@ enum cwk_segment_type cwk_path_get_segment_type(
  * was not truncated.
  */
 size_t cwk_path_change_segment(struct cwk_segment *segment, const char *value,
-  char *buffer, size_t buffer_size);
+			       char *buffer, size_t buffer_size);
 
 /**
  * @brief Checks whether the submitted pointer points to a separator.

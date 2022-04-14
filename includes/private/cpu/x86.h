@@ -26,101 +26,93 @@
 #define BL cpu_state.regs[3].b.l
 #define BH cpu_state.regs[3].b.h
 
-typedef union
-{
-        uint32_t l;
-        uint16_t w;
-        struct
-        {
-                uint8_t l,h;
-        } b;
+typedef union {
+	uint32_t l;
+	uint16_t w;
+	struct {
+		uint8_t l, h;
+	} b;
 } x86reg;
 
-typedef struct
-{
-        uint32_t base;
-        uint32_t limit, limit_raw;
-        uint8_t access, access2;
-        uint16_t seg;
-        uint32_t limit_low, limit_high;
-        int checked; /*Non-zero if selector is known to be valid*/
+typedef struct {
+	uint32_t base;
+	uint32_t limit, limit_raw;
+	uint8_t access, access2;
+	uint16_t seg;
+	uint32_t limit_low, limit_high;
+	int checked; /*Non-zero if selector is known to be valid*/
 } x86seg;
 
-typedef union MMX_REG
-{
-        uint64_t q;
-        int64_t  sq;
-        uint32_t l[2];
-        int32_t  sl[2];
-        uint16_t w[4];
-        int16_t  sw[4];
-        uint8_t  b[8];
-        int8_t   sb[8];
-        float    f[2];
+typedef union MMX_REG {
+	uint64_t q;
+	int64_t sq;
+	uint32_t l[2];
+	int32_t sl[2];
+	uint16_t w[4];
+	int16_t sw[4];
+	uint8_t b[8];
+	int8_t sb[8];
+	float f[2];
 } MMX_REG;
 
-struct
-{
-        x86reg regs[8];
+struct {
+	x86reg regs[8];
 
-        uint8_t tag[8];
+	uint8_t tag[8];
 
-        x86seg *ea_seg;
-        uint32_t eaaddr;
+	x86seg *ea_seg;
+	uint32_t eaaddr;
 
-        int flags_op;
-        uint32_t flags_res;
-        uint32_t flags_op1, flags_op2;
+	int flags_op;
+	uint32_t flags_res;
+	uint32_t flags_op1, flags_op2;
 
-        uint32_t pc;
-        uint32_t oldpc;
-        uint32_t op32;
+	uint32_t pc;
+	uint32_t oldpc;
+	uint32_t op32;
 
-        int TOP;
+	int TOP;
 
-        union
-        {
-                struct
-                {
-                        int8_t rm, mod, reg;
-                } rm_mod_reg;
-                uint32_t rm_mod_reg_data;
-        } rm_data;
+	union {
+		struct {
+			int8_t rm, mod, reg;
+		} rm_mod_reg;
+		uint32_t rm_mod_reg_data;
+	} rm_data;
 
-        int8_t ssegs;
-        int8_t ismmx;
-        int8_t abrt;
-        int8_t smi_pending;
+	int8_t ssegs;
+	int8_t ismmx;
+	int8_t abrt;
+	int8_t smi_pending;
 
-        int _cycles;
-        int cpu_recomp_ins;
+	int _cycles;
+	int cpu_recomp_ins;
 
-        uint16_t npxs, npxc;
+	uint16_t npxs, npxc;
 
-        double ST[8];
+	double ST[8];
 
-        uint16_t MM_w4[8];
+	uint16_t MM_w4[8];
 
-        MMX_REG MM[8];
+	MMX_REG MM[8];
 
-        uint32_t old_fp_control, new_fp_control;
+	uint32_t old_fp_control, new_fp_control;
 #if defined i386 || defined __i386 || defined __i386__ || defined _X86_
-        uint16_t old_fp_control2, new_fp_control2;
+	uint16_t old_fp_control2, new_fp_control2;
 #endif
 #if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined __amd64__
-        uint32_t trunc_fp_control;
+	uint32_t trunc_fp_control;
 #endif
-        x86seg seg_cs,seg_ds,seg_es,seg_ss,seg_fs,seg_gs;
+	x86seg seg_cs, seg_ds, seg_es, seg_ss, seg_fs, seg_gs;
 
-        union
-        {
-                uint32_t l;
-                uint16_t w;
-        } CR0;
+	union {
+		uint32_t l;
+		uint16_t w;
+	} CR0;
 
-        uint16_t flags, eflags;
+	uint16_t flags, eflags;
 
-        uint32_t smbase;
+	uint32_t smbase;
 } cpu_state;
 
 #define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state - 128)
@@ -182,7 +174,6 @@ extern uint32_t dr[8];
 extern uint16_t sysenter_cs;
 extern uint32_t sysenter_eip, sysenter_esp;
 
-
 extern uint16_t cpu_cur_status;
 
 /*The flags below must match in both cpu_cur_status and block->status for a block
@@ -199,7 +190,6 @@ extern uint16_t cpu_cur_status;
 #define CPU_STATUS_NOTFLATDS  (1 << 8)
 #define CPU_STATUS_NOTFLATSS  (1 << 9)
 #define CPU_STATUS_MASK 0xff00
-
 
 extern uint32_t rmdat;
 #define fetchdat rmdat
@@ -228,7 +218,7 @@ extern int x86_was_reset;
 
 extern int insc;
 extern int fpucount;
-extern float mips,flops;
+extern float mips, flops;
 
 #define setznp168 setznp16
 
@@ -236,10 +226,10 @@ extern float mips,flops;
 #define getr16(r)  cpu_state.regs[r].w
 #define getr32(r)  cpu_state.regs[r].l
 
-#define setr8(r,v) if (r&4) cpu_state.regs[r&3].b.h=v; \
+#define setr8(r, v) if (r&4) cpu_state.regs[r&3].b.h=v; \
                    else     cpu_state.regs[r&3].b.l=v;
-#define setr16(r,v) cpu_state.regs[r].w=v
-#define setr32(r,v) cpu_state.regs[r].l=v
+#define setr16(r, v) cpu_state.regs[r].w=v
+#define setr32(r, v) cpu_state.regs[r].l=v
 
 #define fetchea()   { rmdat=readmemb(cs+pc); pc++;  \
                     reg=(rmdat>>3)&7;               \
@@ -247,23 +237,20 @@ extern float mips,flops;
                     rm=rmdat&7;                   \
                     if (mod!=3) fetcheal(); }
 
-
 extern int optype;
 #define JMP 1
 #define CALL 2
 #define IRET 3
 #define OPTYPE_INT 4
 
-
-enum
-{
-        ABRT_NONE = 0,
-        ABRT_GEN,
-        ABRT_TS  = 0xA,
-        ABRT_NP  = 0xB,
-        ABRT_SS  = 0xC,
-        ABRT_GPF = 0xD,
-        ABRT_PF  = 0xE
+enum {
+	ABRT_NONE = 0,
+	ABRT_GEN,
+	ABRT_TS = 0xA,
+	ABRT_NP = 0xB,
+	ABRT_SS = 0xC,
+	ABRT_GPF = 0xD,
+	ABRT_PF = 0xE
 };
 
 #define ABRT_MASK 0x7f
@@ -331,14 +318,12 @@ void cyrix_write_seg_descriptor(uint32_t addr, x86seg *seg);
 #define SMHR_VALID (1 << 0)
 #define SMHR_ADDR_MASK (0xfffffffc)
 
-struct
-{
-        struct
-        {
-                uint32_t base;
-                uint64_t size;
-        } arr[8];
-        uint32_t smhr;
+struct {
+	struct {
+		uint32_t base;
+		uint64_t size;
+	} arr[8];
+	uint32_t smhr;
 } cyrix;
 
 #endif /* _X86_H_ */

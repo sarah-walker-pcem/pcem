@@ -12,5 +12,4 @@ int fdi_hole(int drive);
 void fdi_stop();
 void fdi_poll();
 
-
 #endif /* _DISC_FDI_H_ */

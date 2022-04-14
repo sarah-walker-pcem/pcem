@@ -23,40 +23,37 @@
 #ifndef _PZX_H_
 #define _PZX_H_
 
-typedef enum
-{
-	PZX_CLOSED,	/* File is not open */
-	PZX_IDLE,	/* File is open, no block loaded */
-	PZX_IN_PULS,	/* File is open, current block is a PULS block */
-	PZX_IN_DATA,	/* File is open, current block is a DATA block */
-	PZX_IN_PAUS,	/* File is open, current block is a PAUS block */
+typedef enum {
+	PZX_CLOSED,        /* File is not open */
+	PZX_IDLE,        /* File is open, no block loaded */
+	PZX_IN_PULS,        /* File is open, current block is a PULS block */
+	PZX_IN_DATA,        /* File is open, current block is a DATA block */
+	PZX_IN_PAUS,        /* File is open, current block is a PAUS block */
 } PZX_STATE;
 
-
-typedef struct pzxfile_t
-{
-	FILE *input;		/* Input PZX file */
-	uint8_t *curblock;	/* Currently-loaded block, if any */
-	int level;		/* Current signal level */
-	PZX_STATE state;	/* State machine current status */
+typedef struct pzxfile_t {
+	FILE *input;                /* Input PZX file */
+	uint8_t *curblock;        /* Currently-loaded block, if any */
+	int level;                /* Current signal level */
+	PZX_STATE state;        /* State machine current status */
 /* State variables for PULS */
-	uint32_t puls_ptr;	/* Pointer within PULS block */
-	uint32_t puls_len;	/* Length of PULS block */
-	uint32_t puls_count;	/* Count of pulses */
-	uint32_t puls_duration;	/* Duration of each pulse */
-	uint32_t puls_remain;	/* Time remaining in this pulse */
+	uint32_t puls_ptr;        /* Pointer within PULS block */
+	uint32_t puls_len;        /* Length of PULS block */
+	uint32_t puls_count;        /* Count of pulses */
+	uint32_t puls_duration;        /* Duration of each pulse */
+	uint32_t puls_remain;        /* Time remaining in this pulse */
 /* State variables for PAUS */
-	uint32_t paus_remain;	/* Time remaining in this pause */
+	uint32_t paus_remain;        /* Time remaining in this pause */
 /* State variables for DATA */
-	uint32_t data_ptr;	/* Pointer within DATA block */
-	uint32_t data_bits; 	/* Count of bits */
-	uint16_t data_tail;	/* Length of pulse after last bit */
-	uint8_t  data_mask;	/* Mask for current bit */
-	uint8_t	 data_p0;	/* Length of 0 encoding */	
-	uint8_t	 data_p1;	/* Length of 1 encoding */	
-	int	 data_p;	/* Current sequence being emitted */
-	uint32_t data_w;	/* Current waveform */
-	uint32_t data_remain;	/* Current data pulse time remaining */
+	uint32_t data_ptr;        /* Pointer within DATA block */
+	uint32_t data_bits;        /* Count of bits */
+	uint16_t data_tail;        /* Length of pulse after last bit */
+	uint8_t data_mask;        /* Mask for current bit */
+	uint8_t data_p0;        /* Length of 0 encoding */
+	uint8_t data_p1;        /* Length of 1 encoding */
+	int data_p;        /* Current sequence being emitted */
+	uint32_t data_w;        /* Current waveform */
+	uint32_t data_remain;        /* Current data pulse time remaining */
 } pzxfile_t;
 
 uint8_t *pzx_load_block(FILE *fp);
@@ -72,6 +69,5 @@ void pzx_close(pzxfile_t *pzx);
 
 /* Advance by 'time' samples (3.5MHz sample rate) and return current state */
 int pzx_advance(pzxfile_t *pzx, int time);
-
 
 #endif /* _PZX_H_ */
