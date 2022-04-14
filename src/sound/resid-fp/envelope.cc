@@ -23,32 +23,30 @@
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-EnvelopeGeneratorFP::EnvelopeGeneratorFP()
-{
-        reset();
+EnvelopeGeneratorFP::EnvelopeGeneratorFP() {
+	reset();
 }
 
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void EnvelopeGeneratorFP::reset()
-{
-        envelope_counter = 0;
+void EnvelopeGeneratorFP::reset() {
+	envelope_counter = 0;
 
-        attack = 0;
-        decay = 0;
-        sustain = 0;
-        release = 0;
+	attack = 0;
+	decay = 0;
+	sustain = 0;
+	release = 0;
 
-        gate = 0;
+	gate = 0;
 
-        rate_counter = 0;
-        exponential_counter = 0;
-        exponential_counter_period = 1;
+	rate_counter = 0;
+	exponential_counter = 0;
+	exponential_counter_period = 1;
 
-        state = RELEASE;
-        rate_period = rate_counter_period[release];
-        hold_zero = true;
+	state = RELEASE;
+	rate_period = rate_counter_period[release];
+	hold_zero = true;
 }
 
 // Rate counter periods are calculated from the Envelope Rates table in
@@ -96,22 +94,22 @@ void EnvelopeGeneratorFP::reset()
 // periods.
 //
 reg16 EnvelopeGeneratorFP::rate_counter_period[] = {
-        9,  //   2ms*1.0MHz/256 =     7.81
-        32,  //   8ms*1.0MHz/256 =    31.25
-        63,  //  16ms*1.0MHz/256 =    62.50
-        95,  //  24ms*1.0MHz/256 =    93.75
-        149,  //  38ms*1.0MHz/256 =   148.44
-        220,  //  56ms*1.0MHz/256 =   218.75
-        267,  //  68ms*1.0MHz/256 =   265.63
-        313,  //  80ms*1.0MHz/256 =   312.50
-        392,  // 100ms*1.0MHz/256 =   390.63
-        977,  // 250ms*1.0MHz/256 =   976.56
-        1954,  // 500ms*1.0MHz/256 =  1953.13
-        3126,  // 800ms*1.0MHz/256 =  3125.00
-        3907,  //   1 s*1.0MHz/256 =  3906.25
-        11720,  //   3 s*1.0MHz/256 = 11718.75
-        19532,  //   5 s*1.0MHz/256 = 19531.25
-        31251   //   8 s*1.0MHz/256 = 31250.00
+	9,  //   2ms*1.0MHz/256 =     7.81
+	32,  //   8ms*1.0MHz/256 =    31.25
+	63,  //  16ms*1.0MHz/256 =    62.50
+	95,  //  24ms*1.0MHz/256 =    93.75
+	149,  //  38ms*1.0MHz/256 =   148.44
+	220,  //  56ms*1.0MHz/256 =   218.75
+	267,  //  68ms*1.0MHz/256 =   265.63
+	313,  //  80ms*1.0MHz/256 =   312.50
+	392,  // 100ms*1.0MHz/256 =   390.63
+	977,  // 250ms*1.0MHz/256 =   976.56
+	1954,  // 500ms*1.0MHz/256 =  1953.13
+	3126,  // 800ms*1.0MHz/256 =  3125.00
+	3907,  //   1 s*1.0MHz/256 =  3906.25
+	11720,  //   3 s*1.0MHz/256 = 11718.75
+	19532,  //   5 s*1.0MHz/256 = 19531.25
+	31251   //   8 s*1.0MHz/256 = 31250.00
 };
 
 
@@ -153,105 +151,94 @@ reg16 EnvelopeGeneratorFP::rate_counter_period[] = {
 // This has been verified by sampling ENV3.
 //
 reg8 EnvelopeGeneratorFP::sustain_level[] = {
-        0x00,
-        0x11,
-        0x22,
-        0x33,
-        0x44,
-        0x55,
-        0x66,
-        0x77,
-        0x88,
-        0x99,
-        0xaa,
-        0xbb,
-        0xcc,
-        0xdd,
-        0xee,
-        0xff,
+	0x00,
+	0x11,
+	0x22,
+	0x33,
+	0x44,
+	0x55,
+	0x66,
+	0x77,
+	0x88,
+	0x99,
+	0xaa,
+	0xbb,
+	0xcc,
+	0xdd,
+	0xee,
+	0xff,
 };
 
 // ----------------------------------------------------------------------------
 // Register functions.
 // ----------------------------------------------------------------------------
-void EnvelopeGeneratorFP::writeCONTROL_REG(reg8 control)
-{
-        reg8 gate_next = control & 0x01;
+void EnvelopeGeneratorFP::writeCONTROL_REG(reg8 control) {
+	reg8 gate_next = control & 0x01;
 
-        // The rate counter is never reset, thus there will be a delay before the
-        // envelope counter starts counting up (attack) or down (release).
+	// The rate counter is never reset, thus there will be a delay before the
+	// envelope counter starts counting up (attack) or down (release).
 
-        // Gate bit on: Start attack, decay, sustain.
-        if (!gate && gate_next)
-        {
-                state = ATTACK;
-                update_rate_period(rate_counter_period[attack]);
+	// Gate bit on: Start attack, decay, sustain.
+	if (!gate && gate_next) {
+		state = ATTACK;
+		update_rate_period(rate_counter_period[attack]);
 
-                // Switching to attack state unlocks the zero freeze.
-                hold_zero = false;
-        }
-                // Gate bit off: Start release.
-        else if (gate && !gate_next)
-        {
-                state = RELEASE;
-                update_rate_period(rate_counter_period[release]);
-        }
+		// Switching to attack state unlocks the zero freeze.
+		hold_zero = false;
+	}
+		// Gate bit off: Start release.
+	else if (gate && !gate_next) {
+		state = RELEASE;
+		update_rate_period(rate_counter_period[release]);
+	}
 
-        gate = gate_next;
+	gate = gate_next;
 }
 
-void EnvelopeGeneratorFP::writeATTACK_DECAY(reg8 attack_decay)
-{
-        attack = (attack_decay >> 4) & 0x0f;
-        decay = attack_decay & 0x0f;
-        if (state == ATTACK)
-        {
-                update_rate_period(rate_counter_period[attack]);
-        }
-        else if (state == DECAY_SUSTAIN)
-        {
-                update_rate_period(rate_counter_period[decay]);
-        }
+void EnvelopeGeneratorFP::writeATTACK_DECAY(reg8 attack_decay) {
+	attack = (attack_decay >> 4) & 0x0f;
+	decay = attack_decay & 0x0f;
+	if (state == ATTACK) {
+		update_rate_period(rate_counter_period[attack]);
+	} else if (state == DECAY_SUSTAIN) {
+		update_rate_period(rate_counter_period[decay]);
+	}
 }
 
-void EnvelopeGeneratorFP::writeSUSTAIN_RELEASE(reg8 sustain_release)
-{
-        sustain = (sustain_release >> 4) & 0x0f;
-        release = sustain_release & 0x0f;
-        if (state == RELEASE)
-        {
-                update_rate_period(rate_counter_period[release]);
-        }
+void EnvelopeGeneratorFP::writeSUSTAIN_RELEASE(reg8 sustain_release) {
+	sustain = (sustain_release >> 4) & 0x0f;
+	release = sustain_release & 0x0f;
+	if (state == RELEASE) {
+		update_rate_period(rate_counter_period[release]);
+	}
 }
 
-reg8 EnvelopeGeneratorFP::readENV()
-{
-        return output();
+reg8 EnvelopeGeneratorFP::readENV() {
+	return output();
 }
 
-void EnvelopeGeneratorFP::update_rate_period(reg16 newperiod)
-{
-        rate_period = newperiod;
+void EnvelopeGeneratorFP::update_rate_period(reg16 newperiod) {
+	rate_period = newperiod;
 
-        /* The ADSR counter is XOR shift register with 0x7fff unique values.
-         * If the rate_period is adjusted to a value already seen in this cycle,
-         * the register will wrap around. This is known as the ADSR delay bug.
-         *
-         * To simplify the hot path calculation, we simulate this through observing
-         * that we add the 0x7fff cycle delay by changing the rate_counter variable
-         * directly. This takes care of the 99 % common case. However, playroutine
-         * could make multiple consequtive rate_period adjustments, in which case we
-         * need to cancel the previous adjustment. */
+	/* The ADSR counter is XOR shift register with 0x7fff unique values.
+	 * If the rate_period is adjusted to a value already seen in this cycle,
+	 * the register will wrap around. This is known as the ADSR delay bug.
+	 *
+	 * To simplify the hot path calculation, we simulate this through observing
+	 * that we add the 0x7fff cycle delay by changing the rate_counter variable
+	 * directly. This takes care of the 99 % common case. However, playroutine
+	 * could make multiple consequtive rate_period adjustments, in which case we
+	 * need to cancel the previous adjustment. */
 
-        /* if the new period exeecds 0x7fff, we need to wrap */
-        if (rate_period - rate_counter > 0x7fff)
-                rate_counter += 0x7fff;
+	/* if the new period exeecds 0x7fff, we need to wrap */
+	if (rate_period - rate_counter > 0x7fff)
+		rate_counter += 0x7fff;
 
-        /* simulate 0x7fff wraparound, if the period-to-be-written
-         * is less than the current value. */
-        if (rate_period <= rate_counter)
-                rate_counter -= 0x7fff;
+	/* simulate 0x7fff wraparound, if the period-to-be-written
+	 * is less than the current value. */
+	if (rate_period <= rate_counter)
+		rate_counter -= 0x7fff;
 
-        /* at this point it should be impossible for
-         * rate_counter >= rate_period. If it is, there is a bug... */
+	/* at this point it should be impossible for
+	 * rate_counter >= rate_period. If it is, there is a bug... */
 }

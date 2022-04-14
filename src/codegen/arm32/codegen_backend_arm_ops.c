@@ -206,36 +206,36 @@ static void codegen_allocate_new_block(codeblock_t *block);
 
 static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 {
-        if (block_pos >= (BLOCK_MAX-4))
+	if (block_pos >= (BLOCK_MAX-4))
 		codegen_allocate_new_block(block);
-        *(uint32_t *)&block_write_data[block_pos] = val;
-        block_pos += 4;
+	*(uint32_t *)&block_write_data[block_pos] = val;
+	block_pos += 4;
 }
 
 static void codegen_allocate_new_block(codeblock_t *block)
 {
-        /*Current block is full. Allocate a new block*/
-        struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block, get_block_nr(block));
-        uint8_t *new_ptr = codeblock_allocator_get_ptr(new_block);
+	/*Current block is full. Allocate a new block*/
+	struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block, get_block_nr(block));
+	uint8_t *new_ptr = codeblock_allocator_get_ptr(new_block);
 	uint32_t offset = ((uintptr_t)new_ptr - (uintptr_t)&block_write_data[block_pos]) - 8;
 
-        /*Add a jump instruction to the new block*/
+	/*Add a jump instruction to the new block*/
 	*(uint32_t *)&block_write_data[block_pos] = COND_AL | OPCODE_B | B_OFFSET(offset);
 
-        /*Set write address to start of new block*/
-        block_pos = 0;
-        block_write_data = new_ptr;
+	/*Set write address to start of new block*/
+	block_pos = 0;
+	block_write_data = new_ptr;
 }
 
 static inline void codegen_alloc_4(codeblock_t *block)
 {
-        if (block_pos >= (BLOCK_MAX-4))
+	if (block_pos >= (BLOCK_MAX-4))
 		codegen_allocate_new_block(block);
 }
 
 void codegen_alloc(codeblock_t *block, int size)
 {
-        if (block_pos >= (BLOCK_MAX-size))
+	if (block_pos >= (BLOCK_MAX-size))
 		codegen_allocate_new_block(block);
 }
 
@@ -1155,62 +1155,62 @@ void host_arm_VQMOVN_U16(codeblock_t *block, int dst_reg, int src_reg)
 
 void host_arm_VSHL_D_IMM_16(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 15)
-                fatal("host_arm_VSHL_D_IMM_16 : shift > 15\n");
+	if (shift > 15)
+		fatal("host_arm_VSHL_D_IMM_16 : shift > 15\n");
 	codegen_addlong(block, OPCODE_VSHL_D_IMM_16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
 }
 void host_arm_VSHL_D_IMM_32(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 31)
-                fatal("host_arm_VSHL_D_IMM_32 : shift > 31\n");
+	if (shift > 31)
+		fatal("host_arm_VSHL_D_IMM_32 : shift > 31\n");
 	codegen_addlong(block, OPCODE_VSHL_D_IMM_32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
 }
 void host_arm_VSHL_D_IMM_64(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 63)
-                fatal("host_arm_VSHL_D_IMM_64 : shift > 63\n");
+	if (shift > 63)
+		fatal("host_arm_VSHL_D_IMM_64 : shift > 63\n");
 	codegen_addlong(block, OPCODE_VSHL_D_IMM_64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(shift));
 }
 void host_arm_VSHR_D_S16(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 15)
-                fatal("host_arm_VSHR_SD_IMM_16 : shift > 15\n");
+	if (shift > 15)
+		fatal("host_arm_VSHR_SD_IMM_16 : shift > 15\n");
 	codegen_addlong(block, OPCODE_VSHR_D_S16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(16-shift));
 }
 void host_arm_VSHR_D_S32(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 31)
-                fatal("host_arm_VSHR_SD_IMM_32 : shift > 31\n");
+	if (shift > 31)
+		fatal("host_arm_VSHR_SD_IMM_32 : shift > 31\n");
 	codegen_addlong(block, OPCODE_VSHR_D_S32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(32-shift));
 }
 void host_arm_VSHR_D_S64(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 63)
-                fatal("host_arm_VSHR_SD_IMM_64 : shift > 63\n");
+	if (shift > 63)
+		fatal("host_arm_VSHR_SD_IMM_64 : shift > 63\n");
 	codegen_addlong(block, OPCODE_VSHR_D_S64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(64-shift));
 }
 void host_arm_VSHR_D_U16(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 15)
-                fatal("host_arm_VSHR_UD_IMM_16 : shift > 15\n");
+	if (shift > 15)
+		fatal("host_arm_VSHR_UD_IMM_16 : shift > 15\n");
 	codegen_addlong(block, OPCODE_VSHR_D_U16 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(16-shift));
 }
 void host_arm_VSHR_D_U32(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 31)
-                fatal("host_arm_VSHR_UD_IMM_32 : shift > 31\n");
+	if (shift > 31)
+		fatal("host_arm_VSHR_UD_IMM_32 : shift > 31\n");
 	codegen_addlong(block, OPCODE_VSHR_D_U32 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(32-shift));
 }
 void host_arm_VSHR_D_U64(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 63)
-                fatal("host_arm_VSHR_UD_IMM_64 : shift > 63\n");
+	if (shift > 63)
+		fatal("host_arm_VSHR_UD_IMM_64 : shift > 63\n");
 	codegen_addlong(block, OPCODE_VSHR_D_U64 | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM(64-shift));
 }
 void host_arm_VSHRN_32(codeblock_t *block, int dst_reg, int src_reg, int shift)
 {
-        if (shift > 16)
-                fatal("host_arm_VSHRN_32 : shift > 16\n");
+	if (shift > 16)
+		fatal("host_arm_VSHRN_32 : shift > 16\n");
 	codegen_addlong(block, OPCODE_VSHRN | Vd(dst_reg) | Vm(src_reg) | VSHIFT_IMM_32(16-shift));
 }
 

@@ -1,7 +1,0 @@
-{
-    "cmake.configureOnOpen": true,
-    "files.associations": {
-        "*.xrc": "xml"
-    },
-    "editor.tabSize": 8
-}

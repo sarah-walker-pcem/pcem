@@ -32,35 +32,34 @@
 
 #include "slirp/slirp.h"
 
-int	tcp_keepidle = TCPTV_KEEP_IDLE;
-int	tcp_keepintvl = TCPTV_KEEPINTVL;
-int	tcp_maxidle;
-int	so_options = DO_KEEPALIVE;
+int tcp_keepidle = TCPTV_KEEP_IDLE;
+int tcp_keepintvl = TCPTV_KEEPINTVL;
+int tcp_maxidle;
+int so_options = DO_KEEPALIVE;
 
-struct   tcpstat tcpstat;        /* tcp statistics */
-u_int32_t        tcp_now;                /* for RFC 1323 timestamps */
+struct tcpstat tcpstat;        /* tcp statistics */
+u_int32_t tcp_now;                /* for RFC 1323 timestamps */
 
 /*
  * Fast timeout routine for processing delayed acks
  */
 void
-tcp_fasttimo()
-{
+tcp_fasttimo() {
 	register struct SLIRPsocket *so;
 	register struct tcpcb *tp;
 
 	DEBUG_CALL("tcp_fasttimo");
-	
+
 	so = tcb.so_next;
 	if (so)
-	for (; so != &tcb; so = so->so_next)
-		if ((tp = (struct tcpcb *)so->so_tcpcb) &&
-		    (tp->t_flags & TF_DELACK)) {
-			tp->t_flags &= ~TF_DELACK;
-			tp->t_flags |= TF_ACKNOW;
-			tcpstat.tcps_delack++;
-			(void) tcp_output(tp);
-		}
+		for (; so != &tcb; so = so->so_next)
+			if ((tp = (struct tcpcb *)so->so_tcpcb) &&
+				(tp->t_flags & TF_DELACK)) {
+				tp->t_flags &= ~TF_DELACK;
+				tp->t_flags |= TF_ACKNOW;
+				tcpstat.tcps_delack++;
+				(void)tcp_output(tp);
+			}
 }
 
 /*
@@ -69,21 +68,20 @@ tcp_fasttimo()
  * causes finite state machine actions if timers expire.
  */
 void
-tcp_slowtimo()
-{
+tcp_slowtimo() {
 	register struct SLIRPsocket *ip, *ipnxt;
 	register struct tcpcb *tp;
 	register int i;
 
 	DEBUG_CALL("tcp_slowtimo");
-	
+
 	tcp_maxidle = TCPTV_KEEPCNT * tcp_keepintvl;
 	/*
 	 * Search through tcb's and update active timers.
 	 */
 	ip = tcb.so_next;
 	if (ip == 0)
-	   return;
+		return;
 	for (; ip != &tcb; ip = ipnxt) {
 		ipnxt = ip->so_next;
 		tp = sototcpcb(ip);
@@ -91,23 +89,22 @@ tcp_slowtimo()
 			continue;
 		for (i = 0; i < TCPT_NTIMERS; i++) {
 			if (tp->t_timer[i] && --tp->t_timer[i] == 0) {
-				tcp_timers(tp,i);
+				tcp_timers(tp, i);
 				if (ipnxt->so_prev != ip)
 					goto tpgone;
 			}
 		}
 		tp->t_idle++;
 		if (tp->t_rtt)
-		   tp->t_rtt++;
-tpgone:
-		;
+			tp->t_rtt++;
+	    tpgone:;
 	}
-	tcp_iss += TCP_ISSINCR/PR_SLOWHZ;		/* increment iss */
+	tcp_iss += TCP_ISSINCR / PR_SLOWHZ;                /* increment iss */
 #ifdef TCP_COMPAT_42
 	if ((int)tcp_iss < 0)
 		tcp_iss = 0;				/* XXX */
 #endif
-	tcp_now++;					/* for timestamps */
+	tcp_now++;                                        /* for timestamps */
 }
 
 /*
@@ -123,8 +120,8 @@ tcp_canceltimers(tp)
 		tp->t_timer[i] = 0;
 }
 
-int	tcp_backoff[TCP_MAXRXTSHIFT + 1] =
-   { 1, 2, 4, 8, 16, 32, 64, 64, 64, 64, 64, 64, 64 };
+int tcp_backoff[TCP_MAXRXTSHIFT + 1] =
+	{1, 2, 4, 8, 16, 32, 64, 64, 64, 64, 64, 64, 64};
 
 /*
  * TCP timer processing.
@@ -135,37 +132,37 @@ tcp_timers(tp, timer)
 	int timer;
 {
 	int rexmt;
-	
+
 	DEBUG_CALL("tcp_timers");
-	
+
 	switch (timer) {
 
-	/*
-	 * 2 MSL timeout in shutdown went off.  If we're closed but
-	 * still waiting for peer to close and connection has been idle
-	 * too long, or if 2MSL time is up from TIME_WAIT, delete connection
-	 * control block.  Otherwise, check again in a bit.
-	 */
+		/*
+		 * 2 MSL timeout in shutdown went off.  If we're closed but
+		 * still waiting for peer to close and connection has been idle
+		 * too long, or if 2MSL time is up from TIME_WAIT, delete connection
+		 * control block.  Otherwise, check again in a bit.
+		 */
 	case TCPT_2MSL:
 		if (tp->t_state != TCPS_TIME_WAIT &&
-		    tp->t_idle <= tcp_maxidle)
+			tp->t_idle <= tcp_maxidle)
 			tp->t_timer[TCPT_2MSL] = tcp_keepintvl;
 		else
 			tp = tcp_close(tp);
 		break;
 
-	/*
-	 * Retransmission timer went off.  Message has not
-	 * been acked within retransmit interval.  Back off
-	 * to a longer retransmit interval and retransmit one segment.
-	 */
+		/*
+		 * Retransmission timer went off.  Message has not
+		 * been acked within retransmit interval.  Back off
+		 * to a longer retransmit interval and retransmit one segment.
+		 */
 	case TCPT_REXMT:
-		
+
 		/*
 		 * XXXXX If a packet has timed out, then remove all the queued
 		 * packets for that session.
 		 */
-		
+
 		if (++tp->t_rxtshift > TCP_MAXRXTSHIFT) {
 			/*
 			 * This is a hack to suit our terminal server here at the uni of canberra
@@ -181,7 +178,7 @@ tcp_timers(tp, timer)
 			 * 
 			 * *sigh*
 			 */
-			
+
 			tp->t_maxseg >>= 1;
 			if (tp->t_maxseg < 32) {
 				/*
@@ -193,7 +190,7 @@ tcp_timers(tp, timer)
 				/* tp->t_softerror : ETIMEDOUT); */ /* XXX */
 				return (tp); /* XXX */
 			}
-			
+
 			/*
 			 * Set rxtshift to 6, which is still at the maximum
 			 * backoff time
@@ -203,7 +200,7 @@ tcp_timers(tp, timer)
 		tcpstat.tcps_rexmttimeo++;
 		rexmt = TCP_REXMTVAL(tp) * tcp_backoff[tp->t_rxtshift];
 		TCPT_RANGESET(tp->t_rxtcur, rexmt,
-		    (short)tp->t_rttmin, TCPTV_REXMTMAX); /* XXX */
+			      (short)tp->t_rttmin, TCPTV_REXMTMAX); /* XXX */
 		tp->t_timer[TCPT_REXMT] = tp->t_rxtcur;
 		/*
 		 * If losing, let the lower level know and try for
@@ -248,40 +245,38 @@ tcp_timers(tp, timer)
 		 * to go below this.)
 		 */
 		{
-		u_int win = min(tp->snd_wnd, tp->snd_cwnd) / 2 / tp->t_maxseg;
-		if (win < 2)
-			win = 2;
-		tp->snd_cwnd = tp->t_maxseg;
-		tp->snd_ssthresh = win * tp->t_maxseg;
-		tp->t_dupacks = 0;
+			u_int win = min(tp->snd_wnd, tp->snd_cwnd) / 2 / tp->t_maxseg;
+			if (win < 2)
+				win = 2;
+			tp->snd_cwnd = tp->t_maxseg;
+			tp->snd_ssthresh = win * tp->t_maxseg;
+			tp->t_dupacks = 0;
 		}
-		(void) tcp_output(tp);
+		(void)tcp_output(tp);
 		break;
 
-	/*
-	 * Persistence timer into zero window.
-	 * Force a byte to be output, if possible.
-	 */
-	case TCPT_PERSIST:
-		tcpstat.tcps_persisttimeo++;
+		/*
+		 * Persistence timer into zero window.
+		 * Force a byte to be output, if possible.
+		 */
+	case TCPT_PERSIST: tcpstat.tcps_persisttimeo++;
 		tcp_setpersist(tp);
 		tp->t_force = 1;
-		(void) tcp_output(tp);
+		(void)tcp_output(tp);
 		tp->t_force = 0;
 		break;
 
-	/*
-	 * Keep-alive timer went off; send something
-	 * or drop connection if idle for too long.
-	 */
-	case TCPT_KEEP:
-		tcpstat.tcps_keeptimeo++;
+		/*
+		 * Keep-alive timer went off; send something
+		 * or drop connection if idle for too long.
+		 */
+	case TCPT_KEEP: tcpstat.tcps_keeptimeo++;
 		if (tp->t_state < TCPS_ESTABLISHED)
 			goto dropit;
 
 /*		if (tp->t_socket->so_options & SO_KEEPALIVE && */
 		if ((so_options) && tp->t_state <= TCPS_CLOSE_WAIT) {
-		    	if (tp->t_idle >= tcp_keepidle + tcp_maxidle)
+			if (tp->t_idle >= tcp_keepidle + tcp_maxidle)
 				goto dropit;
 			/*
 			 * Send a packet designed to force a response
@@ -305,7 +300,7 @@ tcp_timers(tp, timer)
 			    tp->rcv_nxt - 1, tp->snd_una - 1, 0);
 #else
 			tcp_respond(tp, &tp->t_template, (struct SLIRPmbuf *)NULL,
-			    tp->rcv_nxt, tp->snd_una - 1, 0);
+				    tp->rcv_nxt, tp->snd_una - 1, 0);
 #endif
 			tp->t_timer[TCPT_KEEP] = tcp_keepintvl;
 		} else

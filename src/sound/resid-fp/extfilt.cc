@@ -23,72 +23,62 @@
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-ExternalFilterFP::ExternalFilterFP()
-{
-        reset();
-        enable_filter(true);
-        set_chip_model(MOS6581FP);
-        set_clock_frequency(1e6f);
-        set_sampling_parameter(15915.6f);
+ExternalFilterFP::ExternalFilterFP() {
+	reset();
+	enable_filter(true);
+	set_chip_model(MOS6581FP);
+	set_clock_frequency(1e6f);
+	set_sampling_parameter(15915.6f);
 }
 
 // ----------------------------------------------------------------------------
 // Enable filter.
 // ----------------------------------------------------------------------------
-void ExternalFilterFP::enable_filter(bool enable)
-{
-        enabled = enable;
+void ExternalFilterFP::enable_filter(bool enable) {
+	enabled = enable;
 }
 
 // ----------------------------------------------------------------------------
 // Setup of the external filter sampling parameters.
 // ----------------------------------------------------------------------------
-void ExternalFilterFP::set_clock_frequency(float clock)
-{
-        clock_frequency = clock;
-        _set_sampling_parameter();
+void ExternalFilterFP::set_clock_frequency(float clock) {
+	clock_frequency = clock;
+	_set_sampling_parameter();
 }
 
-void ExternalFilterFP::set_sampling_parameter(float freq)
-{
-        pass_frequency = freq;
-        _set_sampling_parameter();
+void ExternalFilterFP::set_sampling_parameter(float freq) {
+	pass_frequency = freq;
+	_set_sampling_parameter();
 }
 
-void ExternalFilterFP::_set_sampling_parameter()
-{
-        // Low-pass:  R = 10kOhm, C = 1000pF; w0l = 1/RC = 1/(1e4*1e-9) = 100000
-        // High-pass: R =  1kOhm, C =   10uF; w0h = 1/RC = 1/(1e3*1e-5) =    100
-        w0hp = 100.f / clock_frequency;
-        w0lp = pass_frequency * 2.f * M_PI_f / clock_frequency;
+void ExternalFilterFP::_set_sampling_parameter() {
+	// Low-pass:  R = 10kOhm, C = 1000pF; w0l = 1/RC = 1/(1e4*1e-9) = 100000
+	// High-pass: R =  1kOhm, C =   10uF; w0h = 1/RC = 1/(1e3*1e-5) =    100
+	w0hp = 100.f / clock_frequency;
+	w0lp = pass_frequency * 2.f * M_PI_f / clock_frequency;
 }
 
 // ----------------------------------------------------------------------------
 // Set chip model.
 // ----------------------------------------------------------------------------
-void ExternalFilterFP::set_chip_model(chip_model model)
-{
-        if (model == MOS6581FP)
-        {
-                // Approximate the DC output level to be removed if the external
-                // filter is turned off. (0x800 - wave_zero + voice DC) * maxenv * voices
-                //  - extin offset...
-                mixer_DC = (-0x600 + 0x800) * 0xff * 3 - 0x20000;
-        }
-        else
-        {
-                // No DC offsets in the MOS8580.
-                mixer_DC = 0;
-        }
+void ExternalFilterFP::set_chip_model(chip_model model) {
+	if (model == MOS6581FP) {
+		// Approximate the DC output level to be removed if the external
+		// filter is turned off. (0x800 - wave_zero + voice DC) * maxenv * voices
+		//  - extin offset...
+		mixer_DC = (-0x600 + 0x800) * 0xff * 3 - 0x20000;
+	} else {
+		// No DC offsets in the MOS8580.
+		mixer_DC = 0;
+	}
 }
 
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void ExternalFilterFP::reset()
-{
-        // State of filter.
-        Vlp = 0;
-        Vhp = 0;
-        Vo = 0;
+void ExternalFilterFP::reset() {
+	// State of filter.
+	Vlp = 0;
+	Vhp = 0;
+	Vo = 0;
 }

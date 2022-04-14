@@ -41,13 +41,13 @@ void *codegen_exit_rout;
 
 host_reg_def_t codegen_host_reg_list[CODEGEN_HOST_REGS] =
 {
-        {REG_X19, 0},
-        {REG_X20, 0},
-        {REG_X21, 0},
+	{REG_X19, 0},
+	{REG_X20, 0},
+	{REG_X21, 0},
 	{REG_X22, 0},
 	{REG_X23, 0},
-        {REG_X24, 0},
-        {REG_X25, 0},
+	{REG_X24, 0},
+	{REG_X25, 0},
 	{REG_X26, 0},
 	{REG_X27, 0},
 	{REG_X28, 0}
@@ -55,24 +55,24 @@ host_reg_def_t codegen_host_reg_list[CODEGEN_HOST_REGS] =
 
 host_reg_def_t codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
 {
-        {REG_V8, 0},
-        {REG_V9, 0},
-        {REG_V10, 0},
+	{REG_V8, 0},
+	{REG_V9, 0},
+	{REG_V10, 0},
 	{REG_V11, 0},
 	{REG_V12, 0},
-        {REG_V13, 0},
-        {REG_V14, 0},
+	{REG_V13, 0},
+	{REG_V14, 0},
 	{REG_V15, 0}
 };
 
 static void build_load_routine(codeblock_t *block, int size, int is_float)
 {
-        uint32_t *branch_offset;
-        uint32_t *misaligned_offset;
+	uint32_t *branch_offset;
+	uint32_t *misaligned_offset;
 	int offset;
 
-        /*In - W0 = address
-          Out - W0 = data, W1 = abrt*/
+	/*In - W0 = address
+	  Out - W0 = data, W1 = abrt*/
 	/*MOV W1, W0, LSR #12
 	  MOV X2, #readlookup2
 	  LDR X1, [X2, X1, LSL #3]
@@ -136,12 +136,12 @@ static void build_load_routine(codeblock_t *block, int size, int is_float)
 
 static void build_store_routine(codeblock_t *block, int size, int is_float)
 {
-        uint32_t *branch_offset;
-        uint32_t *misaligned_offset;
+	uint32_t *branch_offset;
+	uint32_t *misaligned_offset;
 	int offset;
 
-        /*In - R0 = address, R1 = data
-          Out - R1 = abrt*/
+	/*In - R0 = address, R1 = data
+	  Out - R1 = abrt*/
 	/*MOV W2, W0, LSR #12
 	  MOV X3, #writelookup2
 	  LDR X2, [X3, X2, LSL #3]
@@ -205,31 +205,31 @@ static void build_store_routine(codeblock_t *block, int size, int is_float)
 
 static void build_loadstore_routines(codeblock_t *block)
 {
-        codegen_mem_load_byte = &block_write_data[block_pos];
-        build_load_routine(block, 1, 0);
-        codegen_mem_load_word = &block_write_data[block_pos];
-        build_load_routine(block, 2, 0);
-        codegen_mem_load_long = &block_write_data[block_pos];
-        build_load_routine(block, 4, 0);
-        codegen_mem_load_quad = &block_write_data[block_pos];
-        build_load_routine(block, 8, 0);
-        codegen_mem_load_single = &block_write_data[block_pos];
-        build_load_routine(block, 4, 1);
-        codegen_mem_load_double = &block_write_data[block_pos];
-        build_load_routine(block, 8, 1);
+	codegen_mem_load_byte = &block_write_data[block_pos];
+	build_load_routine(block, 1, 0);
+	codegen_mem_load_word = &block_write_data[block_pos];
+	build_load_routine(block, 2, 0);
+	codegen_mem_load_long = &block_write_data[block_pos];
+	build_load_routine(block, 4, 0);
+	codegen_mem_load_quad = &block_write_data[block_pos];
+	build_load_routine(block, 8, 0);
+	codegen_mem_load_single = &block_write_data[block_pos];
+	build_load_routine(block, 4, 1);
+	codegen_mem_load_double = &block_write_data[block_pos];
+	build_load_routine(block, 8, 1);
 
-        codegen_mem_store_byte = &block_write_data[block_pos];
-        build_store_routine(block, 1, 0);
-        codegen_mem_store_word = &block_write_data[block_pos];
-        build_store_routine(block, 2, 0);
-        codegen_mem_store_long = &block_write_data[block_pos];
-        build_store_routine(block, 4, 0);
-        codegen_mem_store_quad = &block_write_data[block_pos];
-        build_store_routine(block, 8, 0);
-        codegen_mem_store_single = &block_write_data[block_pos];
-        build_store_routine(block, 4, 1);
-        codegen_mem_store_double = &block_write_data[block_pos];
-        build_store_routine(block, 8, 1);
+	codegen_mem_store_byte = &block_write_data[block_pos];
+	build_store_routine(block, 1, 0);
+	codegen_mem_store_word = &block_write_data[block_pos];
+	build_store_routine(block, 2, 0);
+	codegen_mem_store_long = &block_write_data[block_pos];
+	build_store_routine(block, 4, 0);
+	codegen_mem_store_quad = &block_write_data[block_pos];
+	build_store_routine(block, 8, 0);
+	codegen_mem_store_single = &block_write_data[block_pos];
+	build_store_routine(block, 4, 1);
+	codegen_mem_store_double = &block_write_data[block_pos];
+	build_store_routine(block, 8, 1);
 }
 
 static void build_fp_round_routine(codeblock_t *block, int is_quad)
@@ -265,7 +265,7 @@ static void build_fp_round_routine(codeblock_t *block, int is_quad)
 	else
 		host_arm64_FCVTMS_W_D(block, REG_TEMP, REG_V_TEMP);
 	host_arm64_RET(block, REG_X30);
-	
+
 	jump_table[X87_ROUNDING_CHOP] = (uint64_t)(uintptr_t)&block_write_data[block_pos]; //zero
 	if (is_quad)
 		host_arm64_FCVTZS_X_D(block, REG_TEMP, REG_V_TEMP);
@@ -277,7 +277,7 @@ static void build_fp_round_routine(codeblock_t *block, int is_quad)
 void codegen_backend_init()
 {
 	codeblock_t *block;
-        int c;
+	int c;
 #if defined(__linux__) || defined(__APPLE__)
 	void *start;
 	size_t len;
@@ -286,38 +286,38 @@ void codegen_backend_init()
 #endif
 
 	codeblock = malloc(BLOCK_SIZE * sizeof(codeblock_t));
-        codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
+	codeblock_hash = malloc(HASH_SIZE * sizeof(codeblock_t *));
 
-        memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
-        memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
+	memset(codeblock, 0, BLOCK_SIZE * sizeof(codeblock_t));
+	memset(codeblock_hash, 0, HASH_SIZE * sizeof(codeblock_t *));
 
-        for (c = 0; c < BLOCK_SIZE; c++)
+	for (c = 0; c < BLOCK_SIZE; c++)
 	{
-                codeblock[c].pc = BLOCK_PC_INVALID;
+		codeblock[c].pc = BLOCK_PC_INVALID;
 	}
 
 //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
 
-        block_current = 0;
-        block_pos = 0;
-        block = &codeblock[block_current];
-        block->head_mem_block = codegen_allocator_allocate(NULL, block_current);
-        block->data = codeblock_allocator_get_ptr(block->head_mem_block);
-        block_write_data = block->data;
-        build_loadstore_routines(block);
+	block_current = 0;
+	block_pos = 0;
+	block = &codeblock[block_current];
+	block->head_mem_block = codegen_allocator_allocate(NULL, block_current);
+	block->data = codeblock_allocator_get_ptr(block->head_mem_block);
+	block_write_data = block->data;
+	build_loadstore_routines(block);
 
-        codegen_fp_round = &block_write_data[block_pos];
+	codegen_fp_round = &block_write_data[block_pos];
 	build_fp_round_routine(block, 0);
-        codegen_fp_round_quad = &block_write_data[block_pos];
+	codegen_fp_round_quad = &block_write_data[block_pos];
 	build_fp_round_routine(block, 1);
 
 	codegen_alloc(block, 80);
-        codegen_gpf_rout = &block_write_data[block_pos];
+	codegen_gpf_rout = &block_write_data[block_pos];
 	host_arm64_mov_imm(block, REG_ARG0, 0);
 	host_arm64_mov_imm(block, REG_ARG1, 0);
 	host_arm64_call(block, (void *)x86gpf);
 
-        codegen_exit_rout = &block_write_data[block_pos];
+	codegen_exit_rout = &block_write_data[block_pos];
 	host_arm64_LDP_POSTIDX_X(block, REG_X19, REG_X20, REG_XSP, 64);
 	host_arm64_LDP_POSTIDX_X(block, REG_X21, REG_X22, REG_XSP, 16);
 	host_arm64_LDP_POSTIDX_X(block, REG_X23, REG_X24, REG_XSP, 16);
@@ -326,12 +326,12 @@ void codegen_backend_init()
 	host_arm64_LDP_POSTIDX_X(block, REG_X29, REG_X30, REG_XSP, 16);
 	host_arm64_RET(block, REG_X30);
 
-        block_write_data = NULL;
+	block_write_data = NULL;
 
 	codegen_allocator_clean_blocks(block->head_mem_block);
 
 	asm("mrs %0, fpcr\n"
-                : "=r" (cpu_state.old_fp_control)
+		: "=r" (cpu_state.old_fp_control)
 	);
 }
 
@@ -339,13 +339,13 @@ void codegen_set_rounding_mode(int mode)
 {
 	if (mode < 0 || mode > 3)
 		fatal("codegen_set_rounding_mode - invalid mode\n");
-        cpu_state.new_fp_control = mode << 3;
+	cpu_state.new_fp_control = mode << 3;
 }
 
 /*R10 - cpu_state*/
 void codegen_backend_prologue(codeblock_t *block)
 {
-        block_pos = BLOCK_START;
+	block_pos = BLOCK_START;
 
 	/*Entry code*/
 
@@ -358,12 +358,12 @@ void codegen_backend_prologue(codeblock_t *block)
 
 	host_arm64_MOVX_IMM(block, REG_CPUSTATE, (uint64_t)&cpu_state);
 
-        if (block->flags & CODEBLOCK_HAS_FPU)
-        {
+	if (block->flags & CODEBLOCK_HAS_FPU)
+	{
 		host_arm64_LDR_IMM_W(block, REG_TEMP, REG_CPUSTATE, (uintptr_t)&cpu_state.TOP - (uintptr_t)&cpu_state);
 		host_arm64_SUB_IMM(block, REG_TEMP, REG_TEMP, block->TOP);
 		host_arm64_STR_IMM_W(block, REG_TEMP, REG_XSP, IREG_TOP_diff_stack_offset);
-        }
+	}
 }
 
 void codegen_backend_epilogue(codeblock_t *block)

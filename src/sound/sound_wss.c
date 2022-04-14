@@ -26,125 +26,117 @@
 /*f40, 11, 1 - 530=22*/
 
 
-static int wss_dma[4] = { 0, 0, 1, 3 };
-static int wss_irq[8] = { 5, 7, 9, 10, 11, 12, 14, 15 }; /*W95 only uses 7-9, others may be wrong*/
+static int wss_dma[4] = {0, 0, 1, 3};
+static int wss_irq[8] = {5, 7, 9, 10, 11, 12, 14, 15}; /*W95 only uses 7-9, others may be wrong*/
 //static uint16_t wss_addr[4] = {0x530, 0x604, 0xe80, 0xf40};
 
-typedef struct wss_t
-{
-        uint8_t config;
+typedef struct wss_t {
+	uint8_t config;
 
-        ad1848_t ad1848;
-        opl_t opl;
+	ad1848_t ad1848;
+	opl_t opl;
 } wss_t;
 
-uint8_t wss_read(uint16_t addr, void* p)
-{
-        wss_t* wss = (wss_t*)p;
-        uint8_t temp;
+uint8_t wss_read(uint16_t addr, void *p) {
+	wss_t *wss = (wss_t *)p;
+	uint8_t temp;
 //        pclog("wss_read - addr %04X %04X(%08X):%08X ", addr, CS, cs, pc);
-        temp = 4 | (wss->config & 0x40);
+	temp = 4 | (wss->config & 0x40);
 //        pclog("return %02X\n", temp);
-        return temp;
+	return temp;
 }
 
-void wss_write(uint16_t addr, uint8_t val, void* p)
-{
-        wss_t* wss = (wss_t*)p;
+void wss_write(uint16_t addr, uint8_t val, void *p) {
+	wss_t *wss = (wss_t *)p;
 //        pclog("wss_write - addr %04X val %02X  %04X(%08X):%08X\n", addr, val, CS, cs, pc);
 
-        wss->config = val;
-        ad1848_setdma(&wss->ad1848, wss_dma[val & 3]);
-        ad1848_setirq(&wss->ad1848, wss_irq[(val >> 3) & 7]);
+	wss->config = val;
+	ad1848_setdma(&wss->ad1848, wss_dma[val & 3]);
+	ad1848_setirq(&wss->ad1848, wss_irq[(val >> 3) & 7]);
 }
 
-static void wss_get_buffer(int32_t* buffer, int len, void* p)
-{
-        wss_t* wss = (wss_t*)p;
+static void wss_get_buffer(int32_t *buffer, int len, void *p) {
+	wss_t *wss = (wss_t *)p;
 
-        int c;
+	int c;
 
-        opl3_update2(&wss->opl);
-        ad1848_update(&wss->ad1848);
-        for (c = 0; c < len * 2; c++)
-        {
-                buffer[c] += wss->opl.buffer[c];
-                buffer[c] += (wss->ad1848.buffer[c] / 2);
-        }
+	opl3_update2(&wss->opl);
+	ad1848_update(&wss->ad1848);
+	for (c = 0; c < len * 2; c++) {
+		buffer[c] += wss->opl.buffer[c];
+		buffer[c] += (wss->ad1848.buffer[c] / 2);
+	}
 
-        wss->opl.pos = 0;
-        wss->ad1848.pos = 0;
+	wss->opl.pos = 0;
+	wss->ad1848.pos = 0;
 }
 
-void* wss_init()
-{
-        int opl_emu;
-        wss_t* wss = malloc(sizeof(wss_t));
-        memset(wss, 0, sizeof(wss_t));
+void *wss_init() {
+	int opl_emu;
+	wss_t *wss = malloc(sizeof(wss_t));
+	memset(wss, 0, sizeof(wss_t));
 
-        opl_emu = device_get_config_int("opl_emu");
-        opl3_init(&wss->opl, opl_emu);
-        ad1848_init(&wss->ad1848, AD1848_TYPE_DEFAULT);
+	opl_emu = device_get_config_int("opl_emu");
+	opl3_init(&wss->opl, opl_emu);
+	ad1848_init(&wss->ad1848, AD1848_TYPE_DEFAULT);
 
-        ad1848_setirq(&wss->ad1848, 7);
-        ad1848_setdma(&wss->ad1848, 3);
+	ad1848_setirq(&wss->ad1848, 7);
+	ad1848_setdma(&wss->ad1848, 3);
 
-        io_sethandler(0x0388, 0x0004, opl3_read, NULL, NULL, opl3_write, NULL, NULL, &wss->opl);
-        io_sethandler(0x0530, 0x0004, wss_read, NULL, NULL, wss_write, NULL, NULL, wss);
-        io_sethandler(0x0534, 0x0004, ad1848_read, NULL, NULL, ad1848_write, NULL, NULL, &wss->ad1848);
+	io_sethandler(0x0388, 0x0004, opl3_read, NULL, NULL, opl3_write, NULL, NULL, &wss->opl);
+	io_sethandler(0x0530, 0x0004, wss_read, NULL, NULL, wss_write, NULL, NULL, wss);
+	io_sethandler(0x0534, 0x0004, ad1848_read, NULL, NULL, ad1848_write, NULL, NULL, &wss->ad1848);
 
-        sound_add_handler(wss_get_buffer, wss);
+	sound_add_handler(wss_get_buffer, wss);
 
-        return wss;
+	return wss;
 }
 
-void wss_close(void* p)
-{
-        wss_t* wss = (wss_t*)p;
+void wss_close(void *p) {
+	wss_t *wss = (wss_t *)p;
 
-        free(wss);
+	free(wss);
 }
 
-void wss_speed_changed(void* p)
-{
-        wss_t* wss = (wss_t*)p;
+void wss_speed_changed(void *p) {
+	wss_t *wss = (wss_t *)p;
 
-        ad1848_speed_changed(&wss->ad1848);
+	ad1848_speed_changed(&wss->ad1848);
 }
 
 static device_config_t wss_config[] =
-        {
-                {
-                        .name = "opl_emu",
-                        .description = "OPL emulator",
-                        .type = CONFIG_SELECTION,
-                        .selection =
-                                {
-                                        {
-                                                .description = "DBOPL",
-                                                .value = OPL_DBOPL
-                                        },
-                                        {
-                                                .description = "NukedOPL",
-                                                .value = OPL_NUKED
-                                        },
-                                },
-                        .default_int = OPL_DBOPL
-                },
-                {
-                        .type = -1
-                }
-        };
+	{
+		{
+			.name = "opl_emu",
+			.description = "OPL emulator",
+			.type = CONFIG_SELECTION,
+			.selection =
+				{
+					{
+						.description = "DBOPL",
+						.value = OPL_DBOPL
+					},
+					{
+						.description = "NukedOPL",
+						.value = OPL_NUKED
+					},
+				},
+			.default_int = OPL_DBOPL
+		},
+		{
+			.type = -1
+		}
+	};
 
 device_t wss_device =
-        {
-                "Windows Sound System",
-                0,
-                wss_init,
-                wss_close,
-                NULL,
-                wss_speed_changed,
-                NULL,
-                NULL,
-                wss_config
-        };
+	{
+		"Windows Sound System",
+		0,
+		wss_init,
+		wss_close,
+		NULL,
+		wss_speed_changed,
+		NULL,
+		NULL,
+		wss_config
+	};

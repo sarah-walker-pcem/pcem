@@ -277,32 +277,32 @@ static void codegen_allocate_new_block(codeblock_t *block);
 
 static inline void codegen_addlong(codeblock_t *block, uint32_t val)
 {
-        if (block_pos >= (BLOCK_MAX-4))
+	if (block_pos >= (BLOCK_MAX-4))
 		codegen_allocate_new_block(block);
-        *(uint32_t *)&block_write_data[block_pos] = val;
-        block_pos += 4;
+	*(uint32_t *)&block_write_data[block_pos] = val;
+	block_pos += 4;
 }
 
 static void codegen_allocate_new_block(codeblock_t *block)
 {
-        /*Current block is full. Allocate a new block*/
-        struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block, get_block_nr(block));
-        uint8_t *new_ptr = codeblock_allocator_get_ptr(new_block);
+	/*Current block is full. Allocate a new block*/
+	struct mem_block_t *new_block = codegen_allocator_allocate(block->head_mem_block, get_block_nr(block));
+	uint8_t *new_ptr = codeblock_allocator_get_ptr(new_block);
 	uint32_t offset = (uintptr_t)new_ptr - (uintptr_t)&block_write_data[block_pos];
 
 	if (!offset_is_26bit(offset))
 		fatal("codegen_allocate_new_block - offset out of range %x\n", offset);
-        /*Add a jump instruction to the new block*/
+	/*Add a jump instruction to the new block*/
 	*(uint32_t *)&block_write_data[block_pos] = OPCODE_B | OFFSET26(offset);
 
-        /*Set write address to start of new block*/
-        block_pos = 0;
-        block_write_data = new_ptr;
+	/*Set write address to start of new block*/
+	block_pos = 0;
+	block_write_data = new_ptr;
 }
 
 void codegen_alloc(codeblock_t *block, int size)
 {
-        if (block_pos >= (BLOCK_MAX-size))
+	if (block_pos >= (BLOCK_MAX-size))
 		codegen_allocate_new_block(block);
 }
 
@@ -1096,7 +1096,7 @@ void host_arm64_SCVTF_V2S(codeblock_t *block, int dst_reg, int src_reg)
 void host_arm64_SHRN_V4H_4S(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
 	if (shift > 16)
-                fatal("host_arm64_SHRN_V4H_4S : shift > 16\n");
+		fatal("host_arm64_SHRN_V4H_4S : shift > 16\n");
 	codegen_addlong(block, OPCODE_SHRN | Rd(dst_reg) | Rn(src_n_reg) | SHRN_SHIFT_IMM_V4S(16-shift));
 }
 
@@ -1146,20 +1146,20 @@ void host_arm64_SHL_V2D(codeblock_t *block, int dst_reg, int src_n_reg, int shif
 
 void host_arm64_SSHR_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-        if (shift > 16)
-                fatal("host_arm_USHR_V4H : shift > 16\n");
+	if (shift > 16)
+		fatal("host_arm_USHR_V4H : shift > 16\n");
 	codegen_addlong(block, OPCODE_SSHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V4H(16-shift));
 }
 void host_arm64_SSHR_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-        if (shift > 32)
-                fatal("host_arm_SSHR_V2S : shift > 32\n");
+	if (shift > 32)
+		fatal("host_arm_SSHR_V2S : shift > 32\n");
 	codegen_addlong(block, OPCODE_SSHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2S(32-shift));
 }
 void host_arm64_SSHR_V2D(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-        if (shift > 64)
-                fatal("host_arm_SSHR_V2D : shift > 64\n");
+	if (shift > 64)
+		fatal("host_arm_SSHR_V2D : shift > 64\n");
 	codegen_addlong(block, OPCODE_SSHR_VQ | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2D(64-shift));
 }
 
@@ -1314,20 +1314,20 @@ void host_arm64_UQXTN_V4H_4S(codeblock_t *block, int dst_reg, int src_reg)
 
 void host_arm64_USHR_V4H(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-        if (shift > 16)
-                fatal("host_arm_USHR_V4H : shift > 16\n");
+	if (shift > 16)
+		fatal("host_arm_USHR_V4H : shift > 16\n");
 	codegen_addlong(block, OPCODE_USHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V4H(16-shift));
 }
 void host_arm64_USHR_V2S(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-        if (shift > 32)
-                fatal("host_arm_USHR_V4S : shift > 32\n");
+	if (shift > 32)
+		fatal("host_arm_USHR_V4S : shift > 32\n");
 	codegen_addlong(block, OPCODE_USHR_VD | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2S(32-shift));
 }
 void host_arm64_USHR_V2D(codeblock_t *block, int dst_reg, int src_n_reg, int shift)
 {
-        if (shift > 64)
-                fatal("host_arm_USHR_V2D : shift > 64\n");
+	if (shift > 64)
+		fatal("host_arm_USHR_V2D : shift > 64\n");
 	codegen_addlong(block, OPCODE_USHR_VQ | Rd(dst_reg) | Rn(src_n_reg) | SHIFT_IMM_V2D(64-shift));
 }
 

@@ -46,163 +46,138 @@ ropParith(PFMIN)
 ropParith(PFMUL)
 ropParith(PFSUB)
 
-uint32_t ropPF2ID(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = (fetchdat >> 3) & 7;
+uint32_t ropPF2ID(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = (fetchdat >> 3) & 7;
 
-        uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
-                int src_reg = fetchdat & 7;
-                uop_PF2ID(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
-                x86seg *target_seg;
+	uop_MMX_ENTER(ir);
+	codegen_mark_code_present(block, cs + op_pc, 1);
+	if ((fetchdat & 0xc0) == 0xc0) {
+		int src_reg = fetchdat & 7;
+		uop_PF2ID(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
+	} else {
+		x86seg *target_seg;
 
-                uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
-                target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
-                codegen_check_seg_read(block, ir, target_seg);
-                uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
-                uop_PF2ID(ir, IREG_MM(dest_reg), IREG_temp0_Q);
-        }
+		uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+		target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+		codegen_check_seg_read(block, ir, target_seg);
+		uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
+		uop_PF2ID(ir, IREG_MM(dest_reg), IREG_temp0_Q);
+	}
 
-        codegen_mark_code_present(block, cs+op_pc+1, 1);
-        return op_pc + 2;
+	codegen_mark_code_present(block, cs + op_pc + 1, 1);
+	return op_pc + 2;
 }
 
-uint32_t ropPFSUBR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = (fetchdat >> 3) & 7;
+uint32_t ropPFSUBR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = (fetchdat >> 3) & 7;
 
-        uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
-                int src_reg = fetchdat & 7;
-                uop_PFSUB(ir, IREG_MM(dest_reg), IREG_MM(src_reg), IREG_MM(dest_reg));
-        }
-        else
-        {
-                x86seg *target_seg;
+	uop_MMX_ENTER(ir);
+	codegen_mark_code_present(block, cs + op_pc, 1);
+	if ((fetchdat & 0xc0) == 0xc0) {
+		int src_reg = fetchdat & 7;
+		uop_PFSUB(ir, IREG_MM(dest_reg), IREG_MM(src_reg), IREG_MM(dest_reg));
+	} else {
+		x86seg *target_seg;
 
-                uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
-                target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
-                codegen_check_seg_read(block, ir, target_seg);
-                uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
-                uop_PFSUB(ir, IREG_MM(dest_reg), IREG_temp0_Q, IREG_MM(dest_reg));
-        }
+		uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+		target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+		codegen_check_seg_read(block, ir, target_seg);
+		uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
+		uop_PFSUB(ir, IREG_MM(dest_reg), IREG_temp0_Q, IREG_MM(dest_reg));
+	}
 
-        codegen_mark_code_present(block, cs+op_pc+1, 1);
-        return op_pc + 2;
+	codegen_mark_code_present(block, cs + op_pc + 1, 1);
+	return op_pc + 2;
 }
 
-uint32_t ropPI2FD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = (fetchdat >> 3) & 7;
+uint32_t ropPI2FD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = (fetchdat >> 3) & 7;
 
-        uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
-                int src_reg = fetchdat & 7;
-                uop_PI2FD(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
-                x86seg *target_seg;
+	uop_MMX_ENTER(ir);
+	codegen_mark_code_present(block, cs + op_pc, 1);
+	if ((fetchdat & 0xc0) == 0xc0) {
+		int src_reg = fetchdat & 7;
+		uop_PI2FD(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
+	} else {
+		x86seg *target_seg;
 
-                uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
-                target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
-                codegen_check_seg_read(block, ir, target_seg);
-                uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
-                uop_PI2FD(ir, IREG_MM(dest_reg), IREG_temp0_Q);
-        }
+		uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+		target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+		codegen_check_seg_read(block, ir, target_seg);
+		uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
+		uop_PI2FD(ir, IREG_MM(dest_reg), IREG_temp0_Q);
+	}
 
-        codegen_mark_code_present(block, cs+op_pc+1, 1);
-        return op_pc + 2;
+	codegen_mark_code_present(block, cs + op_pc + 1, 1);
+	return op_pc + 2;
 }
 
-uint32_t ropPFRCPIT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = (fetchdat >> 3) & 7;
+uint32_t ropPFRCPIT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = (fetchdat >> 3) & 7;
 
-        uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
-                int src_reg = fetchdat & 7;
-                uop_MOV(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
-                x86seg *target_seg;
+	uop_MMX_ENTER(ir);
+	codegen_mark_code_present(block, cs + op_pc, 1);
+	if ((fetchdat & 0xc0) == 0xc0) {
+		int src_reg = fetchdat & 7;
+		uop_MOV(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
+	} else {
+		x86seg *target_seg;
 
-                uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
-                target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
-                codegen_check_seg_read(block, ir, target_seg);
-                uop_MEM_LOAD_REG(ir, IREG_MM(dest_reg), ireg_seg_base(target_seg), IREG_eaaddr);
-        }
+		uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+		target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+		codegen_check_seg_read(block, ir, target_seg);
+		uop_MEM_LOAD_REG(ir, IREG_MM(dest_reg), ireg_seg_base(target_seg), IREG_eaaddr);
+	}
 
-        codegen_mark_code_present(block, cs+op_pc+1, 1);
-        return op_pc + 2;
+	codegen_mark_code_present(block, cs + op_pc + 1, 1);
+	return op_pc + 2;
 }
-uint32_t ropPFRCP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = (fetchdat >> 3) & 7;
+uint32_t ropPFRCP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = (fetchdat >> 3) & 7;
 
-        uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
-                int src_reg = fetchdat & 7;
-                uop_PFRCP(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
-                x86seg *target_seg;
+	uop_MMX_ENTER(ir);
+	codegen_mark_code_present(block, cs + op_pc, 1);
+	if ((fetchdat & 0xc0) == 0xc0) {
+		int src_reg = fetchdat & 7;
+		uop_PFRCP(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
+	} else {
+		x86seg *target_seg;
 
-                uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
-                target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
-                codegen_check_seg_read(block, ir, target_seg);
-                uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
-                uop_PFRCP(ir, IREG_MM(dest_reg), IREG_temp0_Q);
-        }
+		uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+		target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+		codegen_check_seg_read(block, ir, target_seg);
+		uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
+		uop_PFRCP(ir, IREG_MM(dest_reg), IREG_temp0_Q);
+	}
 
-        codegen_mark_code_present(block, cs+op_pc+1, 1);
-        return op_pc + 2;
+	codegen_mark_code_present(block, cs + op_pc + 1, 1);
+	return op_pc + 2;
 }
-uint32_t ropPFRSQRT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = (fetchdat >> 3) & 7;
+uint32_t ropPFRSQRT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = (fetchdat >> 3) & 7;
 
-        uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
-                int src_reg = fetchdat & 7;
-                uop_PFRSQRT(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
-                x86seg *target_seg;
+	uop_MMX_ENTER(ir);
+	codegen_mark_code_present(block, cs + op_pc, 1);
+	if ((fetchdat & 0xc0) == 0xc0) {
+		int src_reg = fetchdat & 7;
+		uop_PFRSQRT(ir, IREG_MM(dest_reg), IREG_MM(src_reg));
+	} else {
+		x86seg *target_seg;
 
-                uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
-                target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
-                codegen_check_seg_read(block, ir, target_seg);
-                uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
-                uop_PFRSQRT(ir, IREG_MM(dest_reg), IREG_temp0_Q);
-        }
+		uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
+		target_seg = codegen_generate_ea(ir, op_ea_seg, fetchdat, op_ssegs, &op_pc, op_32, 0);
+		codegen_check_seg_read(block, ir, target_seg);
+		uop_MEM_LOAD_REG(ir, IREG_temp0_Q, ireg_seg_base(target_seg), IREG_eaaddr);
+		uop_PFRSQRT(ir, IREG_MM(dest_reg), IREG_temp0_Q);
+	}
 
-        codegen_mark_code_present(block, cs+op_pc+1, 1);
-        return op_pc + 2;
+	codegen_mark_code_present(block, cs + op_pc + 1, 1);
+	return op_pc + 2;
 }
 
-uint32_t ropPFRSQIT1(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        uop_MMX_ENTER(ir);
+uint32_t ropPFRSQIT1(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	uop_MMX_ENTER(ir);
 
-        codegen_mark_code_present(block, cs+op_pc, 2);
-        return op_pc + 2;
+	codegen_mark_code_present(block, cs + op_pc, 2);
+	return op_pc + 2;
 }

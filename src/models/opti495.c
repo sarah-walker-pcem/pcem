@@ -8,52 +8,43 @@
 static uint8_t optiregs[0x10];
 static int optireg;
 
-static void opti495_write(uint16_t addr, uint8_t val, void *p)
-{
-        switch (addr)
-        {
-                case 0x22:
-                optireg=val;
-                break;
-                case 0x24:
-                printf("Writing OPTI reg %02X %02X\n",optireg,val);
-                if (optireg>=0x20 && optireg<=0x2C)
-                {
-                        optiregs[optireg-0x20]=val;
-                        if (optireg == 0x21)
-                        {
-                                cpu_cache_ext_enabled = val & 0x10;
-                                cpu_update_waitstates();
-                        }
-                        if (optireg == 0x22)
-                        {
-                                if (!(val & 0x80))
-                                        mem_set_mem_state(0xf0000, 0x10000, MEM_READ_INTERNAL | MEM_WRITE_DISABLED);
-                                else
-                                        mem_set_mem_state(0xf0000, 0x10000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
-                        }
-                }
-                break;
-        }
+static void opti495_write(uint16_t addr, uint8_t val, void *p) {
+	switch (addr) {
+	case 0x22:optireg = val;
+		break;
+	case 0x24:printf("Writing OPTI reg %02X %02X\n", optireg, val);
+		if (optireg >= 0x20 && optireg <= 0x2C) {
+			optiregs[optireg - 0x20] = val;
+			if (optireg == 0x21) {
+				cpu_cache_ext_enabled = val & 0x10;
+				cpu_update_waitstates();
+			}
+			if (optireg == 0x22) {
+				if (!(val & 0x80))
+					mem_set_mem_state(0xf0000, 0x10000, MEM_READ_INTERNAL | MEM_WRITE_DISABLED);
+				else
+					mem_set_mem_state(0xf0000, 0x10000, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
+			}
+		}
+		break;
+	}
 }
 
-static uint8_t opti495_read(uint16_t addr, void *p)
-{
-        switch (addr)
-        {
-                case 0x24:
-                //printf("Read OPTI reg %02X\n",optireg);
-                if (optireg>=0x20 && optireg<=0x2C) return optiregs[optireg-0x20];
-                break;
-        }
-        return 0xFF;
+static uint8_t opti495_read(uint16_t addr, void *p) {
+	switch (addr) {
+	case 0x24:
+		//printf("Read OPTI reg %02X\n",optireg);
+		if (optireg >= 0x20 && optireg <= 0x2C)
+			return optiregs[optireg - 0x20];
+		break;
+	}
+	return 0xFF;
 }
 
-void opti495_init()
-{
-        io_sethandler(0x0022, 0x0001, opti495_read, NULL, NULL, opti495_write, NULL, NULL, NULL);
-        io_sethandler(0x0024, 0x0001, opti495_read, NULL, NULL, opti495_write, NULL, NULL, NULL);
-        optiregs[0x22-0x20] = 0x80;
+void opti495_init() {
+	io_sethandler(0x0022, 0x0001, opti495_read, NULL, NULL, opti495_write, NULL, NULL, NULL);
+	io_sethandler(0x0024, 0x0001, opti495_read, NULL, NULL, opti495_write, NULL, NULL, NULL);
+	optiregs[0x22 - 0x20] = 0x80;
 }
 
 /*Details for the chipset from Ralph Brown's interrupt list

@@ -26,5 +26,4 @@ void pci_clear_irq(int card, int pci_int);
 
 extern int pci_burst_time, pci_nonburst_time;
 
-
 #endif /* _PCI_H_ */

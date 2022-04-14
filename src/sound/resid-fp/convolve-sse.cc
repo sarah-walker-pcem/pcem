@@ -23,60 +23,53 @@
 
 #include <xmmintrin.h>
 
-float convolve_sse(const float* a, const float* b, int n)
-{
-        float out = 0.f;
-        __m128 out4 = { 0, 0, 0, 0 };
+float convolve_sse(const float *a, const float *b, int n) {
+	float out = 0.f;
+	__m128 out4 = {0, 0, 0, 0};
 
-        /* examine if we can use aligned loads on both pointers */
-        int diff = (int)(a - b) & 0xf;
-        /* long cast is no-op for x86-32, but x86-64 gcc needs 64 bit intermediate
-         * to convince compiler we mean this. */
-        unsigned int a_align = (unsigned int)(uintptr_t)a & 0xf;
+	/* examine if we can use aligned loads on both pointers */
+	int diff = (int)(a - b) & 0xf;
+	/* long cast is no-op for x86-32, but x86-64 gcc needs 64 bit intermediate
+	 * to convince compiler we mean this. */
+	unsigned int a_align = (unsigned int)(uintptr_t)a & 0xf;
 
-        /* advance if necessary. We can't let n fall < 0, so no while (n --). */
-        while (n > 0 && a_align != 0 && a_align != 16)
-        {
-                out += (*(a++)) * (*(b++));
-                --n;
-                a_align += 4;
-        }
+	/* advance if necessary. We can't let n fall < 0, so no while (n --). */
+	while (n > 0 && a_align != 0 && a_align != 16) {
+		out += (*(a++)) * (*(b++));
+		--n;
+		a_align += 4;
+	}
 
-        int n4 = n / 4;
-        if (diff == 0)
-        {
-                for (int i = 0; i < n4; i++)
-                {
-                        out4 = _mm_add_ps(out4, _mm_mul_ps(_mm_load_ps(a), _mm_load_ps(b)));
-                        a += 4;
-                        b += 4;
-                }
-        }
-        else
-        {
-                /* XXX loadu is 4x slower than load, at least. We could at 4x memory
-                 * use prepare versions of b aligned for any a alignment. We could
-                 * also issue aligned loads and shuffle the halves at each iteration.
-                 * Initial results indicate only very small improvements. */
-                for (int i = 0; i < n4; i++)
-                {
-                        out4 = _mm_add_ps(out4, _mm_mul_ps(_mm_load_ps(a), _mm_loadu_ps(b)));
-                        a += 4;
-                        b += 4;
-                }
-        }
+	int n4 = n / 4;
+	if (diff == 0) {
+		for (int i = 0; i < n4; i++) {
+			out4 = _mm_add_ps(out4, _mm_mul_ps(_mm_load_ps(a), _mm_load_ps(b)));
+			a += 4;
+			b += 4;
+		}
+	} else {
+		/* XXX loadu is 4x slower than load, at least. We could at 4x memory
+		 * use prepare versions of b aligned for any a alignment. We could
+		 * also issue aligned loads and shuffle the halves at each iteration.
+		 * Initial results indicate only very small improvements. */
+		for (int i = 0; i < n4; i++) {
+			out4 = _mm_add_ps(out4, _mm_mul_ps(_mm_load_ps(a), _mm_loadu_ps(b)));
+			a += 4;
+			b += 4;
+		}
+	}
 
-        out4 = _mm_add_ps(_mm_movehl_ps(out4, out4), out4);
-        out4 = _mm_add_ss(_mm_shuffle_ps(out4, out4, 1), out4);
-        float out_tmp;
-        _mm_store_ss(&out_tmp, out4);
-        out += out_tmp;
+	out4 = _mm_add_ps(_mm_movehl_ps(out4, out4), out4);
+	out4 = _mm_add_ss(_mm_shuffle_ps(out4, out4, 1), out4);
+	float out_tmp;
+	_mm_store_ss(&out_tmp, out4);
+	out += out_tmp;
 
-        n &= 3;
+	n &= 3;
 
-        while (n--)
-                out += (*(a++)) * (*(b++));
+	while (n--)
+		out += (*(a++)) * (*(b++));
 
-        return out;
+	return out;
 }
 #endif

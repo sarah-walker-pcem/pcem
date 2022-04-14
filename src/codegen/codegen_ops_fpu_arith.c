@@ -11,262 +11,238 @@
 #include "codegen_ops_fpu_arith.h"
 #include "codegen_ops_helpers.h"
 
-uint32_t ropFADD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFADD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FADD(ir, IREG_ST(0), IREG_ST(0), IREG_ST(src_reg));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
-        
-        return op_pc;
+	uop_FP_ENTER(ir);
+	uop_FADD(ir, IREG_ST(0), IREG_ST(0), IREG_ST(src_reg));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+
+	return op_pc;
 }
-uint32_t ropFADDr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFADDr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FADD(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FADD(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFADDP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFADDP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FADD(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(block, ir);
-        
-        return op_pc;
+	uop_FP_ENTER(ir);
+	uop_FADD(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	fpu_POP(block, ir);
+
+	return op_pc;
 }
 
-uint32_t ropFCOM(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFCOM(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
-        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
-        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+	uop_FP_ENTER(ir);
+	uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
+	uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0 | C2 | C3));
+	uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFCOMP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFCOMP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
-        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
-        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
-        fpu_POP(block, ir);
+	uop_FP_ENTER(ir);
+	uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
+	uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0 | C2 | C3));
+	uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+	fpu_POP(block, ir);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFCOMPP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        uop_FP_ENTER(ir);
-        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(1));
-        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
-        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
-        fpu_POP2(block, ir);
+uint32_t ropFCOMPP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	uop_FP_ENTER(ir);
+	uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(1));
+	uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0 | C2 | C3));
+	uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+	fpu_POP2(block, ir);
 
-        return op_pc;
+	return op_pc;
 }
 
-uint32_t ropFDIV(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFDIV(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FDIV(ir, IREG_ST(0), IREG_ST(0), IREG_ST(src_reg));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FDIV(ir, IREG_ST(0), IREG_ST(0), IREG_ST(src_reg));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFDIVR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFDIVR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FDIV(ir, IREG_ST(0), IREG_ST(src_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FDIV(ir, IREG_ST(0), IREG_ST(src_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFDIVr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFDIVr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFDIVRr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFDIVRr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFDIVP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFDIVP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(block, ir);
-        
-        return op_pc;
+	uop_FP_ENTER(ir);
+	uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	fpu_POP(block, ir);
+
+	return op_pc;
 }
-uint32_t ropFDIVRP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFDIVRP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(block, ir);
+	uop_FP_ENTER(ir);
+	uop_FDIV(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	fpu_POP(block, ir);
 
-        return op_pc;
+	return op_pc;
 }
 
-uint32_t ropFMUL(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFMUL(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FMUL(ir, IREG_ST(0), IREG_ST(0), IREG_ST(src_reg));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FMUL(ir, IREG_ST(0), IREG_ST(0), IREG_ST(src_reg));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFMULr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFMULr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FMUL(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FMUL(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFMULP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFMULP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FMUL(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(block, ir);
+	uop_FP_ENTER(ir);
+	uop_FMUL(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	fpu_POP(block, ir);
 
-        return op_pc;
+	return op_pc;
 }
 
-uint32_t ropFSUB(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFSUB(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FSUB(ir, IREG_ST(0), IREG_ST(0), IREG_ST(src_reg));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FSUB(ir, IREG_ST(0), IREG_ST(0), IREG_ST(src_reg));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFSUBR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFSUBR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FSUB(ir, IREG_ST(0), IREG_ST(src_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FSUB(ir, IREG_ST(0), IREG_ST(src_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFSUBr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFSUBr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFSUBRr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFSUBRr(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	uop_FP_ENTER(ir);
+	uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFSUBP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFSUBP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(block, ir);
+	uop_FP_ENTER(ir);
+	uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(dest_reg), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	fpu_POP(block, ir);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFSUBRP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int dest_reg = fetchdat & 7;
+uint32_t ropFSUBRP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int dest_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
-        uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
-        fpu_POP(block, ir);
-        
-        return op_pc;
+	uop_FP_ENTER(ir);
+	uop_FSUB(ir, IREG_ST(dest_reg), IREG_ST(0), IREG_ST(dest_reg));
+	uop_MOV_IMM(ir, IREG_tag(dest_reg), TAG_VALID);
+	fpu_POP(block, ir);
+
+	return op_pc;
 }
 
-uint32_t ropFUCOM(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFUCOM(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
-        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
-        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+	uop_FP_ENTER(ir);
+	uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
+	uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0 | C2 | C3));
+	uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFUCOMP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        int src_reg = fetchdat & 7;
+uint32_t ropFUCOMP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	int src_reg = fetchdat & 7;
 
-        uop_FP_ENTER(ir);
-        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
-        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
-        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
-        fpu_POP(block, ir);
+	uop_FP_ENTER(ir);
+	uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(src_reg));
+	uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0 | C2 | C3));
+	uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+	fpu_POP(block, ir);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFUCOMPP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        uop_FP_ENTER(ir);
-        uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(1));
-        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
-        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
-        fpu_POP2(block, ir);
+uint32_t ropFUCOMPP(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	uop_FP_ENTER(ir);
+	uop_FCOM(ir, IREG_temp0_W, IREG_ST(0), IREG_ST(1));
+	uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0 | C2 | C3));
+	uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+	fpu_POP2(block, ir);
 
-        return op_pc;
+	return op_pc;
 }
 
 #define ropF_arith_mem(name, load_uop)                                                                                          \
@@ -535,38 +511,33 @@ uint32_t ropFISUBR ## name(codeblock_t *block, ir_data_t *ir, uint8_t opcode, ui
 ropFI_arith_mem(l, IREG_temp0)
 ropFI_arith_mem(w, IREG_temp0_W)
 
+uint32_t ropFABS(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	uop_FP_ENTER(ir);
+	uop_FABS(ir, IREG_ST(0), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
 
-uint32_t ropFABS(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        uop_FP_ENTER(ir);
-        uop_FABS(ir, IREG_ST(0), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
-
-        return op_pc;
+	return op_pc;
 }
 
-uint32_t ropFCHS(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        uop_FP_ENTER(ir);
-        uop_FCHS(ir, IREG_ST(0), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+uint32_t ropFCHS(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	uop_FP_ENTER(ir);
+	uop_FCHS(ir, IREG_ST(0), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFSQRT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        uop_FP_ENTER(ir);
-        uop_FSQRT(ir, IREG_ST(0), IREG_ST(0));
-        uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
+uint32_t ropFSQRT(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	uop_FP_ENTER(ir);
+	uop_FSQRT(ir, IREG_ST(0), IREG_ST(0));
+	uop_MOV_IMM(ir, IREG_tag(0), TAG_VALID);
 
-        return op_pc;
+	return op_pc;
 }
-uint32_t ropFTST(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
-        uop_FP_ENTER(ir);
-        uop_FTST(ir, IREG_temp0_W, IREG_ST(0));
-        uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0|C2|C3));
-        uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
+uint32_t ropFTST(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
+	uop_FP_ENTER(ir);
+	uop_FTST(ir, IREG_temp0_W, IREG_ST(0));
+	uop_AND_IMM(ir, IREG_NPXS, IREG_NPXS, ~(C0 | C2 | C3));
+	uop_OR(ir, IREG_NPXS, IREG_NPXS, IREG_temp0_W);
 
-        return op_pc;
+	return op_pc;
 }

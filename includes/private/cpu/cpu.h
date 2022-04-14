@@ -34,10 +34,10 @@ extern int fpu_type;
 #define CPU_WINCHIP2 16
 #define CPU_PENTIUM 17
 #define CPU_PENTIUMMMX 18
-#define CPU_Cx6x86 	19
+#define CPU_Cx6x86        19
 #define CPU_Cx6x86MX    20
-#define CPU_Cx6x86L 	21
-#define CPU_CxGX1 	22
+#define CPU_Cx6x86L        21
+#define CPU_CxGX1        22
 #define CPU_K6          23
 #define CPU_K6_2        24
 #define CPU_K6_3        25
@@ -69,14 +69,13 @@ extern int timing_jmp_rm, timing_jmp_pm, timing_jmp_pm_gate;
 
 extern int timing_misaligned;
 
-enum
-{
-        FPU_NONE,
-        FPU_8087,
-        FPU_287,
-        FPU_287XL,
-        FPU_387,
-        FPU_BUILTIN
+enum {
+	FPU_NONE,
+	FPU_8087,
+	FPU_287,
+	FPU_287XL,
+	FPU_387,
+	FPU_BUILTIN
 };
 
 extern CPU *cpu_s;
@@ -133,9 +132,8 @@ extern int cpu_cyrix_alignment;
 #define CPU_FEATURE_SYSCALL (1 << 7)
 
 extern uint32_t cpu_features;
-static inline int cpu_has_feature(int feature)
-{
-        return cpu_features & feature;
+static inline int cpu_has_feature(int feature) {
+	return cpu_features & feature;
 }
 
 #define CR4_TSD  (1 << 2)

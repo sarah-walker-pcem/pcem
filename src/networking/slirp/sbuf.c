@@ -26,19 +26,19 @@ sbfree(sb)
 void
 sbdrop(sb, num)
 	struct sbuf *sb;
-	int num; 
+	int num;
 {
 	/* 
 	 * We can only drop how much we have
 	 * This should never succeed 
 	 */
-	if(num > sb->sb_cc)
+	if (num > sb->sb_cc)
 		num = sb->sb_cc;
 	sb->sb_cc -= num;
 	sb->sb_rptr += num;
-	if(sb->sb_rptr >= sb->sb_data + sb->sb_datalen)
+	if (sb->sb_rptr >= sb->sb_data + sb->sb_datalen)
 		sb->sb_rptr -= sb->sb_datalen;
-   
+
 }
 
 void
@@ -52,17 +52,17 @@ sbreserve(sb, size)
 			sb->sb_wptr = sb->sb_rptr = sb->sb_data = (char *)realloc(sb->sb_data, size);
 			sb->sb_cc = 0;
 			if (sb->sb_wptr)
-			   sb->sb_datalen = size;
+				sb->sb_datalen = size;
 			else
-			   sb->sb_datalen = 0;
+				sb->sb_datalen = 0;
 		}
 	} else {
 		sb->sb_wptr = sb->sb_rptr = sb->sb_data = (char *)malloc(size);
 		sb->sb_cc = 0;
 		if (sb->sb_wptr)
-		   sb->sb_datalen = size;
+			sb->sb_datalen = size;
 		else
-		   sb->sb_datalen = 0;
+			sb->sb_datalen = 0;
 	}
 }
 
@@ -78,18 +78,18 @@ sbappend(so, m)
 	struct SLIRPmbuf *m;
 {
 	int ret = 0;
-	
+
 	DEBUG_CALL("sbappend");
 	DEBUG_ARG("so = %lx", (long)so);
 	DEBUG_ARG("m = %lx", (long)m);
 	DEBUG_ARG("m->m_len = %d", m->m_len);
-	
+
 	/* Shouldn't happen, but...  e.g. foreign host closes connection */
 	if (m->m_len <= 0) {
 		m_free(m);
 		return;
 	}
-	
+
 	/*
 	 * If there is urgent data, call sosendoob
 	 * if not all was sent, sowrite will take care of the rest
@@ -101,14 +101,14 @@ sbappend(so, m)
 		sosendoob(so);
 		return;
 	}
-	
+
 	/*
 	 * We only write if there's nothing in the buffer,
 	 * ottherwise it'll arrive out of order, and hence corrupt
 	 */
 	if (!so->so_rcv.sb_cc)
-	   ret = send(so->s, m->m_data, m->m_len, 0);
-	
+		ret = send(so->s, m->m_data, m->m_len, 0);
+
 	if (ret <= 0) {
 		/* 
 		 * Nothing was written
@@ -136,28 +136,31 @@ sbappend(so, m)
  */
 void
 sbappendsb(sb, m)
-	 struct sbuf *sb;
-	 struct SLIRPmbuf *m;
+	struct sbuf *sb;
+	struct SLIRPmbuf *m;
 {
-	int len, n,  nn;
-	
+	int len, n, nn;
+
 	len = m->m_len;
 
 	if (sb->sb_wptr < sb->sb_rptr) {
 		n = sb->sb_rptr - sb->sb_wptr;
-		if (n > len) n = len;
+		if (n > len)
+			n = len;
 		memcpy(sb->sb_wptr, m->m_data, n);
 	} else {
 		/* Do the right edge first */
 		n = sb->sb_data + sb->sb_datalen - sb->sb_wptr;
-		if (n > len) n = len;
+		if (n > len)
+			n = len;
 		memcpy(sb->sb_wptr, m->m_data, n);
 		len -= n;
 		if (len) {
 			/* Now the left edge */
 			nn = sb->sb_rptr - sb->sb_data;
-			if (nn > len) nn = len;
-			memcpy(sb->sb_data,m->m_data+n,nn);
+			if (nn > len)
+				nn = len;
+			memcpy(sb->sb_data, m->m_data + n, nn);
 			n += nn;
 		}
 	}
@@ -181,22 +184,24 @@ sbcopy(sb, off, len, to)
 	char *to;
 {
 	char *from;
-	
+
 	from = sb->sb_rptr + off;
 	if (from >= sb->sb_data + sb->sb_datalen)
 		from -= sb->sb_datalen;
 
 	if (from < sb->sb_wptr) {
-		if (len > sb->sb_cc) len = sb->sb_cc;
-		memcpy(to,from,len);
+		if (len > sb->sb_cc)
+			len = sb->sb_cc;
+		memcpy(to, from, len);
 	} else {
 		/* re-use off */
 		off = (sb->sb_data + sb->sb_datalen) - from;
-		if (off > len) off = len;
-		memcpy(to,from,off);
+		if (off > len)
+			off = len;
+		memcpy(to, from, off);
 		len -= off;
 		if (len)
-		   memcpy(to+off,sb->sb_data,len);
+			memcpy(to + off, sb->sb_data, len);
 	}
 }
 		

@@ -23,7 +23,6 @@ extern char *strerror _P((int));
 extern struct termios slirp_tty_settings;
 extern int slirp_tty_restore;
 
-
 void
 debug_init(file, dbg)
 	char *file;
@@ -31,19 +30,19 @@ debug_init(file, dbg)
 {
 	/* Close the old debugging file */
 	if (dfd)
-	   fclose(dfd);
-	
-	dfd = fopen(file,"w");
+		fclose(dfd);
+
+	dfd = fopen(file, "w");
 	if (dfd != NULL) {
 #if 1
-		fprintf(dfd,"Slirp %s - Debugging Started.\n", SLIRP_VERSION);
+		fprintf(dfd, "Slirp %s - Debugging Started.\n", SLIRP_VERSION);
 #endif
-		fprintf(dfd,"Debugging Started level %i.\r\n",dbg);
+		fprintf(dfd, "Debugging Started level %i.\r\n", dbg);
 		fflush(dfd);
 		slirp_debug = dbg;
 	} else {
 		lprint("Error: Debugging file \"%s\" could not be opened: %s\r\n",
-			file, strerror(errno));
+		       file, strerror(errno));
 	}
 }
 
@@ -130,13 +129,12 @@ allttystats()
 #endif
 
 void
-ipstats()
-{
-	lprint(" \r\n");	
+ipstats() {
+	lprint(" \r\n");
 
 	lprint("IP stats:\r\n");
 	lprint("  %6d total packets received (%d were unaligned)\r\n",
-			ipstat.ips_total, ipstat.ips_unaligned);
+	       ipstat.ips_total, ipstat.ips_unaligned);
 	lprint("  %6d with incorrect version\r\n", ipstat.ips_badvers);
 	lprint("  %6d with bad header checksum\r\n", ipstat.ips_badsum);
 	lprint("  %6d with length too short (len < sizeof(iphdr))\r\n", ipstat.ips_tooshort);
@@ -173,59 +171,58 @@ vjstats()
 #endif
 
 void
-tcpstats()
-{
+tcpstats() {
 	lprint(" \r\n");
 
 	lprint("TCP stats:\r\n");
-	
+
 	lprint("  %6d packets sent\r\n", tcpstat.tcps_sndtotal);
 	lprint("          %6d data packets (%d bytes)\r\n",
-			tcpstat.tcps_sndpack, tcpstat.tcps_sndbyte);
+	       tcpstat.tcps_sndpack, tcpstat.tcps_sndbyte);
 	lprint("          %6d data packets retransmitted (%d bytes)\r\n",
-			tcpstat.tcps_sndrexmitpack, tcpstat.tcps_sndrexmitbyte);
+	       tcpstat.tcps_sndrexmitpack, tcpstat.tcps_sndrexmitbyte);
 	lprint("          %6d ack-only packets (%d delayed)\r\n",
-			tcpstat.tcps_sndacks, tcpstat.tcps_delack);
+	       tcpstat.tcps_sndacks, tcpstat.tcps_delack);
 	lprint("          %6d URG only packets\r\n", tcpstat.tcps_sndurg);
 	lprint("          %6d window probe packets\r\n", tcpstat.tcps_sndprobe);
 	lprint("          %6d window update packets\r\n", tcpstat.tcps_sndwinup);
 	lprint("          %6d control (SYN/FIN/RST) packets\r\n", tcpstat.tcps_sndctrl);
 	lprint("          %6d times tcp_output did nothing\r\n", tcpstat.tcps_didnuttin);
-	
-	lprint("  %6d packets received\r\n", tcpstat.tcps_rcvtotal);       
+
+	lprint("  %6d packets received\r\n", tcpstat.tcps_rcvtotal);
 	lprint("          %6d acks (for %d bytes)\r\n",
-			tcpstat.tcps_rcvackpack, tcpstat.tcps_rcvackbyte);
+	       tcpstat.tcps_rcvackpack, tcpstat.tcps_rcvackbyte);
 	lprint("          %6d duplicate acks\r\n", tcpstat.tcps_rcvdupack);
 	lprint("          %6d acks for unsent data\r\n", tcpstat.tcps_rcvacktoomuch);
 	lprint("          %6d packets received in sequence (%d bytes)\r\n",
-			tcpstat.tcps_rcvpack, tcpstat.tcps_rcvbyte);
-        lprint("          %6d completely duplicate packets (%d bytes)\r\n",
-			tcpstat.tcps_rcvduppack, tcpstat.tcps_rcvdupbyte);
-	
+	       tcpstat.tcps_rcvpack, tcpstat.tcps_rcvbyte);
+	lprint("          %6d completely duplicate packets (%d bytes)\r\n",
+	       tcpstat.tcps_rcvduppack, tcpstat.tcps_rcvdupbyte);
+
 	lprint("          %6d packets with some duplicate data (%d bytes duped)\r\n",
-			tcpstat.tcps_rcvpartduppack, tcpstat.tcps_rcvpartdupbyte);
+	       tcpstat.tcps_rcvpartduppack, tcpstat.tcps_rcvpartdupbyte);
 	lprint("          %6d out-of-order packets (%d bytes)\r\n",
-			tcpstat.tcps_rcvoopack, tcpstat.tcps_rcvoobyte);
+	       tcpstat.tcps_rcvoopack, tcpstat.tcps_rcvoobyte);
 	lprint("          %6d packets of data after window (%d bytes)\r\n",
-			tcpstat.tcps_rcvpackafterwin, tcpstat.tcps_rcvbyteafterwin);
+	       tcpstat.tcps_rcvpackafterwin, tcpstat.tcps_rcvbyteafterwin);
 	lprint("          %6d window probes\r\n", tcpstat.tcps_rcvwinprobe);
 	lprint("          %6d window update packets\r\n", tcpstat.tcps_rcvwinupd);
 	lprint("          %6d packets received after close\r\n", tcpstat.tcps_rcvafterclose);
 	lprint("          %6d discarded for bad checksums\r\n", tcpstat.tcps_rcvbadsum);
 	lprint("          %6d discarded for bad header offset fields\r\n",
-			tcpstat.tcps_rcvbadoff);
-	
+	       tcpstat.tcps_rcvbadoff);
+
 	lprint("  %6d connection requests\r\n", tcpstat.tcps_connattempt);
 	lprint("  %6d connection accepts\r\n", tcpstat.tcps_accepts);
 	lprint("  %6d connections established (including accepts)\r\n", tcpstat.tcps_connects);
 	lprint("  %6d connections closed (including %d drop)\r\n",
-			tcpstat.tcps_closed, tcpstat.tcps_drops);
+	       tcpstat.tcps_closed, tcpstat.tcps_drops);
 	lprint("  %6d embryonic connections dropped\r\n", tcpstat.tcps_conndrops);
 	lprint("  %6d segments we tried to get rtt (%d succeeded)\r\n",
-			tcpstat.tcps_segstimed, tcpstat.tcps_rttupdated);
+	       tcpstat.tcps_segstimed, tcpstat.tcps_rttupdated);
 	lprint("  %6d retransmit timeouts\r\n", tcpstat.tcps_rexmttimeo);
 	lprint("          %6d connections dropped by rxmt timeout\r\n",
-			tcpstat.tcps_timeoutdrop);
+	       tcpstat.tcps_timeoutdrop);
 	lprint("  %6d persist timeouts\r\n", tcpstat.tcps_persisttimeo);
 	lprint("  %6d keepalive timeouts\r\n", tcpstat.tcps_keeptimeo);
 	lprint("          %6d keepalive probes sent\r\n", tcpstat.tcps_keepprobe);
@@ -233,17 +230,16 @@ tcpstats()
 	lprint("  %6d correct ACK header predictions\r\n", tcpstat.tcps_predack);
 	lprint("  %6d correct data packet header predictions\n", tcpstat.tcps_preddat);
 	lprint("  %6d TCP cache misses\r\n", tcpstat.tcps_socachemiss);
-	
-	
+
+
 /*	lprint("    Packets received too short:		%d\r\n", tcpstat.tcps_rcvshort); */
 /*	lprint("    Segments dropped due to PAWS:	%d\r\n", tcpstat.tcps_pawsdrop); */
 
 }
 
 void
-udpstats()
-{
-        lprint(" \r\n");
+udpstats() {
+	lprint(" \r\n");
 
 	lprint("UDP stats:\r\n");
 	lprint("  %6d datagrams received\r\n", udpstat.udps_ipackets);
@@ -255,8 +251,7 @@ udpstats()
 }
 
 void
-icmpstats()
-{
+icmpstats() {
 	lprint(" \r\n");
 	lprint("ICMP stats:\r\n");
 	lprint("  %6d ICMP packets received\r\n", icmpstat.icps_received);
@@ -268,124 +263,117 @@ icmpstats()
 }
 
 void
-mbufstats()
-{
+mbufstats() {
 	struct SLIRPmbuf *m;
 	int i;
-	
-        lprint(" \r\n");
-	
+
+	lprint(" \r\n");
+
 	lprint("Mbuf stats:\r\n");
 
 	lprint("  %6d mbufs allocated (%d max)\r\n", mbuf_alloced, mbuf_max);
-	
+
 	i = 0;
 	for (m = m_freelist.m_next; m != &m_freelist; m = m->m_next)
 		i++;
-	lprint("  %6d mbufs on free list\r\n",  i);
-	
+	lprint("  %6d mbufs on free list\r\n", i);
+
 	i = 0;
 	for (m = m_usedlist.m_next; m != &m_usedlist; m = m->m_next)
 		i++;
-	lprint("  %6d mbufs on used list\r\n",  i);
-        lprint("  %6d mbufs queued as packets\r\n\r\n", if_queued);
+	lprint("  %6d mbufs on used list\r\n", i);
+	lprint("  %6d mbufs queued as packets\r\n\r\n", if_queued);
 }
 
-
-void sockstats(void)
-{
+void sockstats(void) {
 	char buff[256];
 	int n;
 	struct SLIRPsocket *so;
 
-        lprint(" \r\n");
-	
+	lprint(" \r\n");
+
 	lprint(
-	   "Proto[state]     Sock     Local Address, Port  Remote Address, Port RecvQ SendQ\r\n");
-			
+		"Proto[state]     Sock     Local Address, Port  Remote Address, Port RecvQ SendQ\r\n");
+
 	for (so = tcb.so_next; so != &tcb; so = so->so_next) {
-		
-		n = sprintf(buff, "tcp[%s]", so->so_tcpcb?tcpstates[so->so_tcpcb->t_state]:"NONE");
+
+		n = sprintf(buff, "tcp[%s]", so->so_tcpcb ? tcpstates[so->so_tcpcb->t_state] : "NONE");
 		while (n < 17)
-		   buff[n++] = ' ';
+			buff[n++] = ' ';
 		buff[17] = 0;
 		lprint("%s %3d   %15s %5d ",
-				buff, so->s,
-				inet_ntoa(so->so_laddr), ntohs(so->so_lport));
+		       buff, so->s,
+		       inet_ntoa(so->so_laddr), ntohs(so->so_lport));
 		lprint("%15s %5d %5d %5d\r\n",
-				inet_ntoa(so->so_faddr), ntohs(so->so_fport),
-				so->so_rcv.sb_cc, so->so_snd.sb_cc);
+		       inet_ntoa(so->so_faddr), ntohs(so->so_fport),
+		       so->so_rcv.sb_cc, so->so_snd.sb_cc);
 
 	}
 
 	for (so = udb.so_next; so != &udb; so = so->so_next) {
-		
+
 		n = sprintf(buff, "udp[%d sec]", (so->so_expire - curtime) / 1000);
 		while (n < 17)
-		   buff[n++] = ' ';
+			buff[n++] = ' ';
 		buff[17] = 0;
 		lprint("%s %3d  %15s %5d  ",
-				buff, so->s,
-				inet_ntoa(so->so_laddr), ntohs(so->so_lport));
+		       buff, so->s,
+		       inet_ntoa(so->so_laddr), ntohs(so->so_lport));
 		lprint("%15s %5d %5d %5d\r\n",
-				inet_ntoa(so->so_faddr), ntohs(so->so_fport),
-				so->so_rcv.sb_cc, so->so_snd.sb_cc);
+		       inet_ntoa(so->so_faddr), ntohs(so->so_fport),
+		       so->so_rcv.sb_cc, so->so_snd.sb_cc);
 	}
 }
 
-
-
-void printf_sockstats(void)
-{
+void printf_sockstats(void) {
 	char buff[256];
 	int n;
 	struct SLIRPsocket *so;
 
-        printf(" \r\n");
-	
+	printf(" \r\n");
+
 	printf(
-	   "Proto[state]     Sock     Local Address, Port  Remote Address, Port RecvQ SendQ\r\n");
-			
+		"Proto[state]     Sock     Local Address, Port  Remote Address, Port RecvQ SendQ\r\n");
+
 	for (so = tcb.so_next; so != &tcb; so = so->so_next) {
-		
-		n = sprintf(buff, "tcp[%s]", so->so_tcpcb?tcpstates[so->so_tcpcb->t_state]:"NONE");
+
+		n = sprintf(buff, "tcp[%s]", so->so_tcpcb ? tcpstates[so->so_tcpcb->t_state] : "NONE");
 		while (n < 17)
-		   buff[n++] = ' ';
+			buff[n++] = ' ';
 		buff[17] = 0;
 		printf("%s %3d   %15s %5d ",
-				buff, so->s,
-				inet_ntoa(so->so_laddr), ntohs(so->so_lport));
+		       buff, so->s,
+		       inet_ntoa(so->so_laddr), ntohs(so->so_lport));
 		printf("%15s %5d %5d %5d\r\n",
-				inet_ntoa(so->so_faddr), ntohs(so->so_fport),
-				so->so_rcv.sb_cc, so->so_snd.sb_cc);
+		       inet_ntoa(so->so_faddr), ntohs(so->so_fport),
+		       so->so_rcv.sb_cc, so->so_snd.sb_cc);
 
 	}
 
 	for (so = udb.so_next; so != &udb; so = so->so_next) {
-		
+
 		n = sprintf(buff, "udp[%d sec]", (so->so_expire - curtime) / 1000);
 		while (n < 17)
-		   buff[n++] = ' ';
+			buff[n++] = ' ';
 		buff[17] = 0;
 		printf("%s %3d  %15s %5d  ",
-				buff, so->s,
-				inet_ntoa(so->so_laddr), ntohs(so->so_lport));
+		       buff, so->s,
+		       inet_ntoa(so->so_laddr), ntohs(so->so_lport));
 		printf("%15s %5d %5d %5d\r\n",
-				inet_ntoa(so->so_faddr), ntohs(so->so_fport),
-				so->so_rcv.sb_cc, so->so_snd.sb_cc);
+		       inet_ntoa(so->so_faddr), ntohs(so->so_fport),
+		       so->so_rcv.sb_cc, so->so_snd.sb_cc);
 	}
-printf("\n\n");
+	printf("\n\n");
 }
 
 //Simple code to purge and close open sockets.
 //This way we can open/close/open/close..
-void purgesocks(void)
-{
+void purgesocks(void) {
 	struct SLIRPsocket *so;
-	
+
 	for (so = tcb.so_next; so != &tcb; so = so->so_next) {
-		
-	closesocket(so->s);	//close the socket
+
+		closesocket(so->s);        //close the socket
 	}
 }
 
@@ -395,16 +383,16 @@ slirp_exit(exit_status)
 	int exit_status;
 {
 //	struct ttys *ttyp;
-	
+
 	DEBUG_CALL("slirp_exit");
 	DEBUG_ARG("exit_status = %d", exit_status);
 
 	if (dostats) {
-		lprint_print = (int (*) _P((void *, const char *, va_list)))vfprintf;
+		lprint_print = (int (*)_P((void *, const char *, va_list)))vfprintf;
 		if (!dfd)
-		   debug_init("slirp_stats", 0xf);
+			debug_init("slirp_stats", 0xf);
 		lprint_arg = (char **)&dfd;
-		
+
 		ipstats();
 		tcpstats();
 		udpstats();
@@ -415,17 +403,17 @@ slirp_exit(exit_status)
 //		allttystats();
 //		vjstats();
 	}
-	
+
 //	for (ttyp = ttys; ttyp; ttyp = ttyp->next)
 //	   tty_detached(ttyp, 1);
-	
+
 //	if (slirp_forked) {
 //		/* Menendez time */
 //		if (kill(getppid(), SIGQUIT) < 0)
 //			lprint("Couldn't kill parent process %ld!\n",
 //			    (long) getppid());
 //  	}
-	
+
 	/* Restore the terminal if we gotta */
 //	if(slirp_tty_restore)
 //	  tcsetattr(0,TCSANOW, &slirp_tty_settings);  /* NOW DAMMIT! */

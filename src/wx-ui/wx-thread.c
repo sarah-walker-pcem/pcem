@@ -8,106 +8,92 @@
 #if defined WIN32 || defined _WIN32 || defined _WIN32
 #include <windows.h>
 #include <process.h>
-void *thread_create(void (*thread_rout)(void *param), void *param)
-{
-        return (void *)_beginthread(thread_rout, 0, param);
+void *thread_create(void (*thread_rout)(void *param), void *param) {
+	return (void *)_beginthread(thread_rout, 0, param);
 }
 
-void thread_kill(void *handle)
-{
-        TerminateThread(handle, 0);
+void thread_kill(void *handle) {
+	TerminateThread(handle, 0);
 }
 
-void thread_sleep(int t)
-{
-        Sleep(t);
+void thread_sleep(int t) {
+	Sleep(t);
 }
 
-typedef struct win_event_t
-{
-        HANDLE handle;
+typedef struct win_event_t {
+	HANDLE handle;
 } win_event_t;
 
-event_t *thread_create_event()
-{
-        win_event_t *event = malloc(sizeof(win_event_t));
+event_t *thread_create_event() {
+	win_event_t *event = malloc(sizeof(win_event_t));
 
-        event->handle = CreateEvent(NULL, FALSE, FALSE, NULL);
+	event->handle = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-        return (event_t *)event;
+	return (event_t *)event;
 }
 
-void thread_set_event(event_t *_event)
-{
-        win_event_t *event = (win_event_t *)_event;
+void thread_set_event(event_t *_event) {
+	win_event_t *event = (win_event_t *)_event;
 
-        SetEvent(event->handle);
+	SetEvent(event->handle);
 }
 
-void thread_reset_event(event_t *_event)
-{
-        win_event_t *event = (win_event_t *)_event;
+void thread_reset_event(event_t *_event) {
+	win_event_t *event = (win_event_t *)_event;
 
-        ResetEvent(event->handle);
+	ResetEvent(event->handle);
 }
 
-int thread_wait_event(event_t *_event, int timeout)
-{
-        win_event_t *event = (win_event_t *)_event;
+int thread_wait_event(event_t *_event, int timeout) {
+	win_event_t *event = (win_event_t *)_event;
 
-        if (timeout == -1)
-                timeout = INFINITE;
+	if (timeout == -1)
+		timeout = INFINITE;
 
-        if (WaitForSingleObject(event->handle, timeout))
-                return 1;
-        return 0;
+	if (WaitForSingleObject(event->handle, timeout))
+		return 1;
+	return 0;
 }
 
-void thread_destroy_event(event_t *_event)
-{
-        win_event_t *event = (win_event_t *)_event;
+void thread_destroy_event(event_t *_event) {
+	win_event_t *event = (win_event_t *)_event;
 
-        CloseHandle(event->handle);
+	CloseHandle(event->handle);
 
-        free(event);
+	free(event);
 }
 
-typedef struct win_mutex_t
-{
-        HANDLE handle;
+typedef struct win_mutex_t {
+	HANDLE handle;
 } win_mutex_t;
 
-mutex_t *thread_create_mutex(void)
-{
-        win_mutex_t *mutex = malloc(sizeof(win_mutex_t));
-        
-        mutex->handle = CreateSemaphore(NULL, 1, 1, NULL);
-        
-        return mutex;
+mutex_t *thread_create_mutex(void) {
+	win_mutex_t *mutex = malloc(sizeof(win_mutex_t));
+
+	mutex->handle = CreateSemaphore(NULL, 1, 1, NULL);
+
+	return mutex;
 
 }
 
-void thread_lock_mutex(mutex_t *_mutex)
-{
-        win_mutex_t *mutex = (win_mutex_t *)_mutex;
-        
-        WaitForSingleObject(mutex->handle, INFINITE);
+void thread_lock_mutex(mutex_t *_mutex) {
+	win_mutex_t *mutex = (win_mutex_t *)_mutex;
+
+	WaitForSingleObject(mutex->handle, INFINITE);
 }
 
-void thread_unlock_mutex(mutex_t *_mutex)
-{
-        win_mutex_t *mutex = (win_mutex_t *)_mutex;
-        
-        ReleaseSemaphore(mutex->handle, 1, NULL);
+void thread_unlock_mutex(mutex_t *_mutex) {
+	win_mutex_t *mutex = (win_mutex_t *)_mutex;
+
+	ReleaseSemaphore(mutex->handle, 1, NULL);
 }
 
-void thread_destroy_mutex(mutex_t *_mutex)
-{
-        win_mutex_t *mutex = (win_mutex_t *)_mutex;
+void thread_destroy_mutex(mutex_t *_mutex) {
+	win_mutex_t *mutex = (win_mutex_t *)_mutex;
 
-        CloseHandle(mutex->handle);
+	CloseHandle(mutex->handle);
 
-        free(mutex);
+	free(mutex);
 }
 #else
 #include <pthread.h>
@@ -123,7 +109,7 @@ typedef struct event_pthread_t
 thread_t *thread_create(void (*thread_rout)(void *param), void *param)
 {
 	pthread_t *thread = malloc(sizeof(pthread_t));
-        
+
 	pthread_create(thread, NULL, (void*)thread_rout, param);
 
 	return thread;
@@ -147,7 +133,7 @@ event_t *thread_create_event()
 	pthread_mutex_init(&event->mutex, NULL);
 	event->state = 0;
 
-        return (event_t *)event;
+	return (event_t *)event;
 }
 
 void thread_set_event(event_t *handle)
@@ -177,10 +163,10 @@ int thread_wait_event(event_t *handle, int timeout)
 #ifdef __linux__
 	clock_gettime(CLOCK_REALTIME, &abstime);
 #else
-        struct timeval now;
-        gettimeofday(&now, 0);
-        abstime.tv_sec = now.tv_sec;
-        abstime.tv_nsec = now.tv_usec*1000UL;
+	struct timeval now;
+	gettimeofday(&now, 0);
+	abstime.tv_sec = now.tv_sec;
+	abstime.tv_nsec = now.tv_usec*1000UL;
 #endif
 	abstime.tv_nsec += (timeout % 1000) * 1000000;
 	abstime.tv_sec += (timeout / 1000);
@@ -200,7 +186,7 @@ int thread_wait_event(event_t *handle, int timeout)
 		pthread_cond_timedwait(&event->cond, &event->mutex, &abstime);
 	pthread_mutex_unlock(&event->mutex);
 
-        return 0;
+	return 0;
 }
 
 void thread_destroy_event(event_t *handle)
@@ -221,39 +207,39 @@ void thread_sleep(int t)
 
 typedef struct pt_mutex_t
 {
-        pthread_mutex_t mutex;
+	pthread_mutex_t mutex;
 } pt_mutex_t;
 
 mutex_t *thread_create_mutex(void)
 {
-        pt_mutex_t *mutex = malloc(sizeof(pt_mutex_t));
-        
-        pthread_mutex_init(&mutex->mutex, NULL);
-        
-        return mutex;
+	pt_mutex_t *mutex = malloc(sizeof(pt_mutex_t));
+
+	pthread_mutex_init(&mutex->mutex, NULL);
+
+	return mutex;
 
 }
 
 void thread_lock_mutex(mutex_t *_mutex)
 {
-        pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
-        
-        pthread_mutex_lock(&mutex->mutex);
+	pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
+
+	pthread_mutex_lock(&mutex->mutex);
 }
 
 void thread_unlock_mutex(mutex_t *_mutex)
 {
-        pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
-        
-        pthread_mutex_unlock(&mutex->mutex);
+	pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
+
+	pthread_mutex_unlock(&mutex->mutex);
 }
 
 void thread_destroy_mutex(mutex_t *_mutex)
 {
-        pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
+	pt_mutex_t *mutex = (pt_mutex_t *)_mutex;
 
-        pthread_mutex_destroy(&mutex->mutex);
+	pthread_mutex_destroy(&mutex->mutex);
 
-        free(mutex);
+	free(mutex);
 }
 #endif

@@ -44,35 +44,34 @@
 #define ADDCARRY(x)  (x > 65535 ? x -= 65535 : x)
 #define REDUCE {l_util.l = sum; sum = l_util.s[0] + l_util.s[1]; ADDCARRY(sum);}
 
-int cksum(struct SLIRPmbuf *m, int len)
-{
+int cksum(struct SLIRPmbuf *m, int len) {
 	register u_int16_t *w;
 	register int sum = 0;
 	register int mlen = 0;
 	int byte_swapped = 0;
 
 	union {
-		u_int8_t	c[2];
-		u_int16_t	s;
+		u_int8_t c[2];
+		u_int16_t s;
 	} s_util;
 	union {
 		u_int16_t s[2];
 		u_int32_t l;
 	} l_util;
-	
+
 	if (m->m_len == 0)
-	   goto cont;
+		goto cont;
 	w = mtod(m, u_int16_t *);
-	
+
 	mlen = m->m_len;
-	
+
 	if (len < mlen)
-	   mlen = len;
+		mlen = len;
 	len -= mlen;
 	/*
 	 * Force to even boundary.
 	 */
-	if ((1 & (long) w) && (mlen > 0)) {
+	if ((1 & (long)w) && (mlen > 0)) {
 		REDUCE;
 		sum <<= 8;
 		s_util.c[0] = *(u_int8_t *)w;
@@ -85,25 +84,40 @@ int cksum(struct SLIRPmbuf *m, int len)
 	 * branches &c small.
 	 */
 	while ((mlen -= 32) >= 0) {
-		sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
-		sum += w[4]; sum += w[5]; sum += w[6]; sum += w[7];
-		sum += w[8]; sum += w[9]; sum += w[10]; sum += w[11];
-		sum += w[12]; sum += w[13]; sum += w[14]; sum += w[15];
+		sum += w[0];
+		sum += w[1];
+		sum += w[2];
+		sum += w[3];
+		sum += w[4];
+		sum += w[5];
+		sum += w[6];
+		sum += w[7];
+		sum += w[8];
+		sum += w[9];
+		sum += w[10];
+		sum += w[11];
+		sum += w[12];
+		sum += w[13];
+		sum += w[14];
+		sum += w[15];
 		w += 16;
 	}
 	mlen += 32;
 	while ((mlen -= 8) >= 0) {
-		sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
+		sum += w[0];
+		sum += w[1];
+		sum += w[2];
+		sum += w[3];
 		w += 4;
 	}
 	mlen += 8;
 	if (mlen == 0 && byte_swapped == 0)
-	   goto cont;
+		goto cont;
 	REDUCE;
 	while ((mlen -= 2) >= 0) {
 		sum += *w++;
 	}
-	
+
 	if (byte_swapped) {
 		REDUCE;
 		sum <<= 8;
@@ -113,12 +127,12 @@ int cksum(struct SLIRPmbuf *m, int len)
 			sum += s_util.s;
 			mlen = 0;
 		} else
-		   
-		   mlen = -1;
+
+			mlen = -1;
 	} else if (mlen == -1)
-	   s_util.c[0] = *(u_int8_t *)w;
-	
-cont:
+		s_util.c[0] = *(u_int8_t *)w;
+
+    cont:
 #ifdef SLIRP_DEBUG
 	if (len) {
 		DEBUG_ERROR((dfd, "cksum: out of data\n"));
