@@ -9,4 +9,5 @@ void vga_enable(void *p);
 struct svga_t;
 extern struct svga_t *mb_vga;
 
+
 #endif /* _VID_VGA_H_ */

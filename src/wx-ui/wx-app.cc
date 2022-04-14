@@ -1,9 +1,9 @@
 #include "wx-app.h"
 
-#include "wx-common.h"
-#include "wx-utils.h"
-#include <wx/event.h>
 #include <wx/xrc/xmlres.h>
+#include <wx/event.h>
+#include "wx-utils.h"
+#include "wx-common.h"
 
 #ifdef _WIN32
 #define BITMAP WINDOWS_BITMAP
@@ -12,14 +12,15 @@
 #undef BITMAP
 #endif
 
-extern "C" {
-int wx_load_config(void *);
-int wx_start(void *);
-int wx_stop(void *);
-void wx_show(void *);
-void wx_handle_command(void *, int, int);
+extern "C"
+{
+int wx_load_config(void*);
+int wx_start(void*);
+int wx_stop(void*);
+void wx_show(void*);
+void wx_handle_command(void*, int, int);
 
-int start_emulation(void *);
+int start_emulation(void*);
 int resume_emulation();
 int pause_emulation();
 int stop_emulation();
@@ -41,38 +42,42 @@ wxDEFINE_EVENT(WX_WIN_SEND_MESSAGE_EVENT, WinSendMessageEvent);
 #endif
 
 wxBEGIN_EVENT_TABLE(Frame, wxFrame)
-    wxEND_EVENT_TABLE()
+wxEND_EVENT_TABLE()
 
-        wxIMPLEMENT_APP_NO_MAIN(App);
+wxIMPLEMENT_APP_NO_MAIN(App);
 
-App::App() {
+App::App()
+{
         this->frame = NULL;
 }
 
-bool App::OnInit() {
+bool App::OnInit()
+{
         wxImage::AddHandler(new wxPNGHandler);
         wxXmlResource::Get()->InitAllHandlers();
-        //        if (!wxXmlResource::Get()->Load("src/pc.xrc"))
-        //        {
-        //                std::cout << "Could not load resource file" << std::endl;
-        //                return false;
-        //        }
+//        if (!wxXmlResource::Get()->Load("src/pc.xrc"))
+//        {
+//                std::cout << "Could not load resource file" << std::endl;
+//                return false;
+//        }
         InitXmlResource();
 
         frame = new Frame(this, "null frame", wxPoint(500, 500),
-                          wxSize(100, 100));
+                wxSize(100, 100));
         frame->Start();
         return true;
 }
 
-int App::OnRun() {
+int App::OnRun()
+{
         return wxApp::OnRun();
 }
 
 #include <sstream>
 
-Frame::Frame(App *app, const wxString &title, const wxPoint &pos,
-             const wxSize &size) : wxFrame(NULL, wxID_ANY, title, pos, size, 0) // wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER))
+Frame::Frame(App* app, const wxString& title, const wxPoint& pos,
+        const wxSize& size) :
+        wxFrame(NULL, wxID_ANY, title, pos, size, 0)//wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER))
 {
         this->closing = false;
         this->menu = wxXmlResource::Get()->LoadMenu(wxT("main_menu"));
@@ -94,31 +99,37 @@ Frame::Frame(App *app, const wxString &title, const wxPoint &pos,
         CenterOnScreen();
 }
 
-void Frame::Start() {
+void Frame::Start()
+{
         if (wx_start(this))
                 ShowConfigSelection();
         else
                 Quit(0);
 }
 
-void Frame::ShowConfigSelection() {
+void Frame::ShowConfigSelection()
+{
         if (wx_load_config(this))
                 start_emulation(this);
         else
                 Quit(1);
 }
 
-void Frame::OnCallbackEvent(CallbackEvent &event) {
+void Frame::OnCallbackEvent(CallbackEvent& event)
+{
         WX_CALLBACK callback = event.GetCallback();
         callback(event.GetData());
 }
 
-void Frame::OnStopEmulationEvent(wxCommandEvent &event) {
-        if (emulation_state != EMULATION_STOPPED) {
+void Frame::OnStopEmulationEvent(wxCommandEvent& event)
+{
+        if (emulation_state != EMULATION_STOPPED)
+        {
                 pause_emulation();
                 int ret = wxID_OK;
 
-                if (confirm_on_stop_emulation) {
+                if (confirm_on_stop_emulation)
+                {
                         wxDialog dlg;
                         wxXmlResource::Get()->LoadDialog(&dlg, this, "ConfirmRememberDlg");
                         dlg.FindWindow("IDC_CONFIRM_LABEL")->SetLabel("Stop emulation?");
@@ -126,21 +137,24 @@ void Frame::OnStopEmulationEvent(wxCommandEvent &event) {
                         dlg.Fit();
                         ret = dlg.ShowModal();
                         if (ret == wxID_OK)
-                                confirm_on_stop_emulation = !((wxCheckBox *)dlg.FindWindow("IDC_CONFIRM_REMEMBER"))->IsChecked();
+                                confirm_on_stop_emulation = !((wxCheckBox*)dlg.FindWindow("IDC_CONFIRM_REMEMBER"))->IsChecked();
                 }
 
-                if (ret == wxID_OK) {
+                if (ret == wxID_OK)
+                {
                         stop_emulation();
                         if (!config_override)
                                 ShowConfigSelection();
                         else
                                 Quit(1);
-                } else
+                }
+                else
                         resume_emulation();
         }
 }
 
-void Frame::OnStopEmulationNowEvent(wxCommandEvent &event) {
+void Frame::OnStopEmulationNowEvent(wxCommandEvent& event)
+{
         stop_emulation();
         if (!config_override)
                 ShowConfigSelection();
@@ -148,8 +162,9 @@ void Frame::OnStopEmulationNowEvent(wxCommandEvent &event) {
                 Quit(1);
 }
 
-void Frame::OnShowWindowEvent(wxCommandEvent &event) {
-        wxWindow *window = (wxWindow *)event.GetEventObject();
+void Frame::OnShowWindowEvent(wxCommandEvent& event)
+{
+        wxWindow* window = (wxWindow*)event.GetEventObject();
         int shown = window->IsShown();
         int value = event.GetInt();
         if (value < 0)
@@ -160,11 +175,12 @@ void Frame::OnShowWindowEvent(wxCommandEvent &event) {
                 window->Refresh();
 }
 
-void Frame::OnPopupMenuEvent(PopupMenuEvent &event) {
-        wxWindow *window = event.GetWindow();
-        wxMenu *menu = event.GetMenu();
-        int *x = event.GetX();
-        int *y = event.GetY();
+void Frame::OnPopupMenuEvent(PopupMenuEvent& event)
+{
+        wxWindow* window = event.GetWindow();
+        wxMenu* menu = event.GetMenu();
+        int* x = event.GetX();
+        int* y = event.GetY();
 
         if (x && y)
                 window->PopupMenu(menu, *x, *y);
@@ -172,26 +188,32 @@ void Frame::OnPopupMenuEvent(PopupMenuEvent &event) {
                 window->PopupMenu(menu);
 }
 
-void Frame::OnCommand(wxCommandEvent &event) {
+void Frame::OnCommand(wxCommandEvent& event)
+{
         wx_handle_command(this, event.GetId(), event.IsChecked());
 }
 
-void Frame::OnClose(wxCloseEvent &event) {
+void Frame::OnClose(wxCloseEvent& event)
+{
         wx_exit(this, 0);
 }
 
-wxMenu *Frame::GetMenu() {
+wxMenu* Frame::GetMenu()
+{
         return menu;
 }
 
 /* Exit */
 
-void Frame::Quit(bool stop_emulator) {
+void Frame::Quit(bool stop_emulator)
+{
         if (closing)
                 return;
         closing = true;
-        if (stop_emulator) {
-                if (!wx_stop(this)) {
+        if (stop_emulator)
+        {
+                if (!wx_stop(this))
+                {
                         // cancel quit
                         closing = false;
                         return;
@@ -200,34 +222,39 @@ void Frame::Quit(bool stop_emulator) {
         Destroy();
 }
 
-void Frame::OnExitEvent(wxCommandEvent &event) {
+void Frame::OnExitEvent(wxCommandEvent& event)
+{
         if (closing)
                 return;
         closing = true;
-        CExitThread *exitThread = new CExitThread(this);
+        CExitThread* exitThread = new CExitThread(this);
         exitThread->Run();
 }
 
-void Frame::OnExitCompleteEvent(wxCommandEvent &event) {
+void Frame::OnExitCompleteEvent(wxCommandEvent& event)
+{
         if (event.GetInt())
                 Destroy();
         else
                 closing = false;
 }
 
-CExitThread::CExitThread(Frame *frame) {
+CExitThread::CExitThread(Frame* frame)
+{
         this->frame = frame;
 }
 
-wxThread::ExitCode CExitThread::Entry() {
-        wxCommandEvent *event = new wxCommandEvent(WX_EXIT_COMPLETE_EVENT, wxID_ANY);
+wxThread::ExitCode CExitThread::Entry()
+{
+        wxCommandEvent* event = new wxCommandEvent(WX_EXIT_COMPLETE_EVENT, wxID_ANY);
         event->SetInt(wx_stop(frame));
         wxQueueEvent(frame, event);
         return 0;
 }
 
 #ifdef _WIN32
-void Frame::OnWinSendMessageEvent(WinSendMessageEvent &event) {
+void Frame::OnWinSendMessageEvent(WinSendMessageEvent& event)
+{
         SendMessage((HWND)event.GetHWND(), event.GetMessage(), event.GetWParam(), event.GetLParam());
 }
 #endif

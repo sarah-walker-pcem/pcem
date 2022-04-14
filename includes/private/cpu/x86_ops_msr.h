@@ -1,12 +1,15 @@
 #ifndef _X86_OPS_MSR_H_
 #define _X86_OPS_MSR_H_
-static int opRDTSC(uint32_t fetchdat) {
-        if (!cpu_has_feature(CPU_FEATURE_RDTSC)) {
+static int opRDTSC(uint32_t fetchdat)
+{
+        if (!cpu_has_feature(CPU_FEATURE_RDTSC))
+        {
                 cpu_state.pc = cpu_state.oldpc;
                 x86illegal();
                 return 1;
         }
-        if ((cr4 & CR4_TSD) && CPL) {
+        if ((cr4 & CR4_TSD) && CPL)
+        {
                 x86gpf("RDTSC when TSD set and CPL != 0", 0);
                 return 1;
         }
@@ -16,8 +19,10 @@ static int opRDTSC(uint32_t fetchdat) {
         return 0;
 }
 
-static int opRDPMC(uint32_t fetchdat) {
-        if (ECX > 1 || (!(cr4 & CR4_PCE) && (cr0 & 1) && CPL)) {
+static int opRDPMC(uint32_t fetchdat)
+{
+        if (ECX > 1 || (!(cr4 & CR4_PCE) && (cr0 & 1) && CPL))
+        {
                 x86gpf("RDPMC not allowed", 0);
                 return 1;
         }
@@ -25,5 +30,6 @@ static int opRDPMC(uint32_t fetchdat) {
         CLOCK_CYCLES(1);
         return 0;
 }
+
 
 #endif /* _X86_OPS_MSR_H_ */

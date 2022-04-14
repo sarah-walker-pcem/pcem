@@ -8,10 +8,10 @@ void mouse_poll(int x, int y, int z, int b);
 char *mouse_get_name(int mouse);
 int mouse_get_type(int mouse);
 
-#define MOUSE_TYPE_SERIAL 0
-#define MOUSE_TYPE_PS2 1
+#define MOUSE_TYPE_SERIAL  0
+#define MOUSE_TYPE_PS2     1
 #define MOUSE_TYPE_AMSTRAD 2
-#define MOUSE_TYPE_OLIM24 3
+#define MOUSE_TYPE_OLIM24  3
 
 #define MOUSE_TYPE_IF_MASK 3
 

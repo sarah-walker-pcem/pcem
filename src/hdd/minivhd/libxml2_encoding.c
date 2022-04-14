@@ -18,7 +18,7 @@
  * daniel@veillard.com
  *
  * Original code for IsoLatin1 and UTF-16 by "Martin J. Duerst" <duerst@w3.org>
- *
+ * 
  * Adapted and abridged for MiniVHD by Sherman Perry
  */
 #include <stdlib.h>
@@ -26,14 +26,13 @@
 static int xmlLittleEndian = 1;
 
 /* Note: extracted from original 'void xmlInitCharEncodingHandlers(void)' function */
-void xmlEncodingInit(void) {
+void xmlEncodingInit(void)
+{
         unsigned short int tst = 0x1234;
-        unsigned char *ptr = (unsigned char *)&tst;
+        unsigned char* ptr = (unsigned char*)&tst;
 
-        if (*ptr == 0x12)
-                xmlLittleEndian = 0;
-        else if (*ptr == 0x34)
-                xmlLittleEndian = 1;
+        if (*ptr == 0x12) xmlLittleEndian = 0;
+        else if (*ptr == 0x34) xmlLittleEndian = 1;
 }
 
 /**
@@ -53,48 +52,61 @@ void xmlEncodingInit(void) {
  *     The value of *inlen after return is the number of octets consumed
  *     if the return value is positive, else unpredictable.
  */
-int UTF16LEToUTF8(unsigned char *out, int *outlen,
-                  const unsigned char *inb, int *inlenb) {
-        unsigned char *outstart = out;
-        const unsigned char *processed = inb;
-        unsigned char *outend = out + *outlen;
-        unsigned short *in = (unsigned short *)inb;
-        unsigned short *inend;
+int UTF16LEToUTF8(unsigned char* out, int* outlen,
+        const unsigned char* inb, int* inlenb)
+{
+        unsigned char* outstart = out;
+        const unsigned char* processed = inb;
+        unsigned char* outend = out + *outlen;
+        unsigned short* in = (unsigned short*)inb;
+        unsigned short* inend;
         unsigned int c, d, inlen;
-        unsigned char *tmp;
+        unsigned char* tmp;
         int bits;
 
         if ((*inlenb % 2) == 1)
                 (*inlenb)--;
         inlen = *inlenb / 2;
         inend = in + inlen;
-        while ((in < inend) && (out - outstart + 5 < *outlen)) {
-                if (xmlLittleEndian) {
+        while ((in < inend) && (out - outstart + 5 < *outlen))
+        {
+                if (xmlLittleEndian)
+                {
                         c = *in++;
-                } else {
-                        tmp = (unsigned char *)in;
+                }
+                else
+                {
+                        tmp = (unsigned char*)in;
                         c = *tmp++;
                         c = c | (((unsigned int)*tmp) << 8);
                         in++;
                 }
-                if ((c & 0xFC00) == 0xD800) { /* surrogates */
-                        if (in >= inend) {    /* (in > inend) shouldn't happens */
+                if ((c & 0xFC00) == 0xD800)
+                {    /* surrogates */
+                        if (in >= inend)
+                        {           /* (in > inend) shouldn't happens */
                                 break;
                         }
-                        if (xmlLittleEndian) {
+                        if (xmlLittleEndian)
+                        {
                                 d = *in++;
-                        } else {
-                                tmp = (unsigned char *)in;
+                        }
+                        else
+                        {
+                                tmp = (unsigned char*)in;
                                 d = *tmp++;
                                 d = d | (((unsigned int)*tmp) << 8);
                                 in++;
                         }
-                        if ((d & 0xFC00) == 0xDC00) {
+                        if ((d & 0xFC00) == 0xDC00)
+                        {
                                 c &= 0x03FF;
                                 c <<= 10;
                                 c |= d & 0x03FF;
                                 c += 0x10000;
-                        } else {
+                        }
+                        else
+                        {
                                 *outlen = out - outstart;
                                 *inlenb = processed - inb;
                                 return (-2);
@@ -104,26 +116,34 @@ int UTF16LEToUTF8(unsigned char *out, int *outlen,
                 /* assertion: c is a single UTF-4 value */
                 if (out >= outend)
                         break;
-                if (c < 0x80) {
+                if (c < 0x80)
+                {
                         *out++ = c;
                         bits = -6;
-                } else if (c < 0x800) {
+                }
+                else if (c < 0x800)
+                {
                         *out++ = ((c >> 6) & 0x1F) | 0xC0;
                         bits = 0;
-                } else if (c < 0x10000) {
+                }
+                else if (c < 0x10000)
+                {
                         *out++ = ((c >> 12) & 0x0F) | 0xE0;
                         bits = 6;
-                } else {
+                }
+                else
+                {
                         *out++ = ((c >> 18) & 0x07) | 0xF0;
                         bits = 12;
                 }
 
-                for (; bits >= 0; bits -= 6) {
+                for (; bits >= 0; bits -= 6)
+                {
                         if (out >= outend)
                                 break;
                         *out++ = ((c >> bits) & 0x3F) | 0x80;
                 }
-                processed = (const unsigned char *)in;
+                processed = (const unsigned char*)in;
         }
         *outlen = out - outstart;
         *inlenb = processed - inb;
@@ -143,60 +163,75 @@ int UTF16LEToUTF8(unsigned char *out, int *outlen,
  * Returns the number of bytes written, or -1 if lack of space, or -2
  *     if the transcoding failed.
  */
-int UTF8ToUTF16LE(unsigned char *outb, int *outlen,
-                  const unsigned char *in, int *inlen) {
-        unsigned short *out = (unsigned short *)outb;
-        const unsigned char *processed = in;
-        const unsigned char *const instart = in;
-        unsigned short *outstart = out;
-        unsigned short *outend;
-        const unsigned char *inend;
+int UTF8ToUTF16LE(unsigned char* outb, int* outlen,
+        const unsigned char* in, int* inlen)
+{
+        unsigned short* out = (unsigned short*)outb;
+        const unsigned char* processed = in;
+        const unsigned char* const instart = in;
+        unsigned short* outstart = out;
+        unsigned short* outend;
+        const unsigned char* inend;
         unsigned int c, d;
         int trailing;
-        unsigned char *tmp;
+        unsigned char* tmp;
         unsigned short tmp1, tmp2;
 
         /* UTF16LE encoding has no BOM */
-        if ((out == NULL) || (outlen == NULL) || (inlen == NULL))
-                return (-1);
-        if (in == NULL) {
+        if ((out == NULL) || (outlen == NULL) || (inlen == NULL)) return (-1);
+        if (in == NULL)
+        {
                 *outlen = 0;
                 *inlen = 0;
                 return (0);
         }
         inend = in + *inlen;
         outend = out + (*outlen / 2);
-        while (in < inend) {
+        while (in < inend)
+        {
                 d = *in++;
-                if (d < 0x80) {
+                if (d < 0x80)
+                {
                         c = d;
                         trailing = 0;
-                } else if (d < 0xC0) {
+                }
+                else if (d < 0xC0)
+                {
                         /* trailing byte in leading position */
                         *outlen = (out - outstart) * 2;
                         *inlen = processed - instart;
                         return (-2);
-                } else if (d < 0xE0) {
+                }
+                else if (d < 0xE0)
+                {
                         c = d & 0x1F;
                         trailing = 1;
-                } else if (d < 0xF0) {
+                }
+                else if (d < 0xF0)
+                {
                         c = d & 0x0F;
                         trailing = 2;
-                } else if (d < 0xF8) {
+                }
+                else if (d < 0xF8)
+                {
                         c = d & 0x07;
                         trailing = 3;
-                } else {
+                }
+                else
+                {
                         /* no chance for this in UTF-16 */
                         *outlen = (out - outstart) * 2;
                         *inlen = processed - instart;
                         return (-2);
                 }
 
-                if (inend - in < trailing) {
+                if (inend - in < trailing)
+                {
                         break;
                 }
 
-                for (; trailing; trailing--) {
+                for (; trailing; trailing--)
+                {
                         if ((in >= inend) || (((d = *in++) & 0xC0) != 0x80))
                                 break;
                         c <<= 6;
@@ -204,38 +239,48 @@ int UTF8ToUTF16LE(unsigned char *outb, int *outlen,
                 }
 
                 /* assertion: c is a single UTF-4 value */
-                if (c < 0x10000) {
+                if (c < 0x10000)
+                {
                         if (out >= outend)
                                 break;
-                        if (xmlLittleEndian) {
+                        if (xmlLittleEndian)
+                        {
                                 *out++ = c;
-                        } else {
-                                tmp = (unsigned char *)out;
+                        }
+                        else
+                        {
+                                tmp = (unsigned char*)out;
                                 *tmp = c;
                                 *(tmp + 1) = c >> 8;
                                 out++;
                         }
-                } else if (c < 0x110000) {
+                }
+                else if (c < 0x110000)
+                {
                         if (out + 1 >= outend)
                                 break;
                         c -= 0x10000;
-                        if (xmlLittleEndian) {
+                        if (xmlLittleEndian)
+                        {
                                 *out++ = 0xD800 | (c >> 10);
                                 *out++ = 0xDC00 | (c & 0x03FF);
-                        } else {
+                        }
+                        else
+                        {
                                 tmp1 = 0xD800 | (c >> 10);
-                                tmp = (unsigned char *)out;
+                                tmp = (unsigned char*)out;
                                 *tmp = (unsigned char)tmp1;
                                 *(tmp + 1) = tmp1 >> 8;
                                 out++;
 
                                 tmp2 = 0xDC00 | (c & 0x03FF);
-                                tmp = (unsigned char *)out;
+                                tmp = (unsigned char*)out;
                                 *tmp = (unsigned char)tmp2;
                                 *(tmp + 1) = tmp2 >> 8;
                                 out++;
                         }
-                } else
+                }
+                else
                         break;
                 processed = in;
         }
@@ -261,52 +306,65 @@ int UTF8ToUTF16LE(unsigned char *outb, int *outlen,
  * The value of *inlen after return is the number of octets consumed
  *     if the return value is positive, else unpredictable.
  */
-int UTF16BEToUTF8(unsigned char *out, int *outlen,
-                  const unsigned char *inb, int *inlenb) {
-        unsigned char *outstart = out;
-        const unsigned char *processed = inb;
-        unsigned char *outend = out + *outlen;
-        unsigned short *in = (unsigned short *)inb;
-        unsigned short *inend;
+int UTF16BEToUTF8(unsigned char* out, int* outlen,
+        const unsigned char* inb, int* inlenb)
+{
+        unsigned char* outstart = out;
+        const unsigned char* processed = inb;
+        unsigned char* outend = out + *outlen;
+        unsigned short* in = (unsigned short*)inb;
+        unsigned short* inend;
         unsigned int c, d, inlen;
-        unsigned char *tmp;
+        unsigned char* tmp;
         int bits;
 
         if ((*inlenb % 2) == 1)
                 (*inlenb)--;
         inlen = *inlenb / 2;
         inend = in + inlen;
-        while (in < inend) {
-                if (xmlLittleEndian) {
-                        tmp = (unsigned char *)in;
+        while (in < inend)
+        {
+                if (xmlLittleEndian)
+                {
+                        tmp = (unsigned char*)in;
                         c = *tmp++;
                         c = c << 8;
                         c = c | (unsigned int)*tmp;
                         in++;
-                } else {
+                }
+                else
+                {
                         c = *in++;
                 }
-                if ((c & 0xFC00) == 0xD800) { /* surrogates */
-                        if (in >= inend) {    /* (in > inend) shouldn't happens */
+                if ((c & 0xFC00) == 0xD800)
+                {    /* surrogates */
+                        if (in >= inend)
+                        {           /* (in > inend) shouldn't happens */
                                 *outlen = out - outstart;
                                 *inlenb = processed - inb;
                                 return (-2);
                         }
-                        if (xmlLittleEndian) {
-                                tmp = (unsigned char *)in;
+                        if (xmlLittleEndian)
+                        {
+                                tmp = (unsigned char*)in;
                                 d = *tmp++;
                                 d = d << 8;
                                 d = d | (unsigned int)*tmp;
                                 in++;
-                        } else {
+                        }
+                        else
+                        {
                                 d = *in++;
                         }
-                        if ((d & 0xFC00) == 0xDC00) {
+                        if ((d & 0xFC00) == 0xDC00)
+                        {
                                 c &= 0x03FF;
                                 c <<= 10;
                                 c |= d & 0x03FF;
                                 c += 0x10000;
-                        } else {
+                        }
+                        else
+                        {
                                 *outlen = out - outstart;
                                 *inlenb = processed - inb;
                                 return (-2);
@@ -316,26 +374,34 @@ int UTF16BEToUTF8(unsigned char *out, int *outlen,
                 /* assertion: c is a single UTF-4 value */
                 if (out >= outend)
                         break;
-                if (c < 0x80) {
+                if (c < 0x80)
+                {
                         *out++ = c;
                         bits = -6;
-                } else if (c < 0x800) {
+                }
+                else if (c < 0x800)
+                {
                         *out++ = ((c >> 6) & 0x1F) | 0xC0;
                         bits = 0;
-                } else if (c < 0x10000) {
+                }
+                else if (c < 0x10000)
+                {
                         *out++ = ((c >> 12) & 0x0F) | 0xE0;
                         bits = 6;
-                } else {
+                }
+                else
+                {
                         *out++ = ((c >> 18) & 0x07) | 0xF0;
                         bits = 12;
                 }
 
-                for (; bits >= 0; bits -= 6) {
+                for (; bits >= 0; bits -= 6)
+                {
                         if (out >= outend)
                                 break;
                         *out++ = ((c >> bits) & 0x3F) | 0x80;
                 }
-                processed = (const unsigned char *)in;
+                processed = (const unsigned char*)in;
         }
         *outlen = out - outstart;
         *inlenb = processed - inb;
@@ -355,99 +421,121 @@ int UTF16BEToUTF8(unsigned char *out, int *outlen,
  * Returns the number of byte written, or -1 by lack of space, or -2
  *     if the transcoding failed.
  */
-int UTF8ToUTF16BE(unsigned char *outb, int *outlen,
-                  const unsigned char *in, int *inlen) {
-        unsigned short *out = (unsigned short *)outb;
-        const unsigned char *processed = in;
-        const unsigned char *const instart = in;
-        unsigned short *outstart = out;
-        unsigned short *outend;
-        const unsigned char *inend;
+int UTF8ToUTF16BE(unsigned char* outb, int* outlen,
+        const unsigned char* in, int* inlen)
+{
+        unsigned short* out = (unsigned short*)outb;
+        const unsigned char* processed = in;
+        const unsigned char* const instart = in;
+        unsigned short* outstart = out;
+        unsigned short* outend;
+        const unsigned char* inend;
         unsigned int c, d;
         int trailing;
-        unsigned char *tmp;
+        unsigned char* tmp;
         unsigned short tmp1, tmp2;
 
         /* UTF-16BE has no BOM */
-        if ((outb == NULL) || (outlen == NULL) || (inlen == NULL))
-                return (-1);
-        if (in == NULL) {
+        if ((outb == NULL) || (outlen == NULL) || (inlen == NULL)) return (-1);
+        if (in == NULL)
+        {
                 *outlen = 0;
                 *inlen = 0;
                 return (0);
         }
         inend = in + *inlen;
         outend = out + (*outlen / 2);
-        while (in < inend) {
+        while (in < inend)
+        {
                 d = *in++;
-                if (d < 0x80) {
+                if (d < 0x80)
+                {
                         c = d;
                         trailing = 0;
-                } else if (d < 0xC0) {
+                }
+                else if (d < 0xC0)
+                {
                         /* trailing byte in leading position */
                         *outlen = out - outstart;
                         *inlen = processed - instart;
                         return (-2);
-                } else if (d < 0xE0) {
+                }
+                else if (d < 0xE0)
+                {
                         c = d & 0x1F;
                         trailing = 1;
-                } else if (d < 0xF0) {
+                }
+                else if (d < 0xF0)
+                {
                         c = d & 0x0F;
                         trailing = 2;
-                } else if (d < 0xF8) {
+                }
+                else if (d < 0xF8)
+                {
                         c = d & 0x07;
                         trailing = 3;
-                } else {
+                }
+                else
+                {
                         /* no chance for this in UTF-16 */
                         *outlen = out - outstart;
                         *inlen = processed - instart;
                         return (-2);
                 }
 
-                if (inend - in < trailing) {
+                if (inend - in < trailing)
+                {
                         break;
                 }
 
-                for (; trailing; trailing--) {
-                        if ((in >= inend) || (((d = *in++) & 0xC0) != 0x80))
-                                break;
+                for (; trailing; trailing--)
+                {
+                        if ((in >= inend) || (((d = *in++) & 0xC0) != 0x80)) break;
                         c <<= 6;
                         c |= d & 0x3F;
                 }
 
                 /* assertion: c is a single UTF-4 value */
-                if (c < 0x10000) {
-                        if (out >= outend)
-                                break;
-                        if (xmlLittleEndian) {
-                                tmp = (unsigned char *)out;
+                if (c < 0x10000)
+                {
+                        if (out >= outend) break;
+                        if (xmlLittleEndian)
+                        {
+                                tmp = (unsigned char*)out;
                                 *tmp = c >> 8;
                                 *(tmp + 1) = c;
                                 out++;
-                        } else {
+                        }
+                        else
+                        {
                                 *out++ = c;
                         }
-                } else if (c < 0x110000) {
-                        if (out + 1 >= outend)
-                                break;
+                }
+                else if (c < 0x110000)
+                {
+                        if (out + 1 >= outend) break;
                         c -= 0x10000;
-                        if (xmlLittleEndian) {
+                        if (xmlLittleEndian)
+                        {
                                 tmp1 = 0xD800 | (c >> 10);
-                                tmp = (unsigned char *)out;
+                                tmp = (unsigned char*)out;
                                 *tmp = tmp1 >> 8;
                                 *(tmp + 1) = (unsigned char)tmp1;
                                 out++;
 
                                 tmp2 = 0xDC00 | (c & 0x03FF);
-                                tmp = (unsigned char *)out;
+                                tmp = (unsigned char*)out;
                                 *tmp = tmp2 >> 8;
                                 *(tmp + 1) = (unsigned char)tmp2;
                                 out++;
-                        } else {
+                        }
+                        else
+                        {
                                 *out++ = 0xD800 | (c >> 10);
                                 *out++ = 0xDC00 | (c & 0x03FF);
                         }
-                } else
+                }
+                else
                         break;
                 processed = in;
         }
@@ -456,7 +544,7 @@ int UTF8ToUTF16BE(unsigned char *outb, int *outlen,
         return (*outlen);
 }
 
-/* This file is licenced under the MIT licence as follows:
+/* This file is licenced under the MIT licence as follows: 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

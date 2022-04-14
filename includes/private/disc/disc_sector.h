@@ -12,4 +12,5 @@ void disc_sector_stop();
 
 extern void (*disc_sector_writeback[2])(int drive, int track);
 
+
 #endif /* _DISC_SECTOR_H_ */

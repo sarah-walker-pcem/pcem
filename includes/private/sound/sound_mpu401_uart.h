@@ -1,14 +1,15 @@
 #ifndef _SOUND_MPU401_UART_H_
 #define _SOUND_MPU401_UART_H_
 
-typedef struct mpu401_uart_t {
+typedef struct mpu401_uart_t
+{
         uint8_t status;
         uint8_t rx_data;
 
         int uart_mode;
         uint16_t addr;
         int irq;
-
+        
         int is_aztech;
 } mpu401_uart_t;
 

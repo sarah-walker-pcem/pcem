@@ -1,22 +1,22 @@
-#include "vid_tvp3026_ramdac.h"
 #include "ibm.h"
 #include "mem.h"
-#include "vid_svga.h"
 #include "video.h"
+#include "vid_svga.h"
+#include "vid_tvp3026_ramdac.h"
 
-#define REG_DCC 0x09
+#define REG_DCC         0x09
 #define REG_CURSOR_DATA 0x0b
-#define REG_CURSOR_XL 0x0c
-#define REG_CURSOR_XH 0x0d
-#define REG_CURSOR_YL 0x0e
-#define REG_CURSOR_YH 0x0f
+#define REG_CURSOR_XL   0x0c
+#define REG_CURSOR_XH   0x0d
+#define REG_CURSOR_YL   0x0e
+#define REG_CURSOR_YH   0x0f
 
-#define IREG_ICC 0x06
-#define REG_MSC 0x1e
+#define IREG_ICC   0x06
+#define REG_MSC    0x1e
 
 #define DCC_MODE_SEL_MASK (0x03)
 #define DCC_MODE_SEL_3_COLOUR (0x01)
-#define DCC_MODE_SEL_XGA (0x02)
+#define DCC_MODE_SEL_XGA      (0x02)
 #define DCC_MODE_SEL_XWINDOWS (0x03)
 #define CCR_ADDR_SHIFT (2)
 #define CCR_ADDR_MASK (3 << CCR_ADDR_SHIFT)
@@ -25,35 +25,46 @@
 
 /*Update SVGA hwcursor variables with RAMDAC cursor. Should only be called when
   ramdac->cursor_enabled is set, otherwise the host SVGA board controls the cursor*/
-static void update_cursor(tvp3026_ramdac_t *ramdac, svga_t *svga) {
-        //        pclog("update_cursor: %02x\n", ramdac->regs[REG_DCC]);
-        if (ramdac->cursor_control & DCC_MODE_SEL_MASK) {
+static void update_cursor(tvp3026_ramdac_t* ramdac, svga_t* svga)
+{
+//        pclog("update_cursor: %02x\n", ramdac->regs[REG_DCC]);
+        if (ramdac->cursor_control & DCC_MODE_SEL_MASK)
+        {
                 svga->hwcursor.ena = 1;
-                if (ramdac->cursor_x >= 64) {
+                if (ramdac->cursor_x >= 64)
+                {
                         svga->hwcursor.xoff = 0;
                         svga->hwcursor.x = ramdac->cursor_x - 64;
-                } else {
+                }
+                else
+                {
                         svga->hwcursor.xoff = 64 - ramdac->cursor_x;
                         svga->hwcursor.x = 0;
                 }
-                if (ramdac->cursor_y >= 64) {
+                if (ramdac->cursor_y >= 64)
+                {
                         svga->hwcursor.yoff = 0;
                         svga->hwcursor.addr = 0;
                         svga->hwcursor.y = ramdac->cursor_y - 64;
-                } else {
+                }
+                else
+                {
                         svga->hwcursor.yoff = 64 - ramdac->cursor_y;
                         svga->hwcursor.addr = svga->hwcursor.yoff * 8;
                         svga->hwcursor.y = 0;
                 }
                 ramdac->cursor_mode = ramdac->cursor_control & DCC_MODE_SEL_MASK;
-                //                pclog("     x=%i y=%i\n", svga->hwcursor.x, svga->hwcursor.y);
-        } else
+//                pclog("     x=%i y=%i\n", svga->hwcursor.x, svga->hwcursor.y);
+        }
+        else
                 svga->hwcursor.ena = 0;
 }
 
-void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, svga_t *svga) {
-        //        pclog("tvp3026_ramdac_out: addr=%04x val=%02x\n", addr, val);
-        switch (addr) {
+void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t* ramdac, svga_t* svga)
+{
+//        pclog("tvp3026_ramdac_out: addr=%04x val=%02x\n", addr, val);
+        switch (addr)
+        {
         case 0x0:
                 ramdac->reg_idx = val;
         case 0x1:
@@ -70,7 +81,8 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                 break;
         case 0x5:
                 svga->fullchange = changeframecount;
-                switch (ramdac->cursor_pal_pos) {
+                switch (ramdac->cursor_pal_pos)
+                {
                 case 0:
                         ramdac->cursor_pal_r = val;
                         ramdac->cursor_pal_pos++;
@@ -124,7 +136,8 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                 break;
 
         case 0xa:
-                switch (ramdac->reg_idx) {
+                switch (ramdac->reg_idx)
+                {
                 case IREG_ICC:
                         ramdac->cursor_control = val;
                         update_cursor(ramdac, svga);
@@ -138,7 +151,8 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                         if (val & 0x80)
                                 svga->bpp = 8;
                         else
-                                switch (val & 0x1f) {
+                                switch (val & 0x1f)
+                                {
                                 case 0x04: /*ORGB 1555*/
                                         svga->bpp = 15;
                                         break;
@@ -161,7 +175,7 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                                         break;
                                 }
                         svga_recalctimings(svga);
-                        //                        pclog("bpp=%i\n", svga->bpp);
+//                        pclog("bpp=%i\n", svga->bpp);
                         break;
 
                 case REG_MSC:
@@ -169,7 +183,8 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                         break;
 
                 case 0x2d: /*Pixel clock PLL data*/
-                        switch (ramdac->regs[0x2c] & 3) {
+                        switch (ramdac->regs[0x2c] & 3)
+                        {
                         case 0:
                                 ramdac->pix.n = val;
                                 break;
@@ -184,7 +199,8 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                         break;
 
                 case 0x2e: /*Memory clock PLL data*/
-                        switch ((ramdac->regs[0x2c] >> 2) & 3) {
+                        switch ((ramdac->regs[0x2c] >> 2) & 3)
+                        {
                         case 0:
                                 ramdac->mem.n = val;
                                 break;
@@ -199,7 +215,8 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                         break;
 
                 case 0x2f: /*Loop clock PLL data*/
-                        switch ((ramdac->regs[0x2c] >> 4) & 3) {
+                        switch ((ramdac->regs[0x2c] >> 4) & 3)
+                        {
                         case 0:
                                 ramdac->loop.n = val;
                                 break;
@@ -214,7 +231,8 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                         break;
                 }
 
-                switch (ramdac->reg_idx) {
+                switch (ramdac->reg_idx)
+                {
                 case 0x06:
                 case 0x0f:
                 case 0x18:
@@ -245,15 +263,17 @@ void tvp3026_ramdac_out(uint16_t addr, uint8_t val, tvp3026_ramdac_t *ramdac, sv
                         ramdac->regs[ramdac->reg_idx] = val;
                         break;
                 }
-                //                pclog("RAMDAC[%02x]=%02x\n", ramdac->reg_idx, val);
+//                pclog("RAMDAC[%02x]=%02x\n", ramdac->reg_idx, val);
                 break;
         }
 }
 
-uint8_t tvp3026_ramdac_in(uint16_t addr, tvp3026_ramdac_t *ramdac, svga_t *svga) {
+uint8_t tvp3026_ramdac_in(uint16_t addr, tvp3026_ramdac_t* ramdac, svga_t* svga)
+{
         uint8_t ret = 0xff;
 
-        switch (addr) {
+        switch (addr)
+        {
         case 0x0:
         case 0x1:
                 ret = svga_in(addr + 0x3c8, svga);
@@ -269,7 +289,8 @@ uint8_t tvp3026_ramdac_in(uint16_t addr, tvp3026_ramdac_t *ramdac, svga_t *svga)
                 ret = ramdac->cursor_pal_write;
                 break;
         case 0x5:
-                switch (ramdac->cursor_pal_pos) {
+                switch (ramdac->cursor_pal_pos)
+                {
                 case 0:
                         ramdac->cursor_pal_pos++;
                         return ramdac->cursor_pal[ramdac->cursor_pal_read].r;
@@ -287,9 +308,11 @@ uint8_t tvp3026_ramdac_in(uint16_t addr, tvp3026_ramdac_t *ramdac, svga_t *svga)
                 break;
 
         case 0xa:
-                switch (ramdac->reg_idx) {
+                switch (ramdac->reg_idx)
+                {
                 case 0x2d: /*Pixel clock PLL data*/
-                        switch (ramdac->regs[0x2c] & 3) {
+                        switch (ramdac->regs[0x2c] & 3)
+                        {
                         case 0:
                                 ret = ramdac->pix.n;
                                 break;
@@ -306,7 +329,8 @@ uint8_t tvp3026_ramdac_in(uint16_t addr, tvp3026_ramdac_t *ramdac, svga_t *svga)
                         break;
 
                 case 0x2e: /*Memory clock PLL data*/
-                        switch ((ramdac->regs[0x2c] >> 2) & 3) {
+                        switch ((ramdac->regs[0x2c] >> 2) & 3)
+                        {
                         case 0:
                                 ret = ramdac->mem.n;
                                 break;
@@ -323,7 +347,8 @@ uint8_t tvp3026_ramdac_in(uint16_t addr, tvp3026_ramdac_t *ramdac, svga_t *svga)
                         break;
 
                 case 0x2f: /*Loop clock PLL data*/
-                        switch ((ramdac->regs[0x2c] >> 4) & 3) {
+                        switch ((ramdac->regs[0x2c] >> 4) & 3)
+                        {
                         case 0:
                                 ret = ramdac->loop.n;
                                 break;
@@ -343,60 +368,67 @@ uint8_t tvp3026_ramdac_in(uint16_t addr, tvp3026_ramdac_t *ramdac, svga_t *svga)
                         ret = ramdac->regs[ramdac->reg_idx];
                         break;
                 }
-                //                pclog("Read RAMDAC[%02x]=%02x\n", ramdac->reg_idx, ret);
+//                pclog("Read RAMDAC[%02x]=%02x\n", ramdac->reg_idx, ret);
                 break;
         }
-        //        pclog("tvp3026_ramdac_in: addr=%04x ret=%02x\n", addr, ret);
+//        pclog("tvp3026_ramdac_in: addr=%04x ret=%02x\n", addr, ret);
         return ret;
 }
 
-float tvp3026_getclock(tvp3026_ramdac_t *ramdac) {
-        /*Fvco = 8 x Fref x (65 - M) / (65 - N)*/
-        /*Fpll = Fvco / 2^P*/
+float tvp3026_getclock(tvp3026_ramdac_t* ramdac)
+{
+/*Fvco = 8 x Fref x (65 - M) / (65 - N)*/
+/*Fpll = Fvco / 2^P*/
         int n = ramdac->pix.n & 0x3f;
         int m = ramdac->pix.m & 0x3f;
         int p = ramdac->pix.p & 0x03;
         double f_vco = 8.0 * 14318184 * (double)(65 - m) / (double)(65 - n);
         double f_pll = f_vco / (double)(1 << p);
 
-        //        pclog("f_pll=%g %i\n", f_pll, (int)f_pll);
+//        pclog("f_pll=%g %i\n", f_pll, (int)f_pll);
         return f_pll;
 }
 
-void tvp3026_set_cursor_enable(tvp3026_ramdac_t *ramdac, svga_t *svga, int ena) {
+void tvp3026_set_cursor_enable(tvp3026_ramdac_t* ramdac, svga_t* svga, int ena)
+{
         ramdac->cursor_ena = ena;
         if (ena)
                 update_cursor(ramdac, svga);
 }
 
-void tvp3026_hwcursor_draw(tvp3026_ramdac_t *ramdac, svga_t *svga, int displine) {
+void tvp3026_hwcursor_draw(tvp3026_ramdac_t* ramdac, svga_t* svga, int displine)
+{
         int offset = (svga->hwcursor_latch.x + 32) - svga->hwcursor.xoff;
         int x;
-        uint8_t *cursor_data = &ramdac->cursor_data[svga->hwcursor_latch.addr];
+        uint8_t* cursor_data = &ramdac->cursor_data[svga->hwcursor_latch.addr];
 
-        for (x = 0; x < 64; x++) {
-                if ((offset + x) >= 32) {
+        for (x = 0; x < 64; x++)
+        {
+                if ((offset + x) >= 32)
+                {
                         int p0 = cursor_data[x >> 3] & (0x80 >> (x & 7));
                         int p1 = cursor_data[(x >> 3) + 512] & (0x80 >> (x & 7));
 
-                        switch (ramdac->cursor_mode) {
+                        switch (ramdac->cursor_mode)
+                        {
                         case DCC_MODE_SEL_3_COLOUR:
-                                if (p0 || p1) {
+                                if (p0 || p1)
+                                {
                                         int col = (p0 ? 1 : 0) | (p1 ? 2 : 0);
-                                        ((uint32_t *)buffer32->line[displine])[x + offset] = ramdac->cursor_pal_look[col];
+                                        ((uint32_t*)buffer32->line[displine])[x + offset] = ramdac->cursor_pal_look[col];
                                 }
                                 break;
 
                         case DCC_MODE_SEL_XGA:
                                 if (!p1)
-                                        ((uint32_t *)buffer32->line[displine])[x + offset] = ramdac->cursor_pal_look[p0 ? 2 : 1];
+                                        ((uint32_t*)buffer32->line[displine])[x + offset] = ramdac->cursor_pal_look[p0 ? 2 : 1];
                                 else if (p0)
-                                        ((uint32_t *)buffer32->line[displine])[x + offset] ^= 0xffffff;
+                                        ((uint32_t*)buffer32->line[displine])[x + offset] ^= 0xffffff;
                                 break;
 
                         case DCC_MODE_SEL_XWINDOWS:
                                 if (p1)
-                                        ((uint32_t *)buffer32->line[displine])[x + offset] = ramdac->cursor_pal_look[p0 ? 2 : 1];
+                                        ((uint32_t*)buffer32->line[displine])[x + offset] = ramdac->cursor_pal_look[p0 ? 2 : 1];
                                 break;
                         }
                 }
@@ -404,7 +436,8 @@ void tvp3026_hwcursor_draw(tvp3026_ramdac_t *ramdac, svga_t *svga, int displine)
         svga->hwcursor_latch.addr += 8;
 }
 
-void tvp3026_init(tvp3026_ramdac_t *ramdac) {
+void tvp3026_init(tvp3026_ramdac_t* ramdac)
+{
         ramdac->regs[0x0f] = 0x06; /*Latch control*/
         ramdac->regs[0x18] = 0x80; /*True color control*/
         ramdac->regs[0x19] = 0x80; /*Multiplex control*/

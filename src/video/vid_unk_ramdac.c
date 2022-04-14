@@ -1,20 +1,24 @@
 /*It is unknown exactly what RAMDAC this is
   It is possibly a Sierra 1502x
   It's addressed by the TLIVESA1 driver for ET4000*/
-#include "vid_unk_ramdac.h"
 #include "ibm.h"
 #include "mem.h"
-#include "vid_svga.h"
 #include "video.h"
+#include "vid_svga.h"
+#include "vid_unk_ramdac.h"
 
-void unk_ramdac_out(uint16_t addr, uint8_t val, unk_ramdac_t *ramdac, svga_t *svga) {
-        // pclog("OUT RAMDAC %04X %02X\n",addr,val);
-        switch (addr) {
+void unk_ramdac_out(uint16_t addr, uint8_t val, unk_ramdac_t* ramdac, svga_t* svga)
+{
+        //pclog("OUT RAMDAC %04X %02X\n",addr,val);
+        switch (addr)
+        {
         case 0x3C6:
-                if (ramdac->state == 4) {
+                if (ramdac->state == 4)
+                {
                         ramdac->state = 0;
                         ramdac->ctrl = val;
-                        switch ((val & 1) | ((val & 0xE0) >> 4)) {
+                        switch ((val & 1) | ((val & 0xE0) >> 4))
+                        {
                         case 0:
                         case 1:
                         case 2:
@@ -52,11 +56,14 @@ void unk_ramdac_out(uint16_t addr, uint8_t val, unk_ramdac_t *ramdac, svga_t *sv
         svga_out(addr, val, svga);
 }
 
-uint8_t unk_ramdac_in(uint16_t addr, unk_ramdac_t *ramdac, svga_t *svga) {
-        // pclog("IN RAMDAC %04X\n",addr);
-        switch (addr) {
+uint8_t unk_ramdac_in(uint16_t addr, unk_ramdac_t* ramdac, svga_t* svga)
+{
+        //pclog("IN RAMDAC %04X\n",addr);
+        switch (addr)
+        {
         case 0x3C6:
-                if (ramdac->state == 4) {
+                if (ramdac->state == 4)
+                {
                         ramdac->state = 0;
                         return ramdac->ctrl;
                 }

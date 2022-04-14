@@ -38,4 +38,5 @@ void svga_render_RGBA8888_highres(svga_t *svga);
 
 extern void (*svga_render)(svga_t *svga);
 
+
 #endif /* _VID_SVGA_RENDER_H_ */

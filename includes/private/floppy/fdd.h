@@ -16,4 +16,5 @@ int fdd_get_type(int drive);
 
 extern int fdd_swap;
 
+
 #endif /* _FDD_H_ */

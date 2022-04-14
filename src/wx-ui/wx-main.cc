@@ -6,20 +6,21 @@
 #include <windows.h>
 #endif
 
-extern "C" {
-int pc_main(int, char **);
-int main(int argc, char **argv);
+extern "C"
+{
+int pc_main(int, char**);
+int main(int argc, char** argv);
 }
 
 #if WIN32
-int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char *, int nShowCmd)
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*, int nShowCmd)
 #else
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 #endif
 {
 #if WIN32
         int argc = __argc;
-        char **argv = __argv;
+        char** argv = __argv;
 #endif
 
         if (!pc_main(argc, argv))
@@ -29,3 +30,4 @@ int main(int argc, char **argv)
         wxEntry(argc, argv);
         return 0;
 }
+

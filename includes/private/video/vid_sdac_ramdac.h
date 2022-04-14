@@ -1,6 +1,7 @@
 #ifndef _VID_SDAC_RAMDAC_H_
 #define _VID_SDAC_RAMDAC_H_
-typedef struct sdac_ramdac_t {
+typedef struct sdac_ramdac_t
+{
         int magic_count;
         uint8_t command;
         int windex, rindex;
@@ -15,5 +16,6 @@ void sdac_ramdac_out(uint16_t addr, uint8_t val, sdac_ramdac_t *ramdac, svga_t *
 uint8_t sdac_ramdac_in(uint16_t addr, sdac_ramdac_t *ramdac, svga_t *svga);
 
 float sdac_getclock(int clock, void *p);
+
 
 #endif /* _VID_SDAC_RAMDAC_H_ */

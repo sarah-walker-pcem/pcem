@@ -20,38 +20,38 @@
 #ifndef __VOICE_H__
 #define __VOICE_H__
 
-#include "envelope.h"
 #include "siddefs-fp.h"
 #include "wave.h"
+#include "envelope.h"
 
-class VoiceFP {
-    public:
-        VoiceFP();
+class VoiceFP
+{
+public:
+  VoiceFP();
 
-        void set_chip_model(chip_model model);
-        void set_sync_source(VoiceFP *);
-        void reset();
+  void set_chip_model(chip_model model);
+  void set_sync_source(VoiceFP*);
+  void reset();
 
-        void writeCONTROL_REG(reg8);
+  void writeCONTROL_REG(reg8);
 
-        // Amplitude modulated waveform output.
-        // Range [-2048*255, 2047*255].
-        RESID_INLINE float output();
+  // Amplitude modulated waveform output.
+  // Range [-2048*255, 2047*255].
+  RESID_INLINE float output();
 
-        void set_nonlinearity(float nl);
+  void set_nonlinearity(float nl);
+protected:
+  void calculate_dac_tables();
 
-    protected:
-        void calculate_dac_tables();
+  WaveformGeneratorFP wave;
+  EnvelopeGeneratorFP envelope;
 
-        WaveformGeneratorFP wave;
-        EnvelopeGeneratorFP envelope;
+  // Multiplying D/A DC offset.
+  float voice_DC, wave_zero, nonlinearity;
 
-        // Multiplying D/A DC offset.
-        float voice_DC, wave_zero, nonlinearity;
-
-        float env_dac[256];
-        float voice_dac[4096];
-        friend class SIDFP;
+  float env_dac[256];
+  float voice_dac[4096];
+friend class SIDFP;
 };
 
 // ----------------------------------------------------------------------------
@@ -60,13 +60,14 @@ class VoiceFP {
 // ----------------------------------------------------------------------------
 
 RESID_INLINE
-float VoiceFP::output() {
-        unsigned int w = wave.output();
-        unsigned int e = envelope.output();
-        float _w = voice_dac[w];
-        float _e = env_dac[e];
+float VoiceFP::output()
+{
+    unsigned int w = wave.output();
+    unsigned int e = envelope.output();
+    float _w = voice_dac[w];
+    float _e = env_dac[e];
 
-        return _w * _e + voice_DC;
+    return _w * _e + voice_DC;
 }
 
 #endif // not __VOICE_H__

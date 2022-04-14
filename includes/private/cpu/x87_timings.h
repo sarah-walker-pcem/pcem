@@ -57,4 +57,5 @@ extern const x87_timings_t x87_timings_486;
 
 extern x87_timings_t x87_timings;
 
+
 #endif /* _X87_TIMINGS_H_ */

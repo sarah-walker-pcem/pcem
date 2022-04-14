@@ -18,16 +18,18 @@ bit   0  Controls 6/8bit DAC. 0: 8bit DAC/LUT, 1: 6bit DAC/LUT
     5-6  Always set ?
       7  If set can remove "snow" in some cases (A860_Delay_L ?) ??
 */
-#include "vid_ati68860_ramdac.h"
 #include "ibm.h"
 #include "mem.h"
-#include "vid_svga.h"
-#include "vid_svga_render.h"
 #include "video.h"
+#include "vid_svga.h"
+#include "vid_ati68860_ramdac.h"
+#include "vid_svga_render.h"
 
-void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, svga_t *svga) {
-        //        pclog("ati68860_out : addr %04X val %02X  %04X:%04X\n", addr, val, CS,pc);
-        switch (addr) {
+void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t* ramdac, svga_t* svga)
+{
+//        pclog("ati68860_out : addr %04X val %02X  %04X:%04X\n", addr, val, CS,pc);
+        switch (addr)
+        {
         case 0:
                 svga_out(0x3c8, val, svga);
                 break;
@@ -42,13 +44,15 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
                 break;
         default:
                 ramdac->regs[addr & 0xf] = val;
-                switch (addr & 0xf) {
+                switch (addr & 0xf)
+                {
                 case 0x4:
                         ramdac->dac_write = val;
                         ramdac->dac_pos = 0;
                         break;
                 case 0x5:
-                        switch (ramdac->dac_pos) {
+                        switch (ramdac->dac_pos)
+                        {
                         case 0:
                                 ramdac->dac_r = val;
                                 ramdac->dac_pos++;
@@ -67,7 +71,7 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
                                         ramdac->pallook[ramdac->dac_write] = makecol32(ramdac->pal[ramdac->dac_write].r, ramdac->pal[ramdac->dac_write].g, ramdac->pal[ramdac->dac_write].b);
                                 else
                                         ramdac->pallook[ramdac->dac_write] = makecol32(
-                                            (ramdac->pal[ramdac->dac_write].r & 0x3f) * 4, (ramdac->pal[ramdac->dac_write].g & 0x3f) * 4, (ramdac->pal[ramdac->dac_write].b & 0x3f) * 4);
+                                                (ramdac->pal[ramdac->dac_write].r & 0x3f) * 4, (ramdac->pal[ramdac->dac_write].g & 0x3f) * 4, (ramdac->pal[ramdac->dac_write].b & 0x3f) * 4);
                                 ramdac->dac_pos = 0;
                                 ramdac->dac_write = (ramdac->dac_write + 1) & 255;
                                 break;
@@ -75,7 +79,8 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
                         break;
 
                 case 0xb:
-                        switch (val) {
+                        switch (val)
+                        {
                         case 0x82:
                                 ramdac->render = svga_render_4bpp_highres;
                                 break;
@@ -117,9 +122,11 @@ void ati68860_ramdac_out(uint16_t addr, uint8_t val, ati68860_ramdac_t *ramdac, 
         }
 }
 
-uint8_t ati68860_ramdac_in(uint16_t addr, ati68860_ramdac_t *ramdac, svga_t *svga) {
+uint8_t ati68860_ramdac_in(uint16_t addr, ati68860_ramdac_t* ramdac, svga_t* svga)
+{
         uint8_t ret = 0;
-        switch (addr) {
+        switch (addr)
+        {
         case 0:
                 ret = svga_in(0x3c8, svga);
                 break;
@@ -148,21 +155,25 @@ uint8_t ati68860_ramdac_in(uint16_t addr, ati68860_ramdac_t *ramdac, svga_t *svg
                 ret = ramdac->regs[addr & 0xf];
                 break;
         }
-        //        pclog("ati68860_in  : addr %04X ret %02X  %04X:%04X\n", addr, ret, CS,pc);
+//        pclog("ati68860_in  : addr %04X ret %02X  %04X:%04X\n", addr, ret, CS,pc);
         return ret;
 }
 
-void ati68860_ramdac_init(ati68860_ramdac_t *ramdac) {
+void ati68860_ramdac_init(ati68860_ramdac_t* ramdac)
+{
         ramdac->render = svga_render_8bpp_highres;
 }
 
-void ati68860_set_ramdac_type(ati68860_ramdac_t *ramdac, int type) {
+void ati68860_set_ramdac_type(ati68860_ramdac_t* ramdac, int type)
+{
         int c;
 
-        if (ramdac->ramdac_type != type) {
+        if (ramdac->ramdac_type != type)
+        {
                 ramdac->ramdac_type = type;
 
-                for (c = 0; c < 2; c++) {
+                for (c = 0; c < 2; c++)
+                {
                         if (ramdac->ramdac_type == RAMDAC_8BIT)
                                 ramdac->pallook[c] = makecol32(ramdac->pal[c].r, ramdac->pal[c].g, ramdac->pal[c].b);
                         else

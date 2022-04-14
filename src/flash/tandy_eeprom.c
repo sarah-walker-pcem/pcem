@@ -1,9 +1,9 @@
-#include "tandy_eeprom.h"
-#include "device.h"
+#include <stdlib.h>
 #include "ibm.h"
 #include "io.h"
+#include "device.h"
+#include "tandy_eeprom.h"
 #include "nvr.h"
-#include <stdlib.h>
 
 typedef struct
 {
@@ -17,7 +17,8 @@ typedef struct
         int romset;
 } tandy_eeprom_t;
 
-enum {
+enum
+{
         EEPROM_IDLE,
         EEPROM_GET_OPERATION,
         EEPROM_READ,
@@ -26,14 +27,18 @@ enum {
 
 static int eeprom_data_out;
 
-void tandy_eeprom_write(uint16_t addr, uint8_t val, void *p) {
-        tandy_eeprom_t *eeprom = (tandy_eeprom_t *)p;
+void tandy_eeprom_write(uint16_t addr, uint8_t val, void* p)
+{
+        tandy_eeprom_t* eeprom = (tandy_eeprom_t*)p;
 
-        if ((val & 4) && !eeprom->clock) {
-                //                pclog("eeprom_write %02x %i %i\n", val, eeprom->state, eeprom->count);
-                switch (eeprom->state) {
+        if ((val & 4) && !eeprom->clock)
+        {
+//                pclog("eeprom_write %02x %i %i\n", val, eeprom->state, eeprom->count);
+                switch (eeprom->state)
+                {
                 case EEPROM_IDLE:
-                        switch (eeprom->count) {
+                        switch (eeprom->count)
+                        {
                         case 0:
                                 if (!(val & 3))
                                         eeprom->count = 1;
@@ -56,18 +61,20 @@ void tandy_eeprom_write(uint16_t addr, uint8_t val, void *p) {
                 case EEPROM_GET_OPERATION:
                         eeprom->data = (eeprom->data << 1) | (val & 1);
                         eeprom->count++;
-                        if (eeprom->count == 8) {
+                        if (eeprom->count == 8)
+                        {
                                 eeprom->count = 0;
-                                //                                pclog("EEPROM get operation %02x\n", eeprom->data);
+//                                pclog("EEPROM get operation %02x\n", eeprom->data);
                                 eeprom->addr = eeprom->data & 0x3f;
-                                switch (eeprom->data & 0xc0) {
+                                switch (eeprom->data & 0xc0)
+                                {
                                 case 0x40:
                                         eeprom->state = EEPROM_WRITE;
                                         break;
                                 case 0x80:
                                         eeprom->state = EEPROM_READ;
                                         eeprom->data = eeprom->store[eeprom->addr];
-                                        //                                        pclog("EEPROM read data %02x %04x\n", eeprom->addr, eeprom->data);
+//                                        pclog("EEPROM read data %02x %04x\n", eeprom->addr, eeprom->data);
                                         break;
                                 default:
                                         eeprom->state = EEPROM_IDLE;
@@ -80,7 +87,8 @@ void tandy_eeprom_write(uint16_t addr, uint8_t val, void *p) {
                         eeprom_data_out = eeprom->data & 0x8000;
                         eeprom->data <<= 1;
                         eeprom->count++;
-                        if (eeprom->count == 16) {
+                        if (eeprom->count == 16)
+                        {
                                 eeprom->count = 0;
                                 eeprom->state = EEPROM_IDLE;
                         }
@@ -88,10 +96,11 @@ void tandy_eeprom_write(uint16_t addr, uint8_t val, void *p) {
                 case EEPROM_WRITE:
                         eeprom->data = (eeprom->data << 1) | (val & 1);
                         eeprom->count++;
-                        if (eeprom->count == 16) {
+                        if (eeprom->count == 16)
+                        {
                                 eeprom->count = 0;
                                 eeprom->state = EEPROM_IDLE;
-                                //                                pclog("EEPROM write %04x to %02x\n", eeprom->data, eeprom->addr);
+//                                pclog("EEPROM write %04x to %02x\n", eeprom->data, eeprom->addr);
                                 eeprom->store[eeprom->addr] = eeprom->data;
                         }
                         break;
@@ -101,19 +110,22 @@ void tandy_eeprom_write(uint16_t addr, uint8_t val, void *p) {
         eeprom->clock = val & 4;
 }
 
-int tandy_eeprom_read() {
-        //        pclog("tandy_eeprom_read: data_out=%x\n", eeprom_data_out);
+int tandy_eeprom_read()
+{
+//        pclog("tandy_eeprom_read: data_out=%x\n", eeprom_data_out);
         return eeprom_data_out;
 }
 
-void *tandy_eeprom_init() {
-        tandy_eeprom_t *eeprom = malloc(sizeof(tandy_eeprom_t));
-        FILE *f = NULL;
+void* tandy_eeprom_init()
+{
+        tandy_eeprom_t* eeprom = malloc(sizeof(tandy_eeprom_t));
+        FILE* f = NULL;
 
         memset(eeprom, 0, sizeof(tandy_eeprom_t));
 
         eeprom->romset = romset;
-        switch (romset) {
+        switch (romset)
+        {
         case ROM_TANDY1000HX:
                 f = nvrfopen("tandy1000hx.bin", "rb");
                 break;
@@ -121,10 +133,12 @@ void *tandy_eeprom_init() {
                 f = nvrfopen("tandy1000sl2.bin", "rb");
                 break;
         }
-        if (f) {
+        if (f)
+        {
                 fread(eeprom->store, 128, 1, f);
                 fclose(f);
-        } else
+        }
+        else
                 memset(eeprom->store, 0, 128);
 
         io_sethandler(0x037c, 0x0001, NULL, NULL, NULL, tandy_eeprom_write, NULL, NULL, eeprom);
@@ -132,11 +146,13 @@ void *tandy_eeprom_init() {
         return eeprom;
 }
 
-void tandy_eeprom_close(void *p) {
-        tandy_eeprom_t *eeprom = (tandy_eeprom_t *)p;
-        FILE *f = NULL;
+void tandy_eeprom_close(void* p)
+{
+        tandy_eeprom_t* eeprom = (tandy_eeprom_t*)p;
+        FILE* f = NULL;
 
-        switch (eeprom->romset) {
+        switch (eeprom->romset)
+        {
         case ROM_TANDY1000HX:
                 f = nvrfopen("tandy1000hx.bin", "wb");
                 break;
@@ -151,13 +167,14 @@ void tandy_eeprom_close(void *p) {
 }
 
 device_t tandy_eeprom_device =
-    {
-        "Tandy EEPROM",
-        0,
-        tandy_eeprom_init,
-        tandy_eeprom_close,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "Tandy EEPROM",
+                0,
+                tandy_eeprom_init,
+                tandy_eeprom_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };

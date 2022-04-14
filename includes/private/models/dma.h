@@ -18,4 +18,5 @@ void writedma2(uint8_t temp);
 int dma_channel_read(int channel);
 int dma_channel_write(int channel, uint16_t val);
 
+
 #endif /* _DMA_H_ */

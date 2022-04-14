@@ -11,30 +11,30 @@
   - No instruction pairing of any kind (unlike WinChip 2)
   - Prefixes other than 0x0f cost 1 cycle each
   - AGI stalls cost 1 cycle, except for implicit references to ESP*/
-#include "codegen.h"
-#include "codegen_ops.h"
-#include "codegen_timing_common.h"
-#include "cpu.h"
 #include "ibm.h"
-#include "mem.h"
+#include "cpu.h"
 #include "x86.h"
 #include "x86_ops.h"
 #include "x87.h"
+#include "mem.h"
+#include "codegen.h"
+#include "codegen_ops.h"
+#include "codegen_timing_common.h"
 
 /*Instruction has different execution time for 16 and 32 bit data. Does not pair */
 #define CYCLES_HAS_MULTI (1 << 31)
 
 #define CYCLES_FPU (1 << 30)
 
-#define CYCLES_IS_MMX_MUL (1 << 29)
+#define CYCLES_IS_MMX_MUL   (1 << 29)
 #define CYCLES_IS_MMX_SHIFT (1 << 28)
-#define CYCLES_IS_MMX_ANY (1 << 27)
-#define CYCLES_IS_3DNOW (1 << 26)
+#define CYCLES_IS_MMX_ANY   (1 << 27)
+#define CYCLES_IS_3DNOW     (1 << 26)
 
-#define CYCLES_MMX_MUL(c) (CYCLES_IS_MMX_MUL | c)
+#define CYCLES_MMX_MUL(c)   (CYCLES_IS_MMX_MUL   | c)
 #define CYCLES_MMX_SHIFT(c) (CYCLES_IS_MMX_SHIFT | c)
-#define CYCLES_MMX_ANY(c) (CYCLES_IS_MMX_ANY | c)
-#define CYCLES_3DNOW(c) (CYCLES_IS_3DNOW | c)
+#define CYCLES_MMX_ANY(c)   (CYCLES_IS_MMX_ANY   | c)
+#define CYCLES_3DNOW(c)     (CYCLES_IS_3DNOW     | c)
 
 #define CYCLES_IS_MMX (CYCLES_IS_MMX_MUL | CYCLES_IS_MMX_SHIFT | CYCLES_IS_MMX_ANY | CYCLES_IS_3DNOW)
 
@@ -61,1049 +61,310 @@
 #define INVALID 0
 
 static uint32_t opcode_timings[256] =
-    {
-        /*00*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(2), CYCLES(3), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(2), INVALID,
-        /*10*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(2), CYCLES(3), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(2), CYCLES(3),
-        /*20*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(3), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(3),
-        /*30*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(2), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(2),
+{
+/*00*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(3),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      INVALID,
+/*10*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(3),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(3),
+/*20*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(3),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(3),
+/*30*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),
 
-        /*40*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1),
-        /*50*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1),
-        /*60*/ CYCLES(11), CYCLES(9), CYCLES(7), CYCLES(9), CYCLES(4), CYCLES(4), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES2(17, 25), CYCLES(1), CYCLES2(17, 20), CYCLES(17), CYCLES(17), CYCLES(17), CYCLES(17),
-        /*70*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1),
+/*40*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),
+/*50*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),
+/*60*/  CYCLES(11),     CYCLES(9),      CYCLES(7),      CYCLES(9),      CYCLES(4),      CYCLES(4),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES2(17,25), CYCLES(1),      CYCLES2(17,20), CYCLES(17),     CYCLES(17),     CYCLES(17),     CYCLES(17),
+/*70*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),
 
-        /*80*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(2), CYCLES(2), CYCLES(5), CYCLES(5), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(3), CYCLES(1), CYCLES(5), CYCLES(6),
-        /*90*/ CYCLES(1), CYCLES(3), CYCLES(3), CYCLES(3), CYCLES(3), CYCLES(3), CYCLES(3), CYCLES(3), CYCLES(3), CYCLES(3), CYCLES(0), CYCLES(4), CYCLES(4), CYCLES(5), CYCLES(2), CYCLES(3),
-        /*a0*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(7), CYCLES(7), CYCLES(8), CYCLES(8), CYCLES(1), CYCLES(1), CYCLES(5), CYCLES(5), CYCLES(5), CYCLES(5), CYCLES(6), CYCLES(6),
-        /*b0*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1),
+/*80*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(2),      CYCLES(5),      CYCLES(5),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(3),      CYCLES(1),      CYCLES(5),      CYCLES(6),
+/*90*/  CYCLES(1),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(0),      CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(2),      CYCLES(3),
+/*a0*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(7),      CYCLES(7),      CYCLES(8),      CYCLES(8),      CYCLES(1),      CYCLES(1),      CYCLES(5),      CYCLES(5),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),
+/*b0*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),
 
-        /*c0*/ CYCLES(1), CYCLES(1), CYCLES(5), CYCLES(5), CYCLES(6), CYCLES(6), CYCLES(1), CYCLES(1), CYCLES(14), CYCLES(5), CYCLES(0), CYCLES(0), CYCLES(0), CYCLES(0), CYCLES(3), CYCLES(0),
-        /*d0*/ CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(1), CYCLES(15), CYCLES(14), CYCLES(2), CYCLES(4), INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
-        /*e0*/ CYCLES(6), CYCLES(6), CYCLES(6), CYCLES(5), CYCLES(14), CYCLES(14), CYCLES(16), CYCLES(16), CYCLES(3), CYCLES(3), CYCLES(17), CYCLES(3), CYCLES(14), CYCLES(14), CYCLES(14), CYCLES(14),
-        /*f0*/ CYCLES(4), CYCLES(0), CYCLES(0), CYCLES(0), CYCLES(4), CYCLES(2), INVALID, INVALID, CYCLES(2), CYCLES(2), CYCLES(3), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(3), INVALID};
+/*c0*/  CYCLES(1),      CYCLES(1),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),      CYCLES(1),      CYCLES(1),      CYCLES(14),     CYCLES(5),      CYCLES(0),      CYCLES(0),      CYCLES(0),      CYCLES(0),      CYCLES(3),      CYCLES(0),
+/*d0*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(15),     CYCLES(14),     CYCLES(2),      CYCLES(4),      INVALID,        INVALID,        INVALID,        INVALID,        INVALID,        INVALID,        INVALID,        INVALID,
+/*e0*/  CYCLES(6),      CYCLES(6),      CYCLES(6),      CYCLES(5),      CYCLES(14),     CYCLES(14),     CYCLES(16),     CYCLES(16),     CYCLES(3),      CYCLES(3),      CYCLES(17),     CYCLES(3),      CYCLES(14),     CYCLES(14),     CYCLES(14),     CYCLES(14),
+/*f0*/  CYCLES(4),      CYCLES(0),      CYCLES(0),      CYCLES(0),      CYCLES(4),      CYCLES(2),      INVALID,        INVALID,        CYCLES(2),      CYCLES(2),      CYCLES(3),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(3),      INVALID
+};
 
 static uint32_t opcode_timings_mod3[256] =
-    {
-        /*00*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(2),
-        CYCLES(3),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(2),
-        INVALID,
-        /*10*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(2),
-        CYCLES(3),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(2),
-        CYCLES(3),
-        /*20*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(3),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(3),
-        /*30*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(2),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(2),
+{
+/*00*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(3),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      INVALID,
+/*10*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(3),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(3),
+/*20*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(3),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(3),
+/*30*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),
 
-        /*40*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        /*50*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        /*60*/ CYCLES(11),
-        CYCLES(9),
-        CYCLES(7),
-        CYCLES(9),
-        CYCLES(4),
-        CYCLES(4),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES2(14, 25),
-        CYCLES(1),
-        CYCLES2(17, 20),
-        CYCLES(17),
-        CYCLES(17),
-        CYCLES(17),
-        CYCLES(17),
-        /*70*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
+/*40*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),
+/*50*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),
+/*60*/  CYCLES(11),     CYCLES(9),      CYCLES(7),      CYCLES(9),      CYCLES(4),      CYCLES(4),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES2(14,25), CYCLES(1),      CYCLES2(17,20), CYCLES(17),     CYCLES(17),     CYCLES(17),     CYCLES(17),
+/*70*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),
 
-        /*80*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(5),
-        CYCLES(5),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(2),
-        CYCLES(1),
-        CYCLES(2),
-        CYCLES(1),
-        /*90*/ CYCLES(1),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(0),
-        CYCLES(4),
-        CYCLES(4),
-        CYCLES(5),
-        CYCLES(2),
-        CYCLES(3),
-        /*a0*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(7),
-        CYCLES(7),
-        CYCLES(8),
-        CYCLES(8),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(5),
-        CYCLES(5),
-        CYCLES(5),
-        CYCLES(5),
-        CYCLES(6),
-        CYCLES(6),
-        /*b0*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
+/*80*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(5),      CYCLES(5),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(2),      CYCLES(1),      CYCLES(2),      CYCLES(1),
+/*90*/  CYCLES(1),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(0),      CYCLES(4),      CYCLES(4),      CYCLES(5),      CYCLES(2),      CYCLES(3),
+/*a0*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(7),      CYCLES(7),      CYCLES(8),      CYCLES(8),      CYCLES(1),      CYCLES(1),      CYCLES(5),      CYCLES(5),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),
+/*b0*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),
 
-        /*c0*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(5),
-        CYCLES(5),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(14),
-        CYCLES(5),
-        CYCLES(0),
-        CYCLES(0),
-        CYCLES(0),
-        CYCLES(0),
-        CYCLES(3),
-        CYCLES(0),
-        /*d0*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(15),
-        CYCLES(14),
-        CYCLES(2),
-        CYCLES(4),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*e0*/ CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(5),
-        CYCLES(14),
-        CYCLES(14),
-        CYCLES(16),
-        CYCLES(16),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(17),
-        CYCLES(3),
-        CYCLES(14),
-        CYCLES(14),
-        CYCLES(14),
-        CYCLES(14),
-        /*f0*/ CYCLES(4),
-        CYCLES(0),
-        CYCLES(0),
-        CYCLES(0),
-        CYCLES(4),
-        CYCLES(2),
-        INVALID,
-        INVALID,
-        CYCLES(2),
-        CYCLES(2),
-        CYCLES(3),
-        CYCLES(2),
-        CYCLES(2),
-        CYCLES(2),
-        CYCLES(3),
-        INVALID,
+/*c0*/  CYCLES(1),      CYCLES(1),      CYCLES(5),      CYCLES(5),      CYCLES(6),      CYCLES(6),      CYCLES(1),      CYCLES(1),      CYCLES(14),     CYCLES(5),      CYCLES(0),      CYCLES(0),      CYCLES(0),      CYCLES(0),      CYCLES(3),      CYCLES(0),
+/*d0*/  CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(1),      CYCLES(15),     CYCLES(14),     CYCLES(2),      CYCLES(4),      INVALID,        INVALID,        INVALID,        INVALID,        INVALID,        INVALID,        INVALID,        INVALID,
+/*e0*/  CYCLES(6),      CYCLES(6),      CYCLES(6),      CYCLES(5),      CYCLES(14),     CYCLES(14),     CYCLES(16),     CYCLES(16),     CYCLES(3),      CYCLES(3),      CYCLES(17),     CYCLES(3),      CYCLES(14),     CYCLES(14),     CYCLES(14),     CYCLES(14),
+/*f0*/  CYCLES(4),      CYCLES(0),      CYCLES(0),      CYCLES(0),      CYCLES(4),      CYCLES(2),      INVALID,        INVALID,        CYCLES(2),      CYCLES(2),      CYCLES(3),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(3),      INVALID,
 };
 
 static uint32_t opcode_timings_0f[256] =
-    {
-        /*00*/ CYCLES(20),
-        CYCLES(11),
-        CYCLES(11),
-        CYCLES(10),
-        INVALID,
-        CYCLES(195),
-        CYCLES(7),
-        INVALID,
-        CYCLES(1000),
-        CYCLES(10000),
-        INVALID,
-        INVALID,
-        INVALID,
-        CYCLES_3DNOW(1),
-        CYCLES(1),
-        CYCLES_3DNOW(1),
-        /*10*/ INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*20*/ CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*30*/ CYCLES(9),
-        CYCLES(1),
-        CYCLES(9),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+{
+/*00*/  CYCLES(20),          CYCLES(11),          CYCLES(11),          CYCLES(10),          INVALID,           CYCLES(195),       CYCLES(7),         INVALID,             CYCLES(1000),        CYCLES(10000),       INVALID,             INVALID,             INVALID,           CYCLES_3DNOW(1),   CYCLES(1),         CYCLES_3DNOW(1),
+/*10*/  INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
+/*20*/  CYCLES(6),           CYCLES(6),           CYCLES(6),           CYCLES(6),           CYCLES(6),         CYCLES(6),         INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
+/*30*/  CYCLES(9),           CYCLES(1),           CYCLES(9),           INVALID,             INVALID,           INVALID,           INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
 
-        /*40*/ INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*50*/ INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*60*/ CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        /*70*/ INVALID,
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES(100),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
+/*40*/  INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
+/*50*/  INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
+/*60*/  CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), INVALID,           INVALID,           CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1),
+/*70*/  INVALID,             CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES(100),         INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1),
 
-        /*80*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        /*90*/ CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        /*a0*/ CYCLES(3),
-        CYCLES(3),
-        CYCLES(14),
-        CYCLES(8),
-        CYCLES(3),
-        CYCLES(4),
-        INVALID,
-        INVALID,
-        CYCLES(3),
-        CYCLES(3),
-        INVALID,
-        CYCLES(13),
-        CYCLES(3),
-        CYCLES(3),
-        INVALID,
-        CYCLES2(18, 30),
-        /*b0*/ CYCLES(10),
-        CYCLES(10),
-        CYCLES(6),
-        CYCLES(13),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(3),
-        CYCLES(3),
-        INVALID,
-        INVALID,
-        CYCLES(6),
-        CYCLES(13),
-        CYCLES(7),
-        CYCLES(7),
-        CYCLES(3),
-        CYCLES(3),
+/*80*/  CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),         CYCLES(1),         CYCLES(1),         CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),         CYCLES(1),         CYCLES(1),         CYCLES(1),
+/*90*/  CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),         CYCLES(3),         CYCLES(3),         CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),         CYCLES(3),         CYCLES(3),         CYCLES(3),
+/*a0*/  CYCLES(3),           CYCLES(3),           CYCLES(14),          CYCLES(8),           CYCLES(3),         CYCLES(4),         INVALID,           INVALID,             CYCLES(3),           CYCLES(3),           INVALID,             CYCLES(13),          CYCLES(3),         CYCLES(3),         INVALID,           CYCLES2(18,30),
+/*b0*/  CYCLES(10),          CYCLES(10),          CYCLES(6),           CYCLES(13),          CYCLES(6),         CYCLES(6),         CYCLES(3),         CYCLES(3),           INVALID,             INVALID,             CYCLES(6),           CYCLES(13),          CYCLES(7),         CYCLES(7),         CYCLES(3),         CYCLES(3),
 
-        /*c0*/ CYCLES(4),
-        CYCLES(4),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        CYCLES(3),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        /*d0*/ INVALID,
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        INVALID,
-        CYCLES_MMX_MUL(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        /*e0*/ INVALID,
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_MUL(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        /*f0*/ INVALID,
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        INVALID,
-        CYCLES_MMX_MUL(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(2),
-        INVALID,
+/*c0*/  CYCLES(4),           CYCLES(4),           INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           CYCLES(3),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),         CYCLES(1),         CYCLES(1),         CYCLES(1),
+/*d0*/  INVALID,             CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), INVALID,           CYCLES_MMX_MUL(1), INVALID,           INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1),   INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), INVALID,           CYCLES_MMX_ANY(1),
+/*e0*/  INVALID,             CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), INVALID,             INVALID,           CYCLES_MMX_MUL(1), INVALID,           INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1),   INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), INVALID,           CYCLES_MMX_ANY(1),
+/*f0*/  INVALID,             CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), INVALID,           CYCLES_MMX_MUL(1), INVALID,           INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1),   INVALID,             CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(2), INVALID,
 };
 static uint32_t opcode_timings_0f_mod3[256] =
-    {
-        /*00*/ CYCLES(20),
-        CYCLES(11),
-        CYCLES(11),
-        CYCLES(10),
-        INVALID,
-        CYCLES(195),
-        CYCLES(7),
-        INVALID,
-        CYCLES(1000),
-        CYCLES(10000),
-        INVALID,
-        INVALID,
-        INVALID,
-        CYCLES_3DNOW(1),
-        CYCLES(1),
-        CYCLES_3DNOW(1),
-        /*10*/ INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*20*/ CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(6),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*30*/ CYCLES(9),
-        CYCLES(1),
-        CYCLES(9),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+{
+/*00*/  CYCLES(20),          CYCLES(11),          CYCLES(11),          CYCLES(10),          INVALID,           CYCLES(195),       CYCLES(7),         INVALID,             CYCLES(1000),        CYCLES(10000),       INVALID,             INVALID,             INVALID,           CYCLES_3DNOW(1),   CYCLES(1),         CYCLES_3DNOW(1),
+/*10*/  INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
+/*20*/  CYCLES(6),           CYCLES(6),           CYCLES(6),           CYCLES(6),           CYCLES(6),         CYCLES(6),         INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
+/*30*/  CYCLES(9),           CYCLES(1),           CYCLES(9),           INVALID,             INVALID,           INVALID,           INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
 
-        /*40*/ INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*50*/ INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        /*60*/ CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        /*70*/ INVALID,
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES(100),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
+/*40*/  INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
+/*50*/  INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,             INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           INVALID,
+/*60*/  CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), INVALID,           INVALID,           CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1),
+/*70*/  INVALID,             CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES(100),         INVALID,             INVALID,             INVALID,             INVALID,             INVALID,           INVALID,           CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1),
 
-        /*80*/ CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        /*90*/ CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        CYCLES(3),
-        /*a0*/ CYCLES(3),
-        CYCLES(3),
-        CYCLES(14),
-        CYCLES(8),
-        CYCLES(3),
-        CYCLES(4),
-        INVALID,
-        INVALID,
-        CYCLES(3),
-        CYCLES(3),
-        INVALID,
-        CYCLES(13),
-        CYCLES(3),
-        CYCLES(3),
-        INVALID,
-        CYCLES2(18, 30),
-        /*b0*/ CYCLES(10),
-        CYCLES(10),
-        CYCLES(6),
-        CYCLES(13),
-        CYCLES(6),
-        CYCLES(6),
-        CYCLES(3),
-        CYCLES(3),
-        INVALID,
-        INVALID,
-        CYCLES(6),
-        CYCLES(13),
-        CYCLES(7),
-        CYCLES(7),
-        CYCLES(3),
-        CYCLES(3),
+/*80*/  CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),         CYCLES(1),         CYCLES(1),         CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),         CYCLES(1),         CYCLES(1),         CYCLES(1),
+/*90*/  CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),         CYCLES(3),         CYCLES(3),         CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),           CYCLES(3),         CYCLES(3),         CYCLES(3),         CYCLES(3),
+/*a0*/  CYCLES(3),           CYCLES(3),           CYCLES(14),          CYCLES(8),           CYCLES(3),         CYCLES(4),         INVALID,           INVALID,             CYCLES(3),           CYCLES(3),           INVALID,             CYCLES(13),          CYCLES(3),         CYCLES(3),         INVALID,           CYCLES2(18,30),
+/*b0*/  CYCLES(10),          CYCLES(10),          CYCLES(6),           CYCLES(13),          CYCLES(6),         CYCLES(6),         CYCLES(3),         CYCLES(3),           INVALID,             INVALID,             CYCLES(6),           CYCLES(13),          CYCLES(7),         CYCLES(7),         CYCLES(3),         CYCLES(3),
 
-        /*c0*/ CYCLES(4),
-        CYCLES(4),
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        CYCLES(3),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        CYCLES(1),
-        /*d0*/ INVALID,
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        INVALID,
-        CYCLES_MMX_MUL(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        /*e0*/ INVALID,
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_MUL(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        /*f0*/ INVALID,
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        CYCLES_MMX_SHIFT(1),
-        INVALID,
-        CYCLES_MMX_MUL(1),
-        INVALID,
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        CYCLES_MMX_ANY(1),
-        INVALID,
+/*c0*/  CYCLES(4),           CYCLES(4),           INVALID,             INVALID,             INVALID,           INVALID,           INVALID,           CYCLES(3),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),           CYCLES(1),         CYCLES(1),         CYCLES(1),         CYCLES(1),
+/*d0*/  INVALID,             CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), INVALID,           CYCLES_MMX_MUL(1), INVALID,           INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1),   INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), INVALID,           CYCLES_MMX_ANY(1),
+/*e0*/  INVALID,             CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), INVALID,             INVALID,           CYCLES_MMX_MUL(1), INVALID,           INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1),   INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), INVALID,           CYCLES_MMX_ANY(1),
+/*f0*/  INVALID,             CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), CYCLES_MMX_SHIFT(1), INVALID,           CYCLES_MMX_MUL(1), INVALID,           INVALID,             CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1),   CYCLES_MMX_ANY(1),   INVALID,             CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), CYCLES_MMX_ANY(1), INVALID,
 };
 
 static uint32_t opcode_timings_shift[8] =
-    {
-        CYCLES(7), CYCLES(7), CYCLES(10), CYCLES(10), CYCLES(7), CYCLES(7), CYCLES(7), CYCLES(7)};
+{
+        CYCLES(7),      CYCLES(7),      CYCLES(10),     CYCLES(10),     CYCLES(7),      CYCLES(7),      CYCLES(7),      CYCLES(7)
+};
 static uint32_t opcode_timings_shift_mod3[8] =
-    {
-        CYCLES(3), CYCLES(3), CYCLES(9), CYCLES(9), CYCLES(3), CYCLES(3), CYCLES(3), CYCLES(3)};
+{
+        CYCLES(3),      CYCLES(3),      CYCLES(9),      CYCLES(9),      CYCLES(3),      CYCLES(3),      CYCLES(3),      CYCLES(3)
+};
 
 static uint32_t opcode_timings_f6[8] =
-    {
-        CYCLES(2), INVALID, CYCLES(2), CYCLES(2), CYCLES(13), CYCLES(14), CYCLES(16), CYCLES(19)};
+{
+        CYCLES(2),      INVALID,        CYCLES(2),      CYCLES(2),      CYCLES(13),     CYCLES(14),     CYCLES(16),     CYCLES(19)
+};
 static uint32_t opcode_timings_f6_mod3[8] =
-    {
-        CYCLES(1), INVALID, CYCLES(1), CYCLES(1), CYCLES(13), CYCLES(14), CYCLES(16), CYCLES(19)};
+{
+        CYCLES(1),      INVALID,        CYCLES(1),      CYCLES(1),      CYCLES(13),     CYCLES(14),     CYCLES(16),     CYCLES(19)
+};
 static uint32_t opcode_timings_f7[8] =
-    {
-        CYCLES(2), INVALID, CYCLES(2), CYCLES(2), CYCLES(21), CYCLES2(22, 38), CYCLES2(24, 40), CYCLES2(27, 43)};
+{
+        CYCLES(2),      INVALID,        CYCLES(2),      CYCLES(2),      CYCLES(21),     CYCLES2(22,38), CYCLES2(24,40), CYCLES2(27,43)
+};
 static uint32_t opcode_timings_f7_mod3[8] =
-    {
-        CYCLES(1), INVALID, CYCLES(1), CYCLES(1), CYCLES(21), CYCLES2(22, 38), CYCLES2(24, 40), CYCLES2(27, 43)};
+{
+        CYCLES(1),      INVALID,        CYCLES(1),      CYCLES(1),      CYCLES(21),     CYCLES2(22,38), CYCLES2(24,40), CYCLES2(27,43)
+};
 static uint32_t opcode_timings_ff[8] =
-    {
-        CYCLES(2), CYCLES(2), CYCLES(5), CYCLES(0), CYCLES(5), CYCLES(0), CYCLES(5), INVALID};
+{
+        CYCLES(2),      CYCLES(2),      CYCLES(5),      CYCLES(0),      CYCLES(5),      CYCLES(0),      CYCLES(5),      INVALID
+};
 static uint32_t opcode_timings_ff_mod3[8] =
-    {
-        CYCLES(1), CYCLES(1), CYCLES(5), CYCLES(0), CYCLES(5), CYCLES(0), CYCLES(5), INVALID};
+{
+        CYCLES(1),      CYCLES(1),      CYCLES(5),      CYCLES(0),      CYCLES(5),      CYCLES(0),      CYCLES(5),      INVALID
+};
 
 static uint32_t opcode_timings_d8[8] =
-    {
-        /*      FADDs               FMULs               FCOMs                 FCOMPs*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        /*      FSUBs               FSUBRs              FDIVs                 FDIVRs*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), FPU_CYCLES(39, 38, 2), FPU_CYCLES(39, 38, 2)};
+{
+/*      FADDs               FMULs               FCOMs                 FCOMPs*/
+        FPU_CYCLES(4,2,2),  FPU_CYCLES(4,2,2),  FPU_CYCLES(2,0,0),    FPU_CYCLES(2,0,0),
+/*      FSUBs               FSUBRs              FDIVs                 FDIVRs*/
+        FPU_CYCLES(4,2,2),  FPU_CYCLES(4,2,2),  FPU_CYCLES(39,38,2),  FPU_CYCLES(39,38,2)
+};
 static uint32_t opcode_timings_d8_mod3[8] =
-    {
-        /*      FADD                  FMUL                  FCOM                  FCOMP*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        /*      FSUB                  FSUBR                 FDIV                  FDIVR*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), FPU_CYCLES(39, 38, 2), FPU_CYCLES(39, 38, 2)};
+{
+/*      FADD                  FMUL                  FCOM                  FCOMP*/
+        FPU_CYCLES(4,2,2),    FPU_CYCLES(4,2,2),    FPU_CYCLES(2,0,0),    FPU_CYCLES(2,0,0),
+/*      FSUB                  FSUBR                 FDIV                  FDIVR*/
+        FPU_CYCLES(4,2,2),    FPU_CYCLES(4,2,2),    FPU_CYCLES(39,38,2),  FPU_CYCLES(39,38,2)
+};
 
 static uint32_t opcode_timings_d9[8] =
-    {
-        /*      FLDs                                     FSTs                 FSTPs*/
-        FPU_CYCLES(2, 0, 0), INVALID, FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        /*      FLDENV               FLDCW               FSTENV               FSTCW*/
-        FPU_CYCLES(32, 0, 0), FPU_CYCLES(8, 0, 0), FPU_CYCLES(48, 0, 0), FPU_CYCLES(2, 0, 0)};
+{
+/*      FLDs                                     FSTs                 FSTPs*/
+        FPU_CYCLES(2,0,0),   INVALID,            FPU_CYCLES(2,0,0),   FPU_CYCLES(2,0,0),
+/*      FLDENV               FLDCW               FSTENV               FSTCW*/
+        FPU_CYCLES(32,0,0),  FPU_CYCLES(8,0,0),  FPU_CYCLES(48,0,0),  FPU_CYCLES(2,0,0)
+};
 static uint32_t opcode_timings_d9_mod3[64] =
-    {
+{
         /*FLD*/
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),
         /*FXCH*/
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),
         /*FNOP*/
-        FPU_CYCLES(3, 0, 0), INVALID, INVALID, INVALID,
-        INVALID, INVALID, INVALID, INVALID,
+        FPU_CYCLES(3,0,0),  INVALID,            INVALID,            INVALID,
+        INVALID,            INVALID,            INVALID,            INVALID,
         /*FSTP*/
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        /*      opFCHS              opFABS*/
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), INVALID, INVALID,
-        /*      opFTST              opFXAM*/
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(21, 4, 0), INVALID, INVALID,
-        /*      opFLD1              opFLDL2T            opFLDL2E            opFLDPI*/
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(5, 2, 2), FPU_CYCLES(5, 2, 2), FPU_CYCLES(5, 2, 2),
-        /*      opFLDEG2            opFLDLN2            opFLDZ*/
-        FPU_CYCLES(5, 2, 2), FPU_CYCLES(5, 2, 2), FPU_CYCLES(2, 0, 0), INVALID,
-        /*      opF2XM1             opFYL2X             opFPTAN             opFPATAN*/
-        FPU_CYCLES(53, 2, 2), FPU_CYCLES(103, 2, 2), FPU_CYCLES(120, 36, 0), FPU_CYCLES(112, 2, 2),
-        /*                                              opFDECSTP           opFINCSTP,*/
-        INVALID, INVALID, FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        /*      opFPREM                                 opFSQRT             opFSINCOS*/
-        FPU_CYCLES(64, 2, 2), INVALID, FPU_CYCLES(70, 69, 2), FPU_CYCLES(89, 2, 2),
-        /*      opFRNDINT           opFSCALE            opFSIN              opFCOS*/
-        FPU_CYCLES(9, 0, 0), FPU_CYCLES(20, 5, 0), FPU_CYCLES(65, 2, 2), FPU_CYCLES(65, 2, 2)};
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),
+/*      opFCHS              opFABS*/
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  INVALID,            INVALID,
+/*      opFTST              opFXAM*/
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(21,4,0), INVALID,            INVALID,
+/*      opFLD1              opFLDL2T            opFLDL2E            opFLDPI*/
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(5,2,2),  FPU_CYCLES(5,2,2),  FPU_CYCLES(5,2,2),
+/*      opFLDEG2            opFLDLN2            opFLDZ*/
+        FPU_CYCLES(5,2,2),  FPU_CYCLES(5,2,2),  FPU_CYCLES(2,0,0),  INVALID,
+/*      opF2XM1             opFYL2X             opFPTAN             opFPATAN*/
+        FPU_CYCLES(53,2,2), FPU_CYCLES(103,2,2),FPU_CYCLES(120,36,0),FPU_CYCLES(112,2,2),
+/*                                              opFDECSTP           opFINCSTP,*/
+        INVALID,            INVALID,            FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),
+/*      opFPREM                                 opFSQRT             opFSINCOS*/
+        FPU_CYCLES(64,2,2), INVALID,            FPU_CYCLES(70,69,2),FPU_CYCLES(89,2,2),
+/*      opFRNDINT           opFSCALE            opFSIN              opFCOS*/
+        FPU_CYCLES(9,0,0),  FPU_CYCLES(20,5,0), FPU_CYCLES(65,2,2), FPU_CYCLES(65,2,2)
+};
 
 static uint32_t opcode_timings_da[8] =
-    {
-        /*      FIADDl              FIMULl              FICOMl                FICOMPl*/
-        FPU_CYCLES(6, 2, 2), FPU_CYCLES(6, 2, 2), FPU_CYCLES(4, 0, 0), FPU_CYCLES(4, 0, 0),
-        /*      FISUBl              FISUBRl             FIDIVl                FIDIVRl*/
-        FPU_CYCLES(6, 2, 2), FPU_CYCLES(6, 2, 2), FPU_CYCLES(42, 38, 2), FPU_CYCLES(42, 38, 2)};
+{
+/*      FIADDl              FIMULl              FICOMl                FICOMPl*/
+        FPU_CYCLES(6,2,2),  FPU_CYCLES(6,2,2),  FPU_CYCLES(4,0,0),    FPU_CYCLES(4,0,0),
+/*      FISUBl              FISUBRl             FIDIVl                FIDIVRl*/
+        FPU_CYCLES(6,2,2),  FPU_CYCLES(6,2,2),  FPU_CYCLES(42,38,2),  FPU_CYCLES(42,38,2)
+};
 static uint32_t opcode_timings_da_mod3[8] =
-    {
-        INVALID, INVALID, INVALID, INVALID,
-        /*                          FCOMPP*/
-        INVALID, FPU_CYCLES(2, 0, 0), INVALID, INVALID};
+{
+        INVALID,            INVALID,            INVALID,              INVALID,
+/*                          FCOMPP*/
+        INVALID,            FPU_CYCLES(2,0,0),  INVALID,              INVALID
+};
+
 
 static uint32_t opcode_timings_db[8] =
-    {
-        /*      FLDil                                   FSTil                 FSTPil*/
-        FPU_CYCLES(3, 2, 2), INVALID, FPU_CYCLES(6, 0, 0), FPU_CYCLES(6, 0, 0),
-        /*                          FLDe                                      FSTPe*/
-        INVALID, FPU_CYCLES(3, 0, 0), INVALID, FPU_CYCLES(3, 0, 0)};
+{
+/*      FLDil                                   FSTil                 FSTPil*/
+        FPU_CYCLES(3,2,2),  INVALID,            FPU_CYCLES(6,0,0),    FPU_CYCLES(6,0,0),
+/*                          FLDe                                      FSTPe*/
+        INVALID,            FPU_CYCLES(3,0,0),  INVALID,              FPU_CYCLES(3,0,0)
+};
 static uint32_t opcode_timings_db_mod3[64] =
-    {
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+{
+        INVALID,            INVALID,            INVALID,              INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
 
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
 
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
 
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
 
-        /*                          opFNOP              opFCLEX               opFINIT*/
-        INVALID,
-        FPU_CYCLES(2, 0, 0),
-        FPU_CYCLES(7, 0, 0),
-        FPU_CYCLES(17, 0, 0),
-        /*      opFNOP              opFNOP*/
-        FPU_CYCLES(2, 0, 0),
-        FPU_CYCLES(2, 0, 0),
-        INVALID,
-        INVALID,
+/*                          opFNOP              opFCLEX               opFINIT*/
+        INVALID,            FPU_CYCLES(2,0,0),  FPU_CYCLES(7,0,0),    FPU_CYCLES(17,0,0),
+/*      opFNOP              opFNOP*/
+        FPU_CYCLES(2,0,0),  FPU_CYCLES(2,0,0),  INVALID,              INVALID,
 
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
 
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
 
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
-        INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
+        INVALID,            INVALID,            INVALID,              INVALID,
 };
 
 static uint32_t opcode_timings_dc[8] =
-    {
-        /*      FADDd               FMULd               FCOMd                 FCOMPd*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        /*      FSUBd               FSUBRd              FDIVd                 FDIVRd*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), FPU_CYCLES(39, 38, 2), FPU_CYCLES(39, 38, 2)};
+{
+/*      FADDd               FMULd               FCOMd                 FCOMPd*/
+        FPU_CYCLES(4,2,2),  FPU_CYCLES(4,2,2),  FPU_CYCLES(2,0,0),    FPU_CYCLES(2,0,0),
+/*      FSUBd               FSUBRd              FDIVd                 FDIVRd*/
+        FPU_CYCLES(4,2,2),  FPU_CYCLES(4,2,2),  FPU_CYCLES(39,38,2),  FPU_CYCLES(39,38,2)
+};
 static uint32_t opcode_timings_dc_mod3[8] =
-    {
-        /*      opFADDr               opFMULr*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), INVALID, INVALID,
-        /*      opFSUBRr              opFSUBr           opFDIVRr              opFDIVr*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), FPU_CYCLES(39, 38, 2), FPU_CYCLES(39, 38, 2)};
+{
+/*      opFADDr               opFMULr*/
+        FPU_CYCLES(4,2,2),    FPU_CYCLES(4,2,2),INVALID,              INVALID,
+/*      opFSUBRr              opFSUBr           opFDIVRr              opFDIVr*/
+        FPU_CYCLES(4,2,2),    FPU_CYCLES(4,2,2),FPU_CYCLES(39,38,2),  FPU_CYCLES(39,38,2)
+};
 
 static uint32_t opcode_timings_dd[8] =
-    {
-        /*      FLDd                                    FSTd                  FSTPd*/
-        FPU_CYCLES(2, 0, 0), INVALID, FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        /*      FRSTOR                                  FSAVE                 FSTSW*/
-        FPU_CYCLES(70, 0, 0), INVALID, FPU_CYCLES(127, 0, 0), FPU_CYCLES(6, 0, 0)};
+{
+/*      FLDd                                    FSTd                  FSTPd*/
+        FPU_CYCLES(2,0,0),    INVALID,          FPU_CYCLES(2,0,0),    FPU_CYCLES(2,0,0),
+/*      FRSTOR                                  FSAVE                 FSTSW*/
+        FPU_CYCLES(70,0,0),   INVALID,          FPU_CYCLES(127,0,0),  FPU_CYCLES(6,0,0)
+};
 static uint32_t opcode_timings_dd_mod3[8] =
-    {
-        /*      FFFREE                                  FST                   FSTP*/
-        FPU_CYCLES(2, 0, 0), INVALID, FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0),
-        /*      FUCOM                 FUCOMP*/
-        FPU_CYCLES(2, 0, 0), FPU_CYCLES(2, 0, 0), INVALID, INVALID};
+{
+/*      FFFREE                                  FST                   FSTP*/
+        FPU_CYCLES(2,0,0),    INVALID,          FPU_CYCLES(2,0,0),    FPU_CYCLES(2,0,0),
+/*      FUCOM                 FUCOMP*/
+        FPU_CYCLES(2,0,0),    FPU_CYCLES(2,0,0),INVALID,              INVALID
+};
 
 static uint32_t opcode_timings_de[8] =
-    {
-        /*      FIADDw              FIMULw              FICOMw                FICOMPw*/
-        FPU_CYCLES(6, 2, 2), FPU_CYCLES(6, 2, 2), FPU_CYCLES(4, 0, 0), FPU_CYCLES(4, 0, 0),
-        /*      FISUBw              FISUBRw             FIDIVw                FIDIVRw*/
-        FPU_CYCLES(6, 2, 2), FPU_CYCLES(6, 2, 2), FPU_CYCLES(42, 38, 2), FPU_CYCLES(42, 38, 2)};
+{
+/*      FIADDw              FIMULw              FICOMw                FICOMPw*/
+        FPU_CYCLES(6,2,2),  FPU_CYCLES(6,2,2),  FPU_CYCLES(4,0,0),    FPU_CYCLES(4,0,0),
+/*      FISUBw              FISUBRw             FIDIVw                FIDIVRw*/
+        FPU_CYCLES(6,2,2),  FPU_CYCLES(6,2,2),  FPU_CYCLES(42,38,2),  FPU_CYCLES(42,38,2)
+};
 static uint32_t opcode_timings_de_mod3[8] =
-    {
-        /*      FADDP               FMULP                                     FCOMPP*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), INVALID, FPU_CYCLES(2, 0, 0),
-        /*      FSUBP               FSUBRP              FDIVP                 FDIVRP*/
-        FPU_CYCLES(4, 2, 2), FPU_CYCLES(4, 2, 2), FPU_CYCLES(39, 38, 2), FPU_CYCLES(39, 38, 2)};
+{
+/*      FADDP               FMULP                                     FCOMPP*/
+        FPU_CYCLES(4,2,2),  FPU_CYCLES(4,2,2),  INVALID,              FPU_CYCLES(2,0,0),
+/*      FSUBP               FSUBRP              FDIVP                 FDIVRP*/
+        FPU_CYCLES(4,2,2),  FPU_CYCLES(4,2,2),  FPU_CYCLES(39,38,2),  FPU_CYCLES(39,38,2)
+};
 
 static uint32_t opcode_timings_df[8] =
-    {
-        /*      FILDiw                                  FISTiw                FISTPiw*/
-        FPU_CYCLES(3, 2, 2), INVALID, FPU_CYCLES(6, 0, 0), FPU_CYCLES(6, 0, 0),
-        /*                          FILDiq              FBSTP                 FISTPiq*/
-        INVALID, FPU_CYCLES(3, 2, 2), FPU_CYCLES(148, 0, 0), FPU_CYCLES(6, 0, 0)};
+{
+/*      FILDiw                                  FISTiw                FISTPiw*/
+        FPU_CYCLES(3,2,2),  INVALID,            FPU_CYCLES(6,0,0),    FPU_CYCLES(6,0,0),
+/*                          FILDiq              FBSTP                 FISTPiq*/
+        INVALID,            FPU_CYCLES(3,2,2),  FPU_CYCLES(148,0,0),  FPU_CYCLES(6,0,0)
+};
 static uint32_t opcode_timings_df_mod3[8] =
-    {
-        INVALID, INVALID, INVALID, INVALID,
-        /*      FSTSW AX*/
-        FPU_CYCLES(6, 0, 0), INVALID, INVALID, INVALID};
+{
+        INVALID,            INVALID,            INVALID,              INVALID,
+/*      FSTSW AX*/
+        FPU_CYCLES(6,0,0),  INVALID,            INVALID,              INVALID
+};
 
 static uint32_t opcode_timings_8x[8] =
-    {
-        CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2)};
+{
+        CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2)
+};
 static uint32_t opcode_timings_8x_mod3[8] =
-    {
-        CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2)};
+{
+        CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2)
+};
 static uint32_t opcode_timings_81[8] =
-    {
-        CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2)};
+{
+        CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2)
+};
 static uint32_t opcode_timings_81_mod3[8] =
-    {
-        CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2), CYCLES(2)};
+{
+        CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2),      CYCLES(2)
+};
 
 static int timing_count;
 static uint8_t last_prefix;
@@ -1112,10 +373,13 @@ static int decode_delay, decode_delay_offset;
 static int fpu_latency;
 static int fpu_st_latency[8];
 
-static inline int COUNT(uint32_t c, int op_32) {
+
+static inline int COUNT(uint32_t c, int op_32)
+{
         if (c & CYCLES_FPU)
                 return FPU_I_LATENCY(c);
-        if (c & CYCLES_HAS_MULTI) {
+        if (c & CYCLES_HAS_MULTI)
+        {
                 if (op_32 & 0x100)
                         return (c >> 8) & 0xff;
                 return c & 0xff;
@@ -1123,7 +387,8 @@ static inline int COUNT(uint32_t c, int op_32) {
         return GET_CYCLES(c);
 }
 
-static int check_agi(uint64_t *deps, uint8_t opcode, uint32_t fetchdat, int op_32) {
+static int check_agi(uint64_t *deps, uint8_t opcode, uint32_t fetchdat, int op_32)
+{
         uint32_t addr_regmask = get_addr_regmask(deps[opcode], fetchdat, op_32);
 
         /*Instructions that use ESP implicitly (eg PUSH, POP, CALL etc) do not
@@ -1134,7 +399,8 @@ static int check_agi(uint64_t *deps, uint8_t opcode, uint32_t fetchdat, int op_3
         return (regmask_modified & addr_regmask) & ~REGMASK_IMPL_ESP;
 }
 
-static int codegen_fpu_latencies(uint64_t deps, int reg) {
+static int codegen_fpu_latencies(uint64_t deps, int reg)
+{
         int latency = fpu_latency;
 
         if ((deps & FPU_RW_ST0) && fpu_st_latency[0] && fpu_st_latency[0] > latency)
@@ -1147,12 +413,13 @@ static int codegen_fpu_latencies(uint64_t deps, int reg) {
         return latency;
 }
 
-#define SUB_AND_CLAMP(latency, count) \
-        latency -= count;             \
-        if (latency < 0)              \
-        latency = 0
+#define SUB_AND_CLAMP(latency, count)  \
+        latency -= count;              \
+        if (latency < 0)               \
+                latency = 0
 
-static void codegen_fpu_latency_clock(int count) {
+static void codegen_fpu_latency_clock(int count)
+{
         SUB_AND_CLAMP(fpu_latency, count);
         SUB_AND_CLAMP(fpu_st_latency[0], count);
         SUB_AND_CLAMP(fpu_st_latency[1], count);
@@ -1164,7 +431,8 @@ static void codegen_fpu_latency_clock(int count) {
         SUB_AND_CLAMP(fpu_st_latency[7], count);
 }
 
-static void codegen_instruction(uint32_t *timings, uint64_t *deps, uint8_t opcode, uint32_t fetchdat, int decode_delay_offset, int op_32, int exec_delay) {
+static void codegen_instruction(uint32_t *timings, uint64_t *deps, uint8_t opcode, uint32_t fetchdat, int decode_delay_offset, int op_32, int exec_delay)
+{
         int instr_cycles, latency = 0;
 
         if ((timings[opcode] & CYCLES_FPU) && !(deps[opcode] & FPU_FXCH))
@@ -1184,69 +452,81 @@ static void codegen_instruction(uint32_t *timings, uint64_t *deps, uint8_t opcod
                 codegen_block_cycles += instr_cycles;
         decode_delay = (-instr_cycles) + 1;
 
-        if (deps[opcode] & FPU_POP) {
+        if (deps[opcode] & FPU_POP)
+        {
                 int c;
 
                 for (c = 0; c < 7; c++)
-                        fpu_st_latency[c] = fpu_st_latency[c + 1];
+                        fpu_st_latency[c] = fpu_st_latency[c+1];
                 fpu_st_latency[7] = 0;
         }
-        if (deps[opcode] & FPU_POP2) {
+        if (deps[opcode] & FPU_POP2)
+        {
                 int c;
 
                 for (c = 0; c < 6; c++)
-                        fpu_st_latency[c] = fpu_st_latency[c + 2];
+                        fpu_st_latency[c] = fpu_st_latency[c+2];
                 fpu_st_latency[6] = fpu_st_latency[7] = 0;
         }
-        if (timings[opcode] & CYCLES_FPU) {
-                /*              if (fpu_latency)
-                                      fatal("Bad latency FPU\n");*/
+        if (timings[opcode] & CYCLES_FPU)
+        {
+  /*              if (fpu_latency)
+                        fatal("Bad latency FPU\n");*/
                 fpu_latency = FPU_F_LATENCY(timings[opcode]);
         }
 
-        if (deps[opcode] & FPU_PUSH) {
+        if (deps[opcode] & FPU_PUSH)
+        {
                 int c;
 
                 for (c = 0; c < 7; c++)
-                        fpu_st_latency[c + 1] = fpu_st_latency[c];
+                        fpu_st_latency[c+1] = fpu_st_latency[c];
                 fpu_st_latency[0] = 0;
         }
-        if (deps[opcode] & FPU_WRITE_ST0) {
-                /*                if (fpu_st_latency[0])
-                                        fatal("Bad latency ST0\n");*/
+        if (deps[opcode] & FPU_WRITE_ST0)
+        {
+/*                if (fpu_st_latency[0])
+                        fatal("Bad latency ST0\n");*/
                 fpu_st_latency[0] = FPU_RESULT_LATENCY(timings[opcode]);
         }
-        if (deps[opcode] & FPU_WRITE_ST1) {
-                /*                if (fpu_st_latency[1])
-                                        fatal("Bad latency ST1\n");*/
+        if (deps[opcode] & FPU_WRITE_ST1)
+        {
+/*                if (fpu_st_latency[1])
+                        fatal("Bad latency ST1\n");*/
                 fpu_st_latency[1] = FPU_RESULT_LATENCY(timings[opcode]);
         }
-        if (deps[opcode] & FPU_WRITE_STREG) {
+        if (deps[opcode] & FPU_WRITE_STREG)
+        {
                 int reg = fetchdat & 7;
                 if (deps[opcode] & FPU_POP)
                         reg--;
                 if (reg >= 0 &&
-                    !(reg == 0 && (deps[opcode] & FPU_WRITE_ST0)) &&
-                    !(reg == 1 && (deps[opcode] & FPU_WRITE_ST1))) {
-                        /*                        if (fpu_st_latency[reg])
-                                                        fatal("Bad latency STREG %i %08x %i %016llx %02x\n",fpu_st_latency[reg], fetchdat, reg, timings[opcode], opcode);*/
+                        !(reg == 0 && (deps[opcode] & FPU_WRITE_ST0)) &&
+                        !(reg == 1 && (deps[opcode] & FPU_WRITE_ST1)))
+                {
+/*                        if (fpu_st_latency[reg])
+                                fatal("Bad latency STREG %i %08x %i %016llx %02x\n",fpu_st_latency[reg], fetchdat, reg, timings[opcode], opcode);*/
                         fpu_st_latency[reg] = FPU_RESULT_LATENCY(timings[opcode]);
                 }
         }
 }
 
-static void codegen_timing_cyrixiii_block_start() {
+static void codegen_timing_cyrixiii_block_start()
+{
         regmask_modified = 0;
         decode_delay = decode_delay_offset = 0;
 }
 
-static void codegen_timing_cyrixiii_start() {
+static void codegen_timing_cyrixiii_start()
+{
         timing_count = 0;
         last_prefix = 0;
 }
 
-static void codegen_timing_cyrixiii_prefix(uint8_t prefix, uint32_t fetchdat) {
-        if (prefix == 0x0f) {
+static void codegen_timing_cyrixiii_prefix(uint8_t prefix, uint32_t fetchdat)
+{
+        if (prefix == 0x0f)
+        {
                 /*0fh prefix is 'free'*/
                 last_prefix = prefix;
                 return;
@@ -1257,121 +537,117 @@ static void codegen_timing_cyrixiii_prefix(uint8_t prefix, uint32_t fetchdat) {
         last_prefix = prefix;
 }
 
-static void codegen_timing_cyrixiii_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc) {
+static void codegen_timing_cyrixiii_opcode(uint8_t opcode, uint32_t fetchdat, int op_32, uint32_t op_pc)
+{
         uint32_t *timings;
         uint64_t *deps;
         int mod3 = ((fetchdat & 0xc0) == 0xc0);
         int bit8 = !(opcode & 1);
         int agi_stall = 0;
 
-        switch (last_prefix) {
-        case 0x0f:
+        switch (last_prefix)
+        {
+                case 0x0f:
                 timings = mod3 ? opcode_timings_0f_mod3 : opcode_timings_0f;
                 deps = mod3 ? opcode_deps_0f_mod3 : opcode_deps_0f;
-                //                pclog("timings 0f\n");
+//                pclog("timings 0f\n");
                 break;
 
-        case 0xd8:
+                case 0xd8:
                 timings = mod3 ? opcode_timings_d8_mod3 : opcode_timings_d8;
                 deps = mod3 ? opcode_deps_d8_mod3 : opcode_deps_d8;
                 opcode = (opcode >> 3) & 7;
-                //                pclog("timings d8\n");
+//                pclog("timings d8\n");
                 break;
-        case 0xd9:
+                case 0xd9:
                 timings = mod3 ? opcode_timings_d9_mod3 : opcode_timings_d9;
                 deps = mod3 ? opcode_deps_d9_mod3 : opcode_deps_d9;
                 opcode = mod3 ? opcode & 0x3f : (opcode >> 3) & 7;
-                //                pclog("timings d9\n");
+//                pclog("timings d9\n");
                 break;
-        case 0xda:
+                case 0xda:
                 timings = mod3 ? opcode_timings_da_mod3 : opcode_timings_da;
                 deps = mod3 ? opcode_deps_da_mod3 : opcode_deps_da;
                 opcode = (opcode >> 3) & 7;
-                //                pclog("timings da\n");
+//                pclog("timings da\n");
                 break;
-        case 0xdb:
+                case 0xdb:
                 timings = mod3 ? opcode_timings_db_mod3 : opcode_timings_db;
                 deps = mod3 ? opcode_deps_db_mod3 : opcode_deps_db;
                 opcode = mod3 ? opcode & 0x3f : (opcode >> 3) & 7;
-                //                pclog("timings db\n");
+//                pclog("timings db\n");
                 break;
-        case 0xdc:
+                case 0xdc:
                 timings = mod3 ? opcode_timings_dc_mod3 : opcode_timings_dc;
                 deps = mod3 ? opcode_deps_dc_mod3 : opcode_deps_dc;
                 opcode = (opcode >> 3) & 7;
-                //                pclog("timings dc\n");
+//                pclog("timings dc\n");
                 break;
-        case 0xdd:
+                case 0xdd:
                 timings = mod3 ? opcode_timings_dd_mod3 : opcode_timings_dd;
                 deps = mod3 ? opcode_deps_dd_mod3 : opcode_deps_dd;
                 opcode = (opcode >> 3) & 7;
-                //                pclog("timings dd\n");
+//                pclog("timings dd\n");
                 break;
-        case 0xde:
+                case 0xde:
                 timings = mod3 ? opcode_timings_de_mod3 : opcode_timings_de;
                 deps = mod3 ? opcode_deps_de_mod3 : opcode_deps_de;
                 opcode = (opcode >> 3) & 7;
-                //                pclog("timings de\n");
+//                pclog("timings de\n");
                 break;
-        case 0xdf:
+                case 0xdf:
                 timings = mod3 ? opcode_timings_df_mod3 : opcode_timings_df;
                 deps = mod3 ? opcode_deps_df_mod3 : opcode_deps_df;
                 opcode = (opcode >> 3) & 7;
-                //                pclog("timings df\n");
+//                pclog("timings df\n");
                 break;
 
-        default:
-                switch (opcode) {
-                case 0x80:
-                case 0x82:
-                case 0x83:
+                default:
+                switch (opcode)
+                {
+                        case 0x80: case 0x82: case 0x83:
                         timings = mod3 ? opcode_timings_8x_mod3 : opcode_timings_8x;
                         deps = mod3 ? opcode_deps_8x_mod3 : opcode_deps_8x_mod3;
                         opcode = (fetchdat >> 3) & 7;
-                        //                        pclog("timings 80 %p %p %p\n", (void *)timings, (void *)opcode_timings_mod3, (void *)opcode_timings_8x);
+//                        pclog("timings 80 %p %p %p\n", (void *)timings, (void *)opcode_timings_mod3, (void *)opcode_timings_8x);
                         break;
-                case 0x81:
+                        case 0x81:
                         timings = mod3 ? opcode_timings_81_mod3 : opcode_timings_81;
                         deps = mod3 ? opcode_deps_81_mod3 : opcode_deps_81;
                         opcode = (fetchdat >> 3) & 7;
-                        //                        pclog("timings 80 %p %p %p\n", (void *)timings, (void *)opcode_timings_mod3, (void *)opcode_timings_8x);
+//                        pclog("timings 80 %p %p %p\n", (void *)timings, (void *)opcode_timings_mod3, (void *)opcode_timings_8x);
                         break;
 
-                case 0xc0:
-                case 0xc1:
-                case 0xd0:
-                case 0xd1:
-                case 0xd2:
-                case 0xd3:
+                        case 0xc0: case 0xc1: case 0xd0: case 0xd1: case 0xd2: case 0xd3:
                         timings = mod3 ? opcode_timings_shift_mod3 : opcode_timings_shift;
                         deps = mod3 ? opcode_deps_shift_mod3 : opcode_deps_shift;
                         opcode = (fetchdat >> 3) & 7;
-                        //                        pclog("timings c0\n");
+//                        pclog("timings c0\n");
                         break;
 
-                case 0xf6:
+                        case 0xf6:
                         timings = mod3 ? opcode_timings_f6_mod3 : opcode_timings_f6;
                         deps = mod3 ? opcode_deps_f6_mod3 : opcode_deps_f6;
                         opcode = (fetchdat >> 3) & 7;
-                        //                        pclog("timings f6\n");
+//                        pclog("timings f6\n");
                         break;
-                case 0xf7:
+                        case 0xf7:
                         timings = mod3 ? opcode_timings_f7_mod3 : opcode_timings_f7;
                         deps = mod3 ? opcode_deps_f7_mod3 : opcode_deps_f7;
                         opcode = (fetchdat >> 3) & 7;
-                        //                        pclog("timings f7\n");
+//                        pclog("timings f7\n");
                         break;
-                case 0xff:
+                        case 0xff:
                         timings = mod3 ? opcode_timings_ff_mod3 : opcode_timings_ff;
                         deps = mod3 ? opcode_deps_ff_mod3 : opcode_deps_ff;
                         opcode = (fetchdat >> 3) & 7;
-                        //                        pclog("timings ff\n");
+//                        pclog("timings ff\n");
                         break;
 
-                default:
+                        default:
                         timings = mod3 ? opcode_timings_mod3 : opcode_timings;
                         deps = mod3 ? opcode_deps_mod3 : opcode_deps;
-                        //                        pclog("timings normal\n");
+//                        pclog("timings normal\n");
                         break;
                 }
         }
@@ -1383,18 +659,21 @@ static void codegen_timing_cyrixiii_opcode(uint8_t opcode, uint32_t fetchdat, in
         regmask_modified = get_dstdep_mask(deps[opcode], fetchdat, bit8);
 }
 
-static void codegen_timing_cyrixiii_block_end() {
+static void codegen_timing_cyrixiii_block_end()
+{
 }
 
-int codegen_timing_cyrixiii_jump_cycles() {
+int codegen_timing_cyrixiii_jump_cycles()
+{
         return 0;
 }
 
 codegen_timing_t codegen_timing_cyrixiii =
-    {
+{
         codegen_timing_cyrixiii_start,
         codegen_timing_cyrixiii_prefix,
         codegen_timing_cyrixiii_opcode,
         codegen_timing_cyrixiii_block_start,
         codegen_timing_cyrixiii_block_end,
-        codegen_timing_cyrixiii_jump_cycles};
+        codegen_timing_cyrixiii_jump_cycles
+};

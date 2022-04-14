@@ -3,7 +3,8 @@
 void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)());
 void piix4_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)());
 
-typedef struct piix_t {
+typedef struct piix_t
+{
         int type;
 
         /*PIIX4*/
@@ -41,5 +42,6 @@ typedef struct piix_t {
 
         uint8_t port_92;
 } piix_t;
+
 
 #endif /* _PIIX_H_ */

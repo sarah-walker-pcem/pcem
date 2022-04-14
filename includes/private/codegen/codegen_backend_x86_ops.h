@@ -197,4 +197,5 @@ void host_x86_XOR8_REG_IMM(codeblock_t *block, int dst_reg, uint8_t imm_data);
 void host_x86_XOR16_REG_IMM(codeblock_t *block, int dst_reg, uint16_t imm_data);
 void host_x86_XOR32_REG_IMM(codeblock_t *block, int dst_reg, uint32_t imm_data);
 
+
 #endif /* _CODEGEN_BACKEND_X86_OPS_H_ */

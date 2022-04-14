@@ -26,12 +26,13 @@
 #define BL cpu_state.regs[3].b.l
 #define BH cpu_state.regs[3].b.h
 
-typedef union {
+typedef union
+{
         uint32_t l;
         uint16_t w;
         struct
         {
-                uint8_t l, h;
+                uint8_t l,h;
         } b;
 } x86reg;
 
@@ -45,16 +46,17 @@ typedef struct
         int checked; /*Non-zero if selector is known to be valid*/
 } x86seg;
 
-typedef union MMX_REG {
+typedef union MMX_REG
+{
         uint64_t q;
-        int64_t sq;
+        int64_t  sq;
         uint32_t l[2];
-        int32_t sl[2];
+        int32_t  sl[2];
         uint16_t w[4];
-        int16_t sw[4];
-        uint8_t b[8];
-        int8_t sb[8];
-        float f[2];
+        int16_t  sw[4];
+        uint8_t  b[8];
+        int8_t   sb[8];
+        float    f[2];
 } MMX_REG;
 
 struct
@@ -76,7 +78,8 @@ struct
 
         int TOP;
 
-        union {
+        union
+        {
                 struct
                 {
                         int8_t rm, mod, reg;
@@ -107,9 +110,10 @@ struct
 #if defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined __amd64__
         uint32_t trunc_fp_control;
 #endif
-        x86seg seg_cs, seg_ds, seg_es, seg_ss, seg_fs, seg_gs;
+        x86seg seg_cs,seg_ds,seg_es,seg_ss,seg_fs,seg_gs;
 
-        union {
+        union
+        {
                 uint32_t l;
                 uint16_t w;
         } CR0;
@@ -144,19 +148,19 @@ extern int cycles_main;
 //#define seg_fs _fs.base
 #define gs cpu_state.seg_gs.base
 
-#define CPL ((cpu_state.seg_cs.access >> 5) & 3)
+#define CPL ((cpu_state.seg_cs.access>>5)&3)
 
-#define C_FLAG 0x0001
-#define P_FLAG 0x0004
-#define A_FLAG 0x0010
-#define Z_FLAG 0x0040
-#define N_FLAG 0x0080
-#define T_FLAG 0x0100
-#define I_FLAG 0x0200
-#define D_FLAG 0x0400
-#define V_FLAG 0x0800
+#define C_FLAG  0x0001
+#define P_FLAG  0x0004
+#define A_FLAG  0x0010
+#define Z_FLAG  0x0040
+#define N_FLAG  0x0080
+#define T_FLAG  0x0100
+#define I_FLAG  0x0200
+#define D_FLAG  0x0400
+#define V_FLAG  0x0800
 #define NT_FLAG 0x4000
-#define VM_FLAG 0x0002  /*In EFLAGS*/
+#define VM_FLAG 0x0002 /*In EFLAGS*/
 #define VIF_FLAG 0x0008 /*In EFLAGS*/
 #define VIP_FLAG 0x0010 /*In EFLAGS*/
 
@@ -168,7 +172,7 @@ extern int cycles_main;
 
 #define IOPL ((cpu_state.flags >> 12) & 3)
 
-#define IOPLp ((!(msw & 1)) || (CPL <= IOPL))
+#define IOPLp ((!(msw&1)) || (CPL<=IOPL))
 
 extern x86seg gdt, ldt, idt, tr;
 
@@ -178,22 +182,24 @@ extern uint32_t dr[8];
 extern uint16_t sysenter_cs;
 extern uint32_t sysenter_eip, sysenter_esp;
 
+
 extern uint16_t cpu_cur_status;
 
 /*The flags below must match in both cpu_cur_status and block->status for a block
   to be valid*/
-#define CPU_STATUS_USE32 (1 << 0)
+#define CPU_STATUS_USE32   (1 << 0)
 #define CPU_STATUS_STACK32 (1 << 1)
-#define CPU_STATUS_PMODE (1 << 2)
-#define CPU_STATUS_V86 (1 << 3)
-#define CPU_STATUS_SMM (1 << 4)
+#define CPU_STATUS_PMODE   (1 << 2)
+#define CPU_STATUS_V86     (1 << 3)
+#define CPU_STATUS_SMM     (1 << 4)
 #define CPU_STATUS_FLAGS 0xff
 
 /*If the flags below are set in cpu_cur_status, they must be set in block->status.
   Otherwise they are ignored*/
-#define CPU_STATUS_NOTFLATDS (1 << 8)
-#define CPU_STATUS_NOTFLATSS (1 << 9)
+#define CPU_STATUS_NOTFLATDS  (1 << 8)
+#define CPU_STATUS_NOTFLATSS  (1 << 9)
 #define CPU_STATUS_MASK 0xff00
+
 
 extern uint32_t rmdat;
 #define fetchdat rmdat
@@ -222,32 +228,25 @@ extern int x86_was_reset;
 
 extern int insc;
 extern int fpucount;
-extern float mips, flops;
+extern float mips,flops;
 
 #define setznp168 setznp16
 
-#define getr8(r) ((r & 4) ? cpu_state.regs[r & 3].b.h : cpu_state.regs[r & 3].b.l)
-#define getr16(r) cpu_state.regs[r].w
-#define getr32(r) cpu_state.regs[r].l
+#define getr8(r)   ((r&4)?cpu_state.regs[r&3].b.h:cpu_state.regs[r&3].b.l)
+#define getr16(r)  cpu_state.regs[r].w
+#define getr32(r)  cpu_state.regs[r].l
 
-#define setr8(r, v)                            \
-        if (r & 4)                             \
-                cpu_state.regs[r & 3].b.h = v; \
-        else                                   \
-                cpu_state.regs[r & 3].b.l = v;
-#define setr16(r, v) cpu_state.regs[r].w = v
-#define setr32(r, v) cpu_state.regs[r].l = v
+#define setr8(r,v) if (r&4) cpu_state.regs[r&3].b.h=v; \
+                   else     cpu_state.regs[r&3].b.l=v;
+#define setr16(r,v) cpu_state.regs[r].w=v
+#define setr32(r,v) cpu_state.regs[r].l=v
 
-#define fetchea()                          \
-        {                                  \
-                rmdat = readmemb(cs + pc); \
-                pc++;                      \
-                reg = (rmdat >> 3) & 7;    \
-                mod = (rmdat >> 6) & 3;    \
-                rm = rmdat & 7;            \
-                if (mod != 3)              \
-                        fetcheal();        \
-        }
+#define fetchea()   { rmdat=readmemb(cs+pc); pc++;  \
+                    reg=(rmdat>>3)&7;               \
+                    mod=(rmdat>>6)&3;               \
+                    rm=rmdat&7;                   \
+                    if (mod!=3) fetcheal(); }
+
 
 extern int optype;
 #define JMP 1
@@ -255,14 +254,16 @@ extern int optype;
 #define IRET 3
 #define OPTYPE_INT 4
 
-enum {
+
+enum
+{
         ABRT_NONE = 0,
         ABRT_GEN,
-        ABRT_TS = 0xA,
-        ABRT_NP = 0xB,
-        ABRT_SS = 0xC,
+        ABRT_TS  = 0xA,
+        ABRT_NP  = 0xB,
+        ABRT_SS  = 0xC,
         ABRT_GPF = 0xD,
-        ABRT_PF = 0xE
+        ABRT_PF  = 0xE
 };
 
 #define ABRT_MASK 0x7f
@@ -270,11 +271,11 @@ enum {
   of this code path; eg a GPF due to being in v86 mode. An 'unexpected' exception is
   one that would be unlikely to occur on the next exception, eg a page fault may be
   fixed up by the exception handler and the next execution would not hit it.
-
+  
   This distinction is used by the dynarec; a block that hits an 'expected' exception
   would be compiled, a block that hits an 'unexpected' exception would be rejected so
   that we don't end up with an unnecessarily short block*/
-#define ABRT_EXPECTED 0x80
+#define ABRT_EXPECTED  0x80
 extern uint32_t abrt_error;
 
 void x86_doabrt(int x86_abrt);

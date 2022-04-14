@@ -13,59 +13,73 @@ static struct
         uint8_t pci_bridge_regs[256];
 } mvp3;
 
-static void mvp3_map(uint32_t addr, uint32_t size, int state) {
+static void mvp3_map(uint32_t addr, uint32_t size, int state)
+{
         pclog("mvp3_map: addr=%08x size=%08x state=%i\n", addr, size, state);
-        switch (state & 3) {
-        case 0:
+        switch (state & 3)
+        {
+                case 0:
                 mem_set_mem_state(addr, size, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
                 break;
-        case 1:
+                case 1:
                 mem_set_mem_state(addr, size, MEM_READ_EXTERNAL | MEM_WRITE_INTERNAL);
                 break;
-        case 2:
+                case 2:
                 mem_set_mem_state(addr, size, MEM_READ_INTERNAL | MEM_WRITE_EXTERNAL);
                 break;
-        case 3:
+                case 3:
                 mem_set_mem_state(addr, size, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
                 break;
         }
         flushmmucache_nopc();
 }
 
-static uint8_t mvp3_read(int func, int addr, void *priv) {
-        switch (func) {
-        case 0:
+static uint8_t mvp3_read(int func, int addr, void *priv)
+{
+        switch (func)
+        {
+                case 0:
                 return mvp3.host_bridge_regs[addr];
 
-        case 1:
+                case 1:
                 return mvp3.pci_bridge_regs[addr];
-
-        default:
+                
+                default:
                 return 0xff;
         }
 }
 
-static void mvp3_host_bridge_write(int addr, uint8_t val) {
+
+static void mvp3_host_bridge_write(int addr, uint8_t val)
+{
         /*Read-only addresses*/
-        if ((addr < 4) || (addr >= 5 && addr < 7) || (addr >= 8 && addr < 0xd) || (addr >= 0xe && addr < 0x12) || (addr >= 0x14 && addr < 0x50) || (addr >= 0x79 && addr < 0x7e) || (addr >= 0x85 && addr < 0x88) || (addr >= 0x8c && addr < 0xa8) || (addr >= 0xad && addr < 0xfd))
+        if ((addr < 4) || (addr >= 5 && addr < 7)
+                        || (addr >= 8 && addr < 0xd)
+                        || (addr >= 0xe && addr < 0x12)
+                        || (addr >= 0x14 && addr < 0x50)
+                        || (addr >= 0x79 && addr < 0x7e)
+                        || (addr >= 0x85 && addr < 0x88)
+                        || (addr >= 0x8c && addr < 0xa8)
+                        || (addr >= 0xad && addr < 0xfd))
                 return;
 
-        switch (addr) {
-        case 0x04: /*Command*/
+        switch (addr)
+        {
+                case 0x04: /*Command*/
                 mvp3.host_bridge_regs[0x04] = (mvp3.host_bridge_regs[0x04] & ~0x40) | (val & 0x40);
                 break;
-        case 0x07: /*Status*/
+                case 0x07: /*Status*/
                 mvp3.host_bridge_regs[0x07] &= ~(val & 0xb0);
                 break;
-
-        case 0x12: /*Graphics Aperture Base*/
+                
+                case 0x12: /*Graphics Aperture Base*/
                 mvp3.host_bridge_regs[0x12] = (val & 0xf0);
                 break;
-        case 0x13: /*Graphics Aperture Base*/
+                case 0x13: /*Graphics Aperture Base*/
                 mvp3.host_bridge_regs[0x13] = val;
                 break;
 
-        case 0x61: /*Shadow RAM Control 1*/
+                case 0x61: /*Shadow RAM Control 1*/
                 if ((mvp3.host_bridge_regs[0x61] ^ val) & 0x03)
                         mvp3_map(0xc0000, 0x04000, val & 0x03);
                 if ((mvp3.host_bridge_regs[0x61] ^ val) & 0x0c)
@@ -76,7 +90,7 @@ static void mvp3_host_bridge_write(int addr, uint8_t val) {
                         mvp3_map(0xcc000, 0x04000, (val & 0xc0) >> 6);
                 mvp3.host_bridge_regs[0x61] = val;
                 return;
-        case 0x62: /*Shadow RAM Control 2*/
+                case 0x62: /*Shadow RAM Control 2*/
                 if ((mvp3.host_bridge_regs[0x62] ^ val) & 0x03)
                         mvp3_map(0xd0000, 0x04000, val & 0x03);
                 if ((mvp3.host_bridge_regs[0x62] ^ val) & 0x0c)
@@ -87,7 +101,7 @@ static void mvp3_host_bridge_write(int addr, uint8_t val) {
                         mvp3_map(0xdc000, 0x04000, (val & 0xc0) >> 6);
                 mvp3.host_bridge_regs[0x62] = val;
                 return;
-        case 0x63: /*Shadow RAM Control 3*/
+                case 0x63: /*Shadow RAM Control 3*/
                 if ((mvp3.host_bridge_regs[0x63] ^ val) & 0x30)
                         mvp3_map(0xf0000, 0x10000, (val & 0x30) >> 4);
                 if ((mvp3.host_bridge_regs[0x63] ^ val) & 0xc0)
@@ -97,84 +111,94 @@ static void mvp3_host_bridge_write(int addr, uint8_t val) {
                 {
                         pclog("Enable SMRAM\n");
                         mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
-                } else {
+                }
+                else
+                {
                         pclog("Disable SMRAM\n");
                         mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
                 }
-                //                if (val == 0xb0)
-                //                        output = 3;
+//                if (val == 0xb0)
+//                        output = 3;
                 return;
 
-        default:
+                default:
                 mvp3.host_bridge_regs[addr] = val;
                 break;
         }
 }
-static void mvp3_pci_bridge_write(int addr, uint8_t val) {
+static void mvp3_pci_bridge_write(int addr, uint8_t val)
+{
         /*Read-only addresses*/
-        if ((addr < 4) || (addr >= 5 && addr < 7) || (addr >= 8 && addr < 0x18) || (addr == 0x1b) || (addr >= 0x1e && addr < 0x20) || (addr >= 0x28 && addr < 0x3e) || (addr >= 0x43))
+        if ((addr < 4) || (addr >= 5 && addr < 7)
+                        || (addr >= 8 && addr < 0x18)
+                        || (addr == 0x1b)
+                        || (addr >= 0x1e && addr < 0x20)
+                        || (addr >= 0x28 && addr < 0x3e)
+                        || (addr >= 0x43))
                 return;
-
-        switch (addr) {
-        case 0x04: /*Command*/
+                
+        switch (addr)
+        {
+                case 0x04: /*Command*/
                 mvp3.pci_bridge_regs[0x04] = (mvp3.pci_bridge_regs[0x04] & ~0x47) | (val & 0x47);
                 break;
-        case 0x07: /*Status*/
+                case 0x07: /*Status*/
                 mvp3.pci_bridge_regs[0x07] &= ~(val & 0x30);
                 break;
 
-        case 0x20: /*Memory Base*/
+                case 0x20: /*Memory Base*/
                 mvp3.pci_bridge_regs[0x20] = val & 0xf0;
                 break;
-        case 0x22: /*Memory Limit*/
+                case 0x22: /*Memory Limit*/
                 mvp3.pci_bridge_regs[0x22] = val & 0xf0;
                 break;
-        case 0x24: /*Prefetchable Memory Base*/
+                case 0x24: /*Prefetchable Memory Base*/
                 mvp3.pci_bridge_regs[0x24] = val & 0xf0;
                 break;
-        case 0x26: /*Prefetchable Memory Limit*/
+                case 0x26: /*Prefetchable Memory Limit*/
                 mvp3.pci_bridge_regs[0x26] = val & 0xf0;
                 break;
 
-        default:
+                default:
                 mvp3.pci_bridge_regs[addr] = val;
                 break;
         }
 }
 
-static void mvp3_write(int func, int addr, uint8_t val, void *priv) {
-        switch (func) {
-        case 0:
+static void mvp3_write(int func, int addr, uint8_t val, void *priv)
+{
+        switch (func)
+        {
+                case 0:
                 mvp3_host_bridge_write(addr, val);
                 break;
-
-        case 1:
+                
+                case 1:
                 mvp3_pci_bridge_write(addr, val);
                 break;
         }
 }
 
-static void mvp3_smram_enable(void) {
+static void mvp3_smram_enable(void)
+{
         if ((mvp3.host_bridge_regs[0x63] & 3) == 3)
                 mem_set_mem_state(0xa0000, 0x20000, MEM_READ_INTERNAL | MEM_WRITE_INTERNAL);
 }
-static void mvp3_smram_disable(void) {
+static void mvp3_smram_disable(void)
+{
         if ((mvp3.host_bridge_regs[0x63] & 3) != 1)
                 mem_set_mem_state(0xa0000, 0x20000, MEM_READ_EXTERNAL | MEM_WRITE_EXTERNAL);
 }
 
-void mvp3_init() {
+void mvp3_init()
+{
         pci_add_specific(0, mvp3_read, mvp3_write, NULL);
 
         memset(&mvp3, 0, sizeof(mvp3));
-        mvp3.host_bridge_regs[0x00] = 0x06;
-        mvp3.host_bridge_regs[0x01] = 0x11; /*VIA*/
-        mvp3.host_bridge_regs[0x02] = 0x98;
-        mvp3.host_bridge_regs[0x03] = 0x05; /*VT82C598MVP*/
-        mvp3.host_bridge_regs[0x04] = 0x06;
-        mvp3.host_bridge_regs[0x05] = 0x00;
-        mvp3.host_bridge_regs[0x06] = 0x90;
-        mvp3.host_bridge_regs[0x07] = 0x02;
+        mvp3.host_bridge_regs[0x00] = 0x06; mvp3.host_bridge_regs[0x01] = 0x11; /*VIA*/
+        mvp3.host_bridge_regs[0x02] = 0x98; mvp3.host_bridge_regs[0x03] = 0x05; /*VT82C598MVP*/
+        mvp3.host_bridge_regs[0x04] = 0x06; mvp3.host_bridge_regs[0x05] = 0x00;
+        mvp3.host_bridge_regs[0x06] = 0x90; mvp3.host_bridge_regs[0x07] = 0x02;
         mvp3.host_bridge_regs[0x0b] = 0x06;
         mvp3.host_bridge_regs[0x10] = 0x08;
         mvp3.host_bridge_regs[0x34] = 0xa0;
@@ -198,18 +222,14 @@ void mvp3_init() {
         mvp3.host_bridge_regs[0xa6] = 0x00;
         mvp3.host_bridge_regs[0xa7] = 0x07;
 
-        mvp3.pci_bridge_regs[0x00] = 0x06;
-        mvp3.pci_bridge_regs[0x01] = 0x11; /*VIA*/
-        mvp3.pci_bridge_regs[0x02] = 0x98;
-        mvp3.pci_bridge_regs[0x03] = 0x85; /*VT82C598MVP*/
-        mvp3.pci_bridge_regs[0x04] = 0x07;
-        mvp3.pci_bridge_regs[0x05] = 0x00;
-        mvp3.pci_bridge_regs[0x06] = 0x20;
-        mvp3.pci_bridge_regs[0x07] = 0x02;
+        mvp3.pci_bridge_regs[0x00] = 0x06; mvp3.pci_bridge_regs[0x01] = 0x11; /*VIA*/
+        mvp3.pci_bridge_regs[0x02] = 0x98; mvp3.pci_bridge_regs[0x03] = 0x85; /*VT82C598MVP*/
+        mvp3.pci_bridge_regs[0x04] = 0x07; mvp3.pci_bridge_regs[0x05] = 0x00;
+        mvp3.pci_bridge_regs[0x06] = 0x20; mvp3.pci_bridge_regs[0x07] = 0x02;
         mvp3.pci_bridge_regs[0x0a] = 0x04;
         mvp3.pci_bridge_regs[0x0b] = 0x06;
         mvp3.pci_bridge_regs[0x0e] = 0x01;
-
+        
         mvp3.pci_bridge_regs[0x1c] = 0xf0;
 
         mvp3.pci_bridge_regs[0x20] = 0xf0;

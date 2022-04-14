@@ -1,14 +1,15 @@
 #ifndef _VID_MDA_H_
 #define _VID_MDA_H_
 
-typedef struct mda_t {
+typedef struct mda_t
+{
         mem_mapping_t mapping;
-
+        
         uint8_t crtc[32];
         int crtcreg;
-
+        
         uint8_t ctrl, stat;
-
+        
         uint64_t dispontime, dispofftime;
         pc_timer_t timer;
 
@@ -36,5 +37,7 @@ void mda_poll(void *p);
 void mda_setcol(int chr, int blink, int fg, uint8_t cga_ink);
 
 extern device_t mda_device;
+
+
 
 #endif /* _VID_MDA_H_ */

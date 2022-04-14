@@ -1,19 +1,21 @@
+#include <stdlib.h>
 #include "ibm.h"
 #include "mouse.h"
 #include "pic.h"
 #include "serial.h"
 #include "timer.h"
-#include <stdlib.h>
 
-typedef struct mouse_msystems_t {
+typedef struct mouse_msystems_t
+{
         int mousepos, mousedelay;
         int oldb;
-        SERIAL *serial;
+        SERIAL* serial;
 } mouse_msystems_t;
 
-static void mouse_msystems_poll(int x, int y, int z, int b, void *p) {
-        mouse_msystems_t *mouse = (mouse_msystems_t *)p;
-        SERIAL *serial = mouse->serial;
+static void mouse_msystems_poll(int x, int y, int z, int b, void* p)
+{
+        mouse_msystems_t* mouse = (mouse_msystems_t*)p;
+        SERIAL* serial = mouse->serial;
         uint8_t mousedat[5];
 
         if (!x && !y && b == mouse->oldb)
@@ -44,8 +46,9 @@ static void mouse_msystems_poll(int x, int y, int z, int b, void *p) {
         mousedat[3] = 0;
         mousedat[4] = 0;
 
-        if (!(serial->mctrl & 0x10)) {
-                //                pclog("Serial data %02X %02X %02X\n", mousedat[0], mousedat[1], mousedat[2]);
+        if (!(serial->mctrl & 0x10))
+        {
+//                pclog("Serial data %02X %02X %02X\n", mousedat[0], mousedat[1], mousedat[2]);
                 serial_write_fifo(mouse->serial, mousedat[0]);
                 serial_write_fifo(mouse->serial, mousedat[1]);
                 serial_write_fifo(mouse->serial, mousedat[2]);
@@ -54,8 +57,9 @@ static void mouse_msystems_poll(int x, int y, int z, int b, void *p) {
         }
 }
 
-static void *mouse_msystems_init() {
-        mouse_msystems_t *mouse = (mouse_msystems_t *)malloc(sizeof(mouse_msystems_t));
+static void* mouse_msystems_init()
+{
+        mouse_msystems_t* mouse = (mouse_msystems_t*)malloc(sizeof(mouse_msystems_t));
         memset(mouse, 0, sizeof(mouse_msystems_t));
 
         mouse->serial = &serial1;
@@ -65,8 +69,9 @@ static void *mouse_msystems_init() {
         return mouse;
 }
 
-static void mouse_msystems_close(void *p) {
-        mouse_msystems_t *mouse = (mouse_msystems_t *)p;
+static void mouse_msystems_close(void* p)
+{
+        mouse_msystems_t* mouse = (mouse_msystems_t*)p;
 
         free(mouse);
 
@@ -74,9 +79,10 @@ static void mouse_msystems_close(void *p) {
 }
 
 mouse_t mouse_serial_msystems =
-    {
-        "Mouse Systems 3-button mouse (serial)",
-        mouse_msystems_init,
-        mouse_msystems_close,
-        mouse_msystems_poll,
-        MOUSE_TYPE_SERIAL | MOUSE_TYPE_3BUTTON};
+        {
+                "Mouse Systems 3-button mouse (serial)",
+                mouse_msystems_init,
+                mouse_msystems_close,
+                mouse_msystems_poll,
+                MOUSE_TYPE_SERIAL | MOUSE_TYPE_3BUTTON
+        };

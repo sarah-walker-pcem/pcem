@@ -16,11 +16,11 @@ typedef struct
 {
         uint8_t r, g, b;
 } RGB;
-
+        
 typedef RGB PALETTE[256];
 
-#define makecol(r, g, b) ((b) | ((g) << 8) | ((r) << 16))
-#define makecol32(r, g, b) ((b) | ((g) << 8) | ((r) << 16))
+#define makecol(r, g, b)    ((b) | ((g) << 8) | ((r) << 16))
+#define makecol32(r, g, b)  ((b) | ((g) << 8) | ((r) << 16))
 
 extern BITMAP *buffer32;
 
@@ -41,14 +41,15 @@ extern int video_fullscreen, video_fullscreen_scale, video_fullscreen_first;
 extern int video_force_aspect_ration;
 extern int vid_disc_indicator;
 
-enum {
+enum
+{
         FULLSCR_SCALE_FULL = 0,
         FULLSCR_SCALE_43,
         FULLSCR_SCALE_SQ,
         FULLSCR_SCALE_INT
 };
 
-extern int egareads, egawrites;
+extern int egareads,egawrites;
 
 extern int fullchange;
 extern int changeframecount;
@@ -60,7 +61,7 @@ extern uint8_t fontdatksc5601_user[192][32];
 
 extern uint32_t *video_15to32, *video_16to32;
 
-extern int xsize, ysize;
+extern int xsize,ysize;
 
 extern float cpuclock;
 
@@ -85,16 +86,17 @@ extern int vid_resize;
 void video_wait_for_blit();
 void video_wait_for_buffer();
 
-typedef enum {
-        FONT_MDA,      /* MDA 8x14 */
-        FONT_PC200,    /* MDA 8x14 and CGA 8x8, four fonts */
-        FONT_CGA,      /* CGA 8x8, two fonts */
-        FONT_WY700,    /* Wy700 16x16, two fonts */
-        FONT_MDSI,     /* MDSI Genius 8x12 */
-        FONT_T3100E,   /* Toshiba T3100e, four fonts */
-        FONT_KSC5601,  /* Korean KSC-5601 */
-        FONT_SIGMA400, /* Sigma Color 400, 8x8 and 8x16 */
-        FONT_IM1024,   /* Image Manager 1024 */
+typedef enum
+{
+	FONT_MDA,	/* MDA 8x14 */
+	FONT_PC200,	/* MDA 8x14 and CGA 8x8, four fonts */
+	FONT_CGA,	/* CGA 8x8, two fonts */
+	FONT_WY700,	/* Wy700 16x16, two fonts */
+	FONT_MDSI,	/* MDSI Genius 8x12 */
+	FONT_T3100E,	/* Toshiba T3100e, four fonts */
+	FONT_KSC5601,	/* Korean KSC-5601 */
+	FONT_SIGMA400,	/* Sigma Color 400, 8x8 and 8x16 */
+ 	FONT_IM1024,	/* Image Manager 1024 */
 } fontformat_t;
 
 void loadfont(char *s, fontformat_t format);

@@ -14,4 +14,5 @@ uint32_t ropFSTSW_AX(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t
 
 uint32_t ropFXCH(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc);
 
+
 #endif /* _CODEGEN_OPS_FPU_MISC_H_ */

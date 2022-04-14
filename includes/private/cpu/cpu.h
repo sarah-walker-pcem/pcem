@@ -14,46 +14,46 @@ extern int fpu_type;
 #define CPU_286 2
 
 /*386 class CPUs*/
-#define CPU_386SX 3
-#define CPU_386DX 4
+#define CPU_386SX  3
+#define CPU_386DX  4
 #define CPU_486SLC 5
 #define CPU_486DLC 6
 
 /*486 class CPUs*/
-#define CPU_i486SX 7
+#define CPU_i486SX  7
 #define CPU_Am486SX 8
-#define CPU_Cx486S 9
-#define CPU_i486DX 10
+#define CPU_Cx486S  9
+#define CPU_i486DX  10
 #define CPU_Am486DX 11
 #define CPU_Cx486DX 12
-#define CPU_iDX4 13
-#define CPU_Cx5x86 14
+#define CPU_iDX4    13
+#define CPU_Cx5x86  14
 
 /*586 class CPUs*/
 #define CPU_WINCHIP 15
 #define CPU_WINCHIP2 16
 #define CPU_PENTIUM 17
 #define CPU_PENTIUMMMX 18
-#define CPU_Cx6x86 19
-#define CPU_Cx6x86MX 20
-#define CPU_Cx6x86L 21
-#define CPU_CxGX1 22
-#define CPU_K6 23
-#define CPU_K6_2 24
-#define CPU_K6_3 25
-#define CPU_K6_2P 26
-#define CPU_K6_3P 27
-#define CPU_PENTIUMPRO 28
-#define CPU_PENTIUM_2 29
-#define CPU_CELERON 30
-#define CPU_CELERON_A 31
-#define CPU_CYRIX_III 32
+#define CPU_Cx6x86 	19
+#define CPU_Cx6x86MX    20
+#define CPU_Cx6x86L 	21
+#define CPU_CxGX1 	22
+#define CPU_K6          23
+#define CPU_K6_2        24
+#define CPU_K6_3        25
+#define CPU_K6_2P       26
+#define CPU_K6_3P       27
+#define CPU_PENTIUMPRO  28
+#define CPU_PENTIUM_2   29
+#define CPU_CELERON     30
+#define CPU_CELERON_A   31
+#define CPU_CYRIX_III   32
 
 #define MANU_INTEL 0
-#define MANU_AMD 1
+#define MANU_AMD   1
 #define MANU_CYRIX 2
-#define MANU_IDT 3
-#define MANU_VIA 4
+#define MANU_IDT   3
+#define MANU_VIA   4
 
 extern int timing_rr;
 extern int timing_mr, timing_mrl;
@@ -69,7 +69,8 @@ extern int timing_jmp_rm, timing_jmp_pm, timing_jmp_pm_gate;
 
 extern int timing_misaligned;
 
-enum {
+enum
+{
         FPU_NONE,
         FPU_8087,
         FPU_287,
@@ -122,24 +123,25 @@ extern int cpu_multi;
 /*Cyrix 5x86/6x86 only has data misalignment penalties when crossing 8-byte boundaries*/
 extern int cpu_cyrix_alignment;
 
-#define CPU_FEATURE_RDTSC (1 << 0)
-#define CPU_FEATURE_MSR (1 << 1)
-#define CPU_FEATURE_MMX (1 << 2)
-#define CPU_FEATURE_CR4 (1 << 3)
-#define CPU_FEATURE_VME (1 << 4)
-#define CPU_FEATURE_CX8 (1 << 5)
-#define CPU_FEATURE_3DNOW (1 << 6)
+#define CPU_FEATURE_RDTSC   (1 << 0)
+#define CPU_FEATURE_MSR     (1 << 1)
+#define CPU_FEATURE_MMX     (1 << 2)
+#define CPU_FEATURE_CR4     (1 << 3)
+#define CPU_FEATURE_VME     (1 << 4)
+#define CPU_FEATURE_CX8     (1 << 5)
+#define CPU_FEATURE_3DNOW   (1 << 6)
 #define CPU_FEATURE_SYSCALL (1 << 7)
 
 extern uint32_t cpu_features;
-static inline int cpu_has_feature(int feature) {
+static inline int cpu_has_feature(int feature)
+{
         return cpu_features & feature;
 }
 
-#define CR4_TSD (1 << 2)
-#define CR4_DE (1 << 3)
-#define CR4_MCE (1 << 6)
-#define CR4_PCE (1 << 8)
+#define CR4_TSD  (1 << 2)
+#define CR4_DE   (1 << 3)
+#define CR4_MCE  (1 << 6)
+#define CR4_PCE  (1 << 8)
 
 extern uint64_t cpu_CR4_mask;
 

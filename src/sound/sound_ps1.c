@@ -1,13 +1,14 @@
-#include "sound_ps1.h"
-#include "device.h"
+#include <stdlib.h>
 #include "ibm.h"
+#include "device.h"
 #include "io.h"
 #include "pic.h"
 #include "sound.h"
+#include "sound_ps1.h"
 #include "sound_sn76489.h"
-#include <stdlib.h>
 
-typedef struct ps1_audio_t {
+typedef struct ps1_audio_t
+{
         sn76489_t sn76489;
 
         uint8_t status, ctrl;
@@ -25,20 +26,23 @@ typedef struct ps1_audio_t {
         int pos;
 } ps1_audio_t;
 
-static void ps1_update_irq_status(ps1_audio_t *ps1) {
+static void ps1_update_irq_status(ps1_audio_t* ps1)
+{
         if (((ps1->status & ps1->ctrl) & 0x12) && (ps1->ctrl & 0x01))
                 picint(1 << 7);
         else
                 picintc(1 << 7);
 }
 
-static uint8_t ps1_audio_read(uint16_t port, void *p) {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
+static uint8_t ps1_audio_read(uint16_t port, void* p)
+{
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
         uint8_t temp;
 
-        //        pclog("ps1_audio_read %04x %04x:%04x\n", port, CS, pc);
+//        pclog("ps1_audio_read %04x %04x:%04x\n", port, CS, pc);
 
-        switch (port & 7) {
+        switch (port & 7)
+        {
         case 0: /*ADC data*/
                 ps1->status &= ~0x10;
                 ps1_update_irq_status(ps1);
@@ -50,7 +54,7 @@ static uint8_t ps1_audio_read(uint16_t port, void *p) {
                         temp |= 0x08; /*FIFO full*/
                 if (ps1->fifo_read_idx == ps1->fifo_write_idx)
                         temp |= 0x04; /*FIFO empty*/
-                                      //                pclog("Return status %02x\n", temp);
+//                pclog("Return status %02x\n", temp);
                 return temp;
         case 3: /*FIFO timer*/
                 /*PS/1 technical reference says this should return the current value,
@@ -65,15 +69,18 @@ static uint8_t ps1_audio_read(uint16_t port, void *p) {
         return 0xff;
 }
 
-static void ps1_audio_write(uint16_t port, uint8_t val, void *p) {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
+static void ps1_audio_write(uint16_t port, uint8_t val, void* p)
+{
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
 
-        //        pclog("ps1_audio_write %04x %02x\n", port, val);
+//        pclog("ps1_audio_write %04x %02x\n", port, val);
 
-        switch (port & 7) {
+        switch (port & 7)
+        {
         case 0: /*DAC output*/
-                //                pclog("DAC write %08x %08x %i\n", ps1->fifo_write_idx, ps1->fifo_read_idx, ps1->fifo_write_idx - ps1->fifo_read_idx);
-                if ((ps1->fifo_write_idx - ps1->fifo_read_idx) < 2048) {
+//                pclog("DAC write %08x %08x %i\n", ps1->fifo_write_idx, ps1->fifo_read_idx, ps1->fifo_write_idx - ps1->fifo_read_idx);
+                if ((ps1->fifo_write_idx - ps1->fifo_read_idx) < 2048)
+                {
                         ps1->fifo[ps1->fifo_write_idx & 2047] = val;
                         ps1->fifo_write_idx++;
                 }
@@ -97,23 +104,27 @@ static void ps1_audio_write(uint16_t port, uint8_t val, void *p) {
         }
 }
 
-static void ps1_audio_update(ps1_audio_t *ps1) {
+static void ps1_audio_update(ps1_audio_t* ps1)
+{
         for (; ps1->pos < sound_pos_global; ps1->pos++)
                 ps1->buffer[ps1->pos] = (int8_t)(ps1->dac_val ^ 0x80) * 0x20;
 }
 
-static void ps1_audio_callback(void *p) {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
+static void ps1_audio_callback(void* p)
+{
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
 
         ps1_audio_update(ps1);
 
-        if (ps1->fifo_read_idx != ps1->fifo_write_idx) {
+        if (ps1->fifo_read_idx != ps1->fifo_write_idx)
+        {
                 ps1->dac_val = ps1->fifo[ps1->fifo_read_idx & 2047];
                 ps1->fifo_read_idx++;
         }
-        //        pclog("ps1_callback %08x %08x %08x\n", ps1->fifo_write_idx, ps1->fifo_read_idx, ps1->fifo_threshold);
-        if ((ps1->fifo_write_idx - ps1->fifo_read_idx) == ps1->fifo_threshold) {
-                //                pclog("FIFO almost empty\n");
+//        pclog("ps1_callback %08x %08x %08x\n", ps1->fifo_write_idx, ps1->fifo_read_idx, ps1->fifo_threshold);
+        if ((ps1->fifo_write_idx - ps1->fifo_read_idx) == ps1->fifo_threshold)
+        {
+//                pclog("FIFO almost empty\n");
                 ps1->status |= 0x02; /*FIFO almost empty*/
         }
         ps1->status |= 0x10; /*ADC data ready*/
@@ -122,8 +133,9 @@ static void ps1_audio_callback(void *p) {
         timer_advance_u64(&ps1->timer, ps1->timer_latch * TIMER_USEC);
 }
 
-static void ps1_audio_get_buffer(int32_t *buffer, int len, void *p) {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
+static void ps1_audio_get_buffer(int32_t* buffer, int len, void* p)
+{
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
         int c;
 
         ps1_audio_update(ps1);
@@ -134,8 +146,9 @@ static void ps1_audio_get_buffer(int32_t *buffer, int len, void *p) {
         ps1->pos = 0;
 }
 
-static void *ps1_audio_init() {
-        ps1_audio_t *ps1 = malloc(sizeof(ps1_audio_t));
+static void* ps1_audio_init()
+{
+        ps1_audio_t* ps1 = malloc(sizeof(ps1_audio_t));
         memset(ps1, 0, sizeof(ps1_audio_t));
 
         sn76489_init(&ps1->sn76489, 0x0205, 0x0001, SN76496, 4000000);
@@ -148,19 +161,21 @@ static void *ps1_audio_init() {
         return ps1;
 }
 
-static void ps1_audio_close(void *p) {
-        ps1_audio_t *ps1 = (ps1_audio_t *)p;
+static void ps1_audio_close(void* p)
+{
+        ps1_audio_t* ps1 = (ps1_audio_t*)p;
 
         free(ps1);
 }
 
 device_t ps1_audio_device =
-    {
-        "PS/1 Audio Card",
-        0,
-        ps1_audio_init,
-        ps1_audio_close,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "PS/1 Audio Card",
+                0,
+                ps1_audio_init,
+                ps1_audio_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };

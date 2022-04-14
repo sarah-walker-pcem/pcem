@@ -36,14 +36,14 @@ void disc_set_motor_enable(int motor_enable);
 extern int disc_drivesel;
 
 void fdc_callback();
-int fdc_data(uint8_t dat);
+int  fdc_data(uint8_t dat);
 void fdc_spindown();
 void fdc_finishread();
 void fdc_notfound(int reason);
 void fdc_datacrcerror();
 void fdc_headercrcerror();
 void fdc_writeprotect();
-int fdc_getdata(int last);
+int  fdc_getdata(int last);
 void fdc_sectorid(uint8_t track, uint8_t side, uint8_t sector, uint8_t size, uint8_t crc1, uint8_t crc2);
 void fdc_indexpulse();
 /*extern int fdc_ready;
@@ -53,7 +53,7 @@ extern int motorspin;
 extern int motoron;
 
 extern int defaultwriteprot;
-// extern char discfns[4][260];
+//extern char discfns[4][260];
 
 extern int writeprot[2], fwriteprot[2];
 extern int disc_track[2];
@@ -63,6 +63,7 @@ extern int drive_type[2];
 
 /*Used in the Read A Track command. Only valid for disc_readsector(). */
 #define SECTOR_FIRST -2
-#define SECTOR_NEXT -1
+#define SECTOR_NEXT  -1
+
 
 #endif /* _DISC_H_ */

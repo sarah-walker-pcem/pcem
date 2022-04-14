@@ -8,4 +8,5 @@ void t3100e_turbo_set(uint8_t value);
 uint8_t t3100e_mono_get();
 void t3100e_mono_set(uint8_t value);
 
+
 #endif /* _T3100E_H_ */

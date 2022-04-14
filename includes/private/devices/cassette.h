@@ -32,4 +32,5 @@ void cassette_load(const char *filename);
 
 extern char cassettefn[256];
 
+
 #endif /* _CASSETTE_H_ */

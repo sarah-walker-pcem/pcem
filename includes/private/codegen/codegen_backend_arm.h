@@ -10,7 +10,7 @@
 #define HASH_SIZE 0x20000
 #define HASH_MASK 0x1ffff
 
-#define HASH(l) ((l)&0x1ffff)
+#define HASH(l) ((l) & 0x1ffff)
 
 #define BLOCK_MAX 0x3c0
 
@@ -25,5 +25,6 @@ void host_arm_call(codeblock_t *block, void *dst_addr);
 void host_arm_nop(codeblock_t *block);
 
 void codegen_alloc(codeblock_t *block, int size);
+
 
 #endif /* _CODEGEN_BACKEND_ARM_H_ */

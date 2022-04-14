@@ -1,21 +1,23 @@
-#include "device.h"
-#include "ibm.h"
-#include "io.h"
-#include "mca.h"
-#include "sound.h"
 #include <stdlib.h>
+#include "ibm.h"
+#include "device.h"
+#include "io.h"
+#include "sound.h"
+#include "mca.h"
 
 #include "sound_adlib.h"
 #include "sound_opl.h"
 
-typedef struct adlib_t {
+typedef struct adlib_t
+{
         opl_t opl;
 
         uint8_t pos_regs[8];
 } adlib_t;
 
-static void adlib_get_buffer(int32_t *buffer, int len, void *p) {
-        adlib_t *adlib = (adlib_t *)p;
+static void adlib_get_buffer(int32_t* buffer, int len, void* p)
+{
+        adlib_t* adlib = (adlib_t*)p;
         int c;
 
         opl2_update2(&adlib->opl);
@@ -26,23 +28,26 @@ static void adlib_get_buffer(int32_t *buffer, int len, void *p) {
         adlib->opl.pos = 0;
 }
 
-uint8_t adlib_mca_read(int port, void *p) {
-        adlib_t *adlib = (adlib_t *)p;
+uint8_t adlib_mca_read(int port, void* p)
+{
+        adlib_t* adlib = (adlib_t*)p;
 
         pclog("adlib_mca_read: port=%04x\n", port);
 
         return adlib->pos_regs[port & 7];
 }
 
-void adlib_mca_write(int port, uint8_t val, void *p) {
-        adlib_t *adlib = (adlib_t *)p;
+void adlib_mca_write(int port, uint8_t val, void* p)
+{
+        adlib_t* adlib = (adlib_t*)p;
 
         if (port < 0x102)
                 return;
 
         pclog("adlib_mca_write: port=%04x val=%02x\n", port, val);
 
-        switch (port) {
+        switch (port)
+        {
         case 0x102:
                 if ((adlib->pos_regs[2] & 1) && !(val & 1))
                         io_removehandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &adlib->opl);
@@ -53,8 +58,9 @@ void adlib_mca_write(int port, uint8_t val, void *p) {
         adlib->pos_regs[port & 7] = val;
 }
 
-void *adlib_init() {
-        adlib_t *adlib = malloc(sizeof(adlib_t));
+void* adlib_init()
+{
+        adlib_t* adlib = malloc(sizeof(adlib_t));
         memset(adlib, 0, sizeof(adlib_t));
 
         pclog("adlib_init\n");
@@ -65,8 +71,9 @@ void *adlib_init() {
         return adlib;
 }
 
-void *adlib_mca_init() {
-        adlib_t *adlib = adlib_init();
+void* adlib_mca_init()
+{
+        adlib_t* adlib = adlib_init();
 
         io_removehandler(0x0388, 0x0002, opl2_read, NULL, NULL, opl2_write, NULL, NULL, &adlib->opl);
         mca_add(adlib_mca_read, adlib_mca_write, NULL, adlib);
@@ -76,30 +83,33 @@ void *adlib_mca_init() {
         return adlib;
 }
 
-void adlib_close(void *p) {
-        adlib_t *adlib = (adlib_t *)p;
+void adlib_close(void* p)
+{
+        adlib_t* adlib = (adlib_t*)p;
 
         free(adlib);
 }
 
 device_t adlib_device =
-    {
-        "AdLib",
-        0,
-        adlib_init,
-        adlib_close,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "AdLib",
+                0,
+                adlib_init,
+                adlib_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };
 
 device_t adlib_mca_device =
-    {
-        "AdLib (MCA)",
-        DEVICE_MCA,
-        adlib_init,
-        adlib_close,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "AdLib (MCA)",
+                DEVICE_MCA,
+                adlib_init,
+                adlib_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };

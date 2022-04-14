@@ -3,4 +3,5 @@
 
 extern LPDIRECTINPUT lpdi;
 
+
 #endif /* _PLAT_DINPUT_H_ */

@@ -1,4 +1,4 @@
-/*
+/*  
  *          File: queue.h
  *        Author: Robert I. Pitts <rip@cs.bu.edu>
  * Last Modified: March 9, 2000
@@ -15,8 +15,8 @@
  * ERROR_*   These signal error conditions in queue functions
  *           and are used as exit codes for the program.
  */
-#define ERROR_QUEUE 2
-#define ERROR_MEMORY 3
+#define ERROR_QUEUE   2
+#define ERROR_MEMORY  3
 
 /*
  * Type: queueElementT
@@ -28,7 +28,7 @@
 typedef unsigned char *queueElementT;
 */
 
-struct queuepacket {
+struct queuepacket{
         int len;
         unsigned char data[2000];
 };
@@ -48,7 +48,7 @@ typedef struct queuepacket *queueElementT;
  * of struct.
  */
 
-typedef struct queueCDT *queueADT;
+typedef struct queueCDT *queueADT;	
 
 /*
  * Function: QueueCreate
@@ -84,6 +84,7 @@ void QueueDestroy(queueADT queue);
 void QueueEnter(queueADT queue, queueElementT element);
 queueElementT QueueDelete(queueADT queue);
 
+
 /*
  * Functions: QueueIsEmpty, QueueIsFull
  * Usage: if (QueueIsEmpty(queue)) ...
@@ -97,4 +98,4 @@ int QueueIsFull(queueADT queue);
 
 int QueuePeek(queueADT queue);
 
-#endif /* not defined _QUEUE_H */
+#endif  /* not defined _QUEUE_H */

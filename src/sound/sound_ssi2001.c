@@ -1,19 +1,21 @@
-#include "device.h"
+#include <stdlib.h>
 #include "ibm.h"
+#include "device.h"
 #include "io.h"
 #include "sound.h"
-#include <stdlib.h>
 
 #include "sound_resid.h"
 #include "sound_ssi2001.h"
 
-typedef struct ssi2001_t {
-        void *psid;
+typedef struct ssi2001_t
+{
+        void* psid;
         int16_t buffer[MAXSOUNDBUFLEN * 2];
         int pos;
 } ssi2001_t;
 
-static void ssi2001_update(ssi2001_t *ssi2001) {
+static void ssi2001_update(ssi2001_t* ssi2001)
+{
         if (ssi2001->pos >= sound_pos_global)
                 return;
 
@@ -21,8 +23,9 @@ static void ssi2001_update(ssi2001_t *ssi2001) {
         ssi2001->pos = sound_pos_global;
 }
 
-static void ssi2001_get_buffer(int32_t *buffer, int len, void *p) {
-        ssi2001_t *ssi2001 = (ssi2001_t *)p;
+static void ssi2001_get_buffer(int32_t* buffer, int len, void* p)
+{
+        ssi2001_t* ssi2001 = (ssi2001_t*)p;
         int c;
 
         ssi2001_update(ssi2001);
@@ -33,23 +36,26 @@ static void ssi2001_get_buffer(int32_t *buffer, int len, void *p) {
         ssi2001->pos = 0;
 }
 
-static uint8_t ssi2001_read(uint16_t addr, void *p) {
-        ssi2001_t *ssi2001 = (ssi2001_t *)p;
+static uint8_t ssi2001_read(uint16_t addr, void* p)
+{
+        ssi2001_t* ssi2001 = (ssi2001_t*)p;
 
         ssi2001_update(ssi2001);
 
         return sid_read(addr, p);
 }
 
-static void ssi2001_write(uint16_t addr, uint8_t val, void *p) {
-        ssi2001_t *ssi2001 = (ssi2001_t *)p;
+static void ssi2001_write(uint16_t addr, uint8_t val, void* p)
+{
+        ssi2001_t* ssi2001 = (ssi2001_t*)p;
 
         ssi2001_update(ssi2001);
         sid_write(addr, val, p);
 }
 
-void *ssi2001_init() {
-        ssi2001_t *ssi2001 = malloc(sizeof(ssi2001_t));
+void* ssi2001_init()
+{
+        ssi2001_t* ssi2001 = malloc(sizeof(ssi2001_t));
         memset(ssi2001, 0, sizeof(ssi2001_t));
 
         pclog("ssi2001_init\n");
@@ -60,8 +66,9 @@ void *ssi2001_init() {
         return ssi2001;
 }
 
-void ssi2001_close(void *p) {
-        ssi2001_t *ssi2001 = (ssi2001_t *)p;
+void ssi2001_close(void* p)
+{
+        ssi2001_t* ssi2001 = (ssi2001_t*)p;
 
         sid_close(ssi2001->psid);
 
@@ -69,12 +76,13 @@ void ssi2001_close(void *p) {
 }
 
 device_t ssi2001_device =
-    {
-        "Innovation SSI-2001",
-        0,
-        ssi2001_init,
-        ssi2001_close,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "Innovation SSI-2001",
+                0,
+                ssi2001_init,
+                ssi2001_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };

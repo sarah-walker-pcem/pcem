@@ -7,6 +7,7 @@
 
 void update_cga16_color(uint8_t cgamode);
 void cga_comp_init(int revision);
-Bit8u *Composite_Process(uint8_t cgamode, Bit8u border, Bit32u blocks /*, bool doublewidth*/, Bit8u *TempLine);
+Bit8u * Composite_Process(uint8_t cgamode, Bit8u border, Bit32u blocks/*, bool doublewidth*/, Bit8u *TempLine);
+
 
 #endif /* _VID_CGA_COMP_H_ */

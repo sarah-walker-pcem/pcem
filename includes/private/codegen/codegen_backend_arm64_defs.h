@@ -1,16 +1,16 @@
 #ifndef _CODEGEN_BACKEND_ARM64_DEFS_H_
 #define _CODEGEN_BACKEND_ARM64_DEFS_H_
 
-#define REG_W0 0
-#define REG_W1 1
-#define REG_W2 2
-#define REG_W3 3
-#define REG_W4 4
-#define REG_W5 5
-#define REG_W6 6
-#define REG_W7 7
-#define REG_W8 8
-#define REG_W9 9
+#define REG_W0   0
+#define REG_W1   1
+#define REG_W2   2
+#define REG_W3   3
+#define REG_W4   4
+#define REG_W5   5
+#define REG_W6   6
+#define REG_W7   7
+#define REG_W8   8
+#define REG_W9   9
 #define REG_W10 10
 #define REG_W11 11
 #define REG_W12 12
@@ -34,16 +34,16 @@
 #define REG_W30 30
 #define REG_WZR 31
 
-#define REG_X0 0
-#define REG_X1 1
-#define REG_X2 2
-#define REG_X3 3
-#define REG_X4 4
-#define REG_X5 5
-#define REG_X6 6
-#define REG_X7 7
-#define REG_X8 8
-#define REG_X9 9
+#define REG_X0   0
+#define REG_X1   1
+#define REG_X2   2
+#define REG_X3   3
+#define REG_X4   4
+#define REG_X5   5
+#define REG_X6   6
+#define REG_X7   7
+#define REG_X8   8
+#define REG_X9   9
 #define REG_X10 10
 #define REG_X11 11
 #define REG_X12 12
@@ -67,16 +67,16 @@
 #define REG_X30 30
 #define REG_XZR 31
 
-#define REG_V0 0
-#define REG_V1 1
-#define REG_V2 2
-#define REG_V3 3
-#define REG_V4 4
-#define REG_V5 5
-#define REG_V6 6
-#define REG_V7 7
-#define REG_V8 8
-#define REG_V9 9
+#define REG_V0   0
+#define REG_V1   1
+#define REG_V2   2
+#define REG_V3   3
+#define REG_V4   4
+#define REG_V5   5
+#define REG_V6   6
+#define REG_V7   7
+#define REG_V8   8
+#define REG_V9   9
 #define REG_V10 10
 #define REG_V11 11
 #define REG_V12 12
@@ -109,7 +109,7 @@
 
 #define REG_CPUSTATE REG_X29
 
-#define REG_TEMP REG_X7
+#define REG_TEMP  REG_X7
 #define REG_TEMP2 REG_X6
 
 #define REG_V_TEMP REG_V0
@@ -136,5 +136,6 @@ extern void *codegen_fp_round_quad;
 
 extern void *codegen_gpf_rout;
 extern void *codegen_exit_rout;
+
 
 #endif /* _CODEGEN_BACKEND_ARM64_DEFS_H_ */

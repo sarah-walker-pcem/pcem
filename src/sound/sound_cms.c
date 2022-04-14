@@ -1,6 +1,6 @@
-#include "ibm.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "ibm.h"
 
 #include "device.h"
 #include "io.h"
@@ -9,7 +9,8 @@
 
 #define MASTER_CLOCK 7159090
 
-typedef struct cms_t {
+typedef struct cms_t
+{
         int addrs[2];
         uint8_t regs[2][32];
         uint16_t latch[2][6];
@@ -29,13 +30,17 @@ typedef struct cms_t {
         int pos;
 } cms_t;
 
-void cms_update(cms_t *cms) {
-        for (; cms->pos < sound_pos_global; cms->pos++) {
+void cms_update(cms_t* cms)
+{
+        for (; cms->pos < sound_pos_global; cms->pos++)
+        {
                 int c, d;
                 int16_t out_l = 0, out_r = 0;
 
-                for (c = 0; c < 4; c++) {
-                        switch (cms->noisetype[c >> 1][c & 1]) {
+                for (c = 0; c < 4; c++)
+                {
+                        switch (cms->noisetype[c >> 1][c & 1])
+                        {
                         case 0:
                                 cms->noisefreq[c >> 1][c & 1] = MASTER_CLOCK / 256;
                                 break;
@@ -50,29 +55,34 @@ void cms_update(cms_t *cms) {
                                 break;
                         }
                 }
-                for (c = 0; c < 2; c++) {
-                        if (cms->regs[c][0x1C] & 1) {
-                                for (d = 0; d < 6; d++) {
-                                        if (cms->regs[c][0x14] & (1 << d)) {
-                                                if (cms->stat[c][d])
-                                                        out_l += (cms->vol[c][d][0] * 90);
-                                                if (cms->stat[c][d])
-                                                        out_r += (cms->vol[c][d][1] * 90);
+                for (c = 0; c < 2; c++)
+                {
+                        if (cms->regs[c][0x1C] & 1)
+                        {
+                                for (d = 0; d < 6; d++)
+                                {
+                                        if (cms->regs[c][0x14] & (1 << d))
+                                        {
+                                                if (cms->stat[c][d]) out_l += (cms->vol[c][d][0] * 90);
+                                                if (cms->stat[c][d]) out_r += (cms->vol[c][d][1] * 90);
                                                 cms->count[c][d] += cms->freq[c][d];
-                                                if (cms->count[c][d] >= 24000) {
+                                                if (cms->count[c][d] >= 24000)
+                                                {
                                                         cms->count[c][d] -= 24000;
                                                         cms->stat[c][d] ^= 1;
                                                 }
-                                        } else if (cms->regs[c][0x15] & (1 << d)) {
-                                                if (cms->noise[c][d / 3] & 1)
-                                                        out_l += (cms->vol[c][d][0] * 90);
-                                                if (cms->noise[c][d / 3] & 1)
-                                                        out_r += (cms->vol[c][d][0] * 90);
+                                        }
+                                        else if (cms->regs[c][0x15] & (1 << d))
+                                        {
+                                                if (cms->noise[c][d / 3] & 1) out_l += (cms->vol[c][d][0] * 90);
+                                                if (cms->noise[c][d / 3] & 1) out_r += (cms->vol[c][d][0] * 90);
                                         }
                                 }
-                                for (d = 0; d < 2; d++) {
+                                for (d = 0; d < 2; d++)
+                                {
                                         cms->noisecount[c][d] += cms->noisefreq[c][d];
-                                        while (cms->noisecount[c][d] >= 24000) {
+                                        while (cms->noisecount[c][d] >= 24000)
+                                        {
                                                 cms->noisecount[c][d] -= 24000;
                                                 cms->noise[c][d] <<= 1;
                                                 if (!(((cms->noise[c][d] & 0x4000) >> 8) ^ (cms->noise[c][d] & 0x40)))
@@ -86,8 +96,9 @@ void cms_update(cms_t *cms) {
         }
 }
 
-void cms_get_buffer(int32_t *buffer, int len, void *p) {
-        cms_t *cms = (cms_t *)p;
+void cms_get_buffer(int32_t* buffer, int len, void* p)
+{
+        cms_t* cms = (cms_t*)p;
 
         int c;
 
@@ -99,14 +110,16 @@ void cms_get_buffer(int32_t *buffer, int len, void *p) {
         cms->pos = 0;
 }
 
-void cms_write(uint16_t addr, uint8_t val, void *p) {
-        cms_t *cms = (cms_t *)p;
+void cms_write(uint16_t addr, uint8_t val, void* p)
+{
+        cms_t* cms = (cms_t*)p;
         int voice;
         int chip = (addr & 2) >> 1;
 
-        //        pclog("cms_write : addr %04X val %02X\n", addr, val);
+//        pclog("cms_write : addr %04X val %02X\n", addr, val);
 
-        switch (addr & 0xf) {
+        switch (addr & 0xf)
+        {
         case 1:
                 cms->addrs[0] = val & 31;
                 break;
@@ -118,7 +131,8 @@ void cms_write(uint16_t addr, uint8_t val, void *p) {
         case 2:
                 cms_update(cms);
                 cms->regs[chip][cms->addrs[chip] & 31] = val;
-                switch (cms->addrs[chip] & 31) {
+                switch (cms->addrs[chip] & 31)
+                {
                 case 0x00:
                 case 0x01:
                 case 0x02: /*Volume*/
@@ -161,11 +175,13 @@ void cms_write(uint16_t addr, uint8_t val, void *p) {
         }
 }
 
-uint8_t cms_read(uint16_t addr, void *p) {
-        cms_t *cms = (cms_t *)p;
+uint8_t cms_read(uint16_t addr, void* p)
+{
+        cms_t* cms = (cms_t*)p;
 
-        //        pclog("cms_read : addr %04X\n", addr);
-        switch (addr & 0xf) {
+//        pclog("cms_read : addr %04X\n", addr);
+        switch (addr & 0xf)
+        {
         case 0x1:
                 return cms->addrs[0];
         case 0x3:
@@ -179,8 +195,9 @@ uint8_t cms_read(uint16_t addr, void *p) {
         return 0xff;
 }
 
-void *cms_init() {
-        cms_t *cms = malloc(sizeof(cms_t));
+void* cms_init()
+{
+        cms_t* cms = malloc(sizeof(cms_t));
         memset(cms, 0, sizeof(cms_t));
 
         pclog("cms_init\n");
@@ -189,19 +206,21 @@ void *cms_init() {
         return cms;
 }
 
-void cms_close(void *p) {
-        cms_t *cms = (cms_t *)p;
+void cms_close(void* p)
+{
+        cms_t* cms = (cms_t*)p;
 
         free(cms);
 }
 
 device_t cms_device =
-    {
-        "Creative Music System / Game Blaster",
-        0,
-        cms_init,
-        cms_close,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "Creative Music System / Game Blaster",
+                0,
+                cms_init,
+                cms_close,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };

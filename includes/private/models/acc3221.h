@@ -3,4 +3,5 @@
 
 void acc3221_init();
 
+
 #endif /* _ACC3221_H_ */

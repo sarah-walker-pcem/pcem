@@ -24,13 +24,15 @@
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-VoiceFP::VoiceFP() {
+VoiceFP::VoiceFP()
+{
         nonlinearity = 1.f;
         set_chip_model(MOS6581FP);
 }
 
 /* Keep this at 1.f for 8580, there are no 6581-only codepaths in this file! */
-void VoiceFP::set_nonlinearity(float nl) {
+void VoiceFP::set_nonlinearity(float nl)
+{
         nonlinearity = nl;
         calculate_dac_tables();
 }
@@ -38,10 +40,12 @@ void VoiceFP::set_nonlinearity(float nl) {
 // ----------------------------------------------------------------------------
 // Set chip model.
 // ----------------------------------------------------------------------------
-void VoiceFP::set_chip_model(chip_model model) {
+void VoiceFP::set_chip_model(chip_model model)
+{
         wave.set_chip_model(model);
 
-        if (model == MOS6581FP) {
+        if (model == MOS6581FP)
+        {
                 /* there is some level from each voice even if the env is down and osc
                  * is stopped. You can hear this by routing a voice into filter (filter
                  * should be kept disabled for this) as the master level changes. This
@@ -53,7 +57,9 @@ void VoiceFP::set_chip_model(chip_model model) {
                  * has used another measurement technique and got 0x380. */
                 wave_zero = 0x600;
                 calculate_dac_tables();
-        } else {
+        }
+        else
+        {
                 /* 8580 is thought to be perfect, apart from small negative offset due to
                  * ext-in mixing, I think. */
                 voice_DC = 0;
@@ -62,7 +68,8 @@ void VoiceFP::set_chip_model(chip_model model) {
         }
 }
 
-void VoiceFP::calculate_dac_tables() {
+void VoiceFP::calculate_dac_tables()
+{
         int i;
         for (i = 0; i < 256; i++)
                 env_dac[i] = SIDFP::kinked_dac(i, nonlinearity, 8);
@@ -73,14 +80,16 @@ void VoiceFP::calculate_dac_tables() {
 // ----------------------------------------------------------------------------
 // Set sync source.
 // ----------------------------------------------------------------------------
-void VoiceFP::set_sync_source(VoiceFP *source) {
+void VoiceFP::set_sync_source(VoiceFP* source)
+{
         wave.set_sync_source(&source->wave);
 }
 
 // ----------------------------------------------------------------------------
 // Register functions.
 // ----------------------------------------------------------------------------
-void VoiceFP::writeCONTROL_REG(reg8 control) {
+void VoiceFP::writeCONTROL_REG(reg8 control)
+{
         wave.writeCONTROL_REG(control);
         envelope.writeCONTROL_REG(control);
 }
@@ -88,7 +97,8 @@ void VoiceFP::writeCONTROL_REG(reg8 control) {
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void VoiceFP::reset() {
+void VoiceFP::reset()
+{
         wave.reset();
         envelope.reset();
 }

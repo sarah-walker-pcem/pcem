@@ -254,4 +254,5 @@ void host_arm_VZIP_D8(codeblock_t *block, int d_reg, int m_reg);
 void host_arm_VZIP_D16(codeblock_t *block, int d_reg, int m_reg);
 void host_arm_VZIP_D32(codeblock_t *block, int d_reg, int m_reg);
 
+
 #endif /* _CODEGEN_BACKEND_ARM_OPS_H_ */

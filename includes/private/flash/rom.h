@@ -4,7 +4,8 @@
 FILE *romfopen(char *fn, char *mode);
 int rom_present(char *fn);
 
-typedef struct rom_t {
+typedef struct rom_t
+{
         uint8_t *rom;
         uint32_t mask;
         mem_mapping_t mapping;

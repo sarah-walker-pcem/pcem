@@ -1,5 +1,6 @@
 #ifdef __amd64__
 
+#include "ibm.h"
 #include "codegen.h"
 #include "codegen_allocator.h"
 #include "codegen_backend.h"
@@ -7,13 +8,12 @@
 #include "codegen_backend_x86-64_ops.h"
 #include "codegen_backend_x86-64_ops_sse.h"
 #include "codegen_reg.h"
-#include "ibm.h"
 #include "x86.h"
 
 #if defined(__linux__) || defined(__APPLE__)
-#include <stdlib.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <stdlib.h>
 #endif
 #if defined WIN32 || defined _WIN32 || defined _WIN32
 #include <windows.h>
@@ -37,16 +37,17 @@ void *codegen_gpf_rout;
 void *codegen_exit_rout;
 
 host_reg_def_t codegen_host_reg_list[CODEGEN_HOST_REGS] =
-    {
+{
         /*Note: while EAX and EDX are normally volatile registers under x86
           calling conventions, the recompiler will explicitly save and restore
           them across funcion calls*/
         {REG_EAX, 0},
         {REG_EBX, 0},
-        {REG_EDX, 0}};
+        {REG_EDX, 0}
+};
 
 host_reg_def_t codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
-    {
+{
 #if WIN64
         /*Windows x86-64 calling convention preserves XMM6-XMM15*/
         {REG_XMM6, 0},
@@ -60,9 +61,11 @@ host_reg_def_t codegen_host_fp_reg_list[CODEGEN_HOST_FP_REGS] =
         {REG_XMM2, HOST_REG_FLAG_VOLATILE},
         {REG_XMM3, HOST_REG_FLAG_VOLATILE},
         {REG_XMM4, HOST_REG_FLAG_VOLATILE},
-        {REG_XMM5, HOST_REG_FLAG_VOLATILE}};
+        {REG_XMM5, HOST_REG_FLAG_VOLATILE}
+};
 
-static void build_load_routine(codeblock_t *block, int size, int is_float) {
+static void build_load_routine(codeblock_t *block, int size, int is_float)
+{
         uint8_t *branch_offset;
         uint8_t *misaligned_offset;
 
@@ -90,8 +93,9 @@ static void build_load_routine(codeblock_t *block, int size, int is_float) {
         host_x86_SHR32_IMM(block, REG_ESI, 12);
         host_x86_MOV64_REG_IMM(block, REG_RDI, (uint64_t)(uintptr_t)readlookup2);
         host_x86_MOV64_REG_BASE_INDEX_SHIFT(block, REG_RSI, REG_RDI, REG_RSI, 3);
-        if (size != 1) {
-                host_x86_TEST32_REG_IMM(block, REG_ECX, size - 1);
+        if (size != 1)
+        {
+                host_x86_TEST32_REG_IMM(block, REG_ECX, size-1);
                 misaligned_offset = host_x86_JNZ_short(block);
         }
         host_x86_CMP64_REG_IMM(block, REG_RSI, (uint32_t)-1);
@@ -118,24 +122,33 @@ static void build_load_routine(codeblock_t *block, int size, int is_float) {
         host_x86_PUSH(block, REG_RDX);
 #if WIN64
         host_x86_SUB64_REG_IMM(block, REG_RSP, 0x20);
-        // host_x86_MOV32_REG_REG(block, REG_ECX, uop->imm_data);
+        //host_x86_MOV32_REG_REG(block, REG_ECX, uop->imm_data);
 #else
         host_x86_MOV32_REG_REG(block, REG_EDI, REG_ECX);
 #endif
-        if (size == 1 && !is_float) {
+        if (size == 1 && !is_float)
+        {
                 host_x86_CALL(block, (void *)readmembl);
                 host_x86_MOVZX_REG_32_8(block, REG_ECX, REG_EAX);
-        } else if (size == 2 && !is_float) {
+        }
+        else if (size == 2 && !is_float)
+        {
                 host_x86_CALL(block, (void *)readmemwl);
                 host_x86_MOVZX_REG_32_16(block, REG_ECX, REG_EAX);
-        } else if (size == 4 && !is_float) {
+        }
+        else if (size == 4 && !is_float)
+        {
                 host_x86_CALL(block, (void *)readmemll);
                 host_x86_MOV32_REG_REG(block, REG_ECX, REG_EAX);
-        } else if (size == 4 && is_float) {
+        }
+        else if (size == 4 && is_float)
+        {
                 host_x86_CALL(block, (void *)readmemll);
                 host_x86_MOVD_XREG_REG(block, REG_XMM_TEMP, REG_EAX);
                 host_x86_CVTSS2SD_XREG_XREG(block, REG_XMM_TEMP, REG_XMM_TEMP);
-        } else if (size == 8) {
+        }
+        else if (size == 8)
+        {
                 host_x86_CALL(block, (void *)readmemql);
                 host_x86_MOVQ_XREG_REG(block, REG_XMM_TEMP, REG_RAX);
         }
@@ -148,7 +161,8 @@ static void build_load_routine(codeblock_t *block, int size, int is_float) {
         host_x86_RET(block);
 }
 
-static void build_store_routine(codeblock_t *block, int size, int is_float) {
+static void build_store_routine(codeblock_t *block, int size, int is_float)
+{
         uint8_t *branch_offset;
         uint8_t *misaligned_offset;
 
@@ -177,8 +191,9 @@ static void build_store_routine(codeblock_t *block, int size, int is_float) {
         host_x86_SHR32_IMM(block, REG_ESI, 12);
         host_x86_MOV64_REG_IMM(block, REG_R8, (uint64_t)(uintptr_t)writelookup2);
         host_x86_MOV64_REG_BASE_INDEX_SHIFT(block, REG_RSI, REG_R8, REG_RSI, 3);
-        if (size != 1) {
-                host_x86_TEST32_REG_IMM(block, REG_EDI, size - 1);
+        if (size != 1)
+        {
+                host_x86_TEST32_REG_IMM(block, REG_EDI, size-1);
                 misaligned_offset = host_x86_JNZ_short(block);
         }
         host_x86_CMP64_REG_IMM(block, REG_RSI, (uint32_t)-1);
@@ -206,21 +221,21 @@ static void build_store_routine(codeblock_t *block, int size, int is_float) {
 #if WIN64
         host_x86_SUB64_REG_IMM(block, REG_RSP, 0x28);
         if (size == 4 && is_float)
-                host_x86_MOVD_REG_XREG(block, REG_EDX, REG_XMM_TEMP); // data
+                host_x86_MOVD_REG_XREG(block, REG_EDX, REG_XMM_TEMP); //data
         else if (size == 8)
-                host_x86_MOVQ_REG_XREG(block, REG_RDX, REG_XMM_TEMP); // data
+                host_x86_MOVQ_REG_XREG(block, REG_RDX, REG_XMM_TEMP); //data
         else
-                host_x86_MOV32_REG_REG(block, REG_EDX, REG_ECX); // data
-        host_x86_MOV32_REG_REG(block, REG_ECX, REG_EDI);         // address
+                host_x86_MOV32_REG_REG(block, REG_EDX, REG_ECX); //data
+        host_x86_MOV32_REG_REG(block, REG_ECX, REG_EDI); //address
 #else
         host_x86_SUB64_REG_IMM(block, REG_RSP, 0x8);
-        // host_x86_MOV32_REG_REG(block, REG_EDI, REG_ECX);  //address
+        //host_x86_MOV32_REG_REG(block, REG_EDI, REG_ECX);  //address
         if (size == 4 && is_float)
-                host_x86_MOVD_REG_XREG(block, REG_ESI, REG_XMM_TEMP); // data
+                host_x86_MOVD_REG_XREG(block, REG_ESI, REG_XMM_TEMP); //data
         else if (size == 8)
-                host_x86_MOVQ_REG_XREG(block, REG_RSI, REG_XMM_TEMP); // data
+                host_x86_MOVQ_REG_XREG(block, REG_RSI, REG_XMM_TEMP); //data
         else
-                host_x86_MOV32_REG_REG(block, REG_ESI, REG_ECX); // data
+                host_x86_MOV32_REG_REG(block, REG_ESI, REG_ECX); //data
 #endif
         if (size == 1)
                 host_x86_CALL(block, (void *)writemembl);
@@ -241,7 +256,8 @@ static void build_store_routine(codeblock_t *block, int size, int is_float) {
         host_x86_RET(block);
 }
 
-static void build_loadstore_routines(codeblock_t *block) {
+static void build_loadstore_routines(codeblock_t *block)
+{
         codegen_mem_load_byte = &codeblock[block_current].data[block_pos];
         build_load_routine(block, 1, 0);
         codegen_mem_load_word = &codeblock[block_current].data[block_pos];
@@ -269,7 +285,8 @@ static void build_loadstore_routines(codeblock_t *block) {
         build_store_routine(block, 8, 1);
 }
 
-void codegen_backend_init() {
+void codegen_backend_init()
+{
         codeblock_t *block;
         int c;
 
@@ -282,7 +299,7 @@ void codegen_backend_init() {
         for (c = 0; c < BLOCK_SIZE; c++)
                 codeblock[c].pc = BLOCK_PC_INVALID;
 
-        //        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
+//        pclog("Codegen is %p\n", (void *)pages[0xfab12 >> 12].block);
 
         block_current = 0;
         block_pos = 0;
@@ -300,7 +317,7 @@ void codegen_backend_init() {
         host_x86_XOR32_REG_REG(block, REG_EDI, REG_EDI);
         host_x86_XOR32_REG_REG(block, REG_ESI, REG_ESI);
 #endif
-        host_x86_CALL(block, (void *)x86gpf);
+	host_x86_CALL(block, (void *)x86gpf);
         codegen_exit_rout = &codeblock[block_current].data[block_pos];
         host_x86_ADD64_REG_IMM(block, REG_RSP, 0x38);
         host_x86_POP(block, REG_R15);
@@ -316,16 +333,19 @@ void codegen_backend_init() {
         block_write_data = NULL;
 
         asm(
-            "stmxcsr %0\n"
-            : "=m"(cpu_state.old_fp_control));
+                "stmxcsr %0\n"
+                : "=m" (cpu_state.old_fp_control)
+        );
         cpu_state.trunc_fp_control = cpu_state.old_fp_control | 0x6000;
 }
 
-void codegen_set_rounding_mode(int mode) {
+void codegen_set_rounding_mode(int mode)
+{
         cpu_state.new_fp_control = (cpu_state.old_fp_control & ~0x6000) | (mode << 13);
 }
 
-void codegen_backend_prologue(codeblock_t *block) {
+void codegen_backend_prologue(codeblock_t *block)
+{
         block_pos = BLOCK_START; /*Entry code*/
         host_x86_PUSH(block, REG_RBX);
         host_x86_PUSH(block, REG_RBP);
@@ -337,16 +357,18 @@ void codegen_backend_prologue(codeblock_t *block) {
         host_x86_PUSH(block, REG_R15);
         host_x86_SUB64_REG_IMM(block, REG_RSP, 0x38);
         host_x86_MOV64_REG_IMM(block, REG_RBP, ((uintptr_t)&cpu_state) + 128);
-        if (block->flags & CODEBLOCK_HAS_FPU) {
+        if (block->flags & CODEBLOCK_HAS_FPU)
+        {
                 host_x86_MOV32_REG_ABS(block, REG_EAX, &cpu_state.TOP);
                 host_x86_SUB32_REG_IMM(block, REG_EAX, block->TOP);
                 host_x86_MOV32_BASE_OFFSET_REG(block, REG_RSP, IREG_TOP_diff_stack_offset, REG_EAX);
         }
         if (block->flags & CODEBLOCK_NO_IMMEDIATES)
-                host_x86_MOV64_REG_IMM(block, REG_R12, (uintptr_t)ram);
+            host_x86_MOV64_REG_IMM(block, REG_R12, (uintptr_t)ram);
 }
 
-void codegen_backend_epilogue(codeblock_t *block) {
+void codegen_backend_epilogue(codeblock_t *block)
+{
         host_x86_ADD64_REG_IMM(block, REG_RSP, 0x38);
         host_x86_POP(block, REG_R15);
         host_x86_POP(block, REG_R14);

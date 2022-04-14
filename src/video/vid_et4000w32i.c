@@ -36,7 +36,7 @@ struct
 #define ACL_WRST 1
 #define ACL_RDST 2
 #define ACL_XYST 4
-#define ACL_SSO 8
+#define ACL_SSO  8
 
 struct
 {

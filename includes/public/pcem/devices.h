@@ -9,7 +9,8 @@
 #define CONFIG_SELECTION 3
 #define CONFIG_MIDI 4
 
-enum {
+enum
+{
         DEVICE_NOT_WORKING = 1, /*Device does not currently work correctly and will be disabled in a release build*/
         DEVICE_AT = 2,          /*Device requires an AT-compatible system*/
         DEVICE_MCA = 0x20,      /*Device requires an MCA system*/
@@ -17,12 +18,14 @@ enum {
         DEVICE_PS1 = 0x80       /*Device is only for IBM PS/1 Model 2011*/
 };
 
-typedef struct device_config_selection_t {
+typedef struct device_config_selection_t
+{
         char description[256];
         int value;
 } device_config_selection_t;
 
-typedef struct device_config_t {
+typedef struct device_config_t
+{
         char name[256];
         char description[256];
         int type;
@@ -31,31 +34,35 @@ typedef struct device_config_t {
         device_config_selection_t selection[30];
 } device_config_t;
 
-typedef struct device_t {
+typedef struct device_t
+{
         char name[50];
         uint32_t flags;
         void *(*init)();
         void (*close)(void *p);
-        int (*available)();
+        int  (*available)();
         void (*speed_changed)(void *p);
         void (*force_redraw)(void *p);
         void (*add_status_info)(char *s, int max_len, void *p);
         device_config_t *config;
 } device_t;
 
-typedef struct SOUND_CARD {
+typedef struct SOUND_CARD
+{
         char name[64];
         char internal_name[24];
         device_t *device;
 } SOUND_CARD;
 
-typedef struct video_timings_t {
+typedef struct video_timings_t
+{
         int type;
         int write_b, write_w, write_l;
         int read_b, read_w, read_l;
 } video_timings_t;
 
-typedef struct VIDEO_CARD {
+typedef struct VIDEO_CARD
+{
         char name[64];
         char internal_name[24];
         device_t *device;
@@ -64,7 +71,8 @@ typedef struct VIDEO_CARD {
         video_timings_t timing;
 } VIDEO_CARD;
 
-typedef struct MODEL {
+typedef struct MODEL
+{
         char name[64];
         int id;
         char internal_name[24];
@@ -80,7 +88,8 @@ typedef struct MODEL {
         struct device_t *device;
 } MODEL;
 
-typedef struct HDD_CONTROLLER {
+typedef struct HDD_CONTROLLER
+{
         char name[50];
         char internal_name[16];
         device_t *device;
@@ -89,18 +98,20 @@ typedef struct HDD_CONTROLLER {
         int is_scsi;
 } HDD_CONTROLLER;
 
-typedef struct NETWORK_CARD {
+typedef struct NETWORK_CARD
+{
         char name[32];
         char internal_name[24];
         device_t *device;
 } NETWORK_CARD;
 
-typedef struct lpt_device_t {
+typedef struct lpt_device_t
+{
         char name[50];
         uint32_t flags;
         void *(*init)();
         void (*close)(void *p);
-        int (*available)();
+        int  (*available)();
         void (*speed_changed)(void *p);
         void (*force_redraw)(void *p);
         void (*add_status_info)(char *s, int max_len, void *p);
@@ -110,7 +121,8 @@ typedef struct lpt_device_t {
         uint8_t (*read_status)(void *p);
 } lpt_device_t;
 
-typedef struct LPT_DEVICE {
+typedef struct LPT_DEVICE
+{
         char name[64];
         char internal_name[16];
         lpt_device_t *device;

@@ -6,4 +6,5 @@ void keyboard_olim24_poll();
 
 extern mouse_t mouse_olim24;
 
+
 #endif /* _KEYBOARD_OLIM24_H_ */

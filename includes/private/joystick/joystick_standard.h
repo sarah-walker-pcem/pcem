@@ -5,4 +5,5 @@ extern joystick_if_t joystick_standard_4button;
 extern joystick_if_t joystick_standard_6button;
 extern joystick_if_t joystick_standard_8button;
 
+
 #endif /* _JOYSTICK_STANDARD_H_ */

@@ -1,22 +1,25 @@
-#include "ibm.h"
 #include <stdlib.h>
+#include "ibm.h"
 
 #include "device.h"
-#include "ide.h"
 #include "io.h"
+#include "ide.h"
 #include "mem.h"
 #include "rom.h"
 #include "xtide.h"
 
-typedef struct xtide_t {
+typedef struct xtide_t
+{
         uint8_t data_high;
         rom_t bios_rom;
 } xtide_t;
 
-static void xtide_write(uint16_t port, uint8_t val, void *p) {
-        xtide_t *xtide = (xtide_t *)p;
+static void xtide_write(uint16_t port, uint8_t val, void* p)
+{
+        xtide_t* xtide = (xtide_t*)p;
 
-        switch (port & 0xf) {
+        switch (port & 0xf)
+        {
         case 0x0:
                 writeidew(0, val | (xtide->data_high << 8));
                 return;
@@ -41,11 +44,13 @@ static void xtide_write(uint16_t port, uint8_t val, void *p) {
         }
 }
 
-static uint8_t xtide_read(uint16_t port, void *p) {
-        xtide_t *xtide = (xtide_t *)p;
+static uint8_t xtide_read(uint16_t port, void* p)
+{
+        xtide_t* xtide = (xtide_t*)p;
         uint16_t tempw;
 
-        switch (port & 0xf) {
+        switch (port & 0xf)
+        {
         case 0x0:
                 tempw = readidew(0);
                 xtide->data_high = tempw >> 8;
@@ -70,8 +75,9 @@ static uint8_t xtide_read(uint16_t port, void *p) {
         return 0xff;
 }
 
-static void *xtide_init() {
-        xtide_t *xtide = malloc(sizeof(xtide_t));
+static void* xtide_init()
+{
+        xtide_t* xtide = malloc(sizeof(xtide_t));
         memset(xtide, 0, sizeof(xtide_t));
 
         rom_init(&xtide->bios_rom, "ide_xt.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
@@ -83,8 +89,9 @@ static void *xtide_init() {
         return xtide;
 }
 
-static void *xtide_at_init() {
-        xtide_t *xtide = malloc(sizeof(xtide_t));
+static void* xtide_at_init()
+{
+        xtide_t* xtide = malloc(sizeof(xtide_t));
         memset(xtide, 0, sizeof(xtide_t));
 
         rom_init(&xtide->bios_rom, "ide_at.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
@@ -93,8 +100,9 @@ static void *xtide_at_init() {
         return xtide;
 }
 
-static void *xtide_ps1_init() {
-        xtide_t *xtide = malloc(sizeof(xtide_t));
+static void* xtide_ps1_init()
+{
+        xtide_t* xtide = malloc(sizeof(xtide_t));
         memset(xtide, 0, sizeof(xtide_t));
 
         rom_init(&xtide->bios_rom, "ide_at_1_1_5.bin", 0xc8000, 0x4000, 0x3fff, 0, MEM_MAPPING_EXTERNAL);
@@ -103,54 +111,61 @@ static void *xtide_ps1_init() {
         return xtide;
 }
 
-static void xtide_close(void *p) {
-        xtide_t *xtide = (xtide_t *)p;
+static void xtide_close(void* p)
+{
+        xtide_t* xtide = (xtide_t*)p;
 
         free(xtide);
 }
 
-static int xtide_available() {
+static int xtide_available()
+{
         return rom_present("ide_xt.bin");
 }
 
-static int xtide_at_available() {
+static int xtide_at_available()
+{
         return rom_present("ide_at.bin");
 }
 
-static int xtide_ps1_available() {
+static int xtide_ps1_available()
+{
         return rom_present("ide_at_1_1_5.bin");
 }
 
 device_t xtide_device =
-    {
-        "XTIDE",
-        0,
-        xtide_init,
-        xtide_close,
-        xtide_available,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "XTIDE",
+                0,
+                xtide_init,
+                xtide_close,
+                xtide_available,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };
 device_t xtide_at_device =
-    {
-        "XTIDE (AT)",
-        DEVICE_AT,
-        xtide_at_init,
-        xtide_close,
-        xtide_at_available,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "XTIDE (AT)",
+                DEVICE_AT,
+                xtide_at_init,
+                xtide_close,
+                xtide_at_available,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };
 device_t xtide_ps1_device =
-    {
-        "XTIDE (PS/1)",
-        DEVICE_PS1,
-        xtide_ps1_init,
-        xtide_close,
-        xtide_ps1_available,
-        NULL,
-        NULL,
-        NULL,
-        NULL};
+        {
+                "XTIDE (PS/1)",
+                DEVICE_PS1,
+                xtide_ps1_init,
+                xtide_close,
+                xtide_ps1_available,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+        };

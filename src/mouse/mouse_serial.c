@@ -1,20 +1,22 @@
+#include <stdlib.h>
 #include "ibm.h"
 #include "mouse.h"
 #include "pic.h"
 #include "serial.h"
 #include "timer.h"
-#include <stdlib.h>
 
-typedef struct mouse_serial_t {
+typedef struct mouse_serial_t
+{
         int mousepos;
         pc_timer_t mousedelay_timer;
         int oldb;
-        SERIAL *serial;
+        SERIAL* serial;
 } mouse_serial_t;
 
-void mouse_serial_poll(int x, int y, int z, int b, void *p) {
-        mouse_serial_t *mouse = (mouse_serial_t *)p;
-        SERIAL *serial = mouse->serial;
+void mouse_serial_poll(int x, int y, int z, int b, void* p)
+{
+        mouse_serial_t* mouse = (mouse_serial_t*)p;
+        SERIAL* serial = mouse->serial;
         uint8_t mousedat[3];
 
         if (!(serial->ier & 1))
@@ -23,52 +25,51 @@ void mouse_serial_poll(int x, int y, int z, int b, void *p) {
                 return;
 
         mouse->oldb = b;
-        if (x > 127)
-                x = 127;
-        if (y > 127)
-                y = 127;
-        if (x < -128)
-                x = -128;
-        if (y < -128)
-                y = -128;
+        if (x > 127) x = 127;
+        if (y > 127) y = 127;
+        if (x < -128) x = -128;
+        if (y < -128) y = -128;
 
         /*Use Microsoft format*/
         mousedat[0] = 0x40;
         mousedat[0] |= (((y >> 6) & 3) << 2);
         mousedat[0] |= ((x >> 6) & 3);
-        if (b & 1)
-                mousedat[0] |= 0x20;
-        if (b & 2)
-                mousedat[0] |= 0x10;
+        if (b & 1) mousedat[0] |= 0x20;
+        if (b & 2) mousedat[0] |= 0x10;
         mousedat[1] = x & 0x3F;
         mousedat[2] = y & 0x3F;
 
-        if (!(serial->mctrl & 0x10)) {
-                //                pclog("Serial data %02X %02X %02X\n", mousedat[0], mousedat[1], mousedat[2]);
+        if (!(serial->mctrl & 0x10))
+        {
+//                pclog("Serial data %02X %02X %02X\n", mousedat[0], mousedat[1], mousedat[2]);
                 serial_write_fifo(mouse->serial, mousedat[0]);
                 serial_write_fifo(mouse->serial, mousedat[1]);
                 serial_write_fifo(mouse->serial, mousedat[2]);
         }
 }
 
-void mouse_serial_rcr(struct SERIAL *serial, void *p) {
-        mouse_serial_t *mouse = (mouse_serial_t *)p;
+void mouse_serial_rcr(struct SERIAL* serial, void* p)
+{
+        mouse_serial_t* mouse = (mouse_serial_t*)p;
 
         mouse->mousepos = -1;
         timer_set_delay_u64(&mouse->mousedelay_timer, TIMER_USEC * 5000);
 }
 
-void mousecallback(void *p) {
-        mouse_serial_t *mouse = (mouse_serial_t *)p;
+void mousecallback(void* p)
+{
+        mouse_serial_t* mouse = (mouse_serial_t*)p;
 
-        if (mouse->mousepos == -1) {
+        if (mouse->mousepos == -1)
+        {
                 mouse->mousepos = 0;
                 serial_write_fifo(mouse->serial, 'M');
         }
 }
 
-void *mouse_serial_init() {
-        mouse_serial_t *mouse = (mouse_serial_t *)malloc(sizeof(mouse_serial_t));
+void* mouse_serial_init()
+{
+        mouse_serial_t* mouse = (mouse_serial_t*)malloc(sizeof(mouse_serial_t));
         memset(mouse, 0, sizeof(mouse_serial_t));
 
         mouse->serial = &serial1;
@@ -79,8 +80,9 @@ void *mouse_serial_init() {
         return mouse;
 }
 
-void mouse_serial_close(void *p) {
-        mouse_serial_t *mouse = (mouse_serial_t *)p;
+void mouse_serial_close(void* p)
+{
+        mouse_serial_t* mouse = (mouse_serial_t*)p;
 
         free(mouse);
 
@@ -88,9 +90,10 @@ void mouse_serial_close(void *p) {
 }
 
 mouse_t mouse_serial_microsoft =
-    {
-        "Microsoft 2-button mouse (serial)",
-        mouse_serial_init,
-        mouse_serial_close,
-        mouse_serial_poll,
-        MOUSE_TYPE_SERIAL};
+        {
+                "Microsoft 2-button mouse (serial)",
+                mouse_serial_init,
+                mouse_serial_close,
+                mouse_serial_poll,
+                MOUSE_TYPE_SERIAL
+        };

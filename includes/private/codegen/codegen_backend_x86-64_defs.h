@@ -30,8 +30,8 @@
 #define REG_RBP 5
 #define REG_RSI 6
 #define REG_RDI 7
-#define REG_R8 8
-#define REG_R9 9
+#define REG_R8  8
+#define REG_R9  9
 #define REG_R10 10
 #define REG_R11 11
 #define REG_R12 12
@@ -69,5 +69,6 @@ extern void *codegen_mem_store_double;
 
 extern void *codegen_gpf_rout;
 extern void *codegen_exit_rout;
+
 
 #endif /* _CODEGEN_BACKEND_X86_64_DEFS_H_ */

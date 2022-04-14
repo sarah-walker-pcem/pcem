@@ -1,7 +1,8 @@
 #include "wx-common.h"
 #include "config.h"
 
-void wx_loadconfig() {
+void wx_loadconfig()
+{
         show_machine_info = config_get_int(CFG_GLOBAL, "wxWidgets", "show_machine_info", show_machine_info);
         show_disc_activity = config_get_int(CFG_GLOBAL, "wxWidgets", "show_disc_activity", show_disc_activity);
         show_speed_history = config_get_int(CFG_GLOBAL, "wxWidgets", "show_speed_history", show_speed_history);
@@ -16,7 +17,8 @@ void wx_loadconfig() {
         wx_window_y = config_get_int(CFG_GLOBAL, "wxWidgets", "window_y", wx_window_y);
 }
 
-void wx_saveconfig() {
+void wx_saveconfig()
+{
         config_set_int(CFG_GLOBAL, "wxWidgets", "show_machine_info", show_machine_info);
         config_set_int(CFG_GLOBAL, "wxWidgets", "show_disc_activity", show_disc_activity);
         config_set_int(CFG_GLOBAL, "wxWidgets", "show_speed_history", show_speed_history);
