@@ -20,103 +20,94 @@
 
 *************************************************************************/
 
-#include <stdlib.h>
-#include "ibm.h"
 #include "pzx.h"
+#include "ibm.h"
+#include <stdlib.h>
 
-/* This module is intended to abstract all the details of a PZX file and 
+/* This module is intended to abstract all the details of a PZX file and
  * emit its contents as a bitstream in a form suitable for PCem. Similar
- * modules could be written to add support for other tape formats such as TZX, 
+ * modules could be written to add support for other tape formats such as TZX,
  * TAP or CSW. */
 
 #define CAS_LOG(x) pclog x
 /* #define CAS_LOG(x)  */
 
-static uint32_t peek2(uint8_t* data)
-{
+static uint32_t peek2(uint8_t *data) {
         return (((uint32_t)data[1]) << 8) | data[0];
 }
 
-static uint32_t peek4(uint8_t* data)
-{
+static uint32_t peek4(uint8_t *data) {
         return (((uint32_t)data[3]) << 24) |
                (((uint32_t)data[2]) << 16) |
                (((uint32_t)data[1]) << 8) | data[0];
 }
 
 /* Cue up the next pulse definition from the current PULS block. */
-static void pzx_parse_pulse(pzxfile_t* pzx)
-{
+static void pzx_parse_pulse(pzxfile_t *pzx) {
         pzx->puls_duration = peek2(pzx->curblock + pzx->puls_ptr);
         pzx->puls_ptr += 2;
-        if (pzx->puls_duration > 0x8000)
-        {
+        if (pzx->puls_duration > 0x8000) {
                 pzx->puls_count = pzx->puls_duration & 0x7FFF;
                 pzx->puls_duration = peek2(pzx->curblock + pzx->puls_ptr);
                 pzx->puls_ptr += 2;
         }
-        if (pzx->puls_duration >= 0x8000)
-        {
+        if (pzx->puls_duration >= 0x8000) {
                 pzx->puls_duration &= 0x7FFF;
                 pzx->puls_duration <<= 16;
                 pzx->puls_duration |= peek2(pzx->curblock + pzx->puls_ptr);
                 pzx->puls_ptr += 2;
         }
-        if (!pzx->puls_count) pzx->puls_count = 1;
+        if (!pzx->puls_count)
+                pzx->puls_count = 1;
 }
 
-void pzx_init(pzxfile_t* pzx)
-{
+void pzx_init(pzxfile_t *pzx) {
         memset(pzx, 0, sizeof(pzxfile_t));
         pzx->state = PZX_CLOSED;
 }
 
-/* Load the next block from a PZX-format file. 
+/* Load the next block from a PZX-format file.
  *
  * Returns block if successful, NULL if end of file or error
  * Caller must free the block with free(). */
-uint8_t* pzx_load_block(FILE* fp)
-{
+uint8_t *pzx_load_block(FILE *fp) {
         uint8_t block_header[8];
-        uint8_t* block_data;
+        uint8_t *block_data;
         uint32_t block_len;
 
         /* The first 8 bytes of a PZX block are fixed: the first 4 give
          * the ID, the second 4 the length (excluding the header itself) */
-        if (fread(block_header, 1, 8, fp) < 8) return NULL;        /* EoF */
+        if (fread(block_header, 1, 8, fp) < 8)
+                return NULL; /* EoF */
 
         block_len = peek4(block_header + 4);
         block_data = malloc(8 + block_len);
-        if (!block_data) return NULL;
+        if (!block_data)
+                return NULL;
         memcpy(block_data, block_header, 8);
-        if (!block_len)        /* Block is only the header */
+        if (!block_len) /* Block is only the header */
         {
-/*		CAS_LOG(("Loaded PZX block: %-4.4s\n", block_data)); */
+                /*		CAS_LOG(("Loaded PZX block: %-4.4s\n", block_data)); */
                 return block_data;
         }
-        if (fread(block_data + 8, 1, block_len, fp) < block_len)
-        {
-                free(block_data);        /* Unexpected EoF */
+        if (fread(block_data + 8, 1, block_len, fp) < block_len) {
+                free(block_data); /* Unexpected EoF */
                 return NULL;
         }
-/* 	CAS_LOG(("Loaded PZX block: %-4.4s\n", block_data)); */
+        /* 	CAS_LOG(("Loaded PZX block: %-4.4s\n", block_data)); */
         return block_data;
 }
 
 /* Search the current file for PZX version headers and check they're all 1.x */
-static const char* pzx_check_version(FILE* fp)
-{
-        uint8_t* block;
+static const char *pzx_check_version(FILE *fp) {
+        uint8_t *block;
         static char message[80];
 
         rewind(fp);
-        while ((block = pzx_load_block(fp)))
-        {
-                if (!memcmp(block, "PZXT", 4))
-                {
+        while ((block = pzx_load_block(fp))) {
+                if (!memcmp(block, "PZXT", 4)) {
                         CAS_LOG(("PZX version %d.%d\n", block[8], block[9]));
-                        if (block[8] != 1)
-                        {
+                        if (block[8] != 1) {
                                 sprintf(message, "Unsupported PZX version %d.%d\n", block[8], block[9]);
                                 free(block);
                                 return message;
@@ -128,14 +119,14 @@ static const char* pzx_check_version(FILE* fp)
         return NULL;
 }
 
-const char* pzx_open(pzxfile_t* pzx, FILE* fp)
-{
-        const char* result;
+const char *pzx_open(pzxfile_t *pzx, FILE *fp) {
+        const char *result;
 
         rewind(fp);
         /* Check that this file is compatible */
         result = pzx_check_version(fp);
-        if (result) return result;
+        if (result)
+                return result;
 
         pzx->level = 0;
         pzx->state = PZX_IDLE;
@@ -143,15 +134,12 @@ const char* pzx_open(pzxfile_t* pzx, FILE* fp)
         return NULL;
 }
 
-void pzx_close(pzxfile_t* pzx)
-{
-        if (pzx->input)
-        {
+void pzx_close(pzxfile_t *pzx) {
+        if (pzx->input) {
                 fclose(pzx->input);
                 pzx->input = NULL;
         }
-        if (pzx->curblock)
-        {
+        if (pzx->curblock) {
                 free(pzx->curblock);
                 pzx->curblock = NULL;
         }
@@ -159,19 +147,16 @@ void pzx_close(pzxfile_t* pzx)
 }
 
 /* Read the next block of type DATA, PAUS or PULS */
-int pzx_next_block(pzxfile_t* pzx)
-{
+int pzx_next_block(pzxfile_t *pzx) {
         long pos;
 
         pos = ftell(pzx->input);
-        while (pzx->state == PZX_IDLE)
-        {
-                uint8_t* blk;
+        while (pzx->state == PZX_IDLE) {
+                uint8_t *blk;
 
                 /* In idle state there should be no current block. But
                  * make sure of that */
-                if (pzx->curblock)
-                {
+                if (pzx->curblock) {
                         free(pzx->curblock);
                         pzx->curblock = NULL;
                 }
@@ -181,27 +166,24 @@ int pzx_next_block(pzxfile_t* pzx)
 
                 /* If that didn't load we've reached the end of file; wrap to
                  * beginning. */
-                if (!blk)
-                {
+                if (!blk) {
                         rewind(pzx->input);
                         blk = pzx_load_block(pzx->input);
-                        if (!blk)        /* Couldn't even load first block */
+                        if (!blk) /* Couldn't even load first block */
                         {
                                 pzx_close(pzx);
                                 return 0;
                         }
                         /* Have we read the whole file and come back to where
                          * we were? */
-                        if (ftell(pzx->input) == pos)
-                        {
+                        if (ftell(pzx->input) == pos) {
                                 free(blk);
                                 pzx_close(pzx);
                                 return 0;
                         }
                 }
                 /* We have loaded the next block. What is it? */
-                if (!memcmp(blk, "PULS", 4))
-                {
+                if (!memcmp(blk, "PULS", 4)) {
                         pzx->state = PZX_IN_PULS;
                         pzx->curblock = blk;
                         pzx->puls_len = 8 + peek4(blk + 4);
@@ -211,19 +193,15 @@ int pzx_next_block(pzxfile_t* pzx)
                         pzx->puls_duration = 0;
                         pzx->level = 0;
                         CAS_LOG(("Beginning PULS block\n"));
-                }
-                else if (!memcmp(blk, "PAUS", 4))
-                {
+                } else if (!memcmp(blk, "PAUS", 4)) {
                         pzx->state = PZX_IN_PAUS;
                         pzx->curblock = blk;
                         pzx->paus_remain = peek4(blk + 8);
                         pzx->level = (pzx->paus_remain >> 31);
                         pzx->paus_remain &= 0x7FFFFFFF;
                         CAS_LOG(("Beginning PAUS block, duration=%d\n",
-                                pzx->paus_remain));
-                }
-                else if (!memcmp(blk, "DATA", 4))
-                {
+                                 pzx->paus_remain));
+                } else if (!memcmp(blk, "DATA", 4)) {
                         pzx->state = PZX_IN_DATA;
                         pzx->curblock = blk;
                         pzx->data_bits = peek4(blk + 8);
@@ -239,26 +217,24 @@ int pzx_next_block(pzxfile_t* pzx)
                         pzx->data_mask = 0x80;
                         CAS_LOG(("Beginning DATA block, length=%d p0=%d p1=%d"
                                  " data_ptr=%d\n",
-                                pzx->data_bits,
-                                pzx->data_p0, pzx->data_p1,
-                                pzx->data_ptr));
+                                 pzx->data_bits,
+                                 pzx->data_p0, pzx->data_p1,
+                                 pzx->data_ptr));
                 }
         }
         return 1;
 }
 
-static void pzx_endblock(pzxfile_t* pzx)
-{
-        if (pzx->curblock) free(pzx->curblock);
+static void pzx_endblock(pzxfile_t *pzx) {
+        if (pzx->curblock)
+                free(pzx->curblock);
         pzx->curblock = NULL;
         pzx->state = PZX_IDLE;
 }
 
 /* PAUS is easy - just run the timer down */
-static int pzx_advance_paus(pzxfile_t* pzx, int time)
-{
-        if (pzx->paus_remain > time)
-        {
+static int pzx_advance_paus(pzxfile_t *pzx, int time) {
+        if (pzx->paus_remain > time) {
                 pzx->paus_remain -= time;
                 return 0;
         }
@@ -267,17 +243,14 @@ static int pzx_advance_paus(pzxfile_t* pzx, int time)
         return time;
 }
 
-static int pzx_advance_puls(pzxfile_t* pzx, int time)
-{
+static int pzx_advance_puls(pzxfile_t *pzx, int time) {
         /* At the start of a pulse sequence? */
-        if (pzx->puls_count == 0)
-        {
+        if (pzx->puls_count == 0) {
                 pzx_parse_pulse(pzx);
                 pzx->puls_remain = pzx->puls_duration;
         }
         /* Does sample trigger a pulse change? If not, that's easy. */
-        if (time < pzx->puls_remain)
-        {
+        if (time < pzx->puls_remain) {
                 pzx->puls_remain -= time;
                 return 0;
         }
@@ -287,15 +260,13 @@ static int pzx_advance_puls(pzxfile_t* pzx, int time)
          * straightforward; just flip the level and continue */
         --pzx->puls_count;
         pzx->level = !pzx->level;
-        if (pzx->puls_count)
-        {
+        if (pzx->puls_count) {
                 pzx->puls_remain = pzx->puls_duration;
                 return time;
         }
         /* If we've reached the end of the pulse sequence, there may be
          * another one */
-        if (pzx->puls_ptr < pzx->puls_len)
-        {
+        if (pzx->puls_ptr < pzx->puls_len) {
                 return time;
         }
         /* If there isn't another one, it's the end of the block */
@@ -304,16 +275,13 @@ static int pzx_advance_puls(pzxfile_t* pzx, int time)
 }
 
 /* Decode a DATA block */
-static int pzx_advance_data(pzxfile_t* pzx, int time)
-{
+static int pzx_advance_data(pzxfile_t *pzx, int time) {
         uint8_t bit;
 
         /* Reached end of data? */
-        if (pzx->data_bits == 0)
-        {
+        if (pzx->data_bits == 0) {
                 /* Time interval is covered by the tail bit */
-                if (pzx->data_tail > time)
-                {
+                if (pzx->data_tail > time) {
                         pzx->data_tail -= time;
                         return 0;
                 }
@@ -323,25 +291,20 @@ static int pzx_advance_data(pzxfile_t* pzx, int time)
                 return time;
         }
         /* No more time remaining on the current bit? */
-        if (pzx->data_p < 1 && !pzx->data_remain)
-        {
+        if (pzx->data_p < 1 && !pzx->data_remain) {
                 bit = pzx->curblock[pzx->data_ptr] & pzx->data_mask;
                 pzx->data_mask >>= 1;
-                if (!pzx->data_mask)
-                {
+                if (!pzx->data_mask) {
                         pzx->data_mask = 0x80;
                         ++pzx->data_ptr;
                 }
                 --pzx->data_bits;
 
-                if (bit)
-                {
+                if (bit) {
                         pzx->data_p = pzx->data_p1;
                         pzx->data_w = 16 + 2 * pzx->data_p0;
                         pzx->data_remain = 0;
-                }
-                else
-                {
+                } else {
                         pzx->data_p = pzx->data_p0;
                         pzx->data_w = 16;
                         pzx->data_remain = 0;
@@ -349,22 +312,18 @@ static int pzx_advance_data(pzxfile_t* pzx, int time)
         }
         /* See if we've started processing the current waveform. If not,
          * load its first element (assuming that there is one) */
-        if (!pzx->data_remain)
-        {
-                if (pzx->data_p)
-                {
+        if (!pzx->data_remain) {
+                if (pzx->data_p) {
                         pzx->data_remain = peek2(pzx->curblock + pzx->data_w);
                         pzx->data_w += 2;
                         pzx->data_p--;
                 }
         }
-        if (pzx->data_remain > time)
-        {
+        if (pzx->data_remain > time) {
                 /* Time advance is contained within current wave */
                 pzx->data_remain -= time;
                 return 0;
-        }
-        else        /* Move on to next element of wave / next bit / next block */
+        } else /* Move on to next element of wave / next bit / next block */
         {
                 time -= pzx->data_remain;
                 pzx->data_remain = 0;
@@ -374,16 +333,15 @@ static int pzx_advance_data(pzxfile_t* pzx, int time)
         return time;
 }
 
-int pzx_advance(pzxfile_t* pzx, int time)
-{
-        if (pzx->state == PZX_CLOSED) return 0;        /* No tape loaded */
+int pzx_advance(pzxfile_t *pzx, int time) {
+        if (pzx->state == PZX_CLOSED)
+                return 0; /* No tape loaded */
 
-        while (time)
-        {
-                switch (pzx->state)
-                {
+        while (time) {
+                switch (pzx->state) {
                 case PZX_IDLE:
-                        if (!pzx_next_block(pzx)) return 0;
+                        if (!pzx_next_block(pzx))
+                                return 0;
                         break;
                 case PZX_IN_PULS:
                         time = pzx_advance_puls(pzx, time);
@@ -396,11 +354,7 @@ int pzx_advance(pzxfile_t* pzx, int time)
                         break;
                 case PZX_CLOSED: /*Should never get here*/
                         return 0;
-
                 }
         }
         return pzx->level;
 }
-
-
-

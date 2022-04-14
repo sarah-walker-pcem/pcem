@@ -1,6 +1,6 @@
+#include "sound_speaker.h"
 #include "ibm.h"
 #include "sound.h"
-#include "sound_speaker.h"
 
 int speaker_mute = 0;
 
@@ -11,23 +11,19 @@ static int speaker_pos = 0;
 int speaker_gated = 0;
 int speaker_enable = 0, was_speaker_enable = 0;
 
-void speaker_update()
-{
+void speaker_update() {
         int16_t val;
 
-//        printf("SPeaker - %i %i %i %02X\n",speakval,gated,speakon,pit.m[2]);
-        for (; speaker_pos < sound_pos_global; speaker_pos++)
-        {
-                if (speaker_gated && was_speaker_enable)
-                {
+        //        printf("SPeaker - %i %i %i %02X\n",speakval,gated,speakon,pit.m[2]);
+        for (; speaker_pos < sound_pos_global; speaker_pos++) {
+                if (speaker_gated && was_speaker_enable) {
                         if (!pit.m[2] || pit.m[2] == 4)
                                 val = speakval;
                         else if (pit.l[2] < 0x40)
                                 val = 0xa00;
                         else
                                 val = speakon ? 0x1400 : 0;
-                }
-                else
+                } else
                         val = was_speaker_enable ? 0x1400 : 0;
 
                 if (!speaker_enable)
@@ -37,14 +33,12 @@ void speaker_update()
         }
 }
 
-static void speaker_get_buffer(int32_t* buffer, int len, void* p)
-{
+static void speaker_get_buffer(int32_t *buffer, int len, void *p) {
         int c;
 
         speaker_update();
 
-        if (!speaker_mute)
-        {
+        if (!speaker_mute) {
                 for (c = 0; c < len * 2; c++)
                         buffer[c] += speaker_buffer[c >> 1];
         }
@@ -52,8 +46,7 @@ static void speaker_get_buffer(int32_t* buffer, int len, void* p)
         speaker_pos = 0;
 }
 
-void speaker_init()
-{
+void speaker_init() {
         sound_add_handler(speaker_get_buffer, NULL);
         speaker_mute = 0;
 }

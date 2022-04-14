@@ -1,22 +1,19 @@
 /*STG1702 true colour RAMDAC emulation*/
+#include "vid_stg_ramdac.h"
 #include "ibm.h"
 #include "mem.h"
-#include "video.h"
 #include "vid_svga.h"
-#include "vid_stg_ramdac.h"
+#include "video.h"
 
-static int stg_state_read[2][8] = {{ 1, 2, 3, 4, 0, 0, 0, 0 }, { 1, 2, 3, 4, 5, 6, 7, 7 }};
-static int stg_state_write[8] = { 0, 0, 0, 0, 0, 6, 7, 7 };
+static int stg_state_read[2][8] = {{1, 2, 3, 4, 0, 0, 0, 0}, {1, 2, 3, 4, 5, 6, 7, 7}};
+static int stg_state_write[8] = {0, 0, 0, 0, 0, 6, 7, 7};
 
-void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t* ramdac, svga_t* svga)
-{
+void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t *ramdac, svga_t *svga) {
         int didwrite;
-        //if (CS!=0xC000) pclog("OUT RAMDAC %04X %02X %i %04X:%04X\n",addr,val,stg_ramdac.magic_count,CS,pc);
-        switch (addr)
-        {
+        // if (CS!=0xC000) pclog("OUT RAMDAC %04X %02X %i %04X:%04X\n",addr,val,stg_ramdac.magic_count,CS,pc);
+        switch (addr) {
         case 0x3c6:
-                switch (ramdac->magic_count)
-                {
+                switch (ramdac->magic_count) {
                 case 0:
                 case 1:
                 case 2:
@@ -41,10 +38,8 @@ void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t* ramdac, svga_t* sv
                 }
                 didwrite = (ramdac->magic_count >= 4);
                 ramdac->magic_count = stg_state_write[ramdac->magic_count & 7];
-                if (ramdac->command & 8)
-                {
-                        switch (ramdac->regs[3])
-                        {
+                if (ramdac->command & 8) {
+                        switch (ramdac->regs[3]) {
                         case 0:
                         case 5:
                         case 7:
@@ -67,11 +62,8 @@ void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t* ramdac, svga_t* sv
                                 svga->bpp = 8;
                                 break;
                         }
-                }
-                else
-                {
-                        switch (ramdac->command >> 5)
-                        {
+                } else {
+                        switch (ramdac->command >> 5) {
                         case 0:
                                 svga->bpp = 8;
                                 break;
@@ -90,7 +82,8 @@ void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t* ramdac, svga_t* sv
                         }
                 }
                 svga_recalctimings(svga);
-                if (didwrite) return;
+                if (didwrite)
+                        return;
                 break;
         case 0x3c7:
         case 0x3c8:
@@ -101,15 +94,12 @@ void stg_ramdac_out(uint16_t addr, uint8_t val, stg_ramdac_t* ramdac, svga_t* sv
         svga_out(addr, val, svga);
 }
 
-uint8_t stg_ramdac_in(uint16_t addr, stg_ramdac_t* ramdac, svga_t* svga)
-{
+uint8_t stg_ramdac_in(uint16_t addr, stg_ramdac_t *ramdac, svga_t *svga) {
         uint8_t temp = 0xff;
-        //if (CS!=0xC000) pclog("IN RAMDAC %04X %04X:%04X\n",addr,CS,pc);
-        switch (addr)
-        {
+        // if (CS!=0xC000) pclog("IN RAMDAC %04X %04X:%04X\n",addr,CS,pc);
+        switch (addr) {
         case 0x3c6:
-                switch (ramdac->magic_count)
-                {
+                switch (ramdac->magic_count) {
                 case 0:
                 case 1:
                 case 2:
@@ -126,9 +116,8 @@ uint8_t stg_ramdac_in(uint16_t addr, stg_ramdac_t* ramdac, svga_t* svga)
                         temp = ramdac->index >> 8;
                         break;
                 case 7:
-//                                pclog("Read RAMDAC index %04X\n",stg_ramdac.index);
-                        switch (ramdac->index)
-                        {
+                        //                                pclog("Read RAMDAC index %04X\n",stg_ramdac.index);
+                        switch (ramdac->index) {
                         case 0:
                                 temp = 0x44;
                                 break;
@@ -136,8 +125,10 @@ uint8_t stg_ramdac_in(uint16_t addr, stg_ramdac_t* ramdac, svga_t* svga)
                                 temp = 0x02;
                                 break;
                         default:
-                                if (ramdac->index < 0x100) temp = ramdac->regs[ramdac->index];
-                                else temp = 0xff;
+                                if (ramdac->index < 0x100)
+                                        temp = ramdac->regs[ramdac->index];
+                                else
+                                        temp = 0xff;
                                 break;
                         }
                         ramdac->index++;

@@ -30,137 +30,136 @@
 // The noise waveform is taken from intermediate bits of a 23 bit shift
 // register. This register is clocked by bit 19 of the accumulator.
 // ----------------------------------------------------------------------------
-class WaveformGeneratorFP
-{
-public:
-  WaveformGeneratorFP();
+class WaveformGeneratorFP {
+    public:
+        WaveformGeneratorFP();
 
-  void set_sync_source(WaveformGeneratorFP*);
-  void set_chip_model(chip_model model);
+        void set_sync_source(WaveformGeneratorFP *);
+        void set_chip_model(chip_model model);
 
-  RESID_INLINE void clock();
-  RESID_INLINE void synchronize();
-  void reset();
+        RESID_INLINE void clock();
+        RESID_INLINE void synchronize();
+        void reset();
 
-  void writeFREQ_LO(reg8);
-  void writeFREQ_HI(reg8);
-  void writePW_LO(reg8);
-  void writePW_HI(reg8);
-  void writeCONTROL_REG(reg8);
-  reg8 readOSC();
+        void writeFREQ_LO(reg8);
+        void writeFREQ_HI(reg8);
+        void writePW_LO(reg8);
+        void writePW_HI(reg8);
+        void writeCONTROL_REG(reg8);
+        reg8 readOSC();
 
-  // 12-bit waveform output.
-  RESID_INLINE reg12 output();
+        // 12-bit waveform output.
+        RESID_INLINE reg12 output();
 
-protected:
-  const WaveformGeneratorFP* sync_source;
-  WaveformGeneratorFP* sync_dest;
+    protected:
+        const WaveformGeneratorFP *sync_source;
+        WaveformGeneratorFP *sync_dest;
 
-  // Tell whether the accumulator MSB was set high on this cycle.
-  bool msb_rising;
+        // Tell whether the accumulator MSB was set high on this cycle.
+        bool msb_rising;
 
-  reg24 accumulator;
-  reg24 shift_register;
-  reg12 previous, noise_output_cached;
-  int noise_overwrite_delay;
+        reg24 accumulator;
+        reg24 shift_register;
+        reg12 previous, noise_output_cached;
+        int noise_overwrite_delay;
 
-  // Fout  = (Fn*Fclk/16777216)Hz
-  reg16 freq;
-  // PWout = (PWn/40.95)%, also the same << 12 for direct comparison against acc
-  reg12 pw; reg24 pw_acc_scale;
+        // Fout  = (Fn*Fclk/16777216)Hz
+        reg16 freq;
+        // PWout = (PWn/40.95)%, also the same << 12 for direct comparison against acc
+        reg12 pw;
+        reg24 pw_acc_scale;
 
-  // The control register right-shifted 4 bits; used for output function
-  // table lookup.
-  reg8 waveform;
+        // The control register right-shifted 4 bits; used for output function
+        // table lookup.
+        reg8 waveform;
 
-  // The remaining control register bits.
-  reg8 test;
-  reg8 ring_mod;
-  reg8 sync;
-  // The gate bit is handled by the EnvelopeGenerator.
+        // The remaining control register bits.
+        reg8 test;
+        reg8 ring_mod;
+        reg8 sync;
+        // The gate bit is handled by the EnvelopeGenerator.
 
-  // 16 possible combinations of waveforms.
-  RESID_INLINE reg12 output___T();
-  RESID_INLINE reg12 output__S_();
-  RESID_INLINE reg12 output__ST();
-  RESID_INLINE reg12 output_P__();
-  RESID_INLINE reg12 output_P_T();
-  RESID_INLINE reg12 output_PS_();
-  RESID_INLINE reg12 output_PST();
-  RESID_INLINE reg12 outputN___();
-  RESID_INLINE reg12 outputN__T();
-  RESID_INLINE reg12 outputN_S_();
-  RESID_INLINE reg12 outputN_ST();
-  RESID_INLINE reg12 outputNP__();
-  RESID_INLINE reg12 outputNP_T();
-  RESID_INLINE reg12 outputNPS_();
-  RESID_INLINE reg12 outputNPST();
+        // 16 possible combinations of waveforms.
+        RESID_INLINE reg12 output___T();
+        RESID_INLINE reg12 output__S_();
+        RESID_INLINE reg12 output__ST();
+        RESID_INLINE reg12 output_P__();
+        RESID_INLINE reg12 output_P_T();
+        RESID_INLINE reg12 output_PS_();
+        RESID_INLINE reg12 output_PST();
+        RESID_INLINE reg12 outputN___();
+        RESID_INLINE reg12 outputN__T();
+        RESID_INLINE reg12 outputN_S_();
+        RESID_INLINE reg12 outputN_ST();
+        RESID_INLINE reg12 outputNP__();
+        RESID_INLINE reg12 outputNP_T();
+        RESID_INLINE reg12 outputNPS_();
+        RESID_INLINE reg12 outputNPST();
 
-  // Sample data for combinations of waveforms.
-  static reg8 wave6581__ST[];
-  static reg8 wave6581_P_T[];
-  static reg8 wave6581_PS_[];
-  static reg8 wave6581_PST[];
+        // Sample data for combinations of waveforms.
+        static reg8 wave6581__ST[];
+        static reg8 wave6581_P_T[];
+        static reg8 wave6581_PS_[];
+        static reg8 wave6581_PST[];
 
-  static reg8 wave8580__ST[];
-  static reg8 wave8580_P_T[];
-  static reg8 wave8580_PS_[];
-  static reg8 wave8580_PST[];
+        static reg8 wave8580__ST[];
+        static reg8 wave8580_P_T[];
+        static reg8 wave8580_PS_[];
+        static reg8 wave8580_PST[];
 
-  reg8* wave__ST;
-  reg8* wave_P_T;
-  reg8* wave_PS_;
-  reg8* wave_PST;
+        reg8 *wave__ST;
+        reg8 *wave_P_T;
+        reg8 *wave_PS_;
+        reg8 *wave_PST;
 
-friend class VoiceFP;
-friend class SIDFP;
+        friend class VoiceFP;
+        friend class SIDFP;
 };
 
 // ----------------------------------------------------------------------------
 // SID clocking - 1 cycle.
 // ----------------------------------------------------------------------------
 RESID_INLINE
-void WaveformGeneratorFP::clock()
-{
-  /* no digital operation if test bit is set. Only emulate analog fade. */
-  if (test) {
-    if (noise_overwrite_delay != 0) {
-        if (-- noise_overwrite_delay == 0) {
-            shift_register |= 0x7ffffc;
-            noise_output_cached = outputN___();
+void WaveformGeneratorFP::clock() {
+        /* no digital operation if test bit is set. Only emulate analog fade. */
+        if (test) {
+                if (noise_overwrite_delay != 0) {
+                        if (--noise_overwrite_delay == 0) {
+                                shift_register |= 0x7ffffc;
+                                noise_output_cached = outputN___();
+                        }
+                }
+                return;
         }
-    }
-    return;
-  }
 
-  reg24 accumulator_prev = accumulator;
+        reg24 accumulator_prev = accumulator;
 
-  // Calculate new accumulator value;
-  accumulator += freq;
-  accumulator &= 0xffffff;
+        // Calculate new accumulator value;
+        accumulator += freq;
+        accumulator &= 0xffffff;
 
-  // Check whether the MSB became set high. This is used for synchronization.
-  msb_rising = !(accumulator_prev & 0x800000) && (accumulator & 0x800000);
+        // Check whether the MSB became set high. This is used for synchronization.
+        msb_rising = !(accumulator_prev & 0x800000) && (accumulator & 0x800000);
 
-  // Shift noise register once for each time accumulator bit 19 is set high.
-  if (!(accumulator_prev & 0x080000) && (accumulator & 0x080000)) {
-    reg24 bit0 = ((shift_register >> 22) ^ (shift_register >> 17)) & 0x1;
-    shift_register <<= 1;
-    // optimization: fall into the bit bucket
-    //shift_register &= 0x7fffff;
-    shift_register |= bit0;
+        // Shift noise register once for each time accumulator bit 19 is set high.
+        if (!(accumulator_prev & 0x080000) && (accumulator & 0x080000)) {
+                reg24 bit0 = ((shift_register >> 22) ^ (shift_register >> 17)) & 0x1;
+                shift_register <<= 1;
+                // optimization: fall into the bit bucket
+                // shift_register &= 0x7fffff;
+                shift_register |= bit0;
 
-    /* since noise changes relatively infrequently, we'll avoid the relatively
-     * expensive bit shuffling at output time. */
-    noise_output_cached = outputN___();
-  }
+                /* since noise changes relatively infrequently, we'll avoid the relatively
+                 * expensive bit shuffling at output time. */
+                noise_output_cached = outputN___();
+        }
 
-  // clear output bits of shift register if noise and other waveforms
-  // are selected simultaneously
-  if (waveform > 8) {
-    shift_register &= 0x7fffff^(1<<22)^(1<<20)^(1<<16)^(1<<13)^(1<<11)^(1<<7)^(1<<4)^(1<<2);
-    noise_output_cached = outputN___();
-  }
+        // clear output bits of shift register if noise and other waveforms
+        // are selected simultaneously
+        if (waveform > 8) {
+                shift_register &= 0x7fffff ^ (1 << 22) ^ (1 << 20) ^ (1 << 16) ^ (1 << 13) ^ (1 << 11) ^ (1 << 7) ^ (1 << 4) ^ (1 << 2);
+                noise_output_cached = outputN___();
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -171,16 +170,14 @@ void WaveformGeneratorFP::clock()
 // MSB is set high for hard sync to operate correctly. See SID::clock().
 // ----------------------------------------------------------------------------
 RESID_INLINE
-void WaveformGeneratorFP::synchronize()
-{
-  // A special case occurs when a sync source is synced itself on the same
-  // cycle as when its MSB is set high. In this case the destination will
-  // not be synced. This has been verified by sampling OSC3.
-  if (msb_rising && sync_dest->sync && !(sync && sync_source->msb_rising)) {
-    sync_dest->accumulator = 0;
-  }
+void WaveformGeneratorFP::synchronize() {
+        // A special case occurs when a sync source is synced itself on the same
+        // cycle as when its MSB is set high. In this case the destination will
+        // not be synced. This has been verified by sampling OSC3.
+        if (msb_rising && sync_dest->sync && !(sync && sync_source->msb_rising)) {
+                sync_dest->accumulator = 0;
+        }
 }
-
 
 // ----------------------------------------------------------------------------
 // Output functions.
@@ -196,20 +193,17 @@ void WaveformGeneratorFP::synchronize()
 // Ring modulation substitutes the MSB with MSB EOR sync_source MSB.
 //
 RESID_INLINE
-reg12 WaveformGeneratorFP::output___T()
-{
-  reg24 msb = (ring_mod ? accumulator ^ sync_source->accumulator : accumulator)
-    & 0x800000;
-  return ((msb ? ~accumulator : accumulator) >> 11) & 0xfff;
+reg12 WaveformGeneratorFP::output___T() {
+        reg24 msb = (ring_mod ? accumulator ^ sync_source->accumulator : accumulator) & 0x800000;
+        return ((msb ? ~accumulator : accumulator) >> 11) & 0xfff;
 }
 
 // Sawtooth:
 // The output is identical to the upper 12 bits of the accumulator.
 //
 RESID_INLINE
-reg12 WaveformGeneratorFP::output__S_()
-{
-  return accumulator >> 12;
+reg12 WaveformGeneratorFP::output__S_() {
+        return accumulator >> 12;
 }
 
 // Pulse:
@@ -223,9 +217,8 @@ reg12 WaveformGeneratorFP::output__S_()
 // regardless of the pulse width setting.
 //
 RESID_INLINE
-reg12 WaveformGeneratorFP::output_P__()
-{
-  return (test || accumulator >= pw_acc_scale) ? 0xfff : 0x000;
+reg12 WaveformGeneratorFP::output_P__() {
+        return (test || accumulator >= pw_acc_scale) ? 0xfff : 0x000;
 }
 
 // Noise:
@@ -248,17 +241,15 @@ reg12 WaveformGeneratorFP::output_P__()
 // Since waveform output is 12 bits the output is left-shifted 4 times.
 //
 RESID_INLINE
-reg12 WaveformGeneratorFP::outputN___()
-{
-  return
-    ((shift_register & 0x400000) >> 11) |
-    ((shift_register & 0x100000) >> 10) |
-    ((shift_register & 0x010000) >> 7) |
-    ((shift_register & 0x002000) >> 5) |
-    ((shift_register & 0x000800) >> 4) |
-    ((shift_register & 0x000080) >> 1) |
-    ((shift_register & 0x000010) << 1) |
-    ((shift_register & 0x000004) << 2);
+reg12 WaveformGeneratorFP::outputN___() {
+        return ((shift_register & 0x400000) >> 11) |
+               ((shift_register & 0x100000) >> 10) |
+               ((shift_register & 0x010000) >> 7) |
+               ((shift_register & 0x002000) >> 5) |
+               ((shift_register & 0x000800) >> 4) |
+               ((shift_register & 0x000080) >> 1) |
+               ((shift_register & 0x000010) << 1) |
+               ((shift_register & 0x000004) << 2);
 }
 
 // Combined waveforms:
@@ -269,7 +260,7 @@ reg12 WaveformGeneratorFP::outputN___()
 // in the output. The reason for this has not been determined.
 //
 // Example:
-// 
+//
 //             1 1
 // Bit #       1 0 9 8 7 6 5 4 3 2 1 0
 //             -----------------------
@@ -303,14 +294,14 @@ reg12 WaveformGeneratorFP::outputN___()
 //
 // Sawtooth+Triangle:
 // The sawtooth output is used to look up an OSC3 sample.
-// 
+//
 // Pulse+Triangle:
 // The triangle output is right-shifted and used to look up an OSC3 sample.
 // The sample is output if the pulse output is on.
 // The reason for using the triangle output as the index is to handle ring
 // modulation. Only the first half of the sample is used, which should be OK
 // since the triangle waveform has half the resolution of the accumulator.
-// 
+//
 // Pulse+Sawtooth:
 // The sawtooth output is used to look up an OSC3 sample.
 // The sample is output if the pulse output is on.
@@ -318,31 +309,27 @@ reg12 WaveformGeneratorFP::outputN___()
 // Pulse+Sawtooth+Triangle:
 // The sawtooth output is used to look up an OSC3 sample.
 // The sample is output if the pulse output is on.
-// 
+//
 RESID_INLINE
-reg12 WaveformGeneratorFP::output__ST()
-{
-  return wave__ST[output__S_()] << 4;
+reg12 WaveformGeneratorFP::output__ST() {
+        return wave__ST[output__S_()] << 4;
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::output_P_T()
-{
-  /* ring modulation does something odd with this waveform. But I don't know
-   * how to emulate it. */
-  return (wave_P_T[output___T() >> 1] << 4) & output_P__();
+reg12 WaveformGeneratorFP::output_P_T() {
+        /* ring modulation does something odd with this waveform. But I don't know
+         * how to emulate it. */
+        return (wave_P_T[output___T() >> 1] << 4) & output_P__();
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::output_PS_()
-{
-  return (wave_PS_[output__S_()] << 4) & output_P__();
+reg12 WaveformGeneratorFP::output_PS_() {
+        return (wave_PS_[output__S_()] << 4) & output_P__();
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::output_PST()
-{
-  return (wave_PST[output__S_()] << 4) & output_P__();
+reg12 WaveformGeneratorFP::output_PST() {
+        return (wave_PST[output__S_()] << 4) & output_P__();
 }
 
 // Combined waveforms including noise:
@@ -355,103 +342,95 @@ reg12 WaveformGeneratorFP::output_PST()
 // noise. We hope that nobody is actually using it.
 //
 RESID_INLINE
-reg12 WaveformGeneratorFP::outputN__T()
-{
-  return 0;
+reg12 WaveformGeneratorFP::outputN__T() {
+        return 0;
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::outputN_S_()
-{
-  return 0;
+reg12 WaveformGeneratorFP::outputN_S_() {
+        return 0;
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::outputN_ST()
-{
-  return 0;
+reg12 WaveformGeneratorFP::outputN_ST() {
+        return 0;
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::outputNP__()
-{
-  return 0;
+reg12 WaveformGeneratorFP::outputNP__() {
+        return 0;
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::outputNP_T()
-{
-  return 0;
+reg12 WaveformGeneratorFP::outputNP_T() {
+        return 0;
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::outputNPS_()
-{
-  return 0;
+reg12 WaveformGeneratorFP::outputNPS_() {
+        return 0;
 }
 
 RESID_INLINE
-reg12 WaveformGeneratorFP::outputNPST()
-{
-  return 0;
+reg12 WaveformGeneratorFP::outputNPST() {
+        return 0;
 }
 
 // ----------------------------------------------------------------------------
 // Select one of 16 possible combinations of waveforms.
 // ----------------------------------------------------------------------------
 RESID_INLINE
-reg12 WaveformGeneratorFP::output()
-{
-  switch (waveform) {
-  case 0x1:
-    previous = output___T();
-    break;
-  case 0x2:
-    previous = output__S_();
-    break;
-  case 0x3:
-    previous = output__ST();
-    break;
-  case 0x4:
-    previous = output_P__();
-    break;
-  case 0x5:
-    previous = output_P_T();
-    break;
-  case 0x6:
-    previous = output_PS_();
-    break;
-  case 0x7:
-    previous = output_PST();
-    break;
-  case 0x8:
-    previous = noise_output_cached;
-    break;
-  case 0x9:
-    previous = outputN__T();
-    break;
-  case 0xa:
-    previous = outputN_S_();
-    break;
-  case 0xb:
-    previous = outputN_ST();
-    break;
-  case 0xc:
-    previous = outputNP__();
-    break;
-  case 0xd:
-    previous = outputNP_T();
-    break;
-  case 0xe:
-    previous = outputNPS_();
-    break;
-  case 0xf:
-    previous = outputNPST();
-    break;
-  default:
-    break;
-  }
-  return previous;
+reg12 WaveformGeneratorFP::output() {
+        switch (waveform) {
+        case 0x1:
+                previous = output___T();
+                break;
+        case 0x2:
+                previous = output__S_();
+                break;
+        case 0x3:
+                previous = output__ST();
+                break;
+        case 0x4:
+                previous = output_P__();
+                break;
+        case 0x5:
+                previous = output_P_T();
+                break;
+        case 0x6:
+                previous = output_PS_();
+                break;
+        case 0x7:
+                previous = output_PST();
+                break;
+        case 0x8:
+                previous = noise_output_cached;
+                break;
+        case 0x9:
+                previous = outputN__T();
+                break;
+        case 0xa:
+                previous = outputN_S_();
+                break;
+        case 0xb:
+                previous = outputN_ST();
+                break;
+        case 0xc:
+                previous = outputNP__();
+                break;
+        case 0xd:
+                previous = outputNP_T();
+                break;
+        case 0xe:
+                previous = outputNPS_();
+                break;
+        case 0xf:
+                previous = outputNPST();
+                break;
+        default:
+                break;
+        }
+        return previous;
 }
 
 #endif // not __WAVE_H__

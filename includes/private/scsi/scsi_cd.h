@@ -10,8 +10,8 @@ extern int cd_speed;
 
 #define MAX_CD_MODEL 12
 
-#define CD_MODEL_INTERFACE_ALL  0 // even when controller is not IDE and not SCSI (to always have the PCemCD model as default, even when not selectable)
-#define CD_MODEL_INTERFACE_IDE  1
+#define CD_MODEL_INTERFACE_ALL 0 // even when controller is not IDE and not SCSI (to always have the PCemCD model as default, even when not selectable)
+#define CD_MODEL_INTERFACE_IDE 1
 #define CD_MODEL_INTERFACE_SCSI 2
 
 char *cd_get_model(int i);
@@ -23,6 +23,5 @@ char *cd_model_to_config(char *model);
 char *cd_model_from_config(char *config);
 
 extern char *cd_model;
-
 
 #endif /* _SCSI_CD_H_ */

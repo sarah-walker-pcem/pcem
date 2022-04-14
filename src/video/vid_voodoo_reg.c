@@ -1,36 +1,33 @@
-#include <math.h>
-#include <stddef.h>
-#include "ibm.h"
+#include "vid_voodoo_reg.h"
 #include "device.h"
+#include "ibm.h"
 #include "mem.h"
 #include "thread.h"
-#include "video.h"
 #include "vid_svga.h"
 #include "vid_voodoo.h"
-#include "vid_voodoo_common.h"
 #include "vid_voodoo_banshee.h"
 #include "vid_voodoo_blitter.h"
+#include "vid_voodoo_common.h"
 #include "vid_voodoo_dither.h"
 #include "vid_voodoo_fifo.h"
-#include "vid_voodoo_reg.h"
 #include "vid_voodoo_regs.h"
 #include "vid_voodoo_render.h"
 #include "vid_voodoo_setup.h"
 #include "vid_voodoo_texture.h"
+#include "video.h"
+#include <math.h>
+#include <stddef.h>
 
-enum
-{
+enum {
         CHIP_FBI = 0x1,
         CHIP_TREX0 = 0x2,
         CHIP_TREX1 = 0x4,
         CHIP_TREX2 = 0x8
 };
 
-void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
-{
-        voodoo_t* voodoo = (voodoo_t*)p;
-        union
-        {
+void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p) {
+        voodoo_t *voodoo = (voodoo_t *)p;
+        union {
                 uint32_t i;
                 float f;
         } tempif;
@@ -40,38 +37,31 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 chip = 0xf;
 
         tempif.i = val;
-//pclog("voodoo_reg_write_l: addr=%08x val=%08x(%f) chip=%x\n", addr, val, tempif.f, chip);
+        // pclog("voodoo_reg_write_l: addr=%08x val=%08x(%f) chip=%x\n", addr, val, tempif.f, chip);
         addr &= 0x3fc;
 
         if ((voodoo->fbiInit3 & FBIINIT3_REMAP) && addr < 0x100 && ad21)
                 addr |= 0x400;
-        switch (addr)
-        {
+        switch (addr) {
         case SST_swapbufferCMD:
-                if (voodoo->type >= VOODOO_BANSHEE)
-                {
-//                        pclog("swapbufferCMD %08x %08x\n", val, voodoo->leftOverlayBuf);
+                if (voodoo->type >= VOODOO_BANSHEE) {
+                        //                        pclog("swapbufferCMD %08x %08x\n", val, voodoo->leftOverlayBuf);
 
                         voodoo_wait_for_render_thread_idle(voodoo);
-                        if (!(val & 1))
-                        {
+                        if (!(val & 1)) {
                                 banshee_set_overlay_addr(voodoo->p, voodoo->leftOverlayBuf);
                                 thread_lock_mutex(voodoo->swap_mutex);
                                 if (voodoo->swap_count > 0)
                                         voodoo->swap_count--;
                                 thread_unlock_mutex(voodoo->swap_mutex);
                                 voodoo->frame_count++;
-                        }
-                        else if (TRIPLE_BUFFER)
-                        {
+                        } else if (TRIPLE_BUFFER) {
                                 if (voodoo->swap_pending)
                                         voodoo_wait_for_swap_complete(voodoo);
                                 voodoo->swap_interval = (val >> 1) & 0xff;
                                 voodoo->swap_offset = voodoo->leftOverlayBuf;
                                 voodoo->swap_pending = 1;
-                        }
-                        else
-                        {
+                        } else {
                                 voodoo->swap_interval = (val >> 1) & 0xff;
                                 voodoo->swap_offset = voodoo->leftOverlayBuf;
                                 voodoo->swap_pending = 1;
@@ -83,13 +73,10 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                         break;
                 }
 
-                if (TRIPLE_BUFFER)
-                {
+                if (TRIPLE_BUFFER) {
                         voodoo->disp_buffer = (voodoo->disp_buffer + 1) % 3;
                         voodoo->draw_buffer = (voodoo->draw_buffer + 1) % 3;
-                }
-                else
-                {
+                } else {
                         voodoo->disp_buffer = !voodoo->disp_buffer;
                         voodoo->draw_buffer = !voodoo->draw_buffer;
                 }
@@ -97,29 +84,24 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
 
                 voodoo->params.swapbufferCMD = val;
 
-//                pclog("Swap buffer %08x %d %p %i\n", val, voodoo->swap_count, &voodoo->swap_count, (voodoo == voodoo->set->voodoos[1]) ? 1 : 0);
-//                voodoo->front_offset = params->front_offset;
+                //                pclog("Swap buffer %08x %d %p %i\n", val, voodoo->swap_count, &voodoo->swap_count, (voodoo == voodoo->set->voodoos[1]) ? 1 : 0);
+                //                voodoo->front_offset = params->front_offset;
                 voodoo_wait_for_render_thread_idle(voodoo);
-                if (!(val & 1))
-                {
+                if (!(val & 1)) {
                         memset(voodoo->dirty_line, 1, sizeof(voodoo->dirty_line));
                         voodoo->front_offset = voodoo->params.front_offset;
                         thread_lock_mutex(voodoo->swap_mutex);
                         if (voodoo->swap_count > 0)
                                 voodoo->swap_count--;
                         thread_unlock_mutex(voodoo->swap_mutex);
-                }
-                else if (TRIPLE_BUFFER)
-                {
+                } else if (TRIPLE_BUFFER) {
                         if (voodoo->swap_pending)
                                 voodoo_wait_for_swap_complete(voodoo);
 
                         voodoo->swap_interval = (val >> 1) & 0xff;
                         voodoo->swap_offset = voodoo->params.front_offset;
                         voodoo->swap_pending = 1;
-                }
-                else
-                {
+                } else {
                         voodoo->swap_interval = (val >> 1) & 0xff;
                         voodoo->swap_offset = voodoo->params.front_offset;
                         voodoo->swap_pending = 1;
@@ -523,25 +505,19 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 break;
 
         case SST_clipLeftRight:
-                if (voodoo->type >= VOODOO_2)
-                {
+                if (voodoo->type >= VOODOO_2) {
                         voodoo->params.clipRight = val & 0xfff;
                         voodoo->params.clipLeft = (val >> 16) & 0xfff;
-                }
-                else
-                {
+                } else {
                         voodoo->params.clipRight = val & 0x3ff;
                         voodoo->params.clipLeft = (val >> 16) & 0x3ff;
                 }
                 break;
         case SST_clipLowYHighY:
-                if (voodoo->type >= VOODOO_2)
-                {
+                if (voodoo->type >= VOODOO_2) {
                         voodoo->params.clipHighY = val & 0xfff;
                         voodoo->params.clipLowY = (val >> 16) & 0xfff;
-                }
-                else
-                {
+                } else {
                         voodoo->params.clipHighY = val & 0x3ff;
                         voodoo->params.clipLowY = (val >> 16) & 0x3ff;
                 }
@@ -626,67 +602,55 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 break;
 
         case SST_clipLeftRight1:
-                if (voodoo->type >= VOODOO_BANSHEE)
-                {
+                if (voodoo->type >= VOODOO_BANSHEE) {
                         voodoo->params.clipRight1 = val & 0xfff;
                         voodoo->params.clipLeft1 = (val >> 16) & 0xfff;
                 }
                 break;
         case SST_clipTopBottom1:
-                if (voodoo->type >= VOODOO_BANSHEE)
-                {
+                if (voodoo->type >= VOODOO_BANSHEE) {
                         voodoo->params.clipHighY1 = val & 0xfff;
                         voodoo->params.clipLowY1 = (val >> 16) & 0xfff;
                 }
                 break;
 
         case SST_colBufferAddr:
-                if (voodoo->type >= VOODOO_BANSHEE)
-                {
+                if (voodoo->type >= VOODOO_BANSHEE) {
                         voodoo->params.draw_offset = val & 0xfffff0;
                         voodoo->fb_write_offset = voodoo->params.draw_offset;
-//                        pclog("colorBufferAddr=%06x\n", voodoo->params.draw_offset);
+                        //                        pclog("colorBufferAddr=%06x\n", voodoo->params.draw_offset);
                 }
                 break;
         case SST_colBufferStride:
-                if (voodoo->type >= VOODOO_BANSHEE)
-                {
+                if (voodoo->type >= VOODOO_BANSHEE) {
                         voodoo->col_tiled = val & (1 << 15);
                         voodoo->params.col_tiled = voodoo->col_tiled;
-                        if (voodoo->col_tiled)
-                        {
+                        if (voodoo->col_tiled) {
                                 voodoo->row_width = (val & 0x7f) * 128 * 32;
-//                                pclog("colBufferStride tiled = %i bytes, tiled  %08x\n", voodoo->row_width, val);
-                        }
-                        else
-                        {
+                                //                                pclog("colBufferStride tiled = %i bytes, tiled  %08x\n", voodoo->row_width, val);
+                        } else {
                                 voodoo->row_width = val & 0x3fff;
-//                                pclog("colBufferStride linear = %i bytes, linear\n", voodoo->row_width);
+                                //                                pclog("colBufferStride linear = %i bytes, linear\n", voodoo->row_width);
                         }
                         voodoo->params.row_width = voodoo->row_width;
                 }
                 break;
         case SST_auxBufferAddr:
-                if (voodoo->type >= VOODOO_BANSHEE)
-                {
+                if (voodoo->type >= VOODOO_BANSHEE) {
                         voodoo->params.aux_offset = val & 0xfffff0;
-//                        pclog("auxBufferAddr=%06x\n", voodoo->params.aux_offset);
+                        //                        pclog("auxBufferAddr=%06x\n", voodoo->params.aux_offset);
                 }
                 break;
         case SST_auxBufferStride:
-                if (voodoo->type >= VOODOO_BANSHEE)
-                {
+                if (voodoo->type >= VOODOO_BANSHEE) {
                         voodoo->aux_tiled = val & (1 << 15);
                         voodoo->params.aux_tiled = voodoo->aux_tiled;
-                        if (voodoo->aux_tiled)
-                        {
+                        if (voodoo->aux_tiled) {
                                 voodoo->aux_row_width = (val & 0x7f) * 128 * 32;
-//                                pclog("auxBufferStride tiled = %i bytes, tiled\n", voodoo->aux_row_width);
-                        }
-                        else
-                        {
+                                //                                pclog("auxBufferStride tiled = %i bytes, tiled\n", voodoo->aux_row_width);
+                        } else {
                                 voodoo->aux_row_width = val & 0x3fff;
-//                                pclog("auxBufferStride linear = %i bytes, linear\n", voodoo->aux_row_width);
+                                //                                pclog("auxBufferStride linear = %i bytes, linear\n", voodoo->aux_row_width);
                         }
                         voodoo->params.aux_row_width = voodoo->aux_row_width;
                 }
@@ -696,8 +660,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 voodoo->clutData[(val >> 24) & 0x3f].b = val & 0xff;
                 voodoo->clutData[(val >> 24) & 0x3f].g = (val >> 8) & 0xff;
                 voodoo->clutData[(val >> 24) & 0x3f].r = (val >> 16) & 0xff;
-                if (val & 0x20000000)
-                {
+                if (val & 0x20000000) {
                         voodoo->clutData[(val >> 24) & 0x3f].b = 255;
                         voodoo->clutData[(val >> 24) & 0x3f].g = 255;
                         voodoo->clutData[(val >> 24) & 0x3f].r = 255;
@@ -711,12 +674,12 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
         case SST_sVx:
                 tempif.i = val;
                 voodoo->verts[3].sVx = tempif.f;
-//                pclog("sVx[%i]=%f\n", voodoo->vertex_num, tempif.f);
+                //                pclog("sVx[%i]=%f\n", voodoo->vertex_num, tempif.f);
                 break;
         case SST_sVy:
                 tempif.i = val;
                 voodoo->verts[3].sVy = tempif.f;
-//                pclog("sVy[%i]=%f\n", voodoo->vertex_num, tempif.f);
+                //                pclog("sVy[%i]=%f\n", voodoo->vertex_num, tempif.f);
                 break;
         case SST_sARGB:
                 voodoo->verts[3].sBlue = (float)(val & 0xff);
@@ -774,7 +737,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 break;
 
         case SST_sBeginTriCMD:
-//                pclog("sBeginTriCMD %i %f\n", voodoo->vertex_num, voodoo->verts[4].sVx);
+                //                pclog("sBeginTriCMD %i %f\n", voodoo->vertex_num, voodoo->verts[4].sVx);
                 voodoo->verts[0] = voodoo->verts[3];
                 voodoo->verts[1] = voodoo->verts[3];
                 voodoo->verts[2] = voodoo->verts[3];
@@ -785,24 +748,20 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 voodoo->cull_pingpong = 0;
                 break;
         case SST_sDrawTriCMD:
-//                pclog("sDrawTriCMD %i %i\n", voodoo->num_verticies, voodoo->sSetupMode & SETUPMODE_STRIP_MODE);
+                //                pclog("sDrawTriCMD %i %i\n", voodoo->num_verticies, voodoo->sSetupMode & SETUPMODE_STRIP_MODE);
                 /*I'm not sure this is the vertex selection algorithm actually used in the 3dfx
                   chips, but this works with a number of games that switch between strip and fan
                   mode in the middle of a run (eg Black & White, Viper Racing)*/
-                if (voodoo->vertex_next_age < 3)
-                {
+                if (voodoo->vertex_next_age < 3) {
                         /*Fewer than three vertices already written, store in next slot*/
                         int vertex_nr = voodoo->vertex_next_age;
 
                         voodoo->verts[vertex_nr] = voodoo->verts[3];
                         voodoo->vertex_ages[vertex_nr] = voodoo->vertex_next_age++;
-                }
-                else
-                {
+                } else {
                         int vertex_nr = 0;
 
-                        if (!(voodoo->sSetupMode & SETUPMODE_STRIP_MODE))
-                        {
+                        if (!(voodoo->sSetupMode & SETUPMODE_STRIP_MODE)) {
                                 /*Strip - find oldest vertex*/
                                 if ((voodoo->vertex_ages[0] < voodoo->vertex_ages[1]) &&
                                     (voodoo->vertex_ages[0] < voodoo->vertex_ages[2]))
@@ -812,9 +771,7 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                                         vertex_nr = 1;
                                 else
                                         vertex_nr = 2;
-                        }
-                        else
-                        {
+                        } else {
                                 /*Fan - find second oldest vertex (ie pivot around oldest)*/
                                 if ((voodoo->vertex_ages[1] < voodoo->vertex_ages[0]) &&
                                     (voodoo->vertex_ages[0] < voodoo->vertex_ages[2]))
@@ -836,9 +793,8 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 }
 
                 voodoo->num_verticies++;
-                if (voodoo->num_verticies == 3)
-                {
-//                        pclog("triangle_setup\n");
+                if (voodoo->num_verticies == 3) {
+                        //                        pclog("triangle_setup\n");
                         voodoo_triangle_setup(voodoo);
                         voodoo->cull_pingpong = !voodoo->cull_pingpong;
 
@@ -850,13 +806,13 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 voodoo->bltSrcBaseAddr = val & 0x3fffff;
                 break;
         case SST_bltDstBaseAddr:
-//                pclog("Write bltDstBaseAddr %08x\n", val);
+                //                pclog("Write bltDstBaseAddr %08x\n", val);
                 voodoo->bltDstBaseAddr = val & 0x3fffff;
                 break;
         case SST_bltXYStrides:
                 voodoo->bltSrcXYStride = val & 0xfff;
                 voodoo->bltDstXYStride = (val >> 16) & 0xfff;
-//                pclog("Write bltXYStrides %08x\n", val);
+                //                pclog("Write bltXYStrides %08x\n", val);
                 break;
         case SST_bltSrcChromaRange:
                 voodoo->bltSrcChromaRange = val;
@@ -890,14 +846,14 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 voodoo->bltSrcY = (val >> 16) & 0x7ff;
                 break;
         case SST_bltDstXY:
-//                pclog("Write bltDstXY %08x\n", val);
+                //                pclog("Write bltDstXY %08x\n", val);
                 voodoo->bltDstX = val & 0x7ff;
                 voodoo->bltDstY = (val >> 16) & 0x7ff;
                 if (val & (1 << 31))
                         voodoo_v2_blit_start(voodoo);
                 break;
         case SST_bltSize:
-//                pclog("Write bltSize %08x\n", val);
+                //                pclog("Write bltSize %08x\n", val);
                 voodoo->bltSizeX = val & 0xfff;
                 if (voodoo->bltSizeX & 0x800)
                         voodoo->bltSizeX |= 0xfffff000;
@@ -914,14 +870,14 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 voodoo->bltRop[3] = (val >> 12) & 0xf;
                 break;
         case SST_bltColor:
-//                pclog("Write bltColor %08x\n", val);
+                //                pclog("Write bltColor %08x\n", val);
                 voodoo->bltColorFg = val & 0xffff;
                 voodoo->bltColorBg = (val >> 16) & 0xffff;
                 break;
 
         case SST_bltCommand:
                 voodoo->bltCommand = val;
-//                pclog("Write bltCommand %08x\n", val);
+                //                pclog("Write bltCommand %08x\n", val);
                 if (val & (1 << 31))
                         voodoo_v2_blit_start(voodoo);
                 break;
@@ -930,55 +886,47 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 break;
 
         case SST_textureMode:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->params.textureMode[0] = val;
                         voodoo->params.tformat[0] = (val >> 8) & 0xf;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->params.textureMode[1] = val;
                         voodoo->params.tformat[1] = (val >> 8) & 0xf;
                 }
                 break;
         case SST_tLOD:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->params.tLOD[0] = val;
                         voodoo_recalc_tex(voodoo, 0);
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->params.tLOD[1] = val;
                         voodoo_recalc_tex(voodoo, 1);
                 }
                 break;
         case SST_tDetail:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->params.detail_max[0] = val & 0xff;
                         voodoo->params.detail_bias[0] = (val >> 8) & 0x3f;
                         voodoo->params.detail_scale[0] = (val >> 14) & 7;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->params.detail_max[1] = val & 0xff;
                         voodoo->params.detail_bias[1] = (val >> 8) & 0x3f;
                         voodoo->params.detail_scale[1] = (val >> 14) & 7;
                 }
                 break;
         case SST_texBaseAddr:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         if (voodoo->type >= VOODOO_BANSHEE)
                                 voodoo->params.texBaseAddr[0] = val & 0xfffff0;
                         else
                                 voodoo->params.texBaseAddr[0] = (val & 0x7ffff) << 3;
-//                        pclog("texBaseAddr = %08x %08x\n", voodoo->params.texBaseAddr[0], val);
+                        //                        pclog("texBaseAddr = %08x %08x\n", voodoo->params.texBaseAddr[0], val);
                         voodoo_recalc_tex(voodoo, 0);
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         if (voodoo->type >= VOODOO_BANSHEE)
                                 voodoo->params.texBaseAddr[1] = val & 0xfffff0;
                         else
@@ -987,16 +935,14 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 }
                 break;
         case SST_texBaseAddr1:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         if (voodoo->type >= VOODOO_BANSHEE)
                                 voodoo->params.texBaseAddr1[0] = val & 0xfffff0;
                         else
                                 voodoo->params.texBaseAddr1[0] = (val & 0x7ffff) << 3;
                         voodoo_recalc_tex(voodoo, 0);
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         if (voodoo->type >= VOODOO_BANSHEE)
                                 voodoo->params.texBaseAddr1[1] = val & 0xfffff0;
                         else
@@ -1005,16 +951,14 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 }
                 break;
         case SST_texBaseAddr2:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         if (voodoo->type >= VOODOO_BANSHEE)
                                 voodoo->params.texBaseAddr2[0] = val & 0xfffff0;
                         else
                                 voodoo->params.texBaseAddr2[0] = (val & 0x7ffff) << 3;
                         voodoo_recalc_tex(voodoo, 0);
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         if (voodoo->type >= VOODOO_BANSHEE)
                                 voodoo->params.texBaseAddr2[1] = val & 0xfffff0;
                         else
@@ -1023,16 +967,14 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 }
                 break;
         case SST_texBaseAddr38:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         if (voodoo->type >= VOODOO_BANSHEE)
                                 voodoo->params.texBaseAddr38[0] = val & 0xfffff0;
                         else
                                 voodoo->params.texBaseAddr38[0] = (val & 0x7ffff) << 3;
                         voodoo_recalc_tex(voodoo, 0);
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         if (voodoo->type >= VOODOO_BANSHEE)
                                 voodoo->params.texBaseAddr38[1] = val & 0xfffff0;
                         else
@@ -1049,124 +991,101 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 break;
 
         case SST_nccTable0_Y0:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][0].y[0] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][0].y[0] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable0_Y1:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][0].y[1] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][0].y[1] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable0_Y2:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][0].y[2] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][0].y[2] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable0_Y3:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][0].y[3] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][0].y[3] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
 
         case SST_nccTable0_I0:
-                if (!(val & (1 << 31)))
-                {
-                        if (chip & CHIP_TREX0)
-                        {
+                if (!(val & (1 << 31))) {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->nccTable[0][0].i[0] = val;
                                 voodoo->ncc_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->nccTable[1][0].i[0] = val;
                                 voodoo->ncc_dirty[1] = 1;
                         }
                         break;
                 }
         case SST_nccTable0_I2:
-                if (!(val & (1 << 31)))
-                {
-                        if (chip & CHIP_TREX0)
-                        {
+                if (!(val & (1 << 31))) {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->nccTable[0][0].i[2] = val;
                                 voodoo->ncc_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->nccTable[1][0].i[2] = val;
                                 voodoo->ncc_dirty[1] = 1;
                         }
                         break;
                 }
         case SST_nccTable0_Q0:
-                if (!(val & (1 << 31)))
-                {
-                        if (chip & CHIP_TREX0)
-                        {
+                if (!(val & (1 << 31))) {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->nccTable[0][0].q[0] = val;
                                 voodoo->ncc_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->nccTable[1][0].q[0] = val;
                                 voodoo->ncc_dirty[1] = 1;
                         }
                         break;
                 }
         case SST_nccTable0_Q2:
-                if (!(val & (1 << 31)))
-                {
-                        if (chip & CHIP_TREX0)
-                        {
+                if (!(val & (1 << 31))) {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->nccTable[0][0].i[2] = val;
                                 voodoo->ncc_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->nccTable[1][0].i[2] = val;
                                 voodoo->ncc_dirty[1] = 1;
                         }
                         break;
                 }
-                if (val & (1 << 31))
-                {
+                if (val & (1 << 31)) {
                         int p = (val >> 23) & 0xfe;
-                        if (chip & CHIP_TREX0)
-                        {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->palette[0][p].u = val | 0xff000000;
                                 voodoo->palette_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->palette[1][p].u = val | 0xff000000;
                                 voodoo->palette_dirty[1] = 1;
                         }
@@ -1174,75 +1093,60 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 break;
 
         case SST_nccTable0_I1:
-                if (!(val & (1 << 31)))
-                {
-                        if (chip & CHIP_TREX0)
-                        {
+                if (!(val & (1 << 31))) {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->nccTable[0][0].i[1] = val;
                                 voodoo->ncc_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->nccTable[1][0].i[1] = val;
                                 voodoo->ncc_dirty[1] = 1;
                         }
                         break;
                 }
         case SST_nccTable0_I3:
-                if (!(val & (1 << 31)))
-                {
-                        if (chip & CHIP_TREX0)
-                        {
+                if (!(val & (1 << 31))) {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->nccTable[0][0].i[3] = val;
                                 voodoo->ncc_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->nccTable[1][0].i[3] = val;
                                 voodoo->ncc_dirty[1] = 1;
                         }
                         break;
                 }
         case SST_nccTable0_Q1:
-                if (!(val & (1 << 31)))
-                {
-                        if (chip & CHIP_TREX0)
-                        {
+                if (!(val & (1 << 31))) {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->nccTable[0][0].q[1] = val;
                                 voodoo->ncc_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->nccTable[1][0].q[1] = val;
                                 voodoo->ncc_dirty[1] = 1;
                         }
                         break;
                 }
         case SST_nccTable0_Q3:
-                if (!(val & (1 << 31)))
-                {
-                        if (chip & CHIP_TREX0)
-                        {
+                if (!(val & (1 << 31))) {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->nccTable[0][0].q[3] = val;
                                 voodoo->ncc_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->nccTable[1][0].q[3] = val;
                                 voodoo->ncc_dirty[1] = 1;
                         }
                         break;
                 }
-                if (val & (1 << 31))
-                {
+                if (val & (1 << 31)) {
                         int p = ((val >> 23) & 0xfe) | 0x01;
-                        if (chip & CHIP_TREX0)
-                        {
+                        if (chip & CHIP_TREX0) {
                                 voodoo->palette[0][p].u = val | 0xff000000;
                                 voodoo->palette_dirty[0] = 1;
                         }
-                        if (chip & CHIP_TREX1)
-                        {
+                        if (chip & CHIP_TREX1) {
                                 voodoo->palette[1][p].u = val | 0xff000000;
                                 voodoo->palette_dirty[1] = 1;
                         }
@@ -1250,145 +1154,121 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void* p)
                 break;
 
         case SST_nccTable1_Y0:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].y[0] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].y[0] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_Y1:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].y[1] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].y[1] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_Y2:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].y[2] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].y[2] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_Y3:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].y[3] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].y[3] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_I0:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].i[0] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].i[0] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_I1:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].i[1] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].i[1] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_I2:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].i[2] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].i[2] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_I3:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].i[3] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].i[3] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_Q0:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].q[0] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].q[0] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_Q1:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].q[1] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].q[1] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_Q2:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].q[2] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].q[2] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }
                 break;
         case SST_nccTable1_Q3:
-                if (chip & CHIP_TREX0)
-                {
+                if (chip & CHIP_TREX0) {
                         voodoo->nccTable[0][1].q[3] = val;
                         voodoo->ncc_dirty[0] = 1;
                 }
-                if (chip & CHIP_TREX1)
-                {
+                if (chip & CHIP_TREX1) {
                         voodoo->nccTable[1][1].q[3] = val;
                         voodoo->ncc_dirty[1] = 1;
                 }

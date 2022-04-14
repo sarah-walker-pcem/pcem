@@ -3,15 +3,13 @@
 
 #include <stdint.h>
 
-typedef struct FPU
-{
+typedef struct FPU {
         const char *name;
         const char *internal_name;
         const int type;
 } FPU;
 
-typedef struct CPU
-{
+typedef struct CPU {
         char name[32];
         int cpu_type;
         const FPU *fpus;

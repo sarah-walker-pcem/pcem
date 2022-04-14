@@ -11,7 +11,7 @@ void pci_clear_irq(int card, int pci_int);
 
 #define PCI_REG_COMMAND 0x04
 
-#define PCI_COMMAND_IO  0x01
+#define PCI_COMMAND_IO 0x01
 #define PCI_COMMAND_MEM 0x02
 
 #define PCI_CONFIG_TYPE_1 1
@@ -25,6 +25,5 @@ void pci_clear_irq(int card, int pci_int);
 #define PCI_IRQ_DISABLED -1
 
 extern int pci_burst_time, pci_nonburst_time;
-
 
 #endif /* _PCI_H_ */

@@ -1,22 +1,18 @@
 /*Trident TKD8001 RAMDAC emulation*/
+#include "vid_tkd8001_ramdac.h"
 #include "ibm.h"
 #include "mem.h"
-#include "video.h"
 #include "vid_svga.h"
-#include "vid_tkd8001_ramdac.h"
+#include "video.h"
 
-void tkd8001_ramdac_out(uint16_t addr, uint8_t val, tkd8001_ramdac_t* ramdac, svga_t* svga)
-{
-//        pclog("OUT RAMDAC %04X %02X %04X:%04X\n",addr,val,CS,pc);
-        switch (addr)
-        {
+void tkd8001_ramdac_out(uint16_t addr, uint8_t val, tkd8001_ramdac_t *ramdac, svga_t *svga) {
+        //        pclog("OUT RAMDAC %04X %02X %04X:%04X\n",addr,val,CS,pc);
+        switch (addr) {
         case 0x3C6:
-                if (ramdac->state == 4)
-                {
+                if (ramdac->state == 4) {
                         ramdac->state = 0;
                         ramdac->ctrl = val;
-                        switch (val >> 5)
-                        {
+                        switch (val >> 5) {
                         case 0:
                         case 1:
                         case 2:
@@ -46,15 +42,12 @@ void tkd8001_ramdac_out(uint16_t addr, uint8_t val, tkd8001_ramdac_t* ramdac, sv
         svga_out(addr, val, svga);
 }
 
-uint8_t tkd8001_ramdac_in(uint16_t addr, tkd8001_ramdac_t* ramdac, svga_t* svga)
-{
-//        pclog("IN RAMDAC %04X %04X:%04X\n",addr,CS,pc);
-        switch (addr)
-        {
+uint8_t tkd8001_ramdac_in(uint16_t addr, tkd8001_ramdac_t *ramdac, svga_t *svga) {
+        //        pclog("IN RAMDAC %04X %04X:%04X\n",addr,CS,pc);
+        switch (addr) {
         case 0x3C6:
-                if (ramdac->state == 4)
-                {
-                        //tkd8001_state = 0;
+                if (ramdac->state == 4) {
+                        // tkd8001_state = 0;
                         return ramdac->ctrl;
                 }
                 ramdac->state++;

@@ -1,8 +1,8 @@
+#include "ps2.h"
 #include "ibm.h"
 #include "io.h"
 #include "lpt.h"
 #include "mem.h"
-#include "ps2.h"
 #include "rom.h"
 #include "serial.h"
 
@@ -14,99 +14,93 @@ static struct
         uint8_t attention, ctrl;
 } ps2_hd;
 
-uint8_t ps2_read(uint16_t port, void *p)
-{
+uint8_t ps2_read(uint16_t port, void *p) {
         uint8_t temp;
 
-        switch (port)
-        {
-                case 0x91:
+        switch (port) {
+        case 0x91:
                 return 0;
-                case 0x92:
+        case 0x92:
                 return ps2_92;
-                case 0x94:
+        case 0x94:
                 return ps2_94;
-                case 0x102:
+        case 0x102:
                 return ps2_102 | 8;
-                case 0x103:
+        case 0x103:
                 return ps2_103;
-                case 0x104:
+        case 0x104:
                 return ps2_104;
-                case 0x105:
+        case 0x105:
                 return ps2_105;
-                case 0x190:
+        case 0x190:
                 return ps2_190;
-                
-                case 0x322:
+
+        case 0x322:
                 temp = ps2_hd.status;
                 break;
-                case 0x324:
+        case 0x324:
                 temp = ps2_hd.int_status;
                 ps2_hd.int_status &= ~0x02;
                 break;
-                
-                default:
+
+        default:
                 temp = 0xff;
                 break;
         }
-        
+
         return temp;
 }
 
-void ps2_write(uint16_t port, uint8_t val, void *p)
-{
-        switch (port)
-        {
-                case 0x0092:
-                ps2_92 = val;    
+void ps2_write(uint16_t port, uint8_t val, void *p) {
+        switch (port) {
+        case 0x0092:
+                ps2_92 = val;
                 mem_a20_alt = val & 2;
                 mem_a20_recalc();
                 break;
-                case 0x94:
+        case 0x94:
                 ps2_94 = val;
                 break;
-                case 0x102:
+        case 0x102:
                 lpt1_remove();
                 if (val & 0x04)
                         serial1_init(0x3f8, 4, 1);
                 else
                         serial1_remove();
-                if (val & 0x10)
-                {
-                        switch ((val >> 5) & 3)
-                        {
-                                case 0:
+                if (val & 0x10) {
+                        switch ((val >> 5) & 3) {
+                        case 0:
                                 lpt1_init(0x3bc);
                                 break;
-                                case 1:
+                        case 1:
                                 lpt1_init(0x378);
                                 break;
-                                case 2:
+                        case 2:
                                 lpt1_init(0x278);
                                 break;
                         }
                 }
                 ps2_102 = val;
                 break;
-                case 0x103:
+        case 0x103:
                 ps2_103 = val;
                 break;
-                case 0x104:
+        case 0x104:
                 ps2_104 = val;
                 break;
-                case 0x105:
+        case 0x105:
                 ps2_105 = val;
                 break;
-                case 0x190:
+        case 0x190:
                 ps2_190 = val;
                 break;
-                
-                case 0x322:
+
+        case 0x322:
                 ps2_hd.ctrl = val;
                 if (val & 0x80)
                         ps2_hd.status |= 0x02;
                 break;
-                case 0x324:
+        case 0x324:
                 ps2_hd.attention = val & 0xf0;
                 if (ps2_hd.attention)
                         ps2_hd.status = 0x14;
@@ -114,8 +108,7 @@ void ps2_write(uint16_t port, uint8_t val, void *p)
         }
 }
 
-void ps2board_init()
-{
+void ps2board_init() {
         io_sethandler(0x0091, 0x0001, ps2_read, NULL, NULL, ps2_write, NULL, NULL, NULL);
         io_sethandler(0x0092, 0x0001, ps2_read, NULL, NULL, ps2_write, NULL, NULL, NULL);
         io_sethandler(0x0094, 0x0001, ps2_read, NULL, NULL, ps2_write, NULL, NULL, NULL);
@@ -127,13 +120,13 @@ void ps2board_init()
 
         ps2_92 = 0;
         ps2_190 = 0;
-        
+
         lpt1_remove();
         lpt2_remove();
         lpt1_init(0x3bc);
-        
+
         serial1_remove();
         serial2_remove();
-        
+
         memset(&ps2_hd, 0, sizeof(ps2_hd));
 }

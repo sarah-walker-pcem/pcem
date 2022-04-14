@@ -3,5 +3,4 @@
 
 void aip_82091aa_init(uint16_t base);
 
-
 #endif /* _82091AA_H_ */

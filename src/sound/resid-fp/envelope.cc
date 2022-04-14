@@ -23,16 +23,14 @@
 // ----------------------------------------------------------------------------
 // Constructor.
 // ----------------------------------------------------------------------------
-EnvelopeGeneratorFP::EnvelopeGeneratorFP()
-{
+EnvelopeGeneratorFP::EnvelopeGeneratorFP() {
         reset();
 }
 
 // ----------------------------------------------------------------------------
 // SID reset.
 // ----------------------------------------------------------------------------
-void EnvelopeGeneratorFP::reset()
-{
+void EnvelopeGeneratorFP::reset() {
         envelope_counter = 0;
 
         attack = 0;
@@ -54,7 +52,7 @@ void EnvelopeGeneratorFP::reset()
 // Rate counter periods are calculated from the Envelope Rates table in
 // the Programmer's Reference Guide. The rate counter period is the number of
 // cycles between each increment of the envelope counter.
-// The rates have been verified by sampling ENV3. 
+// The rates have been verified by sampling ENV3.
 //
 // The rate counter is a 16 bit register which is incremented each cycle.
 // When the counter reaches a specific comparison value, the envelope counter
@@ -96,24 +94,23 @@ void EnvelopeGeneratorFP::reset()
 // periods.
 //
 reg16 EnvelopeGeneratorFP::rate_counter_period[] = {
-        9,  //   2ms*1.0MHz/256 =     7.81
-        32,  //   8ms*1.0MHz/256 =    31.25
-        63,  //  16ms*1.0MHz/256 =    62.50
-        95,  //  24ms*1.0MHz/256 =    93.75
-        149,  //  38ms*1.0MHz/256 =   148.44
-        220,  //  56ms*1.0MHz/256 =   218.75
-        267,  //  68ms*1.0MHz/256 =   265.63
-        313,  //  80ms*1.0MHz/256 =   312.50
-        392,  // 100ms*1.0MHz/256 =   390.63
-        977,  // 250ms*1.0MHz/256 =   976.56
-        1954,  // 500ms*1.0MHz/256 =  1953.13
-        3126,  // 800ms*1.0MHz/256 =  3125.00
-        3907,  //   1 s*1.0MHz/256 =  3906.25
-        11720,  //   3 s*1.0MHz/256 = 11718.75
-        19532,  //   5 s*1.0MHz/256 = 19531.25
-        31251   //   8 s*1.0MHz/256 = 31250.00
+    9,     //   2ms*1.0MHz/256 =     7.81
+    32,    //   8ms*1.0MHz/256 =    31.25
+    63,    //  16ms*1.0MHz/256 =    62.50
+    95,    //  24ms*1.0MHz/256 =    93.75
+    149,   //  38ms*1.0MHz/256 =   148.44
+    220,   //  56ms*1.0MHz/256 =   218.75
+    267,   //  68ms*1.0MHz/256 =   265.63
+    313,   //  80ms*1.0MHz/256 =   312.50
+    392,   // 100ms*1.0MHz/256 =   390.63
+    977,   // 250ms*1.0MHz/256 =   976.56
+    1954,  // 500ms*1.0MHz/256 =  1953.13
+    3126,  // 800ms*1.0MHz/256 =  3125.00
+    3907,  //   1 s*1.0MHz/256 =  3906.25
+    11720, //   3 s*1.0MHz/256 = 11718.75
+    19532, //   5 s*1.0MHz/256 = 19531.25
+    31251  //   8 s*1.0MHz/256 = 31250.00
 };
-
 
 // For decay and release, the clock to the envelope counter is sequentially
 // divided by 1, 2, 4, 8, 16, 30, 1 to create a piece-wise linear approximation
@@ -147,52 +144,48 @@ reg16 EnvelopeGeneratorFP::rate_counter_period[] = {
 // complete envelopes.
 // NB! This one cycle delay is not modeled.
 
-
 // From the sustain levels it follows that both the low and high 4 bits of the
 // envelope counter are compared to the 4-bit sustain value.
 // This has been verified by sampling ENV3.
 //
 reg8 EnvelopeGeneratorFP::sustain_level[] = {
-        0x00,
-        0x11,
-        0x22,
-        0x33,
-        0x44,
-        0x55,
-        0x66,
-        0x77,
-        0x88,
-        0x99,
-        0xaa,
-        0xbb,
-        0xcc,
-        0xdd,
-        0xee,
-        0xff,
+    0x00,
+    0x11,
+    0x22,
+    0x33,
+    0x44,
+    0x55,
+    0x66,
+    0x77,
+    0x88,
+    0x99,
+    0xaa,
+    0xbb,
+    0xcc,
+    0xdd,
+    0xee,
+    0xff,
 };
 
 // ----------------------------------------------------------------------------
 // Register functions.
 // ----------------------------------------------------------------------------
-void EnvelopeGeneratorFP::writeCONTROL_REG(reg8 control)
-{
+void EnvelopeGeneratorFP::writeCONTROL_REG(reg8 control) {
         reg8 gate_next = control & 0x01;
 
         // The rate counter is never reset, thus there will be a delay before the
         // envelope counter starts counting up (attack) or down (release).
 
         // Gate bit on: Start attack, decay, sustain.
-        if (!gate && gate_next)
-        {
+        if (!gate && gate_next) {
                 state = ATTACK;
                 update_rate_period(rate_counter_period[attack]);
 
                 // Switching to attack state unlocks the zero freeze.
                 hold_zero = false;
         }
-                // Gate bit off: Start release.
-        else if (gate && !gate_next)
-        {
+        // Gate bit off: Start release.
+        else if (gate && !gate_next) {
                 state = RELEASE;
                 update_rate_period(rate_counter_period[release]);
         }
@@ -200,37 +193,29 @@ void EnvelopeGeneratorFP::writeCONTROL_REG(reg8 control)
         gate = gate_next;
 }
 
-void EnvelopeGeneratorFP::writeATTACK_DECAY(reg8 attack_decay)
-{
+void EnvelopeGeneratorFP::writeATTACK_DECAY(reg8 attack_decay) {
         attack = (attack_decay >> 4) & 0x0f;
         decay = attack_decay & 0x0f;
-        if (state == ATTACK)
-        {
+        if (state == ATTACK) {
                 update_rate_period(rate_counter_period[attack]);
-        }
-        else if (state == DECAY_SUSTAIN)
-        {
+        } else if (state == DECAY_SUSTAIN) {
                 update_rate_period(rate_counter_period[decay]);
         }
 }
 
-void EnvelopeGeneratorFP::writeSUSTAIN_RELEASE(reg8 sustain_release)
-{
+void EnvelopeGeneratorFP::writeSUSTAIN_RELEASE(reg8 sustain_release) {
         sustain = (sustain_release >> 4) & 0x0f;
         release = sustain_release & 0x0f;
-        if (state == RELEASE)
-        {
+        if (state == RELEASE) {
                 update_rate_period(rate_counter_period[release]);
         }
 }
 
-reg8 EnvelopeGeneratorFP::readENV()
-{
+reg8 EnvelopeGeneratorFP::readENV() {
         return output();
 }
 
-void EnvelopeGeneratorFP::update_rate_period(reg16 newperiod)
-{
+void EnvelopeGeneratorFP::update_rate_period(reg16 newperiod) {
         rate_period = newperiod;
 
         /* The ADSR counter is XOR shift register with 0x7fff unique values.

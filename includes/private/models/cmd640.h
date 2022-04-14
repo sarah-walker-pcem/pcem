@@ -3,5 +3,4 @@
 
 void cmd640b_init(int card);
 
-
 #endif /* _CMD640_H_ */

@@ -1,12 +1,12 @@
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include "ibm.h"
 #include "device.h"
+#include "ibm.h"
 #include "io.h"
 #include "mem.h"
 #include "pci.h"
 #include "sound.h"
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define N 16
 
@@ -14,8 +14,7 @@
 
 static float low_fir_es1371_coef[ES1371_NCoef];
 
-typedef struct es1371_t
-{
+typedef struct es1371_t {
         uint8_t pci_command, pci_serr;
 
         uint32_t base_addr;
@@ -76,35 +75,35 @@ typedef struct es1371_t
         int16_t buffer[MAXSOUNDBUFLEN * 2];
 } es1371_t;
 
-#define LEGACY_SB_ADDR            (1 << 29)
-#define LEGACY_SSCAPE_ADDR_SHIFT  27
-#define LEGACY_CODEC_ADDR_SHIFT   25
-#define LEGACY_FORCE_IRQ          (1 << 24)
-#define LEGACY_CAPTURE_SLAVE_DMA  (1 << 23)
-#define LEGACY_CAPTURE_SLAVE_PIC  (1 << 22)
+#define LEGACY_SB_ADDR (1 << 29)
+#define LEGACY_SSCAPE_ADDR_SHIFT 27
+#define LEGACY_CODEC_ADDR_SHIFT 25
+#define LEGACY_FORCE_IRQ (1 << 24)
+#define LEGACY_CAPTURE_SLAVE_DMA (1 << 23)
+#define LEGACY_CAPTURE_SLAVE_PIC (1 << 22)
 #define LEGACY_CAPTURE_MASTER_DMA (1 << 21)
 #define LEGACY_CAPTURE_MASTER_PIC (1 << 20)
-#define LEGACY_CAPTURE_ADLIB      (1 << 19)
-#define LEGACY_CAPTURE_SB         (1 << 18)
-#define LEGACY_CAPTURE_CODEC      (1 << 17)
-#define LEGACY_CAPTURE_SSCAPE     (1 << 16)
-#define LEGACY_EVENT_SSCAPE     (0 << 8)
-#define LEGACY_EVENT_CODEC      (1 << 8)
-#define LEGACY_EVENT_SB         (2 << 8)
-#define LEGACY_EVENT_ADLIB      (3 << 8)
+#define LEGACY_CAPTURE_ADLIB (1 << 19)
+#define LEGACY_CAPTURE_SB (1 << 18)
+#define LEGACY_CAPTURE_CODEC (1 << 17)
+#define LEGACY_CAPTURE_SSCAPE (1 << 16)
+#define LEGACY_EVENT_SSCAPE (0 << 8)
+#define LEGACY_EVENT_CODEC (1 << 8)
+#define LEGACY_EVENT_SB (2 << 8)
+#define LEGACY_EVENT_ADLIB (3 << 8)
 #define LEGACY_EVENT_MASTER_PIC (4 << 8)
 #define LEGACY_EVENT_MASTER_DMA (5 << 8)
-#define LEGACY_EVENT_SLAVE_PIC  (6 << 8)
-#define LEGACY_EVENT_SLAVE_DMA  (7 << 8)
-#define LEGACY_EVENT_MASK       (7 << 8)
+#define LEGACY_EVENT_SLAVE_PIC (6 << 8)
+#define LEGACY_EVENT_SLAVE_DMA (7 << 8)
+#define LEGACY_EVENT_MASK (7 << 8)
 #define LEGACY_EVENT_ADDR_SHIFT 3
 #define LEGACY_EVENT_ADDR_MASK (0x1f << 3)
-#define LEGACY_EVENT_TYPE_RW  (1 << 2)
+#define LEGACY_EVENT_TYPE_RW (1 << 2)
 #define LEGACY_INT (1 << 0)
 
 #define SRC_RAM_WE (1 << 24)
 
-#define CODEC_READ  (1 << 23)
+#define CODEC_READ (1 << 23)
 #define CODEC_READY (1 << 31)
 
 #define INT_DAC1_EN (1 << 6)
@@ -117,23 +116,21 @@ typedef struct es1371_t
 #define INT_STATUS_DAC1 (1 << 2)
 #define INT_STATUS_DAC2 (1 << 1)
 
-#define FORMAT_MONO_8    0
-#define FORMAT_STEREO_8  1
-#define FORMAT_MONO_16   2
+#define FORMAT_MONO_8 0
+#define FORMAT_STEREO_8 1
+#define FORMAT_MONO_16 2
 #define FORMAT_STEREO_16 3
 
 const int32_t codec_attn[] =
-        {
-                25, 32, 41, 51, 65, 82, 103, 130, 164, 206, 260, 327, 412, 519, 653,
-                822, 1036, 1304, 1641, 2067, 2602, 3276, 4125, 5192, 6537, 8230, 10362, 13044,
-                16422, 20674, 26027, 32767
-        };
+    {
+        25, 32, 41, 51, 65, 82, 103, 130, 164, 206, 260, 327, 412, 519, 653,
+        822, 1036, 1304, 1641, 2067, 2602, 3276, 4125, 5192, 6537, 8230, 10362, 13044,
+        16422, 20674, 26027, 32767};
 
-static void es1371_fetch(es1371_t* es1371, int dac_nr);
-static void update_legacy(es1371_t* es1371, uint32_t old_legacy_ctrl);
+static void es1371_fetch(es1371_t *es1371, int dac_nr);
+static void update_legacy(es1371_t *es1371, uint32_t old_legacy_ctrl);
 
-static void es1371_update_irqs(es1371_t* es1371)
-{
+static void es1371_update_irqs(es1371_t *es1371) {
         int irq = 0;
 
         if ((es1371->int_status & INT_STATUS_DAC1) && (es1371->si_cr & SI_P1_INTR_EN))
@@ -149,25 +146,20 @@ static void es1371_update_irqs(es1371_t* es1371)
         if (es1371->legacy_ctrl & LEGACY_FORCE_IRQ)
                 irq = 1;
 
-        if (irq)
-        {
+        if (irq) {
                 pci_set_irq(es1371->card, PCI_INTA);
-//                pclog("Raise IRQ\n");
-        }
-        else
-        {
+                //                pclog("Raise IRQ\n");
+        } else {
                 pci_clear_irq(es1371->card, PCI_INTA);
-//                pclog("Drop IRQ\n");
+                //                pclog("Drop IRQ\n");
         }
 }
 
-static uint8_t es1371_inb(uint16_t port, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static uint8_t es1371_inb(uint16_t port, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
         uint8_t ret = 0;
 
-        switch (port & 0x3f)
-        {
+        switch (port & 0x3f) {
         case 0x00:
                 ret = es1371->int_ctrl & 0xff;
                 break;
@@ -226,17 +218,15 @@ static uint8_t es1371_inb(uint16_t port, void* p)
                 pclog("Bad es1371_inb: port=%04x\n", port);
         }
 
-//        pclog("es1371_inb: port=%04x ret=%02x\n", port, ret);
-//        output = 3;
+        //        pclog("es1371_inb: port=%04x ret=%02x\n", port, ret);
+        //        output = 3;
         return ret;
 }
-static uint16_t es1371_inw(uint16_t port, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static uint16_t es1371_inw(uint16_t port, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
         uint16_t ret = 0;
 
-        switch (port & 0x3e)
-        {
+        switch (port & 0x3e) {
         case 0x00:
                 ret = es1371->int_ctrl & 0xffff;
                 break;
@@ -246,7 +236,7 @@ static uint16_t es1371_inw(uint16_t port, void* p)
 
         case 0x18:
                 ret = es1371->legacy_ctrl & 0xffff;
-//                pclog("Read legacy ctrl %04x\n", ret);
+                //                pclog("Read legacy ctrl %04x\n", ret);
                 break;
 
         case 0x26:
@@ -258,8 +248,7 @@ static uint16_t es1371_inw(uint16_t port, void* p)
                 break;
 
         case 0x36:
-                switch (es1371->mem_page)
-                {
+                switch (es1371->mem_page) {
                 case 0xc:
                         ret = es1371->dac[0].count;
                         break;
@@ -270,8 +259,7 @@ static uint16_t es1371_inw(uint16_t port, void* p)
                 break;
 
         case 0x3e:
-                switch (es1371->mem_page)
-                {
+                switch (es1371->mem_page) {
                 case 0xc:
                         ret = es1371->dac[1].count;
                         break;
@@ -285,16 +273,14 @@ static uint16_t es1371_inw(uint16_t port, void* p)
                 pclog("Bad es1371_inw: port=%04x\n", port);
         }
 
-//        pclog("es1371_inw: port=%04x ret=%04x %04x:%08x\n", port, ret, CS,cpu_state.pc);
+        //        pclog("es1371_inw: port=%04x ret=%04x %04x:%08x\n", port, ret, CS,cpu_state.pc);
         return ret;
 }
-static uint32_t es1371_inl(uint16_t port, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static uint32_t es1371_inl(uint16_t port, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
         uint32_t ret = 0;
 
-        switch (port & 0x3c)
-        {
+        switch (port & 0x3c) {
         case 0x00:
                 ret = es1371->int_ctrl;
                 break;
@@ -314,8 +300,7 @@ static uint32_t es1371_inl(uint16_t port, void* p)
                 break;
 
         case 0x34:
-                switch (es1371->mem_page)
-                {
+                switch (es1371->mem_page) {
                 case 0xc:
                         ret = es1371->dac[0].size | (es1371->dac[0].count << 16);
                         break;
@@ -330,8 +315,7 @@ static uint32_t es1371_inl(uint16_t port, void* p)
                 break;
 
         case 0x3c:
-                switch (es1371->mem_page)
-                {
+                switch (es1371->mem_page) {
                 case 0xc:
                         ret = es1371->dac[1].size | (es1371->dac[1].count << 16);
                         break;
@@ -345,28 +329,24 @@ static uint32_t es1371_inl(uint16_t port, void* p)
                 pclog("Bad es1371_inl: port=%04x\n", port);
         }
 
-//        pclog("es1371_inl: port=%04x ret=%08x  %08x\n", port, ret, cpu_state.pc);
+        //        pclog("es1371_inl: port=%04x ret=%08x  %08x\n", port, ret, cpu_state.pc);
         return ret;
 }
 
-static void es1371_outb(uint16_t port, uint8_t val, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static void es1371_outb(uint16_t port, uint8_t val, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
         uint32_t old_legacy_ctrl;
 
-//        pclog("es1371_outb: port=%04x val=%02x %04x:%08x\n", port, val, cs, cpu_state.pc);
-        switch (port & 0x3f)
-        {
+        //        pclog("es1371_outb: port=%04x val=%02x %04x:%08x\n", port, val, cs, cpu_state.pc);
+        switch (port & 0x3f) {
         case 0x00:
-                if (!(es1371->int_ctrl & INT_DAC1_EN) && (val & INT_DAC1_EN))
-                {
+                if (!(es1371->int_ctrl & INT_DAC1_EN) && (val & INT_DAC1_EN)) {
                         es1371->dac[0].addr = es1371->dac[0].addr_latch;
                         es1371->dac[0].buffer_pos = 0;
                         es1371->dac[0].buffer_pos_end = 0;
                         es1371_fetch(es1371, 0);
                 }
-                if (!(es1371->int_ctrl & INT_DAC2_EN) && (val & INT_DAC2_EN))
-                {
+                if (!(es1371->int_ctrl & INT_DAC2_EN) && (val & INT_DAC2_EN)) {
                         es1371->dac[1].addr = es1371->dac[1].addr_latch;
                         es1371->dac[1].buffer_pos = 0;
                         es1371->dac[1].buffer_pos_end = 0;
@@ -405,7 +385,7 @@ static void es1371_outb(uint16_t port, uint8_t val, void* p)
                 old_legacy_ctrl = es1371->legacy_ctrl;
                 es1371->legacy_ctrl = (es1371->legacy_ctrl & 0x00ffffff) | (val << 24);
                 es1371_update_irqs(es1371);
-//                output = 3;
+                //                output = 3;
                 update_legacy(es1371, old_legacy_ctrl);
                 break;
 
@@ -428,13 +408,11 @@ static void es1371_outb(uint16_t port, uint8_t val, void* p)
                 pclog("Bad es1371_outb: port=%04x val=%02x\n", port, val);
         }
 }
-static void es1371_outw(uint16_t port, uint16_t val, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static void es1371_outw(uint16_t port, uint16_t val, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
 
-//        pclog("es1371_outw: port=%04x val=%04x\n", port, val);
-        switch (port & 0x3f)
-        {
+        //        pclog("es1371_outw: port=%04x val=%04x\n", port, val);
+        switch (port & 0x3f) {
         case 0x0c:
                 es1371->mem_page = val & 0xf;
                 break;
@@ -451,13 +429,11 @@ static void es1371_outw(uint16_t port, uint16_t val, void* p)
                 pclog("Bad es1371_outw: port=%04x val=%04x\n", port, val);
         }
 }
-static void es1371_outl(uint16_t port, uint32_t val, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static void es1371_outl(uint16_t port, uint32_t val, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
 
-//        pclog("es1371_outl: port=%04x val=%08x %04x:%08x\n", port, val, CS, cpu_state.pc);
-        switch (port & 0x3f)
-        {
+        //        pclog("es1371_outl: port=%04x val=%08x %04x:%08x\n", port, val, CS, cpu_state.pc);
+        switch (port & 0x3f) {
         case 0x04:
                 break;
 
@@ -467,12 +443,10 @@ static void es1371_outl(uint16_t port, uint32_t val, void* p)
 
         case 0x10:
                 es1371->sr_cir = val;
-                if (es1371->sr_cir & SRC_RAM_WE)
-                {
-//                        pclog("Write SR RAM %02x %04x\n", es1371->sr_cir >> 25, val & 0xffff);
+                if (es1371->sr_cir & SRC_RAM_WE) {
+                        //                        pclog("Write SR RAM %02x %04x\n", es1371->sr_cir >> 25, val & 0xffff);
                         es1371->sr_ram[es1371->sr_cir >> 25] = val & 0xffff;
-                        switch (es1371->sr_cir >> 25)
-                        {
+                        switch (es1371->sr_cir >> 25) {
                         case 0x71:
                                 es1371->dac[0].vf = (es1371->dac[0].vf & ~0x1f8000) | ((val & 0xfc00) << 5);
                                 es1371->dac[0].ac = (es1371->dac[0].ac & ~0x7f8000) | ((val & 0x00ff) << 15);
@@ -515,17 +489,14 @@ static void es1371_outl(uint16_t port, uint32_t val, void* p)
 
         case 0x14:
                 es1371->codec_ctrl = val;
-                if (!(val & CODEC_READ))
-                {
-//                        pclog("Write codec %02x %04x\n", (val >> 16) & 0x3f, val & 0xffff);
+                if (!(val & CODEC_READ)) {
+                        //                        pclog("Write codec %02x %04x\n", (val >> 16) & 0x3f, val & 0xffff);
                         es1371->codec_regs[(val >> 16) & 0x3f] = val & 0xffff;
-                        switch ((val >> 16) & 0x3f)
-                        {
+                        switch ((val >> 16) & 0x3f) {
                         case 0x02: /*Master volume*/
                                 if (val & 0x8000)
                                         es1371->master_vol_l = es1371->master_vol_r = 0;
-                                else
-                                {
+                                else {
                                         if (val & 0x2000)
                                                 es1371->master_vol_l = codec_attn[0];
                                         else
@@ -555,8 +526,7 @@ static void es1371_outl(uint16_t port, uint32_t val, void* p)
                 break;
 
         case 0x30:
-                switch (es1371->mem_page)
-                {
+                switch (es1371->mem_page) {
                 case 0x0:
                 case 0x1:
                 case 0x2:
@@ -573,7 +543,7 @@ static void es1371_outl(uint16_t port, uint32_t val, void* p)
 
                 case 0xc:
                         es1371->dac[0].addr_latch = val;
-//                        pclog("DAC1 addr %08x\n", val);
+                        //                        pclog("DAC1 addr %08x\n", val);
                         break;
 
                 default:
@@ -581,8 +551,7 @@ static void es1371_outl(uint16_t port, uint32_t val, void* p)
                 }
                 break;
         case 0x34:
-                switch (es1371->mem_page)
-                {
+                switch (es1371->mem_page) {
                 case 0x0:
                 case 0x1:
                 case 0x2:
@@ -612,8 +581,7 @@ static void es1371_outl(uint16_t port, uint32_t val, void* p)
                 }
                 break;
         case 0x38:
-                switch (es1371->mem_page)
-                {
+                switch (es1371->mem_page) {
                 case 0x0:
                 case 0x1:
                 case 0x2:
@@ -640,8 +608,7 @@ static void es1371_outl(uint16_t port, uint32_t val, void* p)
                 }
                 break;
         case 0x3c:
-                switch (es1371->mem_page)
-                {
+                switch (es1371->mem_page) {
                 case 0x0:
                 case 0x1:
                 case 0x2:
@@ -671,8 +638,7 @@ static void es1371_outl(uint16_t port, uint32_t val, void* p)
         }
 }
 
-static void capture_event(es1371_t* es1371, int type, int rw, uint16_t port)
-{
+static void capture_event(es1371_t *es1371, int type, int rw, uint16_t port) {
         es1371->legacy_ctrl &= ~(LEGACY_EVENT_MASK | LEGACY_EVENT_ADDR_MASK);
         es1371->legacy_ctrl |= type;
         if (rw)
@@ -682,89 +648,70 @@ static void capture_event(es1371_t* es1371, int type, int rw, uint16_t port)
         es1371->legacy_ctrl |= ((port << LEGACY_EVENT_ADDR_SHIFT) & LEGACY_EVENT_ADDR_MASK);
         es1371->legacy_ctrl &= ~LEGACY_INT;
         nmi = 1;
-//        pclog("Event! %s %04x\n", rw ? "write" : "read", port);
+        //        pclog("Event! %s %04x\n", rw ? "write" : "read", port);
 }
 
-static void capture_write_sscape(uint16_t port, uint8_t val, void* p)
-{
+static void capture_write_sscape(uint16_t port, uint8_t val, void *p) {
         capture_event(p, LEGACY_EVENT_SSCAPE, 1, port);
 }
-static void capture_write_codec(uint16_t port, uint8_t val, void* p)
-{
+static void capture_write_codec(uint16_t port, uint8_t val, void *p) {
         capture_event(p, LEGACY_EVENT_CODEC, 1, port);
 }
-static void capture_write_sb(uint16_t port, uint8_t val, void* p)
-{
+static void capture_write_sb(uint16_t port, uint8_t val, void *p) {
         capture_event(p, LEGACY_EVENT_SB, 1, port);
 }
-static void capture_write_adlib(uint16_t port, uint8_t val, void* p)
-{
+static void capture_write_adlib(uint16_t port, uint8_t val, void *p) {
         capture_event(p, LEGACY_EVENT_ADLIB, 1, port);
 }
-static void capture_write_master_pic(uint16_t port, uint8_t val, void* p)
-{
+static void capture_write_master_pic(uint16_t port, uint8_t val, void *p) {
         capture_event(p, LEGACY_EVENT_MASTER_PIC, 1, port);
 }
-static void capture_write_master_dma(uint16_t port, uint8_t val, void* p)
-{
+static void capture_write_master_dma(uint16_t port, uint8_t val, void *p) {
         capture_event(p, LEGACY_EVENT_MASTER_DMA, 1, port);
 }
-static void capture_write_slave_pic(uint16_t port, uint8_t val, void* p)
-{
+static void capture_write_slave_pic(uint16_t port, uint8_t val, void *p) {
         capture_event(p, LEGACY_EVENT_SLAVE_PIC, 1, port);
 }
-static void capture_write_slave_dma(uint16_t port, uint8_t val, void* p)
-{
+static void capture_write_slave_dma(uint16_t port, uint8_t val, void *p) {
         capture_event(p, LEGACY_EVENT_SLAVE_DMA, 1, port);
 }
 
-static uint8_t capture_read_sscape(uint16_t port, void* p)
-{
+static uint8_t capture_read_sscape(uint16_t port, void *p) {
         capture_event(p, LEGACY_EVENT_SSCAPE, 0, port);
         return 0xff;
 }
-static uint8_t capture_read_codec(uint16_t port, void* p)
-{
+static uint8_t capture_read_codec(uint16_t port, void *p) {
         capture_event(p, LEGACY_EVENT_CODEC, 0, port);
         return 0xff;
 }
-static uint8_t capture_read_sb(uint16_t port, void* p)
-{
+static uint8_t capture_read_sb(uint16_t port, void *p) {
         capture_event(p, LEGACY_EVENT_SB, 0, port);
         return 0xff;
 }
-static uint8_t capture_read_adlib(uint16_t port, void* p)
-{
+static uint8_t capture_read_adlib(uint16_t port, void *p) {
         capture_event(p, LEGACY_EVENT_ADLIB, 0, port);
         return 0xff;
 }
-static uint8_t capture_read_master_pic(uint16_t port, void* p)
-{
+static uint8_t capture_read_master_pic(uint16_t port, void *p) {
         capture_event(p, LEGACY_EVENT_MASTER_PIC, 0, port);
         return 0xff;
 }
-static uint8_t capture_read_master_dma(uint16_t port, void* p)
-{
+static uint8_t capture_read_master_dma(uint16_t port, void *p) {
         capture_event(p, LEGACY_EVENT_MASTER_DMA, 0, port);
         return 0xff;
 }
-static uint8_t capture_read_slave_pic(uint16_t port, void* p)
-{
+static uint8_t capture_read_slave_pic(uint16_t port, void *p) {
         capture_event(p, LEGACY_EVENT_SLAVE_PIC, 0, port);
         return 0xff;
 }
-static uint8_t capture_read_slave_dma(uint16_t port, void* p)
-{
+static uint8_t capture_read_slave_dma(uint16_t port, void *p) {
         capture_event(p, LEGACY_EVENT_SLAVE_DMA, 0, port);
         return 0xff;
 }
 
-static void update_legacy(es1371_t* es1371, uint32_t old_legacy_ctrl)
-{
-        if (old_legacy_ctrl & LEGACY_CAPTURE_SSCAPE)
-        {
-                switch ((old_legacy_ctrl >> LEGACY_SSCAPE_ADDR_SHIFT) & 3)
-                {
+static void update_legacy(es1371_t *es1371, uint32_t old_legacy_ctrl) {
+        if (old_legacy_ctrl & LEGACY_CAPTURE_SSCAPE) {
+                switch ((old_legacy_ctrl >> LEGACY_SSCAPE_ADDR_SHIFT) & 3) {
                 case 0:
                         io_removehandler(0x0320, 0x0008, capture_read_sscape, NULL, NULL, capture_write_sscape, NULL, NULL, es1371);
                         break;
@@ -779,10 +726,8 @@ static void update_legacy(es1371_t* es1371, uint32_t old_legacy_ctrl)
                         break;
                 }
         }
-        if (old_legacy_ctrl & LEGACY_CAPTURE_CODEC)
-        {
-                switch ((old_legacy_ctrl >> LEGACY_CODEC_ADDR_SHIFT) & 3)
-                {
+        if (old_legacy_ctrl & LEGACY_CAPTURE_CODEC) {
+                switch ((old_legacy_ctrl >> LEGACY_CODEC_ADDR_SHIFT) & 3) {
                 case 0:
                         io_removehandler(0x5300, 0x0080, capture_read_codec, NULL, NULL, capture_write_codec, NULL, NULL, es1371);
                         break;
@@ -794,8 +739,7 @@ static void update_legacy(es1371_t* es1371, uint32_t old_legacy_ctrl)
                         break;
                 }
         }
-        if (old_legacy_ctrl & LEGACY_CAPTURE_SB)
-        {
+        if (old_legacy_ctrl & LEGACY_CAPTURE_SB) {
                 if (!(old_legacy_ctrl & LEGACY_SB_ADDR))
                         io_removehandler(0x0220, 0x0010, capture_read_sb, NULL, NULL, capture_write_sb, NULL, NULL, es1371);
                 else
@@ -812,10 +756,8 @@ static void update_legacy(es1371_t* es1371, uint32_t old_legacy_ctrl)
         if (old_legacy_ctrl & LEGACY_CAPTURE_SLAVE_DMA)
                 io_removehandler(0x00c0, 0x0020, capture_read_slave_dma, NULL, NULL, capture_write_slave_dma, NULL, NULL, es1371);
 
-        if (es1371->legacy_ctrl & LEGACY_CAPTURE_SSCAPE)
-        {
-                switch ((es1371->legacy_ctrl >> LEGACY_SSCAPE_ADDR_SHIFT) & 3)
-                {
+        if (es1371->legacy_ctrl & LEGACY_CAPTURE_SSCAPE) {
+                switch ((es1371->legacy_ctrl >> LEGACY_SSCAPE_ADDR_SHIFT) & 3) {
                 case 0:
                         io_sethandler(0x0320, 0x0008, capture_read_sscape, NULL, NULL, capture_write_sscape, NULL, NULL, es1371);
                         break;
@@ -830,10 +772,8 @@ static void update_legacy(es1371_t* es1371, uint32_t old_legacy_ctrl)
                         break;
                 }
         }
-        if (es1371->legacy_ctrl & LEGACY_CAPTURE_CODEC)
-        {
-                switch ((es1371->legacy_ctrl >> LEGACY_CODEC_ADDR_SHIFT) & 3)
-                {
+        if (es1371->legacy_ctrl & LEGACY_CAPTURE_CODEC) {
+                switch ((es1371->legacy_ctrl >> LEGACY_CODEC_ADDR_SHIFT) & 3) {
                 case 0:
                         io_sethandler(0x5300, 0x0080, capture_read_codec, NULL, NULL, capture_write_codec, NULL, NULL, es1371);
                         break;
@@ -845,8 +785,7 @@ static void update_legacy(es1371_t* es1371, uint32_t old_legacy_ctrl)
                         break;
                 }
         }
-        if (es1371->legacy_ctrl & LEGACY_CAPTURE_SB)
-        {
+        if (es1371->legacy_ctrl & LEGACY_CAPTURE_SB) {
                 if (!(es1371->legacy_ctrl & LEGACY_SB_ADDR))
                         io_sethandler(0x0220, 0x0010, capture_read_sb, NULL, NULL, capture_write_sb, NULL, NULL, es1371);
                 else
@@ -864,17 +803,15 @@ static void update_legacy(es1371_t* es1371, uint32_t old_legacy_ctrl)
                 io_sethandler(0x00c0, 0x0020, capture_read_slave_dma, NULL, NULL, capture_write_slave_dma, NULL, NULL, es1371);
 }
 
-static uint8_t es1371_pci_read(int func, int addr, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static uint8_t es1371_pci_read(int func, int addr, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
 
         if (func)
                 return 0;
 
-        //pclog("ES1371 PCI read %08X PC=%08x\n", addr, cpu_state.pc);
+        // pclog("ES1371 PCI read %08X PC=%08x\n", addr, cpu_state.pc);
 
-        switch (addr)
-        {
+        switch (addr) {
         case 0x00:
                 return 0x74; /*Ensoniq*/
         case 0x01:
@@ -952,17 +889,15 @@ static uint8_t es1371_pci_read(int func, int addr, void* p)
         return 0;
 }
 
-static void es1371_pci_write(int func, int addr, uint8_t val, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static void es1371_pci_write(int func, int addr, uint8_t val, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
 
         if (func)
                 return;
 
-//        pclog("ES1371 PCI write %04X %02X PC=%08x\n", addr, val, cpu_state.pc);
+        //        pclog("ES1371 PCI write %04X %02X PC=%08x\n", addr, val, cpu_state.pc);
 
-        switch (addr)
-        {
+        switch (addr) {
         case 0x04:
                 if (es1371->pci_command & PCI_COMMAND_IO)
                         io_removehandler(es1371->base_addr, 0x0040, es1371_inb, es1371_inw, es1371_inl, es1371_outb, es1371_outw, es1371_outl, es1371);
@@ -1006,21 +941,18 @@ static void es1371_pci_write(int func, int addr, uint8_t val, void* p)
                 es1371->pmcsr = (es1371->pmcsr & 0x00ff) | ((val & 0x01) << 8);
                 break;
         }
-//        pclog("es1371->base_addr %08x\n", es1371->base_addr);
+        //        pclog("es1371->base_addr %08x\n", es1371->base_addr);
 }
 
-static void es1371_fetch(es1371_t* es1371, int dac_nr)
-{
+static void es1371_fetch(es1371_t *es1371, int dac_nr) {
         int format = dac_nr ? ((es1371->si_cr >> 2) & 3) : (es1371->si_cr & 3);
         int pos = es1371->dac[dac_nr].buffer_pos & 63;
         int c;
 
-//pclog("Fetch format=%i %08x %08x  %08x %08x  %08x\n", format, es1371->dac[dac_nr].count, es1371->dac[dac_nr].size,  es1371->dac[dac_nr].curr_samp_ct,es1371->dac[dac_nr].samp_ct, es1371->dac[dac_nr].addr);
-        switch (format)
-        {
+        // pclog("Fetch format=%i %08x %08x  %08x %08x  %08x\n", format, es1371->dac[dac_nr].count, es1371->dac[dac_nr].size,  es1371->dac[dac_nr].curr_samp_ct,es1371->dac[dac_nr].samp_ct, es1371->dac[dac_nr].addr);
+        switch (format) {
         case FORMAT_MONO_8:
-                for (c = 0; c < 32; c += 4)
-                {
+                for (c = 0; c < 32; c += 4) {
                         es1371->dac[dac_nr].buffer_l[(pos + c) & 63] = es1371->dac[dac_nr].buffer_r[(pos + c) & 63] = (mem_readb_phys(es1371->dac[dac_nr].addr) ^ 0x80) << 8;
                         es1371->dac[dac_nr].buffer_l[(pos + c + 1) & 63] = es1371->dac[dac_nr].buffer_r[(pos + c + 1) & 63] = (mem_readb_phys(es1371->dac[dac_nr].addr + 1) ^ 0x80) << 8;
                         es1371->dac[dac_nr].buffer_l[(pos + c + 2) & 63] = es1371->dac[dac_nr].buffer_r[(pos + c + 2) & 63] = (mem_readb_phys(es1371->dac[dac_nr].addr + 2) ^ 0x80) << 8;
@@ -1029,8 +961,7 @@ static void es1371_fetch(es1371_t* es1371, int dac_nr)
 
                         es1371->dac[dac_nr].buffer_pos_end += 4;
                         es1371->dac[dac_nr].count++;
-                        if (es1371->dac[dac_nr].count > es1371->dac[dac_nr].size)
-                        {
+                        if (es1371->dac[dac_nr].count > es1371->dac[dac_nr].size) {
                                 es1371->dac[dac_nr].count = 0;
                                 es1371->dac[dac_nr].addr = es1371->dac[dac_nr].addr_latch;
                                 break;
@@ -1038,8 +969,7 @@ static void es1371_fetch(es1371_t* es1371, int dac_nr)
                 }
                 break;
         case FORMAT_STEREO_8:
-                for (c = 0; c < 16; c += 2)
-                {
+                for (c = 0; c < 16; c += 2) {
                         es1371->dac[dac_nr].buffer_l[(pos + c) & 63] = (mem_readb_phys(es1371->dac[dac_nr].addr) ^ 0x80) << 8;
                         es1371->dac[dac_nr].buffer_r[(pos + c) & 63] = (mem_readb_phys(es1371->dac[dac_nr].addr + 1) ^ 0x80) << 8;
                         es1371->dac[dac_nr].buffer_l[(pos + c + 1) & 63] = (mem_readb_phys(es1371->dac[dac_nr].addr + 2) ^ 0x80) << 8;
@@ -1048,8 +978,7 @@ static void es1371_fetch(es1371_t* es1371, int dac_nr)
 
                         es1371->dac[dac_nr].buffer_pos_end += 2;
                         es1371->dac[dac_nr].count++;
-                        if (es1371->dac[dac_nr].count > es1371->dac[dac_nr].size)
-                        {
+                        if (es1371->dac[dac_nr].count > es1371->dac[dac_nr].size) {
                                 es1371->dac[dac_nr].count = 0;
                                 es1371->dac[dac_nr].addr = es1371->dac[dac_nr].addr_latch;
                                 break;
@@ -1057,16 +986,14 @@ static void es1371_fetch(es1371_t* es1371, int dac_nr)
                 }
                 break;
         case FORMAT_MONO_16:
-                for (c = 0; c < 16; c += 2)
-                {
+                for (c = 0; c < 16; c += 2) {
                         es1371->dac[dac_nr].buffer_l[(pos + c) & 63] = es1371->dac[dac_nr].buffer_r[(pos + c) & 63] = mem_readw_phys(es1371->dac[dac_nr].addr);
                         es1371->dac[dac_nr].buffer_l[(pos + c + 1) & 63] = es1371->dac[dac_nr].buffer_r[(pos + c + 1) & 63] = mem_readw_phys(es1371->dac[dac_nr].addr + 2);
                         es1371->dac[dac_nr].addr += 4;
 
                         es1371->dac[dac_nr].buffer_pos_end += 2;
                         es1371->dac[dac_nr].count++;
-                        if (es1371->dac[dac_nr].count > es1371->dac[dac_nr].size)
-                        {
+                        if (es1371->dac[dac_nr].count > es1371->dac[dac_nr].size) {
                                 es1371->dac[dac_nr].count = 0;
                                 es1371->dac[dac_nr].addr = es1371->dac[dac_nr].addr_latch;
                                 break;
@@ -1074,17 +1001,15 @@ static void es1371_fetch(es1371_t* es1371, int dac_nr)
                 }
                 break;
         case FORMAT_STEREO_16:
-                for (c = 0; c < 4; c++)
-                {
+                for (c = 0; c < 4; c++) {
                         es1371->dac[dac_nr].buffer_l[(pos + c) & 63] = mem_readw_phys(es1371->dac[dac_nr].addr);
                         es1371->dac[dac_nr].buffer_r[(pos + c) & 63] = mem_readw_phys(es1371->dac[dac_nr].addr + 2);
-//                        pclog("Fetch %02x %08x  %04x %04x\n", (pos+c) & 63, es1371->dac[dac_nr].addr, es1371->dac[dac_nr].buffer_l[(pos+c) & 63], es1371->dac[dac_nr].buffer_r[(pos+c) & 63]);
+                        //                        pclog("Fetch %02x %08x  %04x %04x\n", (pos+c) & 63, es1371->dac[dac_nr].addr, es1371->dac[dac_nr].buffer_l[(pos+c) & 63], es1371->dac[dac_nr].buffer_r[(pos+c) & 63]);
                         es1371->dac[dac_nr].addr += 4;
 
                         es1371->dac[dac_nr].buffer_pos_end++;
                         es1371->dac[dac_nr].count++;
-                        if (es1371->dac[dac_nr].count > es1371->dac[dac_nr].size)
-                        {
+                        if (es1371->dac[dac_nr].count > es1371->dac[dac_nr].size) {
                                 es1371->dac[dac_nr].count = 0;
                                 es1371->dac[dac_nr].addr = es1371->dac[dac_nr].addr_latch;
                                 break;
@@ -1094,10 +1019,9 @@ static void es1371_fetch(es1371_t* es1371, int dac_nr)
         }
 }
 
-static inline float low_fir_es1371(int dac_nr, int i, float NewSample)
-{
-        static float x[2][2][128]; //input samples
-        static int x_pos[2] = { 0, 0 };
+static inline float low_fir_es1371(int dac_nr, int i, float NewSample) {
+        static float x[2][2][128]; // input samples
+        static int x_pos[2] = {0, 0};
         float out = 0.0;
         int read_pos;
         int n_coef;
@@ -1110,15 +1034,13 @@ static inline float low_fir_es1371(int dac_nr, int i, float NewSample)
         read_pos = (pos + 15) & (127 & ~15);
         n_coef = (16 - pos) & 15;
 
-        while (n_coef < ES1371_NCoef)
-        {
+        while (n_coef < ES1371_NCoef) {
                 out += low_fir_es1371_coef[n_coef] * x[dac_nr][i][read_pos];
                 read_pos = (read_pos + 16) & (127 & ~15);
                 n_coef += 16;
         }
 
-        if (i == 1)
-        {
+        if (i == 1) {
                 x_pos[dac_nr] = (x_pos[dac_nr] + 1) & 127;
                 if (x_pos[dac_nr] > 127)
                         x_pos[dac_nr] = 0;
@@ -1127,13 +1049,11 @@ static inline float low_fir_es1371(int dac_nr, int i, float NewSample)
         return out;
 }
 
-static void es1371_next_sample_filtered(es1371_t* es1371, int dac_nr, int out_idx)
-{
+static void es1371_next_sample_filtered(es1371_t *es1371, int dac_nr, int out_idx) {
         int out_l, out_r;
         int c;
 
-        if ((es1371->dac[dac_nr].buffer_pos - es1371->dac[dac_nr].buffer_pos_end) >= 0)
-        {
+        if ((es1371->dac[dac_nr].buffer_pos - es1371->dac[dac_nr].buffer_pos_end) >= 0) {
                 es1371_fetch(es1371, dac_nr);
         }
 
@@ -1142,22 +1062,20 @@ static void es1371_next_sample_filtered(es1371_t* es1371, int dac_nr, int out_id
 
         es1371->dac[dac_nr].filtered_l[out_idx] = (int)low_fir_es1371(dac_nr, 0, (float)out_l);
         es1371->dac[dac_nr].filtered_r[out_idx] = (int)low_fir_es1371(dac_nr, 1, (float)out_r);
-        for (c = 1; c < 16; c++)
-        {
+        for (c = 1; c < 16; c++) {
                 es1371->dac[dac_nr].filtered_l[out_idx + c] = (int)low_fir_es1371(dac_nr, 0, 0);
                 es1371->dac[dac_nr].filtered_r[out_idx + c] = (int)low_fir_es1371(dac_nr, 1, 0);
         }
 
-//        pclog("Use %02x %04x %04x\n", es1371->dac[dac_nr].buffer_pos & 63, es1371->dac[dac_nr].out_l, es1371->dac[dac_nr].out_r);
+        //        pclog("Use %02x %04x %04x\n", es1371->dac[dac_nr].buffer_pos & 63, es1371->dac[dac_nr].out_l, es1371->dac[dac_nr].out_r);
 
         es1371->dac[dac_nr].buffer_pos++;
-//        pclog("Next sample %08x %08x  %08x\n", es1371->dac[dac_nr].buffer_pos, es1371->dac[dac_nr].buffer_pos_end, es1371->dac[dac_nr].curr_samp_ct);
+        //        pclog("Next sample %08x %08x  %08x\n", es1371->dac[dac_nr].buffer_pos, es1371->dac[dac_nr].buffer_pos_end, es1371->dac[dac_nr].curr_samp_ct);
 }
 
-//static FILE *es1371_f;//,*es1371_f2;
+// static FILE *es1371_f;//,*es1371_f2;
 
-static void es1371_update(es1371_t* es1371)
-{
+static void es1371_update(es1371_t *es1371) {
         int32_t l, r;
 
         l = (es1371->dac[0].out_l * es1371->dac[0].vol_l) >> 12;
@@ -1180,23 +1098,20 @@ static void es1371_update(es1371_t* es1371)
         else if (r > 32767)
                 r = 32767;
 
-        for (; es1371->pos < sound_pos_global; es1371->pos++)
-        {
+        for (; es1371->pos < sound_pos_global; es1371->pos++) {
                 es1371->buffer[es1371->pos * 2] = l;
                 es1371->buffer[es1371->pos * 2 + 1] = r;
         }
 }
 
-static void es1371_poll(void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static void es1371_poll(void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
 
         timer_advance_u64(&es1371->dac[1].timer, es1371->dac[1].latch);
 
         es1371_update(es1371);
 
-        if (es1371->int_ctrl & INT_DAC1_EN)
-        {
+        if (es1371->int_ctrl & INT_DAC1_EN) {
                 int frac = es1371->dac[0].ac & 0x7fff;
                 int idx = es1371->dac[0].ac >> 15;
                 int samp1_l = es1371->dac[0].filtered_l[idx];
@@ -1206,18 +1121,16 @@ static void es1371_poll(void* p)
 
                 es1371->dac[0].out_l = ((samp1_l * (0x8000 - frac)) + (samp2_l * frac)) >> 15;
                 es1371->dac[0].out_r = ((samp1_r * (0x8000 - frac)) + (samp2_r * frac)) >> 15;
-//                pclog("1Samp %i %i  %08x\n", es1371->dac[0].curr_samp_ct, es1371->dac[0].samp_ct, es1371->dac[0].ac);
+                //                pclog("1Samp %i %i  %08x\n", es1371->dac[0].curr_samp_ct, es1371->dac[0].samp_ct, es1371->dac[0].ac);
                 es1371->dac[0].ac += es1371->dac[0].vf;
                 es1371->dac[0].ac &= ((32 << 15) - 1);
-                if ((es1371->dac[0].ac >> (15 + 4)) != es1371->dac[0].f_pos)
-                {
+                if ((es1371->dac[0].ac >> (15 + 4)) != es1371->dac[0].f_pos) {
                         es1371_next_sample_filtered(es1371, 0, es1371->dac[0].f_pos ? 16 : 0);
                         es1371->dac[0].f_pos = (es1371->dac[0].f_pos + 1) & 1;
 
                         es1371->dac[0].curr_samp_ct--;
-                        if (es1371->dac[0].curr_samp_ct < 0)
-                        {
-//                                pclog("DAC1 IRQ\n");
+                        if (es1371->dac[0].curr_samp_ct < 0) {
+                                //                                pclog("DAC1 IRQ\n");
                                 es1371->int_status |= INT_STATUS_DAC1;
                                 es1371_update_irqs(es1371);
                                 es1371->dac[0].curr_samp_ct = es1371->dac[0].samp_ct;
@@ -1225,8 +1138,7 @@ static void es1371_poll(void* p)
                 }
         }
 
-        if (es1371->int_ctrl & INT_DAC2_EN)
-        {
+        if (es1371->int_ctrl & INT_DAC2_EN) {
                 int frac = es1371->dac[1].ac & 0x7fff;
                 int idx = es1371->dac[1].ac >> 15;
                 int samp1_l = es1371->dac[1].filtered_l[idx];
@@ -1236,18 +1148,16 @@ static void es1371_poll(void* p)
 
                 es1371->dac[1].out_l = ((samp1_l * (0x8000 - frac)) + (samp2_l * frac)) >> 15;
                 es1371->dac[1].out_r = ((samp1_r * (0x8000 - frac)) + (samp2_r * frac)) >> 15;
-//                pclog("2Samp %i %i  %08x\n", es1371->dac[1].curr_samp_ct, es1371->dac[1].samp_ct, es1371->dac[1].ac);
+                //                pclog("2Samp %i %i  %08x\n", es1371->dac[1].curr_samp_ct, es1371->dac[1].samp_ct, es1371->dac[1].ac);
                 es1371->dac[1].ac += es1371->dac[1].vf;
                 es1371->dac[1].ac &= ((32 << 15) - 1);
-                if ((es1371->dac[1].ac >> (15 + 4)) != es1371->dac[1].f_pos)
-                {
+                if ((es1371->dac[1].ac >> (15 + 4)) != es1371->dac[1].f_pos) {
                         es1371_next_sample_filtered(es1371, 1, es1371->dac[1].f_pos ? 16 : 0);
                         es1371->dac[1].f_pos = (es1371->dac[1].f_pos + 1) & 1;
 
                         es1371->dac[1].curr_samp_ct--;
-                        if (es1371->dac[1].curr_samp_ct < 0)
-                        {
-//                                pclog("DAC2 IRQ\n");
+                        if (es1371->dac[1].curr_samp_ct < 0) {
+                                //                                pclog("DAC2 IRQ\n");
                                 es1371->int_status |= INT_STATUS_DAC2;
                                 es1371_update_irqs(es1371);
                                 es1371->dac[1].curr_samp_ct = es1371->dac[1].samp_ct;
@@ -1256,9 +1166,8 @@ static void es1371_poll(void* p)
         }
 }
 
-static void es1371_get_buffer(int32_t* buffer, int len, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static void es1371_get_buffer(int32_t *buffer, int len, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
         int c;
 
         es1371_update(es1371);
@@ -1269,20 +1178,17 @@ static void es1371_get_buffer(int32_t* buffer, int len, void* p)
         es1371->pos = 0;
 }
 
-static inline double sinc(double x)
-{
+static inline double sinc(double x) {
         return sin(M_PI * x) / (M_PI * x);
 }
 
-static void generate_es1371_filter()
-{
+static void generate_es1371_filter() {
         /*Cutoff frequency = 1 / 32*/
         float fC = 1.0 / 32.0;
         float gain;
         int n;
 
-        for (n = 0; n < ES1371_NCoef; n++)
-        {
+        for (n = 0; n < ES1371_NCoef; n++) {
                 /*Blackman window*/
                 double w = 0.42 - (0.5 * cos((2.0 * n * M_PI) / (double)(ES1371_NCoef - 1))) + (0.08 * cos((4.0 * n * M_PI) / (double)(ES1371_NCoef - 1)));
                 /*Sinc filter*/
@@ -1305,9 +1211,8 @@ static void generate_es1371_filter()
                 low_fir_es1371_coef[n] /= gain;
 }
 
-static void* es1371_init()
-{
-        es1371_t* es1371 = malloc(sizeof(es1371_t));
+static void *es1371_init() {
+        es1371_t *es1371 = malloc(sizeof(es1371_t));
         memset(es1371, 0, sizeof(es1371_t));
 
         sound_add_handler(es1371_get_buffer, es1371);
@@ -1321,33 +1226,28 @@ static void* es1371_init()
         return es1371;
 }
 
-static void es1371_close(void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static void es1371_close(void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
 
         free(es1371);
 }
 
-static void es1371_speed_changed(void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+static void es1371_speed_changed(void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
 
         es1371->dac[1].latch = (uint64_t)((double)TIMER_USEC * (1000000.0 / 48000.0));
 }
 
-void es1371_add_status_info_dac(es1371_t* es1371, char* s, int max_len, int dac_nr)
-{
+void es1371_add_status_info_dac(es1371_t *es1371, char *s, int max_len, int dac_nr) {
         int ena = dac_nr ? INT_DAC2_EN : INT_DAC1_EN;
-        char* dac_name = dac_nr ? "DAC2 (Wave)" : "DAC1 (MIDI)";
+        char *dac_name = dac_nr ? "DAC2 (Wave)" : "DAC1 (MIDI)";
         char temps[128];
 
-        if (es1371->int_ctrl & ena)
-        {
+        if (es1371->int_ctrl & ena) {
                 int format = dac_nr ? ((es1371->si_cr >> 2) & 3) : (es1371->si_cr & 3);
                 double freq = 48000.0 * ((double)es1371->dac[dac_nr].vf / (32768.0 * 16.0));
 
-                switch (format)
-                {
+                switch (format) {
                 case FORMAT_MONO_8:
                         snprintf(temps, 128, "%s format : 8-bit mono\n", dac_name);
                         break;
@@ -1367,31 +1267,27 @@ void es1371_add_status_info_dac(es1371_t* es1371, char* s, int max_len, int dac_
 
                 snprintf(temps, 128, "Playback frequency : %i Hz\n", (int)freq);
                 strncat(s, temps, max_len);
-        }
-        else
-        {
+        } else {
                 snprintf(temps, max_len, "%s stopped\n", dac_name);
                 strncat(s, temps, max_len);
         }
 }
 
-void es1371_add_status_info(char* s, int max_len, void* p)
-{
-        es1371_t* es1371 = (es1371_t*)p;
+void es1371_add_status_info(char *s, int max_len, void *p) {
+        es1371_t *es1371 = (es1371_t *)p;
 
         es1371_add_status_info_dac(es1371, s, max_len, 0);
         es1371_add_status_info_dac(es1371, s, max_len, 1);
 }
 
 device_t es1371_device =
-        {
-                "Ensoniq AudioPCI (ES1371)",
-                0,
-                es1371_init,
-                es1371_close,
-                NULL,
-                es1371_speed_changed,
-                NULL,
-                es1371_add_status_info,
-                NULL
-        };
+    {
+        "Ensoniq AudioPCI (ES1371)",
+        0,
+        es1371_init,
+        es1371_close,
+        NULL,
+        es1371_speed_changed,
+        NULL,
+        es1371_add_status_info,
+        NULL};

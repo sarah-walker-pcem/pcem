@@ -7,15 +7,14 @@
 #define HASH_SIZE 0x20000
 #define HASH_MASK 0x1ffff
 
-#define HASH(l) ((l) & 0x1ffff)
+#define HASH(l) ((l)&0x1ffff)
 
 #define BLOCK_EXIT_OFFSET 0x7e0
 #define BLOCK_GPF_OFFSET (BLOCK_EXIT_OFFSET - 20)
 
 #define BLOCK_MAX 1620
 
-enum
-{
+enum {
         OP_RET = 0xc3
 };
 
@@ -23,6 +22,5 @@ enum
 extern int host_reg_mapping[NR_HOST_REGS];
 #define NR_HOST_XMM_REGS 7
 extern int host_reg_xmm_mapping[NR_HOST_XMM_REGS];
-
 
 #endif /* _CODEGEN_X86_64_H_ */

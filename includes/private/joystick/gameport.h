@@ -33,5 +33,4 @@ void gameport_update_joystick_type();
 
 #define AXIS_NOT_PRESENT -99999
 
-
 #endif /* _GAMEPORT_H_ */

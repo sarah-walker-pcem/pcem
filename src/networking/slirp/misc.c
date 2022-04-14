@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 1995 Danny Gasparovski.
- * 
+ *
  * Please read the file COPYRIGHT for the
  * terms and conditions of the copyright.
  */
 
 #define WANT_SYS_IOCTL_H
-#include <stdlib.h>
 #include "slirp/slirp.h"
+#include <stdlib.h>
 
 u_int curtime, time_fasttimo, last_slowtimo, detach_time;
-u_int detach_wait = 600000;	/* 10 minutes */
+u_int detach_wait = 600000; /* 10 minutes */
 
 #if 0
 int x_port = -1;
@@ -70,109 +70,101 @@ redir_x(inaddr, start_port, display, screen)
 
 #ifndef HAVE_INET_ATON
 int
-inet_aton(cp, ia)
-	const char *cp;
-	struct in_addr *ia;
+    inet_aton(cp, ia)
+        const char *cp;
+struct in_addr *ia;
 {
-	u_int32_t addr = inet_addr(cp);
-	if (addr == 0xffffffff)
-		return 0;
-	ia->s_addr = addr;
-	return 1;
+        u_int32_t addr = inet_addr(cp);
+        if (addr == 0xffffffff)
+                return 0;
+        ia->s_addr = addr;
+        return 1;
 }
 #endif
 
 /*
  * Get our IP address and put it in our_addr
  */
-void
-getouraddr()
-{
-	char buff[512];
-	struct hostent *he = NULL;
+void getouraddr() {
+        char buff[512];
+        struct hostent *he = NULL;
 #define ANCIENT
-	#ifdef ANCIENT	
-	if (gethostname((char *)&buff,500) == 0)
-            he = gethostbyname((char *)&buff);
+#ifdef ANCIENT
+        if (gethostname((char *)&buff, 500) == 0)
+                he = gethostbyname((char *)&buff);
         if (he)
-            our_addr = *(struct in_addr *)he->h_addr;
+                our_addr = *(struct in_addr *)he->h_addr;
         if (our_addr.s_addr == 0)
-            our_addr.s_addr = loopback_addr.s_addr;
-	#else
- 	if (gethostname(buff,256) == 0)
-	{
-		struct addrinfo hints = { 0 };
-		hints.ai_flags = AI_NUMERICHOST;
-		hints.ai_family = AF_INET;
-		struct addrinfo* ai;
-		if (getaddrinfo(buff, NULL, &hints, &ai) == 0)
-		{
-			our_addr = *(struct in_addr *)ai->ai_addr->sa_data;
-			freeaddrinfo(ai);
-		}
-	}
-    if (our_addr.s_addr == 0)
-        our_addr.s_addr = loopback_addr.s_addr;
-	#endif
-	#undef ANCIENT
+                our_addr.s_addr = loopback_addr.s_addr;
+#else
+        if (gethostname(buff, 256) == 0) {
+                struct addrinfo hints = {0};
+                hints.ai_flags = AI_NUMERICHOST;
+                hints.ai_family = AF_INET;
+                struct addrinfo *ai;
+                if (getaddrinfo(buff, NULL, &hints, &ai) == 0) {
+                        our_addr = *(struct in_addr *)ai->ai_addr->sa_data;
+                        freeaddrinfo(ai);
+                }
+        }
+        if (our_addr.s_addr == 0)
+                our_addr.s_addr = loopback_addr.s_addr;
+#endif
+#undef ANCIENT
 }
 
 struct quehead {
-	struct quehead *qh_link;
-	struct quehead *qh_rlink;
+        struct quehead *qh_link;
+        struct quehead *qh_rlink;
 };
 
 void
-insque(a, b)
-	void *a, *b;
+    insque(a, b) void *a,
+    *b;
 {
-	register struct quehead *element = (struct quehead *) a;
-	register struct quehead *head = (struct quehead *) b;
-	element->qh_link = head->qh_link;
-	head->qh_link = (struct quehead *)element;
-	element->qh_rlink = (struct quehead *)head;
-	((struct quehead *)(element->qh_link))->qh_rlink
-	= (struct quehead *)element;
+        register struct quehead *element = (struct quehead *)a;
+        register struct quehead *head = (struct quehead *)b;
+        element->qh_link = head->qh_link;
+        head->qh_link = (struct quehead *)element;
+        element->qh_rlink = (struct quehead *)head;
+        ((struct quehead *)(element->qh_link))->qh_rlink = (struct quehead *)element;
 }
 
 void
-remque(a)
-     void *a;
+    remque(a) void *a;
 {
-  register struct quehead *element = (struct quehead *) a;
-  ((struct quehead *)(element->qh_link))->qh_rlink = element->qh_rlink;
-  ((struct quehead *)(element->qh_rlink))->qh_link = element->qh_link;
-  element->qh_rlink = NULL;
-  /*  element->qh_link = NULL;  TCP FIN1 crashes if you do this.  Why ? */
+        register struct quehead *element = (struct quehead *)a;
+        ((struct quehead *)(element->qh_link))->qh_rlink = element->qh_rlink;
+        ((struct quehead *)(element->qh_rlink))->qh_link = element->qh_link;
+        element->qh_rlink = NULL;
+        /*  element->qh_link = NULL;  TCP FIN1 crashes if you do this.  Why ? */
 }
 
 /* #endif */
 
-
-int
-add_exec(ex_ptr, do_pty, exec, addr, port)
-	struct ex_list **ex_ptr;
-	int do_pty;
-	char *exec;
-	int addr;
-	int port;
+int add_exec(ex_ptr, do_pty, exec, addr, port)
+struct ex_list **ex_ptr;
+int do_pty;
+char *exec;
+int addr;
+int port;
 {
-	struct ex_list *tmp_ptr;
-	
-	/* First, check if the port is "bound" */
-	for (tmp_ptr = *ex_ptr; tmp_ptr; tmp_ptr = tmp_ptr->ex_next) {
-		if (port == tmp_ptr->ex_fport && addr == tmp_ptr->ex_addr)
-		   return -1;
-	}
-	
-	tmp_ptr = *ex_ptr;
-	*ex_ptr = (struct ex_list *)malloc(sizeof(struct ex_list));
-	(*ex_ptr)->ex_fport = port;
-	(*ex_ptr)->ex_addr = addr;
-	(*ex_ptr)->ex_pty = do_pty;
-	(*ex_ptr)->ex_exec = strdup(exec);
-	(*ex_ptr)->ex_next = tmp_ptr;
-	return 0;
+        struct ex_list *tmp_ptr;
+
+        /* First, check if the port is "bound" */
+        for (tmp_ptr = *ex_ptr; tmp_ptr; tmp_ptr = tmp_ptr->ex_next) {
+                if (port == tmp_ptr->ex_fport && addr == tmp_ptr->ex_addr)
+                        return -1;
+        }
+
+        tmp_ptr = *ex_ptr;
+        *ex_ptr = (struct ex_list *)malloc(sizeof(struct ex_list));
+        (*ex_ptr)->ex_fport = port;
+        (*ex_ptr)->ex_addr = addr;
+        (*ex_ptr)->ex_pty = do_pty;
+        (*ex_ptr)->ex_exec = strdup(exec);
+        (*ex_ptr)->ex_next = tmp_ptr;
+        return 0;
 }
 
 #ifndef HAVE_STRERROR
@@ -182,99 +174,96 @@ add_exec(ex_ptr, do_pty, exec, addr, port)
  */
 
 #ifdef WIN32
-//extern int sys_nerr;
-//extern char *sys_errlist[];
+// extern int sys_nerr;
+// extern char *sys_errlist[];
 #endif
 
 char *
 SLIRPstrerror(error)
-	int error;
+int error;
 {
-	if (error < sys_nerr)
-	   return sys_errlist[error];
-	else
-	   return "Unknown error.";
+        if (error < sys_nerr)
+                return sys_errlist[error];
+        else
+                return "Unknown error.";
 }
 
 #endif
-
 
 #ifdef _WIN32
 
-int
-fork_exec(so, ex, do_pty)
-	struct SLIRPsocket *so;
-	char *ex;
-	int do_pty;
+int fork_exec(so, ex, do_pty)
+struct SLIRPsocket *so;
+char *ex;
+int do_pty;
 {
-    /* not implemented */
-    return 0;
+        /* not implemented */
+        return 0;
 }
 
 #else
 
-int
-slirp_openpty(amaster, aslave)
-     int *amaster, *aslave;
+int slirp_openpty(amaster, aslave)
+int *amaster, *aslave;
 {
-	register int master, slave;
+        register int master, slave;
 
 #ifdef HAVE_GRANTPT
-	char *ptr;
-	
-	if ((master = open("/dev/ptmx", O_RDWR)) < 0 ||
-	    grantpt(master) < 0 ||
-	    unlockpt(master) < 0 ||
-	    (ptr = ptsname(master)) == NULL)  {
-		close(master);
-		return -1;
-	}
-	
-	if ((slave = open(ptr, O_RDWR)) < 0 ||
-	    ioctl(slave, I_PUSH, "ptem") < 0 ||
-	    ioctl(slave, I_PUSH, "ldterm") < 0 ||
-	    ioctl(slave, I_PUSH, "ttcompat") < 0) {
-		close(master);
-		close(slave);
-		return -1;
-	}
-	
-	*amaster = master;
-	*aslave = slave;
-	return 0;
-	
+        char *ptr;
+
+        if ((master = open("/dev/ptmx", O_RDWR)) < 0 ||
+            grantpt(master) < 0 ||
+            unlockpt(master) < 0 ||
+            (ptr = ptsname(master)) == NULL) {
+                close(master);
+                return -1;
+        }
+
+        if ((slave = open(ptr, O_RDWR)) < 0 ||
+            ioctl(slave, I_PUSH, "ptem") < 0 ||
+            ioctl(slave, I_PUSH, "ldterm") < 0 ||
+            ioctl(slave, I_PUSH, "ttcompat") < 0) {
+                close(master);
+                close(slave);
+                return -1;
+        }
+
+        *amaster = master;
+        *aslave = slave;
+        return 0;
+
 #else
-	
-	static char line[] = "/dev/ptyXX";
-	register const char *cp1, *cp2;
-	
-	for (cp1 = "pqrsPQRS"; *cp1; cp1++) {
-		line[8] = *cp1;
-		for (cp2 = "0123456789abcdefghijklmnopqrstuv"; *cp2; cp2++) {
-			line[9] = *cp2;
-			if ((master = open(line, O_RDWR, 0)) == -1) {
-				if (errno == ENOENT)
-				   return (-1);    /* out of ptys */
-			} else {
-				line[5] = 't';
-				/* These will fail */
-				(void) chown(line, getuid(), 0);
-				(void) chmod(line, S_IRUSR|S_IWUSR|S_IWGRP);
+
+        static char line[] = "/dev/ptyXX";
+        register const char *cp1, *cp2;
+
+        for (cp1 = "pqrsPQRS"; *cp1; cp1++) {
+                line[8] = *cp1;
+                for (cp2 = "0123456789abcdefghijklmnopqrstuv"; *cp2; cp2++) {
+                        line[9] = *cp2;
+                        if ((master = open(line, O_RDWR, 0)) == -1) {
+                                if (errno == ENOENT)
+                                        return (-1); /* out of ptys */
+                        } else {
+                                line[5] = 't';
+                                /* These will fail */
+                                (void)chown(line, getuid(), 0);
+                                (void)chmod(line, S_IRUSR | S_IWUSR | S_IWGRP);
 #ifdef HAVE_REVOKE
-				(void) revoke(line);
+                                (void)revoke(line);
 #endif
-				if ((slave = open(line, O_RDWR, 0)) != -1) {
-					*amaster = master;
-					*aslave = slave;
-					return 0;
-				}
-				(void) close(master);
-				line[5] = 'p';
-			}
-		}
-	}
-	errno = ENOENT; /* out of ptys */
-	return (-1);
+                                if ((slave = open(line, O_RDWR, 0)) != -1) {
+                                        *amaster = master;
+                                        *aslave = slave;
+                                        return 0;
+                                }
+                                (void)close(master);
+                                line[5] = 'p';
+                        }
+                }
+        }
+        errno = ENOENT; /* out of ptys */
+        return (-1);
 #endif
 }
 
@@ -284,87 +273,86 @@ slirp_openpty(amaster, aslave)
  * process, which connects to this socket, after which we
  * exec the wanted program.  If something (strange) happens,
  * the accept() call could block us forever.
- * 
+ *
  * do_pty = 0   Fork/exec inetd style
  * do_pty = 1   Fork/exec using slirp.telnetd
  * do_ptr = 2   Fork/exec using pty
  */
-int
-fork_exec(so, ex, do_pty)
-	struct SLIRPsocket *so;
-	char *ex;
-	int do_pty;
+int fork_exec(so, ex, do_pty)
+struct SLIRPsocket *so;
+char *ex;
+int do_pty;
 {
-	int s;
-	struct sockaddr_in addr;
-	socklen_t addrlen = sizeof(addr);
-	int opt;
+        int s;
+        struct sockaddr_in addr;
+        socklen_t addrlen = sizeof(addr);
+        int opt;
         int master;
-	char *argv[256];
+        char *argv[256];
 #if 0
 	char buff[256];
 #endif
-	/* don't want to clobber the original */
-	char *bptr;
-	char *curarg;
-	int c, i, ret;
-	
-	DEBUG_CALL("fork_exec");
-	DEBUG_ARG("so = %lx", (long)so);
-	DEBUG_ARG("ex = %lx", (long)ex);
-	DEBUG_ARG("do_pty = %lx", (long)do_pty);
-	
-	if (do_pty == 2) {
-		if (slirp_openpty(&master, &s) == -1) {
-			lprint("Error: openpty failed: %s\n", strerror(errno));
-			return 0;
-		}
-	} else {
-		memset(&addr, 0, sizeof(struct sockaddr_in));
-		addr.sin_family = AF_INET;
-		addr.sin_port = 0;
-		addr.sin_addr.s_addr = INADDR_ANY;
-		
-		if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0 ||
-		    bind(s, (struct sockaddr *)&addr, addrlen) < 0 ||
-		    listen(s, 1) < 0) {
-			lprint("Error: inet socket: %s\n", strerror(errno));
-			closesocket(s);
-			
-			return 0;
-		}
-	}
-	
-	switch(fork()) {
-	 case -1:
-		lprint("Error: fork failed: %s\n", strerror(errno));
-		close(s);
-		if (do_pty == 2)
-		   close(master);
-		return 0;
-		
-	 case 0:
-		/* Set the DISPLAY */
-		if (do_pty == 2) {
-			(void) close(master);
+        /* don't want to clobber the original */
+        char *bptr;
+        char *curarg;
+        int c, i, ret;
+
+        DEBUG_CALL("fork_exec");
+        DEBUG_ARG("so = %lx", (long)so);
+        DEBUG_ARG("ex = %lx", (long)ex);
+        DEBUG_ARG("do_pty = %lx", (long)do_pty);
+
+        if (do_pty == 2) {
+                if (slirp_openpty(&master, &s) == -1) {
+                        lprint("Error: openpty failed: %s\n", strerror(errno));
+                        return 0;
+                }
+        } else {
+                memset(&addr, 0, sizeof(struct sockaddr_in));
+                addr.sin_family = AF_INET;
+                addr.sin_port = 0;
+                addr.sin_addr.s_addr = INADDR_ANY;
+
+                if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0 ||
+                    bind(s, (struct sockaddr *)&addr, addrlen) < 0 ||
+                    listen(s, 1) < 0) {
+                        lprint("Error: inet socket: %s\n", strerror(errno));
+                        closesocket(s);
+
+                        return 0;
+                }
+        }
+
+        switch (fork()) {
+        case -1:
+                lprint("Error: fork failed: %s\n", strerror(errno));
+                close(s);
+                if (do_pty == 2)
+                        close(master);
+                return 0;
+
+        case 0:
+                /* Set the DISPLAY */
+                if (do_pty == 2) {
+                        (void)close(master);
 #ifdef TIOCSCTTY /* XXXXX */
-			(void) setsid();
-			ioctl(s, TIOCSCTTY, (char *)NULL);
+                        (void)setsid();
+                        ioctl(s, TIOCSCTTY, (char *)NULL);
 #endif
-		} else {
-			getsockname(s, (struct sockaddr *)&addr, &addrlen);
-			close(s);
-			/*
-			 * Connect to the socket
-			 * XXX If any of these fail, we're in trouble!
-	 		 */
-			s = socket(AF_INET, SOCK_STREAM, 0);
-			addr.sin_addr = loopback_addr;
+                } else {
+                        getsockname(s, (struct sockaddr *)&addr, &addrlen);
+                        close(s);
+                        /*
+                         * Connect to the socket
+                         * XXX If any of these fail, we're in trouble!
+                         */
+                        s = socket(AF_INET, SOCK_STREAM, 0);
+                        addr.sin_addr = loopback_addr;
                         do {
-                            ret = connect(s, (struct sockaddr *)&addr, addrlen);
+                                ret = connect(s, (struct sockaddr *)&addr, addrlen);
                         } while (ret < 0 && errno == EINTR);
-		}
-		
+                }
+
 #if 0
 		if (x_port >= 0) {
 #ifdef HAVE_SETENV
@@ -375,88 +363,89 @@ fork_exec(so, ex, do_pty)
 			putenv(buff);
 #endif
 		}
-#endif	
-		dup2(s, 0);
-		dup2(s, 1);
-		dup2(s, 2);
-		for (s = 3; s <= 255; s++)
-		   close(s);
-		
-		i = 0;
-		bptr = strdup(ex); /* No need to free() this */
-		if (do_pty == 1) {
-			/* Setup "slirp.telnetd -x" */
-			argv[i++] = "slirp.telnetd";
-			argv[i++] = "-x";
-			argv[i++] = bptr;
-		} else
-		   do {
-			/* Change the string into argv[] */
-			curarg = bptr;
-			while (*bptr != ' ' && *bptr != (char)0)
-			   bptr++;
-			c = *bptr;
-			*bptr++ = (char)0;
-			argv[i++] = strdup(curarg);
-		   } while (c);
-		
-		argv[i] = 0;
-		execvp(argv[0], argv);
-		
-		/* Ooops, failed, let's tell the user why */
-		  {
-			  char buff[256];
-			  
-			  sprintf(buff, "Error: execvp of %s failed: %s\n", 
-				  argv[0], strerror(errno));
-			  write(2, buff, strlen(buff)+1);
-		  }
-		close(0); close(1); close(2); /* XXX */
-		exit(1);
-		
-	 default:
-		if (do_pty == 2) {
-			close(s);
-			so->s = master;
-		} else {
-			/*
-			 * XXX this could block us...
-			 * XXX Should set a timer here, and if accept() doesn't
-		 	 * return after X seconds, declare it a failure
-		 	 * The only reason this will block forever is if socket()
-		 	 * of connect() fail in the child process
-		 	 */
+#endif
+                dup2(s, 0);
+                dup2(s, 1);
+                dup2(s, 2);
+                for (s = 3; s <= 255; s++)
+                        close(s);
+
+                i = 0;
+                bptr = strdup(ex); /* No need to free() this */
+                if (do_pty == 1) {
+                        /* Setup "slirp.telnetd -x" */
+                        argv[i++] = "slirp.telnetd";
+                        argv[i++] = "-x";
+                        argv[i++] = bptr;
+                } else
                         do {
-                            so->s = accept(s, (struct sockaddr *)&addr, &addrlen);
+                                /* Change the string into argv[] */
+                                curarg = bptr;
+                                while (*bptr != ' ' && *bptr != (char)0)
+                                        bptr++;
+                                c = *bptr;
+                                *bptr++ = (char)0;
+                                argv[i++] = strdup(curarg);
+                        } while (c);
+
+                argv[i] = 0;
+                execvp(argv[0], argv);
+
+                /* Ooops, failed, let's tell the user why */
+                {
+                        char buff[256];
+
+                        sprintf(buff, "Error: execvp of %s failed: %s\n",
+                                argv[0], strerror(errno));
+                        write(2, buff, strlen(buff) + 1);
+                }
+                close(0);
+                close(1);
+                close(2); /* XXX */
+                exit(1);
+
+        default:
+                if (do_pty == 2) {
+                        close(s);
+                        so->s = master;
+                } else {
+                        /*
+                         * XXX this could block us...
+                         * XXX Should set a timer here, and if accept() doesn't
+                         * return after X seconds, declare it a failure
+                         * The only reason this will block forever is if socket()
+                         * of connect() fail in the child process
+                         */
+                        do {
+                                so->s = accept(s, (struct sockaddr *)&addr, &addrlen);
                         } while (so->s < 0 && errno == EINTR);
                         closesocket(s);
-			opt = 1;
-			setsockopt(so->s,SOL_SOCKET,SO_REUSEADDR,(char *)&opt,sizeof(int));
-			opt = 1;
-			setsockopt(so->s,SOL_SOCKET,SO_OOBINLINE,(char *)&opt,sizeof(int));
-		}
-		fd_nonblock(so->s);
-		
-		/* Append the telnet options now */
-		if (so->so_m != 0 && do_pty == 1)  {
-			sbappend(so, so->so_m);
-			so->so_m = 0;
-		}
-		
-		return 1;
-	}
+                        opt = 1;
+                        setsockopt(so->s, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(int));
+                        opt = 1;
+                        setsockopt(so->s, SOL_SOCKET, SO_OOBINLINE, (char *)&opt, sizeof(int));
+                }
+                fd_nonblock(so->s);
+
+                /* Append the telnet options now */
+                if (so->so_m != 0 && do_pty == 1) {
+                        sbappend(so, so->so_m);
+                        so->so_m = 0;
+                }
+
+                return 1;
+        }
 }
 #endif
 
 #ifndef HAVE_STRDUP
-char * strdup(char *str)
-{
-	char *bptr;
-	
-	bptr = (char *)malloc(strlen(str)+1);
-	strcpy(bptr, str);
-	
-	return bptr;
+char *strdup(char *str) {
+        char *bptr;
+
+        bptr = (char *)malloc(strlen(str) + 1);
+        strcpy(bptr, str);
+
+        return bptr;
 }
 #endif
 
@@ -590,11 +579,11 @@ relay(s)
 }
 #endif
 
-int (*lprint_print) _P((void *, const char *, va_list));
+int(*lprint_print) _P((void *, const char *, va_list));
 char *lprint_ptr, *lprint_ptr2, **lprint_arg;
 
-#ifdef _MSC_VER			//aren't we
-#define __STDC__		
+#ifdef _MSC_VER // aren't we
+#define __STDC__
 #endif
 
 void
@@ -604,8 +593,8 @@ lprint(const char *format, ...)
 lprint(va_alist) va_dcl
 #endif
 {
-	va_list args;
-        
+        va_list args;
+
 #ifdef __STDC__
         va_start(args, format);
 #else
@@ -634,116 +623,115 @@ lprint(va_alist) va_dcl
 			lprint_sb->sb_datalen += TCP_SNDSPACE;
 		}
 	}
-#endif	
-	if (lprint_print)
-	   lprint_ptr += (*lprint_print)(*lprint_arg, format, args);
-	
-	/* Check if they want output to be logged to file as well */
-	if (lfd) {
-		/* 
-		 * Remove \r's
-		 * otherwise you'll get ^M all over the file
-		 */
-		int len = strlen(format);
-		char *bptr1, *bptr2;
-		
-		bptr1 = bptr2 = strdup(format);
-		
-		while (len--) {
-			if (*bptr1 == '\r')
-			   memcpy(bptr1, bptr1+1, len+1);
-			else
-			   bptr1++;
-		}
-		vfprintf(lfd, bptr2, args);
-		free(bptr2);
-	}
-	va_end(args);
+#endif
+        if (lprint_print)
+                lprint_ptr += (*lprint_print)(*lprint_arg, format, args);
+
+        /* Check if they want output to be logged to file as well */
+        if (lfd) {
+                /*
+                 * Remove \r's
+                 * otherwise you'll get ^M all over the file
+                 */
+                int len = strlen(format);
+                char *bptr1, *bptr2;
+
+                bptr1 = bptr2 = strdup(format);
+
+                while (len--) {
+                        if (*bptr1 == '\r')
+                                memcpy(bptr1, bptr1 + 1, len + 1);
+                        else
+                                bptr1++;
+                }
+                vfprintf(lfd, bptr2, args);
+                free(bptr2);
+        }
+        va_end(args);
 }
 
 void
-add_emu(buff)
-	char *buff;
+    add_emu(buff) char *buff;
 {
-	u_int lport, fport;
-	u_int8_t tos = 0, emu = 0;
-	char buff1[256], buff2[256], buff4[128];
-	char *buff3 = buff4;
-	struct emu_t *emup;
-	struct SLIRPsocket *so;
-	
-	if (sscanf(buff, "%256s %256s", buff2, buff1) != 2) {
-		lprint("Error: Bad arguments\r\n");
-		return;
-	}
-	
-	if (sscanf(buff1, "%d:%d", &lport, &fport) != 2) {
-		lport = 0;
-		if (sscanf(buff1, "%d", &fport) != 1) {
-			lprint("Error: Bad first argument\r\n");
-			return;
-		}
-	}
-	
-	if (sscanf(buff2, "%128[^:]:%128s", buff1, buff3) != 2) {
-		buff3 = 0;
-		if (sscanf(buff2, "%256s", buff1) != 1) {
-			lprint("Error: Bad second argument\r\n");
-			return;
-		}
-	}
-	
-	if (buff3) {
-		if (strcmp(buff3, "lowdelay") == 0)
-		   tos = IPTOS_LOWDELAY;
-		else if (strcmp(buff3, "throughput") == 0)
-		   tos = IPTOS_THROUGHPUT;
-		else {
-			lprint("Error: Expecting \"lowdelay\"/\"throughput\"\r\n");
-			return;
-		}
-	}
-	
-	if (strcmp(buff1, "ftp") == 0)
-	   emu = EMU_FTP;
-	else if (strcmp(buff1, "irc") == 0)
-	   emu = EMU_IRC;
-	else if (strcmp(buff1, "none") == 0)
-	   emu = EMU_NONE; /* ie: no emulation */
-	else {
-		lprint("Error: Unknown service\r\n");
-		return;
-	}
-	
-	/* First, check that it isn't already emulated */
-	for (emup = tcpemu; emup; emup = emup->next) {
-		if (emup->lport == lport && emup->fport == fport) {
-			lprint("Error: port already emulated\r\n");
-			return;
-		}
-	}
-	
-	/* link it */
-	emup = (struct emu_t *)malloc(sizeof (struct emu_t));
-	emup->lport = (u_int16_t)lport;
-	emup->fport = (u_int16_t)fport;
-	emup->tos = tos;
-	emup->emu = emu;
-	emup->next = tcpemu;
-	tcpemu = emup;
-	
-	/* And finally, mark all current sessions, if any, as being emulated */
-	for (so = tcb.so_next; so != &tcb; so = so->so_next) {
-		if ((lport && lport == ntohs(so->so_lport)) ||
-		    (fport && fport == ntohs(so->so_fport))) {
-			if (emu)
-			   so->so_emu = emu;
-			if (tos)
-			   so->so_iptos = tos;
-		}
-	}
-	
-	lprint("Adding emulation for %s to port %d/%d\r\n", buff1, emup->lport, emup->fport);
+        u_int lport, fport;
+        u_int8_t tos = 0, emu = 0;
+        char buff1[256], buff2[256], buff4[128];
+        char *buff3 = buff4;
+        struct emu_t *emup;
+        struct SLIRPsocket *so;
+
+        if (sscanf(buff, "%256s %256s", buff2, buff1) != 2) {
+                lprint("Error: Bad arguments\r\n");
+                return;
+        }
+
+        if (sscanf(buff1, "%d:%d", &lport, &fport) != 2) {
+                lport = 0;
+                if (sscanf(buff1, "%d", &fport) != 1) {
+                        lprint("Error: Bad first argument\r\n");
+                        return;
+                }
+        }
+
+        if (sscanf(buff2, "%128[^:]:%128s", buff1, buff3) != 2) {
+                buff3 = 0;
+                if (sscanf(buff2, "%256s", buff1) != 1) {
+                        lprint("Error: Bad second argument\r\n");
+                        return;
+                }
+        }
+
+        if (buff3) {
+                if (strcmp(buff3, "lowdelay") == 0)
+                        tos = IPTOS_LOWDELAY;
+                else if (strcmp(buff3, "throughput") == 0)
+                        tos = IPTOS_THROUGHPUT;
+                else {
+                        lprint("Error: Expecting \"lowdelay\"/\"throughput\"\r\n");
+                        return;
+                }
+        }
+
+        if (strcmp(buff1, "ftp") == 0)
+                emu = EMU_FTP;
+        else if (strcmp(buff1, "irc") == 0)
+                emu = EMU_IRC;
+        else if (strcmp(buff1, "none") == 0)
+                emu = EMU_NONE; /* ie: no emulation */
+        else {
+                lprint("Error: Unknown service\r\n");
+                return;
+        }
+
+        /* First, check that it isn't already emulated */
+        for (emup = tcpemu; emup; emup = emup->next) {
+                if (emup->lport == lport && emup->fport == fport) {
+                        lprint("Error: port already emulated\r\n");
+                        return;
+                }
+        }
+
+        /* link it */
+        emup = (struct emu_t *)malloc(sizeof(struct emu_t));
+        emup->lport = (u_int16_t)lport;
+        emup->fport = (u_int16_t)fport;
+        emup->tos = tos;
+        emup->emu = emu;
+        emup->next = tcpemu;
+        tcpemu = emup;
+
+        /* And finally, mark all current sessions, if any, as being emulated */
+        for (so = tcb.so_next; so != &tcb; so = so->so_next) {
+                if ((lport && lport == ntohs(so->so_lport)) ||
+                    (fport && fport == ntohs(so->so_fport))) {
+                        if (emu)
+                                so->so_emu = emu;
+                        if (tos)
+                                so->so_iptos = tos;
+                }
+        }
+
+        lprint("Adding emulation for %s to port %d/%d\r\n", buff1, emup->lport, emup->fport);
 }
 
 #ifdef BAD_SPRINTF
@@ -755,14 +743,13 @@ add_emu(buff)
  * Some BSD-derived systems have a sprintf which returns char *
  */
 
-int
-vsprintf_len(string, format, args)
-	char *string;
-	const char *format;
-	va_list args;
+int vsprintf_len(string, format, args)
+char *string;
+const char *format;
+va_list args;
 {
-	vsprintf(string, format, args);
-	return strlen(string);
+        vsprintf(string, format, args);
+        return strlen(string);
 }
 
 int
@@ -772,35 +759,34 @@ sprintf_len(char *string, const char *format, ...)
 sprintf_len(va_alist) va_dcl
 #endif
 {
-	va_list args;
+        va_list args;
 #ifdef __STDC__
-	va_start(args, format);
+        va_start(args, format);
 #else
-	char *string;
-	char *format;
-	va_start(args);
-	string = va_arg(args, char *);
-	format = va_arg(args, char *);
+        char *string;
+        char *format;
+        va_start(args);
+        string = va_arg(args, char *);
+        format = va_arg(args, char *);
 #endif
-	vsprintf(string, format, args);
-	return strlen(string);
+        vsprintf(string, format, args);
+        return strlen(string);
 }
 
 #endif
 
 void
-u_sleep(usec)
-	int usec;
+    u_sleep(usec) int usec;
 {
-	struct timeval t;
-	fd_set fdset;
-	
-	FD_ZERO(&fdset);
-	
-	t.tv_sec = 0;
-	t.tv_usec = usec * 1000;
-	
-	select(0, &fdset, &fdset, &fdset, &t);
+        struct timeval t;
+        fd_set fdset;
+
+        FD_ZERO(&fdset);
+
+        t.tv_sec = 0;
+        t.tv_usec = usec * 1000;
+
+        select(0, &fdset, &fdset, &fdset, &t);
 }
 
 /*
@@ -808,39 +794,36 @@ u_sleep(usec)
  */
 
 void
-fd_nonblock(fd)
-	int fd;
+    fd_nonblock(fd) int fd;
 {
 #if defined USE_FIONBIO && defined FIONBIO
-	ioctlsockopt_t opt = 1;
-	
-	ioctlsocket(fd, FIONBIO, &opt);
+        ioctlsockopt_t opt = 1;
+
+        ioctlsocket(fd, FIONBIO, &opt);
 #else
-	int opt;
-	
-	opt = fcntl(fd, F_GETFL, 0);
-	opt |= O_NONBLOCK;
-	fcntl(fd, F_SETFL, opt);
+        int opt;
+
+        opt = fcntl(fd, F_GETFL, 0);
+        opt |= O_NONBLOCK;
+        fcntl(fd, F_SETFL, opt);
 #endif
 }
 
 void
-fd_block(fd)
-	int fd;
+    fd_block(fd) int fd;
 {
 #if defined USE_FIONBIO && defined FIONBIO
-	ioctlsockopt_t opt = 0;
-	
-	ioctlsocket(fd, FIONBIO, &opt);
+        ioctlsockopt_t opt = 0;
+
+        ioctlsocket(fd, FIONBIO, &opt);
 #else
-	int opt;
-	
-	opt = fcntl(fd, F_GETFL, 0);
-	opt &= ~O_NONBLOCK;
-	fcntl(fd, F_SETFL, opt);
+        int opt;
+
+        opt = fcntl(fd, F_GETFL, 0);
+        opt &= ~O_NONBLOCK;
+        fcntl(fd, F_SETFL, opt);
 #endif
 }
-
 
 #if 0
 /*

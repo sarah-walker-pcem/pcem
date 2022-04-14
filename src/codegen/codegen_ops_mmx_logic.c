@@ -1,28 +1,24 @@
 #include "ibm.h"
 
-#include "x86.h"
-#include "x86_flags.h"
 #include "386_common.h"
 #include "codegen.h"
 #include "codegen_accumulate.h"
 #include "codegen_ir.h"
 #include "codegen_ops.h"
-#include "codegen_ops_mmx_logic.h"
 #include "codegen_ops_helpers.h"
+#include "codegen_ops_mmx_logic.h"
+#include "x86.h"
+#include "x86_flags.h"
 
-uint32_t ropPAND(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropPAND(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
+        codegen_mark_code_present(block, cs + op_pc, 1);
+        if ((fetchdat & 0xc0) == 0xc0) {
                 int src_reg = fetchdat & 7;
                 uop_AND(ir, IREG_MM(dest_reg), IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
+        } else {
                 x86seg *target_seg;
 
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
@@ -34,19 +30,15 @@ uint32_t ropPAND(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fet
 
         return op_pc + 1;
 }
-uint32_t ropPANDN(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropPANDN(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
+        codegen_mark_code_present(block, cs + op_pc, 1);
+        if ((fetchdat & 0xc0) == 0xc0) {
                 int src_reg = fetchdat & 7;
                 uop_ANDN(ir, IREG_MM(dest_reg), IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
+        } else {
                 x86seg *target_seg;
 
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
@@ -58,19 +50,15 @@ uint32_t ropPANDN(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fe
 
         return op_pc + 1;
 }
-uint32_t ropPOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropPOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
+        codegen_mark_code_present(block, cs + op_pc, 1);
+        if ((fetchdat & 0xc0) == 0xc0) {
                 int src_reg = fetchdat & 7;
                 uop_OR(ir, IREG_MM(dest_reg), IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
+        } else {
                 x86seg *target_seg;
 
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
@@ -82,19 +70,15 @@ uint32_t ropPOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetc
 
         return op_pc + 1;
 }
-uint32_t ropPXOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc)
-{
+uint32_t ropPXOR(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc) {
         int dest_reg = (fetchdat >> 3) & 7;
 
         uop_MMX_ENTER(ir);
-        codegen_mark_code_present(block, cs+op_pc, 1);
-        if ((fetchdat & 0xc0) == 0xc0)
-        {
+        codegen_mark_code_present(block, cs + op_pc, 1);
+        if ((fetchdat & 0xc0) == 0xc0) {
                 int src_reg = fetchdat & 7;
                 uop_XOR(ir, IREG_MM(dest_reg), IREG_MM(dest_reg), IREG_MM(src_reg));
-        }
-        else
-        {
+        } else {
                 x86seg *target_seg;
 
                 uop_MOV_IMM(ir, IREG_oldpc, cpu_state.oldpc);
