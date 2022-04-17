@@ -6,8 +6,6 @@
 #include "ibm.h"
 #include "wx-utils.h"
 
-#define safe_strncpy(a, b, n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
-
 char default_roms_paths[4096];
 char default_nvr_path[512];
 char default_configs_path[512];
@@ -31,7 +29,6 @@ char screenshots_path[512];
 char plugins_default_path[512];
 
 char nvr_default_path[512];
-char base_path[512];
 
 char get_path_separator() {
 #ifdef _WIN32
@@ -112,11 +109,6 @@ void set_configs_path(char *s) {
 void set_screenshots_path(char *s) {
 	safe_strncpy(screenshots_path, s, 512);
 	append_slash(screenshots_path, 512);
-}
-
-void set_plugins_path(char *s) {
-	safe_strncpy(plugins_default_path, s, 512);
-	append_slash(plugins_default_path, 512);
 }
 
 /* set the default roms paths, this makes them permanent */
@@ -211,31 +203,20 @@ void paths_init() {
 	*p = 0;
 
 	/* set up default paths for this session */
-	get_pcem_base_path(base_path, 512);
-
-	append_filename(s, base_path, "roms/", 512);
+	append_filename(s, pcem_path, "roms/", 512);
 	set_roms_paths(s);
-	append_filename(s, base_path, "nvr/", 512);
+	append_filename(s, pcem_path, "nvr/", 512);
 	set_nvr_path(s);
-	append_filename(s, base_path, "configs/", 512);
+	append_filename(s, pcem_path, "configs/", 512);
 	set_configs_path(s);
-	append_filename(s, base_path, "screenshots/", 512);
+	append_filename(s, pcem_path, "screenshots/", 512);
 	set_screenshots_path(s);
-	append_filename(s, base_path, "logs/", 512);
+	append_filename(s, pcem_path, "logs/", 512);
 	set_logs_path(s);
-
-	append_filename(s, base_path, "nvr/default/", 512);
+	append_filename(s, pcem_path, "nvr/default/", 512);
 	set_default_nvr_default_path(s);
-	append_filename(s, base_path, "plugins/", 512);
-	set_plugins_path(s);
 
 	add_config_callback(paths_loadconfig, paths_saveconfig, paths_onconfigloaded);
-
-}
-
-void get_pcem_base_path(char *s, int size) {
-	char *path = SDL_GetBasePath();
-	strcpy(s, path);
 }
 
 void get_pcem_path(char *s, int size) {

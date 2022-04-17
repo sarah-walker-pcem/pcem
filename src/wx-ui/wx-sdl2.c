@@ -471,33 +471,8 @@ int pc_main(int argc, char **argv) {
 	network_card_init_builtin();
 #endif
 
-#ifdef __linux__
-	char s[1024];
-	/* create directories if they don't exist */
-	if (!wx_setup(pcem_path))
-		return FALSE;
-
-	/* set up default paths */
-	sprintf(s, "%s%s%c%s", pcem_path, "roms/", get_path_separator(), "/usr/share/pcem/roms/");
-	set_default_roms_paths(s);
-	append_filename(s, pcem_path, "nvr/", 511);
-	set_default_nvr_path(s);
-	append_filename(s, "/usr/share/pcem/", "nvr/default/", 512);
-	set_default_nvr_default_path(s);
-	append_filename(s, pcem_path, "configs/", 511);
-	set_default_configs_path(s);
-	append_filename(s, pcem_path, "screenshots/", 511);
-	set_default_screenshots_path(s);
-	append_filename(s, pcem_path, "logs/", 511);
-	set_default_logs_path(s);
-	append_filename(s, pcem_path, "plugins/", 512);
-	set_plugins_path(s);
-#endif
-
 	add_config_callback(sdl_loadconfig, sdl_saveconfig, sdl_onconfigloaded);
 	add_config_callback(wx_loadconfig, wx_saveconfig, 0);
-
-	load_plugins();
 
 	initpc(argc, argv);
 	resetpchard();

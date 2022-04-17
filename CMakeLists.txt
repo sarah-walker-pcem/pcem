@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 include(${CMAKE_SOURCE_DIR}/includes/includes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/debugdefines.cmake)
 
 # TODO: This whole thing is jank, replace with a real way to determine cpu type
 if(WIN32)
@@ -97,6 +98,7 @@ else()
 	set(PCEM_INCLUDE_DIR "include" CACHE STRING "PCem Include File Directory")
 endif()
 message("PCem Program Directories:")
+message("       PCem Prefix Directory: ${CMAKE_INSTALL_PREFIX}")
 message("       PCem Share Directory: ${PCEM_SHARE_DIR}")
 message("       PCem Binary Directory: ${PCEM_BIN_DIR}")
 message("       PCem Library Directory: ${PCEM_LIB_DIR}")
@@ -132,3 +134,4 @@ if(USE_EXPERIMENTAL)
         add_subdirectory(experimental)
 endif()
 
+include(${CMAKE_SOURCE_DIR}/cmake/install.cmake)

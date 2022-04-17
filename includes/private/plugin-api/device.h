@@ -2,7 +2,16 @@
 #define _DEVICE_H_
 
 #include <pcem/devices.h>
-#include <pcem/unsafe/devices.h>
+
+extern device_t *current_device;
+extern char *current_device_name;
+extern int model;
+
+int device_get_config_int(char *name);
+char *device_get_config_string(char *s);
+int model_get_config_int(char *s);
+char *model_get_config_string(char *s);
+device_t *model_getdevice(int model);
 
 void device_init();
 void device_add(device_t *d);

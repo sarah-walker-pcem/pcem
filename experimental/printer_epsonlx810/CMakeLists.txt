@@ -13,4 +13,4 @@ set(EPSON_LX810_SRC
 
 add_library(printer_epsonlx810 SHARED ${EPSON_LX810_SRC} ${EPSON_LX810_HEADER})
 target_link_libraries(printer_epsonlx810 ${PCEM_LIBRARIES} Freetype::Freetype)
-set_target_properties(printer_epsonlx810 PROPERTIES SUFFIX ".pcem")
+set_target_properties(printer_epsonlx810 PROPERTIES SUFFIX ".pplg")

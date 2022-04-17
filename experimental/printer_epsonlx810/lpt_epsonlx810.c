@@ -93,7 +93,6 @@
 #include "lpt_epsonlx810.h"
 
 #include <pcem/devices.h>
-#include <pcem/unsafe/devices.h>
 #include <pcem/unsafe/config.h>
 #include <pcem/logging.h>
 #include <SDL.h>

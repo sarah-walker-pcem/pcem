@@ -2,7 +2,7 @@
 #include <pcem/devices.h>
 #include <pcem/logging.h>
 #include <string.h>
-#include <pcem/unsafe/config.h>
+#include <pcem/config.h>
 
 extern void *device_priv[256];
 extern device_t *devices[DEV_MAX];
@@ -141,6 +141,64 @@ int model_get_config_int(char *s) {
 
 char *model_get_config_string(char *s) {
 	device_t *device = model_getdevice(model);
+	device_config_t *config;
+
+	if (!device)
+		return 0;
+
+	config = device->config;
+
+	while (config->type != -1) {
+		if (!strcmp(s, config->name))
+			return config_get_string(CFG_MACHINE, device->name, s, config->default_string);
+
+		config++;
+	}
+	return NULL;
+}
+
+int pcem_device_get_config_int(device_t *device, char *s) {
+	device_config_t *config = device->config;
+
+	while (config->type != -1) {
+		if (!strcmp(s, config->name))
+			return config_get_int(CFG_MACHINE, device->name, s, config->default_int);
+
+		config++;
+	}
+	return 0;
+}
+
+char *pcem_device_get_config_string(device_t *device, char *s) {
+	device_config_t *config = device->config;
+
+	while (config->type != -1) {
+		if (!strcmp(s, config->name))
+			return config_get_string(CFG_MACHINE, device->name, s, config->default_string);
+
+		config++;
+	}
+	return NULL;
+}
+
+int pcem_model_get_config_int(device_t *device, char *s) {
+	device_config_t *config;
+
+	if (!device)
+		return 0;
+
+	config = device->config;
+
+	while (config->type != -1) {
+		if (!strcmp(s, config->name))
+			return config_get_int(CFG_MACHINE, device->name, s, config->default_int);
+
+		config++;
+	}
+	return 0;
+}
+
+char *pcem_model_get_config_string(device_t *device, char *s) {
 	device_config_t *config;
 
 	if (!device)

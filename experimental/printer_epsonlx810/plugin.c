@@ -1,5 +1,5 @@
 #include <pcem/plugin.h>
-#include <pcem/unsafe/config.h>
+#include <pcem/config.h>
 #include <string.h>
 
 #include "lpt_epsonlx810.h"

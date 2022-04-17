@@ -63,6 +63,7 @@
 
 #ifdef USE_NETWORKING
 #include "nethandler.h"
+#include "plugin.h"
 #define NE2000      1
 uint8_t ethif;
 int inum;
@@ -238,6 +239,9 @@ void initpc(int argc, char *argv[]) {
 
 	loadconfig(NULL);
 	pclog("Config loaded\n");
+
+	load_plugins();
+
 //        if (config_file)
 //                saveconfig();
 

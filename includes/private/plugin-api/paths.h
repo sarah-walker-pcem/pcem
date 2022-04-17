@@ -7,11 +7,8 @@ extern char nvr_path[512];
 extern char logs_path[512];
 extern char screenshots_path[512];
 extern char nvr_default_path[512];
-extern char plugins_default_path[512];
-extern char base_path[512];
 
 void get_pcem_path(char *s, int size);
-void get_pcem_base_path(char *s, int size);
 char get_path_separator();
 void paths_init();
 int dir_exists(char* path);
@@ -32,6 +29,7 @@ void set_nvr_path(char *s);
 void set_logs_path(char *s);
 void set_configs_path(char *s);
 void set_screenshots_path(char *s);
-void set_plugins_path(char *s);
+
+#define safe_strncpy(a, b, n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
 
 #endif /* _PATHS_H_ */
