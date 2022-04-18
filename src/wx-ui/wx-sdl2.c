@@ -479,13 +479,6 @@ int pc_main(int argc, char **argv) {
 
 	sound_init();
 
-#ifdef __linux__
-	/* check if cfg exists, and if not create it */
-	append_filename(s, pcem_path, "pcem.cfg", 511);
-	if (!wx_file_exists(s))
-		saveconfig(NULL);
-#endif
-
 #ifndef __APPLE__
 	display_init();
 #endif
