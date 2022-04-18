@@ -346,7 +346,7 @@ static void recalc_cd_list(void *hdlg, int cur_speed, char *cur_model) {
 		wx_enablewindow(h, TRUE);
 	else
 		wx_enablewindow(h, FALSE);
-	while (1) {
+	while (c < MAX_CD_MODEL) {
 		char s[40];
 		char *model;
 
@@ -366,8 +366,6 @@ static void recalc_cd_list(void *hdlg, int cur_speed, char *cur_model) {
 		}
 
 		c++;
-		if (c > MAX_CD_MODEL)
-			break;
 	}
 	if (!found)
 		wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0); // assume that there is always at least one TODO: is this necessary?
