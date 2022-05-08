@@ -1,6 +1,6 @@
 #ifndef _VID_VOODOO_RENDER_H_
 #define _VID_VOODOO_RENDER_H_
-#if !(defined i386 || defined __i386 || defined __i386__ || defined _X86_ || defined WIN32 || defined _WIN32 || defined _WIN32) && !(defined __amd64__)
+#if !(defined i386 || defined __i386 || defined __i386__ || defined _X86_) && !(defined __amd64__)
 #define NO_CODEGEN
 #endif
 

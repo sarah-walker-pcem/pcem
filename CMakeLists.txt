@@ -15,6 +15,8 @@ if(WIN32)
                 set(CMAKE_SYSTEM_PROCESSOR i386)
         elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
                 set(CMAKE_SYSTEM_PROCESSOR x86_64)
+        elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM64")
+                set(CMAKE_SYSTEM_PROCESSOR arm64)
         endif()
 endif()
 
