@@ -32,7 +32,7 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -mstack
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -mstackrealign -fno-strict-aliasing")
 
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
-set(PCEM_DEFINES PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
+set(PCEM_DEFINES ${PCEM_DEFINES} PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
 
 message("PCem ${PCEM_VERSION_STRING} - Build Type: ${CMAKE_BUILD_TYPE}")
 message("***************************************************************")
