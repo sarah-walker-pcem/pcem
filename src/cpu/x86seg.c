@@ -11,6 +11,7 @@
 #include "config.h"
 #include "paths.h"
 #include "i440bx.h"
+#include "logging-internal.h"
 
 /*Controls whether the accessed bit in a descriptor is set when CS is loaded.*/
 #define CS_ACCESSED
@@ -36,24 +37,13 @@ void taskswitch386(uint16_t seg, uint16_t *segdat);
 /*NOT PRESENT is INT 0B
   GPF is INT 0D*/
 
-FILE *pclogf;
 void x86abort(const char *format, ...) {
-	char buf[256];
-	//   return;
-	if (!pclogf) {
-		strcpy(buf, logs_path);
-		put_backslash(buf);
-		strcat(buf, "pcem.log");
-		pclogf = fopen(buf, "wt");
-	}
-	//return;
 	va_list ap;
 	va_start(ap, format);
-	vsprintf(buf, format, ap);
+	error(format, ap);
 	va_end(ap);
-	fputs(buf, pclogf);
-	fflush(pclogf);
 	dumpregs();
+	pclog_end();
 	exit(-1);
 }
 

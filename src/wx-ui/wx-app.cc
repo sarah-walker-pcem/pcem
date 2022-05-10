@@ -4,6 +4,7 @@
 #include <wx/event.h>
 #include "wx-utils.h"
 #include "wx-common.h"
+#include "logging-internal.h"
 
 #ifdef _WIN32
 #define BITMAP WINDOWS_BITMAP
@@ -119,7 +120,7 @@ void Frame::OnStopEmulationEvent(wxCommandEvent &event) {
 	if (emulation_state != EMULATION_STOPPED) {
 		pause_emulation();
 		int ret = wxID_OK;
-
+		pclog_flush();
 		if (confirm_on_stop_emulation) {
 			wxDialog dlg;
 			wxXmlResource::Get()->LoadDialog(&dlg, this, "ConfirmRememberDlg");
@@ -144,6 +145,7 @@ void Frame::OnStopEmulationEvent(wxCommandEvent &event) {
 
 void Frame::OnStopEmulationNowEvent(wxCommandEvent &event) {
 	stop_emulation();
+	pclog_flush();
 	if (!config_override)
 		ShowConfigSelection();
 	else
@@ -179,6 +181,7 @@ void Frame::OnCommand(wxCommandEvent &event) {
 }
 
 void Frame::OnClose(wxCloseEvent &event) {
+	pclog_end();
 	wx_exit(this, 0);
 }
 
@@ -199,6 +202,7 @@ void Frame::Quit(bool stop_emulator) {
 			return;
 		}
 	}
+	pclog_end();
 	Destroy();
 }
 
@@ -211,8 +215,10 @@ void Frame::OnExitEvent(wxCommandEvent &event) {
 }
 
 void Frame::OnExitCompleteEvent(wxCommandEvent &event) {
-	if (event.GetInt())
+	if (event.GetInt()) {
+		pclog_end();
 		Destroy();
+	}
 	else
 		closing = false;
 }
