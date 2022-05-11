@@ -779,14 +779,12 @@ int render() {
 	if (window_doinputgrab) {
 		window_doinputgrab = 0;
 		mousecapture = 1;
-		SDL_GetRelativeMouseState(0, 0);
-		SDL_SetWindowGrab(window, SDL_TRUE);
-		SDL_SetRelativeMouseMode(SDL_TRUE);
-	}
-	if (mousecapture) {
 		SDL_Rect rect;
 		SDL_GetWindowSize(window, &rect.w, &rect.h);
 		SDL_WarpMouseInWindow(window, rect.w / 2, rect.h / 2);
+		SDL_SetWindowGrab(window, SDL_TRUE);
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+		SDL_GetRelativeMouseState(0, 0);
 	}
 
 	if (window_doinputrelease) {
