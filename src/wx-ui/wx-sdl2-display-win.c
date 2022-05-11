@@ -92,6 +92,7 @@ void display_resize(int width, int height) {
 	if (winsizex < MIN_WIDTH)
 		winsizex = MIN_WIDTH;
 	win_doresize = 1;
+	//pclog("Resizing to %d %d", width, height);
 }
 
 void releasemouse() {
@@ -456,7 +457,6 @@ int sdl_scancode(SDL_Scancode scancode) {
 
 SDL_Event event;
 SDL_Rect rect;
-int border_x, border_y = 0;
 
 uint64_t render_time = 0;
 int render_fps = 0;
@@ -477,11 +477,13 @@ void window_setup() {
 	if (window_remember) {
 		rect.x = window_x;
 		rect.y = window_y;
+		//pclog("window_setup. setting window position to %dx%d\n", rect.x, rect.y);
 		rect.w = window_w;
 		rect.h = window_h;
 	} else {
 		rect.x = SDL_WINDOWPOS_CENTERED;
 		rect.y = SDL_WINDOWPOS_CENTERED;
+		//pclog("window_setup. setting window position with SDL_WINDOWPOS_CENTERED\n");
 		rect.w = 640;
 		rect.h = 480;
 	}
@@ -592,8 +594,10 @@ int window_create() {
 		return 0;
 	}
 
-	SDL_SetWindowPosition(window, rect.x, rect.y);
+	// set size before position, so that SDL_WINDOWPOS_CENTERED can work.
 	SDL_SetWindowSize(window, rect.w, rect.h);
+	SDL_SetWindowPosition(window, rect.x, rect.y);
+	//pclog("window_create Setting window position to %dx%d\n", rect.x, rect.y);
 
 	if (vid_resize)
 		window_dosetresize = 1;
@@ -609,6 +613,18 @@ void window_close() {
 	int i;
 	sdl_renderer_close();
 
+	if (window) {
+		// Do this before removing the menu or else the sizes will be incorrect.
+		SDL_GetWindowPosition(window, &rect.x, &rect.y);
+		//pclog("window_close Getting window position. is %dx%d\n", rect.x, rect.y);
+		SDL_GetWindowSize(window, &rect.w, &rect.h);
+		if (window_remember) {
+			// These are incorrectly set sometimes from SDL_WINDOWEVENT_MOVED so we ensure they have the correct value.
+			window_x = rect.x;
+			window_y = rect.y;
+		}
+	}
+
 	int count = GetMenuItemCount(menu);
 	for (i = 0; i < count; ++i)
 		RemoveMenu(menu, 0, MF_BYPOSITION);
@@ -617,12 +633,6 @@ void window_close() {
 	SetMenu(hwnd, 0);
 
 	if (window) {
-		SDL_GetWindowPosition(window, &rect.x, &rect.y);
-		SDL_GetWindowSize(window, &rect.w, &rect.h);
-		get_border_size(&border_y, &border_x, 0, 0);
-		rect.x -= border_x;
-		rect.y -= border_y;
-
 		SDL_DestroyWindow(window);
 	}
 	window = NULL;
@@ -697,9 +707,9 @@ int render() {
 				int flags = SDL_GetWindowFlags(window);
 				if (!(flags & SDL_WINDOW_FULLSCREEN) && !(flags & SDL_WINDOW_FULLSCREEN_DESKTOP)) {
 					if (event.window.event == SDL_WINDOWEVENT_MOVED) {
-						get_border_size(&border_y, &border_x, 0, 0);
-						window_x = event.window.data1 - border_x;
-						window_y = event.window.data2 - border_y;
+						window_x = event.window.data1;
+						window_y = event.window.data2;
+						//pclog("render window_remember SDL_WINDOWEVENT_MOVED. setting window_x/y to %dx%d\n", window_x, window_y);
 					} else if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
 						window_w = event.window.data1;
 						window_h = event.window.data2;
@@ -736,10 +746,8 @@ int render() {
 	if (window_doremember) {
 		window_doremember = 0;
 		SDL_GetWindowPosition(window, &window_x, &window_y);
+		//pclog("render window_doremember. setting window_x/y to %dx%d\n", window_x, window_y);
 		SDL_GetWindowSize(window, &window_w, &window_h);
-		get_border_size(&border_y, &border_x, 0, 0);
-		window_x -= border_x;
-		window_y -= border_y;
 		saveconfig(NULL);
 	}
 
@@ -757,15 +765,14 @@ int render() {
 
 	if (window_dofullscreen) {
 		window_dofullscreen = 0;
+		// Get window position before hiding the menu or else the sizes will be incorrect.
+		SDL_GetWindowPosition(window, &remembered_rect.x, &remembered_rect.y);
+		//pclog("render window_dofullscreen. getting window position remembered_rect to %dx%d\n", remembered_rect.x, remembered_rect.y);
+		SDL_GetWindowSize(window, &remembered_rect.w, &remembered_rect.h);
 		SetMenu(hwnd, 0);
 		video_wait_for_blit();
 		SDL_RaiseWindow(window);
 		SDL_GetGlobalMouseState(&remembered_mouse_x, &remembered_mouse_y);
-		SDL_GetWindowPosition(window, &remembered_rect.x, &remembered_rect.y);
-		get_border_size(&border_y, &border_x, 0, 0);
-		remembered_rect.x -= border_x;
-		remembered_rect.y -= border_y;
-		SDL_GetWindowSize(window, &remembered_rect.w, &remembered_rect.h);
 		SDL_SetWindowFullscreen(window, video_fullscreen_mode == 0 ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN);
 		device_force_redraw();
 	}
@@ -790,6 +797,7 @@ int render() {
 		window_dowindowed = 0;
 		SetMenu(hwnd, menu);
 		SDL_SetWindowFullscreen(window, 0);
+		//pclog("render window_dowindowed. setting window position remembered_rect to %dx%d\n", remembered_rect.x, remembered_rect.y);
 		SDL_SetWindowSize(window, remembered_rect.w, remembered_rect.h);
 		SDL_SetWindowPosition(window, remembered_rect.x, remembered_rect.y);
 		SDL_WarpMouseGlobal(remembered_mouse_x, remembered_mouse_y);
@@ -805,6 +813,7 @@ int render() {
 				SDL_GetWindowPosition(window, &rect.x, &rect.y);
 				SDL_SetWindowSize(window, winsizex, winsizey);
 				SDL_SetWindowPosition(window, rect.x, rect.y);
+				//pclog("render win_doresize. get/set window position rect to %dx%d\n", rect.x, rect.y);
 				device_force_redraw();
 			}
 		}

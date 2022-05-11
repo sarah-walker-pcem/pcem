@@ -128,6 +128,9 @@ int screenshot_flash = 1;
 int take_screenshot = 0;
 
 void updatewindowsize(int x, int y) {
+	if (video_width == x && video_height == y) {
+		return;
+	}
 	video_width = x;
 	video_height = y;
 
