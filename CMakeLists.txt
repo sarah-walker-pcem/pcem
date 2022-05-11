@@ -11,15 +11,14 @@ include(${CMAKE_SOURCE_DIR}/cmake/debugdefines.cmake)
 
 # TODO: This whole thing is jank, replace with a real way to determine cpu type
 if(WIN32)
-        if(${CMAKE_C_COMPILER} MATCHES ".*mingw32.*")
-                set(CMAKE_SYSTEM_PROCESSOR i386)
-        elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+        if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
                 set(CMAKE_SYSTEM_PROCESSOR x86_64)
         elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM64")
                 set(CMAKE_SYSTEM_PROCESSOR arm64)
+        elseif(${CMAKE_C_COMPILER} MATCHES ".*mingw32.*")
+                set(CMAKE_SYSTEM_PROCESSOR i386)
         endif()
 endif()
-
 set(PCEM_CPU_TYPE ${CMAKE_SYSTEM_PROCESSOR})
 # End of Jankness
 
