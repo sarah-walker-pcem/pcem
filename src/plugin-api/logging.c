@@ -14,13 +14,12 @@ void (*_savenvr)();
 void (*_dumppic)();
 void (*_dumpregs)();
 
-FILE *pclogf;
+FILE *pclogf = NULL;
 
-void error(const char *format, ...) {
+uint8_t pclog_start() {
 #ifndef RELEASE_BUILD
-	char buf[1024];
-	//return;
 	if (!pclogf) {
+		char buf[1024];
 		strcpy(buf, logs_path);
 		put_backslash(buf);
 		strcat(buf, "pcem.log");
@@ -28,8 +27,42 @@ void error(const char *format, ...) {
 
 		if (NULL == pclogf) {
 			fprintf(stderr, "Could not open log file for writing: %s", strerror(errno));
-			return;
+			return 0;
 		}
+	}
+	return 1;
+#else 
+	return 0;
+#endif
+}
+
+void pclog_flush() {
+#ifndef RELEASE_BUILD
+	if (pclogf) {
+		fflush(pclogf);
+	}
+#endif
+
+}
+
+void pclog_end() {
+#ifndef RELEASE_BUILD
+	if (pclogf) {
+		fflush(pclogf);
+		fclose(pclogf);
+		pclogf = NULL;
+	}
+#endif
+}
+
+
+
+void error(const char *format, ...) {
+#ifndef RELEASE_BUILD
+	char buf[1024];
+	//return;
+	if (!pclog_start()) {
+		return;
 	}
 	//return;
 	va_list ap;
@@ -46,17 +79,8 @@ void fatal(const char *format, ...) {
 #ifndef RELEASE_BUILD
 	char buf[1024];
 	//return;
-	if (!pclogf) {
-		strcpy(buf, logs_path);
-		put_backslash(buf);
-		strcat(buf, "pcem.log");
-		pclogf = fopen(buf, "wt");
-
-		if (NULL == pclogf) {
-			fprintf(stderr, "Could not open log file for writing: %s", strerror(errno));
-			return;
-		}
-
+	if (!pclog_start()) {
+		return;
 	}
 	//return;
 	va_list ap;
@@ -71,6 +95,7 @@ void fatal(const char *format, ...) {
 	_savenvr();
 	_dumppic();
 	_dumpregs();
+	pclog_end();
 	exit(-1);
 }
 
@@ -89,16 +114,8 @@ void pclog(const char *format, ...) {
 #ifndef RELEASE_BUILD
 	char buf[1024];
 	//return;
-	if (!pclogf) {
-		strcpy(buf, logs_path);
-		put_backslash(buf);
-		strcat(buf, "pcem.log");
-		pclogf = fopen(buf, "wt");
-		if (NULL == pclogf) {
-			fprintf(stderr, "Could not open log file for writing: %s", strerror(errno));
-			return;
-		}
-
+	if (!pclog_start()) {
+		return;
 	}
 	//return;
 	va_list ap;
