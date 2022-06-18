@@ -99,6 +99,5 @@ lpt_device_t dss_device =
 		NULL,
 		dss_write_data,
 		dss_write_ctrl,
-		dss_read_status,
-		NULL
+		dss_read_status
 	};
