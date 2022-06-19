@@ -6,8 +6,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 include(${CMAKE_SOURCE_DIR}/includes/includes.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/debugdefines.cmake)
 
 # TODO: This whole thing is jank, replace with a real way to determine cpu type
 if((NOT DEFINED CMAKE_TOOLCHAIN_FILE) AND WIN32)
@@ -68,7 +66,12 @@ if(USE_EXPERIMENTAL)
         message("       Printer Support: ${USE_EXPERIMENTAL_PRINTER}")
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+	option(PCEM_RELDEB_AS_RELEASE "Build PCem RelWithDebInfo as Release Mode" ON)
+        message("Build PCem RelWithDebInfo as Release Mode: ${PCEM_RELDEB_AS_RELEASE}")
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" AND NOT PCEM_RELDEB_AS_RELEASE))
         message("Extra Debug Messages:")
         option(PCEM_SLIRP_DEBUG "Build PCem with SLIRP_DEBUG debug output" OFF)
         message("       SLIRP_DEBUG debug output: ${PCEM_SLIRP_DEBUG}")
@@ -87,6 +90,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInf
         option(PCEM_PRINTER_DEBUG "Build PCem with PRINTER_DEBUG debug output" OFF)
         message("       PRINTER_DEBUG debug output: ${PCEM_PRINTER_DEBUG}")
 endif()
+
 message("***************************************************************")
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	set(PCEM_SHARE_DIR "bin" CACHE STRING "PCem Share Directory")
@@ -109,6 +113,9 @@ message("       PCem Library Directory: ${PCEM_LIB_DIR}")
 message("       PCem Plugin Directory: ${PCEM_PLUGIN_DIR}")
 message("       PCem Include File Directory: ${PCEM_INCLUDE_DIR}")
 message("***************************************************************")
+
+include(${CMAKE_SOURCE_DIR}/cmake/debugdefines.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(SDL2 REQUIRED)
