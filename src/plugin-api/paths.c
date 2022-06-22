@@ -30,7 +30,8 @@ char plugins_default_path[512];
 
 char nvr_default_path[512];
 
-char get_path_separator() {
+char get_path_separator()
+{
 #ifdef _WIN32
 	return ';';
 #else
@@ -38,16 +39,20 @@ char get_path_separator() {
 #endif
 }
 
-int get_roms_path(int pos, char *s, int size) {
+int get_roms_path(int pos, char *s, int size)
+{
 	int j, i, z, len;
 	char path_separator;
 
 	path_separator = get_path_separator();
 	len = strlen(roms_paths);
 	j = 0;
-	for (i = 0; i < len; i++) {
-		if (roms_paths[i] == path_separator || i == len - 1) {
-			if ((pos--) == 0) {
+	for (i = 0; i < len; i++)
+	{
+		if (roms_paths[i] == path_separator || i == len - 1)
+		{
+			if ((pos--) == 0)
+			{
 				z = (i - j) + ((i == len - 1) ? 1 : 0);
 				safe_strncpy(s, roms_paths + j, size);
 				s[(size - 1 < z) ? size - 1 : z] = 0;
@@ -59,7 +64,8 @@ int get_roms_path(int pos, char *s, int size) {
 	return 0;
 }
 
-void set_roms_paths(char *path) {
+void set_roms_paths(char *path)
+{
 	char s[512];
 	int j, i, z, len;
 	char path_separator[2];
@@ -70,13 +76,16 @@ void set_roms_paths(char *path) {
 	len = strlen(path);
 	j = 0;
 	num_roms_paths = 0;
-	for (i = 0; i < len; i++) {
-		if (path[i] == path_separator[0] || i == len - 1) {
+	for (i = 0; i < len; i++)
+	{
+		if (path[i] == path_separator[0] || i == len - 1)
+		{
 			z = (i - j) + ((i == len - 1) ? 1 : 0) + 1;
 			safe_strncpy(s, path + j, z);
 			s[(511 < z) ? 511 : z] = 0;
 			append_slash(s, 512);
-			if (dir_exists(s)) {
+			if (dir_exists(s))
+			{
 				if (num_roms_paths > 0)
 					strcat(roms_paths, path_separator);
 				strcat(roms_paths, s);
@@ -87,65 +96,77 @@ void set_roms_paths(char *path) {
 	}
 }
 
-int dir_exists(char *path) {
+int dir_exists(char *path)
+{
 	return wx_dir_exists(path);
 }
 
-void set_nvr_path(char *s) {
+void set_nvr_path(char *s)
+{
 	safe_strncpy(nvr_path, s, 512);
 	append_slash(nvr_path, 512);
 }
 
-void set_logs_path(char *s) {
+void set_logs_path(char *s)
+{
 	safe_strncpy(logs_path, s, 512);
 	append_slash(logs_path, 512);
 }
 
-void set_configs_path(char *s) {
+void set_configs_path(char *s)
+{
 	safe_strncpy(configs_path, s, 512);
 	append_slash(configs_path, 512);
 }
 
-void set_screenshots_path(char *s) {
+void set_screenshots_path(char *s)
+{
 	safe_strncpy(screenshots_path, s, 512);
 	append_slash(screenshots_path, 512);
 }
 
 /* set the default roms paths, this makes them permanent */
-void set_default_roms_paths(char *s) {
+void set_default_roms_paths(char *s)
+{
 	safe_strncpy(default_roms_paths, s, 4096);
 	set_roms_paths(s);
 }
 
 /* set the default nvr path, this makes it permanent */
-void set_default_nvr_path(char *s) {
+void set_default_nvr_path(char *s)
+{
 	safe_strncpy(default_nvr_path, s, 512);
 	set_nvr_path(s);
 }
 
-void set_default_nvr_default_path(char *s) {
+void set_default_nvr_default_path(char *s)
+{
 	safe_strncpy(nvr_default_path, s, 512);
 }
 
 /* set the default logs path, this makes it permanent */
-void set_default_logs_path(char *s) {
+void set_default_logs_path(char *s)
+{
 	safe_strncpy(default_logs_path, s, 512);
 	set_logs_path(s);
 }
 
 /* set the default configs path, this makes it permanent */
-void set_default_configs_path(char *s) {
+void set_default_configs_path(char *s)
+{
 	safe_strncpy(default_configs_path, s, 512);
 	set_configs_path(s);
 }
 
 /* set the default screenshots path, this makes it permanent */
-void set_default_screenshots_path(char *s) {
+void set_default_screenshots_path(char *s)
+{
 	safe_strncpy(default_screenshots_path, s, 512);
 	set_screenshots_path(s);
 }
 
-void paths_loadconfig() {
+void paths_loadconfig()
+{
 	char *cfg_roms_paths = config_get_string(CFG_GLOBAL, "Paths", "roms_paths", 0);
 	char *cfg_nvr_path = config_get_string(CFG_GLOBAL, "Paths", "nvr_path", 0);
 	char *cfg_configs_path = config_get_string(CFG_GLOBAL, "Paths", "configs_path", 0);
@@ -164,7 +185,8 @@ void paths_loadconfig() {
 		safe_strncpy(default_screenshots_path, cfg_screenshots_path, 512);
 }
 
-void paths_saveconfig() {
+void paths_saveconfig()
+{
 	config_set_string(CFG_GLOBAL, "Paths", "roms_paths", default_roms_paths);
 	config_set_string(CFG_GLOBAL, "Paths", "nvr_path", default_nvr_path);
 	config_set_string(CFG_GLOBAL, "Paths", "configs_path", default_configs_path);
@@ -172,7 +194,8 @@ void paths_saveconfig() {
 	config_set_string(CFG_GLOBAL, "Paths", "screenshots_path", default_screenshots_path);
 }
 
-void paths_onconfigloaded() {
+void paths_onconfigloaded()
+{
 	if (strlen(default_roms_paths) > 0)
 		set_roms_paths(default_roms_paths);
 
@@ -192,7 +215,8 @@ void paths_onconfigloaded() {
 }
 
 /* initialize default paths */
-void paths_init() {
+void paths_init()
+{
 	char s[512];
 
 	char *p;
@@ -205,21 +229,27 @@ void paths_init() {
 	/* set up default paths for this session */
 	append_filename(s, pcem_path, "roms/", 512);
 	set_roms_paths(s);
+	set_default_roms_paths(s);
 	append_filename(s, pcem_path, "nvr/", 512);
 	set_nvr_path(s);
+	set_default_nvr_path(s);
 	append_filename(s, pcem_path, "configs/", 512);
 	set_configs_path(s);
+	set_default_configs_path(s);
 	append_filename(s, pcem_path, "screenshots/", 512);
 	set_screenshots_path(s);
+	set_default_screenshots_path(s);
 	append_filename(s, pcem_path, "logs/", 512);
 	set_logs_path(s);
+	set_default_logs_path(s);
 	append_filename(s, pcem_path, "nvr/default/", 512);
 	set_default_nvr_default_path(s);
 
 	add_config_callback(paths_loadconfig, paths_saveconfig, paths_onconfigloaded);
 }
 
-void get_pcem_path(char *s, int size) {
+void get_pcem_path(char *s, int size)
+{
 #ifdef __linux
 	wx_get_home_directory(s);
 	strcat(s, ".pcem/");
@@ -242,4 +272,3 @@ void get_pcem_path(char *s, int size) {
 	strcpy(s, path);
 #endif
 }
-
