@@ -44,7 +44,13 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/scsi/scsi.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/sound/sound.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/video/video.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/wx-ui.cmake)
+
+if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
+        include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/wx-ui.cmake)
+endif()
+if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
+        message(FATAL_ERROR "Qt Mode is not yet implemented.")
+endif()
 
 set(PCEM_SRC ${PCEM_SRC}
         fdi2raw.c
@@ -58,7 +64,7 @@ set(PCEM_SRC ${PCEM_SRC}
         timer.c
         )
 
-set(PCEM_LIBRARIES ${wxWidgets_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES} ${PCEM_ADDITIONAL_LIBS})
+set(PCEM_LIBRARIES ${DISPLAY_ENGINE_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES} ${PCEM_ADDITIONAL_LIBS})
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/plugin-api/plugin-api.cmake)
 

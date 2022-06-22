@@ -36,6 +36,7 @@ then `./src/pcem` to run.
 
 The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
 
+You can specify the Display Engine using `-DPCEM_DISPLAY_ENGINE=` The options you have are wxWidgets, and Qt
 configure options are :
 ```
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
@@ -43,7 +44,7 @@ configure options are :
   -DUSE_NETWORKING=OFF       : Build with networking support.
   -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (Needs USE_NETWORKING to compile) Requires libpcap.
   -DUSE_ALSA=OFF             : Build with support for MIDI output through ALSA. Requires libasound. (Linux Only)
-  -DPLUGIN_ENGINE=OFF        : Build with plugin support. Builds libpcem-plugin-api and links PCem with it.
+  -DPLUGIN_ENGINE=OFF        : Build with plugin support. Builds libpcem-plugin-api and links PCem with it. 
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
