@@ -29,6 +29,7 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -mstack
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -mstackrealign -fno-strict-aliasing")
 
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
+set(PCEM_DISPLAY_ENGINE "wxWidgets" CACHE STRING "PCem Display Engine")
 set(PCEM_DEFINES ${PCEM_DEFINES} PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
 
 message("PCem ${PCEM_VERSION_STRING} - Build Type: ${CMAKE_BUILD_TYPE}")
@@ -38,6 +39,7 @@ endif()
 message("***************************************************************")
 message("OS Building For: ${CMAKE_SYSTEM_NAME}")
 message("System Processor: ${PCEM_CPU_TYPE}")
+message("PCem Display Engine: ${PCEM_DISPLAY_ENGINE}")
 message("***************************************************************")
 
 option(PLUGIN_ENGINE "Build PCem with plugin support" OFF)
@@ -124,8 +126,12 @@ include_directories(${SDL2_INCLUDE_DIRS})
 find_package(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})
 
-find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
-include(${wxWidgets_USE_FILE})
+if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
+        find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
+        include(${wxWidgets_USE_FILE})
+        set(DISPLAY_ENGINE_LIBRARIES ${wxWidgets_LIBRARIES})
+endif()
+
 
 if(USE_ALSA)
         find_package(ALSA REQUIRED)
