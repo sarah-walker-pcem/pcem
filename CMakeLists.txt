@@ -6,19 +6,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 include(${CMAKE_SOURCE_DIR}/includes/includes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/arch-detect.cmake)
 
-# TODO: This whole thing is jank, replace with a real way to determine cpu type
-if((NOT DEFINED CMAKE_TOOLCHAIN_FILE) AND WIN32)
-        if(${CMAKE_C_COMPILER} MATCHES ".*mingw32.*")
-                set(CMAKE_SYSTEM_PROCESSOR i386)
-        elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
-                set(CMAKE_SYSTEM_PROCESSOR x86_64)
-        elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM64")
-                set(CMAKE_SYSTEM_PROCESSOR arm64)
-        endif()
-endif()
-set(PCEM_CPU_TYPE ${CMAKE_SYSTEM_PROCESSOR})
-# End of Jankness
+target_architecture(PCEM_CPU_TYPE)
 
 if(${PCEM_CPU_TYPE} STREQUAL "i386")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
