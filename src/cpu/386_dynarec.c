@@ -260,7 +260,7 @@ static inline void exec_interpreter(void) {
  *       a SEGFAULT
  */
 
-static inline void exec_recompiler(void) {
+static void __attribute__((noinline)) exec_recompiler(void) {
 	uint32_t phys_addr = get_phys(cs + cpu_state.pc);
 	int hash = HASH(phys_addr);
 	codeblock_t *block = &codeblock[codeblock_hash[hash]];
