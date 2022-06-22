@@ -106,6 +106,8 @@ message("       PCem Plugin Directory: ${PCEM_PLUGIN_DIR}")
 message("       PCem Include File Directory: ${PCEM_INCLUDE_DIR}")
 message("***************************************************************")
 
+set(PCEM_DEFINES ${PCEM_DEFINES} PLUGIN_DIR="${CMAKE_INSTALL_PREFIX}/${PCEM_PLUGIN_DIR}")
+
 include(${CMAKE_SOURCE_DIR}/cmake/debugdefines.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
 
