@@ -9,5 +9,4 @@ extern int speaker_enable, was_speaker_enable;
 
 void speaker_update();
 
-
 #endif /* _SOUND_SPEAKER_H_ */

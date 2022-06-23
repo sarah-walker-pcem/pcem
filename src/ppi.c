@@ -12,7 +12,6 @@
 #include "plat-mouse.h"
 
 void ppi_reset() {
-	ppi.pa = 0x0;//0x1D;
-	ppi.pb = 0x40;
+        ppi.pa = 0x0; // 0x1D;
+        ppi.pb = 0x40;
 }
-

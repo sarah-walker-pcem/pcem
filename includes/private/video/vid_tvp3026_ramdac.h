@@ -1,19 +1,17 @@
 #ifndef _VID_TVP3026_RAMDAC_H_
 #define _VID_TVP3026_RAMDAC_H_
 
-typedef struct tvp3026_ramdac_t
-{
+typedef struct tvp3026_ramdac_t {
         int reg_idx;
         uint16_t regs[256];
         int cursor_ena, cursor_mode;
         uint8_t cursor_control;
         int cursor_x, cursor_y;
         uint8_t cursor_data[1024];
-        struct
-        {
+        struct {
                 uint8_t m, n, p;
         } pix, mem, loop;
-        
+
         int cursor_pal_read, cursor_pal_write, cursor_pal_pos;
         int cursor_pal_r, cursor_pal_g;
         RGB cursor_pal[4];

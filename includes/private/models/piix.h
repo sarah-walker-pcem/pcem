@@ -3,16 +3,14 @@
 void piix_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)());
 void piix4_init(int card, int pci_a, int pci_b, int pci_c, int pci_d, void (*nb_reset)());
 
-typedef struct piix_t
-{
+typedef struct piix_t {
         int type;
 
         /*PIIX4*/
         uint8_t card_pm[256];
 
         uint16_t pmba;
-        struct
-        {
+        struct {
                 uint8_t apmc, apms;
 
                 uint64_t timer_offset;
@@ -35,13 +33,11 @@ typedef struct piix_t
         } pm;
 
         uint16_t smbba;
-        struct
-        {
+        struct {
                 uint8_t host_ctrl;
         } smbus;
 
         uint8_t port_92;
 } piix_t;
-
 
 #endif /* _PIIX_H_ */

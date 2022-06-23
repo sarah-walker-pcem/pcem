@@ -4,7 +4,7 @@
 extern "C" {
 #include <stdint.h>
 #include "device.h"
-void deviceconfig_open(void* hwnd, device_t *device);
+void deviceconfig_open(void *hwnd, device_t *device);
 }
 
 #endif /* SRC_WX_DEVICECONFIG_H_ */

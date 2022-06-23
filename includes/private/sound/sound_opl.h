@@ -2,16 +2,15 @@
 #define _SOUND_OPL_H_
 #include "sound.h"
 
-typedef struct opl_t
-{
+typedef struct opl_t {
         int chip_nr[2];
-        
+
         pc_timer_t timers[2][2];
 
         int16_t filtbuf[2];
 
         int16_t buffer[MAXSOUNDBUFLEN * 2];
-        int     pos;
+        int pos;
 } opl_t;
 
 uint8_t opl2_read(uint16_t a, void *priv);
@@ -34,6 +33,5 @@ void opl3_update2(opl_t *opl);
 
 #define OPL_DBOPL 0
 #define OPL_NUKED 1
-
 
 #endif /* _SOUND_OPL_H_ */

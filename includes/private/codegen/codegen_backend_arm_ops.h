@@ -105,7 +105,8 @@ void host_arm_ORR_IMM_cond(codeblock_t *block, uint32_t cond, int dst_reg, int s
 void host_arm_ORR_REG_LSL_cond(codeblock_t *block, uint32_t cond, int dst_reg, int src_reg_n, int src_reg_m, int shift);
 
 #define host_arm_ORR_IMM(block, dst_reg, src_reg, imm) host_arm_ORR_IMM_cond(block, COND_AL, dst_reg, src_reg, imm)
-#define host_arm_ORR_REG_LSL(block, dst_reg, src_reg_a, src_reg_b, shift) host_arm_ORR_REG_LSL_cond(block, COND_AL, dst_reg, src_reg_a, src_reg_b, shift)
+#define host_arm_ORR_REG_LSL(block, dst_reg, src_reg_a, src_reg_b, shift)                                                        \
+        host_arm_ORR_REG_LSL_cond(block, COND_AL, dst_reg, src_reg_a, src_reg_b, shift)
 
 #define host_arm_ORRCC_IMM(block, dst_reg, src_reg, imm) host_arm_ORR_IMM_cond(block, COND_CC, dst_reg, src_reg, imm)
 #define host_arm_ORREQ_IMM(block, dst_reg, src_reg, imm) host_arm_ORR_IMM_cond(block, COND_EQ, dst_reg, src_reg, imm)
@@ -253,6 +254,5 @@ void host_arm_VSUB_I32(codeblock_t *block, int dst_reg, int src_reg_n, int src_r
 void host_arm_VZIP_D8(codeblock_t *block, int d_reg, int m_reg);
 void host_arm_VZIP_D16(codeblock_t *block, int d_reg, int m_reg);
 void host_arm_VZIP_D32(codeblock_t *block, int d_reg, int m_reg);
-
 
 #endif /* _CODEGEN_BACKEND_ARM_OPS_H_ */

@@ -21,17 +21,17 @@
 #define __SIDDEFS_FP_H__
 
 #ifndef M_PI
-#define M_PI    3.14159265358979323846
-#define M_PI_f  3.14159265358979323846f
+#define M_PI 3.14159265358979323846
+#define M_PI_f 3.14159265358979323846f
 #else
-#define M_PI_f  ((float) M_PI)
+#define M_PI_f ((float)M_PI)
 #endif
 
 #ifndef M_LN2
-#define M_LN2   0.69314718055994530942
+#define M_LN2 0.69314718055994530942
 #define M_LN2_f 0.69314718055994530942f
 #else
-#define M_LN2_f ((float) M_LN2)
+#define M_LN2_f ((float)M_LN2)
 #endif
 
 // Define bool, true, and false for C++ compilers that lack these keywords.
@@ -58,16 +58,15 @@ typedef unsigned int reg24;
 
 typedef int cycle_count;
 
-enum chip_model { MOS6581FP=1, MOS8580FP };
+enum chip_model { MOS6581FP = 1, MOS8580FP };
 
-enum sampling_method { SAMPLE_INTERPOLATE=1, SAMPLE_RESAMPLE_INTERPOLATE };
+enum sampling_method { SAMPLE_INTERPOLATE = 1, SAMPLE_RESAMPLE_INTERPOLATE };
 
-extern "C"
-{
+extern "C" {
 #ifndef __VERSION_CC__
-extern const char* resid_version_string;
+extern const char *resid_version_string;
 #else
-const char* resid_version_string = VERSION;
+const char *resid_version_string = VERSION;
 #endif
 }
 

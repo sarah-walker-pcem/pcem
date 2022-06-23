@@ -26,105 +26,100 @@
 #include "extfilt.h"
 #include "pot.h"
 
-class SIDFP
-{
-public:
-  SIDFP();
-  ~SIDFP();
+class SIDFP {
+    public:
+        SIDFP();
+        ~SIDFP();
 
-  static float kinked_dac(const int x, const float nonlinearity, const int bits);
-  bool sse_enabled() { return can_use_sse; }
+        static float kinked_dac(const int x, const float nonlinearity, const int bits);
+        bool sse_enabled() { return can_use_sse; }
 
-  void set_chip_model(chip_model model);
-  FilterFP& get_filter() { return filter; }
-  void enable_filter(bool enable);
-  void enable_external_filter(bool enable);
-  bool set_sampling_parameters(float clock_freq, sampling_method method,
-                               float sample_freq, float pass_freq = -1);
-  void adjust_sampling_frequency(float sample_freq);
-  void set_voice_nonlinearity(float nonlinearity);
+        void set_chip_model(chip_model model);
+        FilterFP &get_filter() { return filter; }
+        void enable_filter(bool enable);
+        void enable_external_filter(bool enable);
+        bool set_sampling_parameters(float clock_freq, sampling_method method, float sample_freq, float pass_freq = -1);
+        void adjust_sampling_frequency(float sample_freq);
+        void set_voice_nonlinearity(float nonlinearity);
 
-  void clock();
-  int clock(cycle_count& delta_t, short* buf, int n, int interleave = 1);
-  void reset();
-  
-  // Read/write registers.
-  reg8 read(reg8 offset);
-  void write(reg8 offset, reg8 value);
+        void clock();
+        int clock(cycle_count &delta_t, short *buf, int n, int interleave = 1);
+        void reset();
 
-  // Read/write state.
-  class State
-  {
-  public:
-    State();
+        // Read/write registers.
+        reg8 read(reg8 offset);
+        void write(reg8 offset, reg8 value);
 
-    char sid_register[0x20];
+        // Read/write state.
+        class State {
+            public:
+                State();
 
-    reg8 bus_value;
-    cycle_count bus_value_ttl;
+                char sid_register[0x20];
 
-    reg24 accumulator[3];
-    reg24 shift_register[3];
-    reg16 rate_counter[3];
-    reg16 rate_counter_period[3];
-    reg16 exponential_counter[3];
-    reg16 exponential_counter_period[3];
-    reg8 envelope_counter[3];
-    EnvelopeGeneratorFP::State envelope_state[3];
-    bool hold_zero[3];
-  };
-    
-  State read_state();
-  void write_state(const State& state);
+                reg8 bus_value;
+                cycle_count bus_value_ttl;
 
-  // 16-bit input (EXT IN).
-  void input(int sample);
+                reg24 accumulator[3];
+                reg24 shift_register[3];
+                reg16 rate_counter[3];
+                reg16 rate_counter_period[3];
+                reg16 exponential_counter[3];
+                reg16 exponential_counter_period[3];
+                reg8 envelope_counter[3];
+                EnvelopeGeneratorFP::State envelope_state[3];
+                bool hold_zero[3];
+        };
 
-  // output in range -32768 .. 32767, not clipped (AUDIO OUT)
-  float output();
+        State read_state();
+        void write_state(const State &state);
 
-protected:
-  static double I0(double x);
-  RESID_INLINE int clock_interpolate(cycle_count& delta_t, short* buf, int n,
-                                     int interleave);
-  RESID_INLINE int clock_resample_interpolate(cycle_count& delta_t, short* buf,
-                                              int n, int interleave);
-  RESID_INLINE void age_bus_value(cycle_count);
+        // 16-bit input (EXT IN).
+        void input(int sample);
 
-  VoiceFP voice[3];
-  FilterFP filter;
-  ExternalFilterFP extfilt;
-  PotentiometerFP potx;
-  PotentiometerFP poty;
+        // output in range -32768 .. 32767, not clipped (AUDIO OUT)
+        float output();
 
-  reg8 bus_value;
-  cycle_count bus_value_ttl;
+    protected:
+        static double I0(double x);
+        RESID_INLINE int clock_interpolate(cycle_count &delta_t, short *buf, int n, int interleave);
+        RESID_INLINE int clock_resample_interpolate(cycle_count &delta_t, short *buf, int n, int interleave);
+        RESID_INLINE void age_bus_value(cycle_count);
 
-  float clock_frequency;
+        VoiceFP voice[3];
+        FilterFP filter;
+        ExternalFilterFP extfilt;
+        PotentiometerFP potx;
+        PotentiometerFP poty;
 
-  // External audio input.
-  float ext_in;
+        reg8 bus_value;
+        cycle_count bus_value_ttl;
 
-  enum { RINGSIZE = 16384 };
+        float clock_frequency;
 
-  // Sampling variables.
-  sampling_method sampling;
-  float cycles_per_sample;
-  float sample_offset;
-  int sample_index;
-  int fir_N;
-  int fir_RES;
-  
-  // Linear interpolation helper
-  float sample_prev;
+        // External audio input.
+        float ext_in;
 
-  // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
-  float* sample;
+        enum { RINGSIZE = 16384 };
 
-  // FIR_RES filter tables (FIR_N*FIR_RES).
-  float* fir;
+        // Sampling variables.
+        sampling_method sampling;
+        float cycles_per_sample;
+        float sample_offset;
+        int sample_index;
+        int fir_N;
+        int fir_RES;
 
-  bool can_use_sse;
+        // Linear interpolation helper
+        float sample_prev;
+
+        // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
+        float *sample;
+
+        // FIR_RES filter tables (FIR_N*FIR_RES).
+        float *fir;
+
+        bool can_use_sse;
 };
 
 #endif // not __SID_H__

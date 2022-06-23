@@ -31,8 +31,7 @@ extern const uOpFn uop_handlers[];
 /*Register will not be preserved across function calls*/
 #define HOST_REG_FLAG_VOLATILE (1 << 0)
 
-typedef struct host_reg_def_t
-{
+typedef struct host_reg_def_t {
         int reg;
         int flags;
 } host_reg_def_t;

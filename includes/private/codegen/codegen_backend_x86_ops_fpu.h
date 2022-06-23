@@ -7,5 +7,4 @@ void host_x87_FLDCW(codeblock_t *block, void *p);
 void host_x87_FLDd_BASE(codeblock_t *block, int base_reg);
 void host_x87_FSTPd_BASE(codeblock_t *block, int base_reg);
 
-
 #endif /* _CODEGEN_BACKEND_X86_OPS_FPU_H_ */
