@@ -1,14 +1,14 @@
 #ifndef _DISC_H_
 #define _DISC_H_
 typedef struct {
-	void (*seek)(int drive, int track);
-	void (*readsector)(int drive, int sector, int track, int side, int density, int sector_size);
-	void (*writesector)(int drive, int sector, int track, int side, int density, int sector_size);
-	void (*readaddress)(int drive, int track, int side, int density);
-	void (*format)(int drive, int track, int side, int density, uint8_t fill);
-	int (*hole)(int drive);
-	void (*stop)();
-	void (*poll)();
+        void (*seek)(int drive, int track);
+        void (*readsector)(int drive, int sector, int track, int side, int density, int sector_size);
+        void (*writesector)(int drive, int sector, int track, int side, int density, int sector_size);
+        void (*readaddress)(int drive, int track, int side, int density);
+        void (*format)(int drive, int track, int side, int density, uint8_t fill);
+        int (*hole)(int drive);
+        void (*stop)();
+        void (*poll)();
 } DRIVE;
 
 extern DRIVE drives[2];
@@ -52,7 +52,7 @@ extern int motorspin;
 extern int motoron;
 
 extern int defaultwriteprot;
-//extern char discfns[4][260];
+// extern char discfns[4][260];
 
 extern int writeprot[2], fwriteprot[2];
 extern int disc_track[2];
@@ -62,6 +62,6 @@ extern int drive_type[2];
 
 /*Used in the Read A Track command. Only valid for disc_readsector(). */
 #define SECTOR_FIRST -2
-#define SECTOR_NEXT  -1
+#define SECTOR_NEXT -1
 
 #endif /* _DISC_H_ */

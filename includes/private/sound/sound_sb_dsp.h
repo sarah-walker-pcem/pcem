@@ -2,21 +2,22 @@
 #define _SOUND_SB_DSP_H_
 
 /*Sound Blaster Clones, for quirks*/
-#define SB_SUBTYPE_DEFAULT             0 /*Handle as a Creative card*/
+#define SB_SUBTYPE_DEFAULT 0             /*Handle as a Creative card*/
 #define SB_SUBTYPE_CLONE_AZT2316A_0X11 1 /*Aztech Sound Galaxy Pro 16 AB, DSP 3.1 - SBPRO2 clone*/
-#define SB_SUBTYPE_CLONE_AZT1605_0X0C  2 /*Aztech Sound Galaxy Nova 16 Extra / Packard Bell Forte 16, DSP 2.1 - SBPRO2 clone*/
+#define SB_SUBTYPE_CLONE_AZT1605_0X0C 2  /*Aztech Sound Galaxy Nova 16 Extra / Packard Bell Forte 16, DSP 2.1 - SBPRO2 clone*/
 
 // aztech-related
-#define IS_AZTECH(dsp) ((dsp)->sb_subtype == SB_SUBTYPE_CLONE_AZT2316A_0X11 || (dsp)->sb_subtype == SB_SUBTYPE_CLONE_AZT1605_0X0C) // check for future AZT cards here
-#define AZTECH_EEPROM_SIZE             16
+#define IS_AZTECH(dsp)                                                                                                           \
+        ((dsp)->sb_subtype == SB_SUBTYPE_CLONE_AZT2316A_0X11 ||                                                                  \
+         (dsp)->sb_subtype == SB_SUBTYPE_CLONE_AZT1605_0X0C) // check for future AZT cards here
+#define AZTECH_EEPROM_SIZE 16
 
-typedef struct sb_dsp_t
-{
+typedef struct sb_dsp_t {
         int sb_type;
         int sb_subtype; // which clone
-        void *parent; // "sb_t *" if default subtype, "azt2316a_t *" if aztech.
+        void *parent;   // "sb_t *" if default subtype, "azt2316a_t *" if aztech.
 
-        int sb_8_length,  sb_8_format,  sb_8_autoinit,  sb_8_pause,  sb_8_enable,  sb_8_autolen,  sb_8_output;
+        int sb_8_length, sb_8_format, sb_8_autoinit, sb_8_pause, sb_8_enable, sb_8_autolen, sb_8_output;
         int sb_8_dmanum;
         int sb_16_length, sb_16_format, sb_16_autoinit, sb_16_pause, sb_16_enable, sb_16_autolen, sb_16_output;
         int sb_16_dmanum;
@@ -37,7 +38,7 @@ typedef struct sb_dsp_t
         uint8_t sb_data[8];
 
         int sb_freq;
-        
+
         int16_t sbdat;
         int sbdat2;
         int16_t sbdatl, sbdatr;
@@ -58,22 +59,22 @@ typedef struct sb_dsp_t
         int sb_irq8, sb_irq16;
 
         uint8_t sb_asp_regs[256];
-        
+
         int sbenable, sb_enable_i;
-        
+
         pc_timer_t output_timer, input_timer;
-        
+
         uint64_t sblatcho, sblatchi;
-        
+
         uint16_t sb_addr;
-        
+
         int stereo;
-        
+
         int asp_data_len;
-        
-	pc_timer_t wb_timer;
+
+        pc_timer_t wb_timer;
         int wb_full;
-        
+
         int busy_count;
 
         int record_pos_read;

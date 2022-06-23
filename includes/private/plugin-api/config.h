@@ -18,9 +18,9 @@ extern char config_file_default[256];
 extern char config_name[256];
 
 typedef struct config_callback_t {
-	void (*loadconfig)();
-	void (*saveconfig)();
-	void (*onloaded)();
+        void (*loadconfig)();
+        void (*saveconfig)();
+        void (*onloaded)();
 } config_callback_t;
 extern config_callback_t config_callbacks[CALLBACK_MAX];
 extern int num_config_callbacks;

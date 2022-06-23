@@ -39,5 +39,4 @@ extern int sound_gain;
 extern int SOUNDBUFLEN;
 #define MAXSOUNDBUFLEN (48000 / 10)
 
-
 #endif /* _SOUND_H_ */

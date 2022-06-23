@@ -18,9 +18,8 @@
 //  ---------------------------------------------------------------------------
 
 float convolve(const float *a, const float *b, int n) {
-	float out = 0.f;
-	while (n--)
-		out += (*(a++)) * (*(b++));
-	return out;
+        float out = 0.f;
+        while (n--)
+                out += (*(a++)) * (*(b++));
+        return out;
 }
-

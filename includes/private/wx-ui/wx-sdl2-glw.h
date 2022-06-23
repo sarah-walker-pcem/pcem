@@ -41,9 +41,8 @@ typedef struct glw_t {
         PFNGLBUFFERSUBDATAPROC glBufferSubData;
 } glw_t;
 
-glw_t* glw_init()
-{
-        glw_t* glw = malloc(sizeof(glw_t));
+glw_t *glw_init() {
+        glw_t *glw = malloc(sizeof(glw_t));
         glw->glActiveTexture = SDL_GL_GetProcAddress("glActiveTexture");
         glw->glCreateShader = SDL_GL_GetProcAddress("glCreateShader");
         glw->glShaderSource = SDL_GL_GetProcAddress("glShaderSource");
@@ -84,9 +83,6 @@ glw_t* glw_init()
         return glw;
 }
 
-void glw_free(glw_t* glw)
-{
-        free(glw);
-}
+void glw_free(glw_t *glw) { free(glw); }
 
 #endif /* _WX_SDL2_GLW_H_ */

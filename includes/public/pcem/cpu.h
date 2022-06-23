@@ -4,26 +4,26 @@
 #include <stdint.h>
 
 typedef struct FPU {
-	const char *name;
-	const char *internal_name;
-	const int type;
+        const char *name;
+        const char *internal_name;
+        const int type;
 } FPU;
 
 typedef struct CPU {
-	char name[32];
-	int cpu_type;
-	const FPU *fpus;
-	int speed;
-	int rspeed;
-	int multi;
-	int pci_speed;
-	uint32_t edx_reset;
-	uint32_t cpuid_model;
-	uint16_t cyrix_id;
-	int cpu_flags;
-	int mem_read_cycles, mem_write_cycles;
-	int cache_read_cycles, cache_write_cycles;
-	int atclk_div;
+        char name[32];
+        int cpu_type;
+        const FPU *fpus;
+        int speed;
+        int rspeed;
+        int multi;
+        int pci_speed;
+        uint32_t edx_reset;
+        uint32_t cpuid_model;
+        uint16_t cyrix_id;
+        int cpu_flags;
+        int mem_read_cycles, mem_write_cycles;
+        int cache_read_cycles, cache_write_cycles;
+        int atclk_div;
 } CPU;
 
 extern FPU fpus_none[];

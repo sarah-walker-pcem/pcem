@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1995 Danny Gasparovski.
- * 
- * Please read the file COPYRIGHT for the 
+ *
+ * Please read the file COPYRIGHT for the
  * terms and conditions of the copyright.
  */
 
@@ -26,7 +26,7 @@ extern int ctty_closed;
  * x is the greater of the 2 (current time) and y is
  * what it's being compared against.
  */
-#define TIME_DIFF(x,y) (x)-(y) < 0 ? ~0-(y)+(x) : (x)-(y)
+#define TIME_DIFF(x, y) (x) - (y) < 0 ? ~0 - (y) + (x) : (x) - (y)
 
 extern char *slirp_tty;
 extern char *exec_shell;

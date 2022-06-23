@@ -10,5 +10,4 @@ void t1000_configsys_savenvr();
 void t1000_emsboard_savenvr();
 void t1200_state_savenvr();
 
-
 #endif /* _T1000_H_ */

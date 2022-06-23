@@ -4,7 +4,7 @@
 void host_x86_ADDPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_ADDSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
-#define CMPPS_EQ  0
+#define CMPPS_EQ 0
 #define CMPPS_NLT 5
 #define CMPPS_NLE 6
 void host_x86_CMPPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg, int type);
@@ -36,11 +36,13 @@ void host_x86_MOVD_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg
 void host_x86_MOVD_XREG_REG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_MOVQ_ABS_XREG(codeblock_t *block, void *p, int src_reg);
-void host_x86_MOVQ_ABS_REG_REG_SHIFT_XREG(codeblock_t *block, uint32_t addr, int src_reg_a, int src_reg_b, int shift, int src_reg);
+void host_x86_MOVQ_ABS_REG_REG_SHIFT_XREG(codeblock_t *block, uint32_t addr, int src_reg_a, int src_reg_b, int shift,
+                                          int src_reg);
 void host_x86_MOVQ_BASE_INDEX_XREG(codeblock_t *block, int base_reg, int idx_reg, int src_reg);
 void host_x86_MOVQ_BASE_OFFSET_XREG(codeblock_t *block, int base_reg, int offset, int src_reg);
 void host_x86_MOVQ_XREG_ABS(codeblock_t *block, int dst_reg, void *p);
-void host_x86_MOVQ_XREG_ABS_REG_REG_SHIFT(codeblock_t *block, int dst_reg, uint32_t addr, int src_reg_a, int src_reg_b, int shift);
+void host_x86_MOVQ_XREG_ABS_REG_REG_SHIFT(codeblock_t *block, int dst_reg, uint32_t addr, int src_reg_a, int src_reg_b,
+                                          int shift);
 void host_x86_MOVQ_XREG_BASE_INDEX(codeblock_t *block, int dst_reg, int base_reg, int idx_reg);
 void host_x86_MOVQ_XREG_BASE_OFFSET(codeblock_t *block, int dst_reg, int base_reg, int offset);
 
@@ -115,6 +117,5 @@ void host_x86_SUBPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 void host_x86_SUBSD_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
 
 void host_x86_UNPCKLPS_XREG_XREG(codeblock_t *block, int dst_reg, int src_reg);
-
 
 #endif /* _CODEGEN_BACKEND_X86_64_OPS_SSE_H_ */

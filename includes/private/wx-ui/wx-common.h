@@ -27,5 +27,4 @@ typedef struct drive_info_t {
         int readflash;
 } drive_info_t;
 
-
 #endif /* _WX_COMMON_H_ */

@@ -19,5 +19,4 @@ void thread_destroy_mutex(mutex_t *mutex);
 
 void thread_sleep(int t);
 
-
 #endif /* _THREAD_H_ */

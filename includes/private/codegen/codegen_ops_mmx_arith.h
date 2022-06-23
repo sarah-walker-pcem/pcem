@@ -20,5 +20,4 @@ uint32_t ropPMADDWD(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t 
 uint32_t ropPMULHW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc);
 uint32_t ropPMULLW(codeblock_t *block, ir_data_t *ir, uint8_t opcode, uint32_t fetchdat, uint32_t op_32, uint32_t op_pc);
 
-
 #endif /* _CODEGEN_OPS_MMX_ARITH_H_ */
