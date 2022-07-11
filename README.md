@@ -1,5 +1,6 @@
 # [PCem](https://pcem-emulator.co.uk/)
-![C/C++ CI](https://github.com/sarah-walker-pcem/pcem/actions/workflows/c-cpp.yml/badge.svg)
+![Test Debug Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-debug-builds.yml/badge.svg)
+![Test Release Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-release-builds.yml/badge.svg)
 ## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)
 
 Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
