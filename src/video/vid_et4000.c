@@ -436,8 +436,19 @@ void et4000k_recalctimings(svga_t *svga) {
 
         if (svga->render == svga_render_text_80 && ((svga->crtc[0x37] & 0x0A) == 0x0A)) {
                 if (et4000->port_32cb_val & 0x80) {
-                        svga->ma_latch -= 2;
-                        svga->ca_adj = -2;
+                        // TODO : Delete below 10 lines and uncomment following 2 lines after VGA byte panning emulation is actually re-enabled.
+                        if (!(svga->gdcreg[6] & 1) && !(svga->attrregs[0x10] & 1)) /*Text mode*/
+                        {
+                                svga->hdisp -= ((svga->crtc[5] & 0x60) >> 5) * (((svga->seqregs[1] & 1) ? 16 : 18) >> ((~svga->seqregs[1] & 8) >> 3));
+                        }
+                        else
+                        {
+                                svga->hdisp -= ((svga->crtc[5] & 0x60) >> 5);
+                        }
+                        svga->ma_latch -= 2 - ((svga->crtc[5] & 0x60) >> 5);
+                        svga->ca_adj = ((svga->crtc[0xb] & 0x60) >> 5) - 2;
+                        //svga->ma_latch -= 2;
+                        //svga->ca_adj = -2;
                 }
                 if ((et4000->port_32cb_val & 0xB4) == ((svga->crtc[0x37] & 3) == 2 ? 0xB4 : 0xB0)) {
                         svga->render = svga_render_text_80_ksc5601;
@@ -451,8 +462,19 @@ void et4000_kasan_recalctimings(svga_t *svga) {
         et4000_recalctimings(svga);
 
         if (svga->render == svga_render_text_80 && (et4000->kasan_cfg_regs[0] & 8)) {
-                svga->ma_latch -= 3;
-                svga->ca_adj = (et4000->kasan_cfg_regs[0] >> 6) - 3;
+                // TODO : Delete below 10 lines and uncomment following 2 lines after VGA byte panning emulation is actually re-enabled.
+                if (!(svga->gdcreg[6] & 1) && !(svga->attrregs[0x10] & 1)) /*Text mode*/
+                {
+                        svga->hdisp -= ((svga->crtc[5] & 0x60) >> 5) * (((svga->seqregs[1] & 1) ? 16 : 18) >> ((~svga->seqregs[1] & 8) >> 3));
+                }
+                else
+                {
+                        svga->hdisp -= ((svga->crtc[5] & 0x60) >> 5);
+                }
+                svga->ma_latch -= 3 - ((svga->crtc[5] & 0x60) >> 5);
+                svga->ca_adj = (et4000->kasan_cfg_regs[0] >> 6) + ((svga->crtc[0xb] & 0x60) >> 5) - 3;
+                //svga->ma_latch -= 3;
+                //svga->ca_adj = (et4000->kasan_cfg_regs[0] >> 6) - 3;
                 svga->ksc5601_sbyte_mask = (et4000->kasan_cfg_regs[0] & 4) << 5;
                 if ((et4000->kasan_cfg_regs[0] & 0x23) == 0x20 && (et4000->kasan_cfg_regs[4] & 0x80) &&
                     ((svga->crtc[0x37] & 0x0B) == 0x0A))
@@ -483,7 +505,7 @@ void *et4000k_init() {
         rom_init(&et4000->bios_rom, "tgkorvga.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         loadfont("tg_ksc5601.rom", 6);
 
-        io_sethandler(0x03c0, 0x0020, et4000_in, NULL, NULL, et4000_out, NULL, NULL, et4000);
+        io_sethandler(0x03c0, 0x0020, et4000k_in, NULL, NULL, et4000k_out, NULL, NULL, et4000);
 
         io_sethandler(0x22cb, 0x0001, et4000k_in, NULL, NULL, et4000k_out, NULL, NULL, et4000);
         io_sethandler(0x22cf, 0x0001, et4000k_in, NULL, NULL, et4000k_out, NULL, NULL, et4000);
@@ -513,7 +535,7 @@ void *et4000_kasan_init() {
         rom_init(&et4000->bios_rom, "et4000_kasan16.bin", 0xc0000, 0x8000, 0x7fff, 0, MEM_MAPPING_EXTERNAL);
         loadfont("kasan_ksc5601.rom", 6);
 
-        io_sethandler(0x03c0, 0x0020, et4000_in, NULL, NULL, et4000_out, NULL, NULL, et4000);
+        io_sethandler(0x03c0, 0x0020, et4000k_in, NULL, NULL, et4000k_out, NULL, NULL, et4000);
 
         io_sethandler(0x0258, 0x0002, et4000_kasan_in, NULL, NULL, et4000_kasan_out, NULL, NULL, et4000);
 
