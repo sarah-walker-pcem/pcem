@@ -86,4 +86,4 @@ static void dss_close(void *p) {
 }
 
 lpt_device_t dss_device = {"Disney Sound Source", NULL,           dss_init,        dss_close, NULL, NULL, NULL, NULL, NULL,
-                           dss_write_data,        dss_write_ctrl, dss_read_status, NULL};
+                           dss_write_data,        dss_write_ctrl, dss_read_status};
