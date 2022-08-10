@@ -17,5 +17,4 @@ extern uint8_t nvrram[128];
 extern int nvrmask;
 extern int oldromset;
 
-
 #endif /* _NVR_H_ */

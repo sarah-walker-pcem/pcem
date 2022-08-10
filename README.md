@@ -1,5 +1,6 @@
 # [PCem](https://pcem-emulator.co.uk/)
-![C/C++ CI](https://github.com/sarah-walker-pcem/pcem/actions/workflows/c-cpp.yml/badge.svg)
+![Test Debug Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-debug-builds.yml/badge.svg)
+![Test Release Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-release-builds.yml/badge.svg)
 ## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)
 
 Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
@@ -36,14 +37,15 @@ then `./src/pcem` to run.
 
 The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
 
+You can specify the Display Engine using `-DPCEM_DISPLAY_ENGINE=` The options you have are wxWidgets, and Qt
 configure options are :
 ```
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
   -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
-  -DUSE_NETWORKING=ON        : Build with networking support.
-  -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (On by default needs USE_NETWORKING to compile) Requires libpcap
-  -DUSE_ALSA=ON              : Build with support for MIDI output through ALSA. Requires libasound.
-  -DPLUGIN_ENGINE=ON         : Build with plugin support. Builds libpcem-plugin-api and links PCem with it.
+  -DUSE_NETWORKING=OFF       : Build with networking support.
+  -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (Needs USE_NETWORKING to compile) Requires libpcap.
+  -DUSE_ALSA=OFF             : Build with support for MIDI output through ALSA. Requires libasound. (Linux Only)
+  -DPLUGIN_ENGINE=OFF        : Build with plugin support. Builds libpcem-plugin-api and links PCem with it. 
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
@@ -57,9 +59,14 @@ If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you
   -DPCEM_DEBUG_EXTRA=ON           : Build PCem with DEBUG_EXTRA debug output
 ```
 
+If you are using -DCMAKE_BUILD_TYPE=RelWithDebInfo, there are additional options you can do
+```
+  -DPCEM_RELDEB_AS_RELEASE=ON     : Builds RelWithDebInfo with debugging logging enabled when this is off
+```
+
 They are some extra modules you can add if you build with `-DUSE_EXPERIMENTAL=ON`. These modules are untested.
 incomplete, and may or may not be in a future build of PCem. We do not provide builds with these enabled as
-well.
+well. It is also possible they may not even build.
 ```
   -DUSE_EXPERIMENTAL_PGC=ON       : Build PCem with Professional Graphics Controller support.
   -DUSE_EXPERIMENTAL_PRINTER=ON   : Build PCem with Printer support. Requires freetype.

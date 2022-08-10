@@ -23,7 +23,7 @@ struct texture {
 
 struct shader {
         char shader_fn[1024];
-        char* shader_program;
+        char *shader_program;
         char alias[64];
         int filter_linear;
         int float_framebuffer;
@@ -49,8 +49,8 @@ typedef struct glslp_t {
         int input_filter_linear;
 } glslp_t;
 
-void get_glslp_name(const char* f, char* s, int size);
-glslp_t* glslp_parse(const char* f);
-void glslp_free(glslp_t* p);
+void get_glslp_name(const char *f, char *s, int size);
+glslp_t *glslp_parse(const char *f);
+void glslp_free(glslp_t *p);
 
 #endif /* SRC_WX_GLSLP_PARSER_H_ */

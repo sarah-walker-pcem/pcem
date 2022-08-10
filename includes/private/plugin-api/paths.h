@@ -11,9 +11,9 @@ extern char nvr_default_path[512];
 void get_pcem_path(char *s, int size);
 char get_path_separator();
 void paths_init();
-int dir_exists(char* path);
+int dir_exists(char *path);
 
-int get_roms_path(int p, char* s, int size);
+int get_roms_path(int p, char *s, int size);
 
 /* set the default paths to make them permanent */
 void set_default_roms_paths(char *s);
@@ -24,12 +24,16 @@ void set_default_screenshots_path(char *s);
 void set_default_nvr_default_path(char *s);
 
 /* set the paths temporarily for this session */
-void set_roms_paths(char* path);
+void set_roms_paths(char *path);
 void set_nvr_path(char *s);
 void set_logs_path(char *s);
 void set_configs_path(char *s);
 void set_screenshots_path(char *s);
 
-#define safe_strncpy(a, b, n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
+#define safe_strncpy(a, b, n)                                                                                                    \
+        do {                                                                                                                     \
+                strncpy((a), (b), (n)-1);                                                                                        \
+                (a)[(n)-1] = 0;                                                                                                  \
+        } while (0)
 
 #endif /* _PATHS_H_ */

@@ -12,5 +12,4 @@ uint8_t picinterrupt();
 void picclear(int num);
 void dumppic();
 
-
 #endif /* _PIC_H_ */

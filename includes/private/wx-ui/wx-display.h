@@ -7,7 +7,7 @@ extern "C" {
 
 int display_init();
 void display_close();
-void display_start(void* hwnd);
+void display_start(void *hwnd);
 void display_stop();
 void display_resize(int width, int height);
 

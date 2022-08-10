@@ -1,18 +1,18 @@
 #ifndef _HDD_FILE_H_
 #define _HDD_FILE_H_
 typedef enum hdd_img_type {
-	HDD_IMG_RAW,
-	HDD_IMG_VHD,
+        HDD_IMG_RAW,
+        HDD_IMG_VHD,
 } hdd_img_type;
 
 typedef struct hdd_file_t {
-	void *f;
-	int spt;
-	int hpc;
-	int tracks;
-	int sectors;
-	int read_only;
-	hdd_img_type img_type;
+        void *f;
+        int spt;
+        int hpc;
+        int tracks;
+        int sectors;
+        int read_only;
+        hdd_img_type img_type;
 } hdd_file_t;
 
 void hdd_load(hdd_file_t *hdd, int d, const char *fn);

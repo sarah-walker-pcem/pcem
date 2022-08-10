@@ -6,21 +6,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 include(${CMAKE_SOURCE_DIR}/includes/includes.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/debugdefines.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/arch-detect.cmake)
 
-# TODO: This whole thing is jank, replace with a real way to determine cpu type
-if((NOT DEFINED CMAKE_TOOLCHAIN_FILE) AND WIN32)
-        if(${CMAKE_C_COMPILER} MATCHES ".*mingw32.*")
-                set(CMAKE_SYSTEM_PROCESSOR i386)
-        elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
-                set(CMAKE_SYSTEM_PROCESSOR x86_64)
-        elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "ARM64")
-                set(CMAKE_SYSTEM_PROCESSOR arm64)
-        endif()
-endif()
-set(PCEM_CPU_TYPE ${CMAKE_SYSTEM_PROCESSOR})
-# End of Jankness
+target_architecture(PCEM_CPU_TYPE)
 
 if(${PCEM_CPU_TYPE} STREQUAL "i386")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
@@ -31,6 +19,7 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -mstack
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -mstackrealign -fno-strict-aliasing")
 
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
+set(PCEM_DISPLAY_ENGINE "wxWidgets" CACHE STRING "PCem Display Engine")
 set(PCEM_DEFINES ${PCEM_DEFINES} PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
 
 message("PCem ${PCEM_VERSION_STRING} - Build Type: ${CMAKE_BUILD_TYPE}")
@@ -40,6 +29,7 @@ endif()
 message("***************************************************************")
 message("OS Building For: ${CMAKE_SYSTEM_NAME}")
 message("System Processor: ${PCEM_CPU_TYPE}")
+message("PCem Display Engine: ${PCEM_DISPLAY_ENGINE}")
 message("***************************************************************")
 
 option(PLUGIN_ENGINE "Build PCem with plugin support" OFF)
@@ -68,7 +58,12 @@ if(USE_EXPERIMENTAL)
         message("       Printer Support: ${USE_EXPERIMENTAL_PRINTER}")
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+	option(PCEM_RELDEB_AS_RELEASE "Build PCem RelWithDebInfo as Release Mode" ON)
+        message("Build PCem RelWithDebInfo as Release Mode: ${PCEM_RELDEB_AS_RELEASE}")
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" AND NOT PCEM_RELDEB_AS_RELEASE))
         message("Extra Debug Messages:")
         option(PCEM_SLIRP_DEBUG "Build PCem with SLIRP_DEBUG debug output" OFF)
         message("       SLIRP_DEBUG debug output: ${PCEM_SLIRP_DEBUG}")
@@ -87,6 +82,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInf
         option(PCEM_PRINTER_DEBUG "Build PCem with PRINTER_DEBUG debug output" OFF)
         message("       PRINTER_DEBUG debug output: ${PCEM_PRINTER_DEBUG}")
 endif()
+
 message("***************************************************************")
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	set(PCEM_SHARE_DIR "bin" CACHE STRING "PCem Share Directory")
@@ -110,6 +106,11 @@ message("       PCem Plugin Directory: ${PCEM_PLUGIN_DIR}")
 message("       PCem Include File Directory: ${PCEM_INCLUDE_DIR}")
 message("***************************************************************")
 
+set(PCEM_DEFINES ${PCEM_DEFINES} PLUGIN_DIR="${CMAKE_INSTALL_PREFIX}/${PCEM_PLUGIN_DIR}")
+
+include(${CMAKE_SOURCE_DIR}/cmake/debugdefines.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
+
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
@@ -117,8 +118,20 @@ include_directories(${SDL2_INCLUDE_DIRS})
 find_package(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})
 
-find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
-include(${wxWidgets_USE_FILE})
+if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
+        find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
+        include(${wxWidgets_USE_FILE})
+        set(DISPLAY_ENGINE_LIBRARIES ${wxWidgets_LIBRARIES})
+endif()
+if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
+        find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
+        set(DISPLAY_ENGINE_LIBRARIES Qt5::Core Qt5::Widgets)
+        set(CMAKE_AUTOMOC ON)
+        set(CMAKE_AUTORCC ON)
+        set(CMAKE_AUTOUIC ON)
+        include_directories(${Qt5_INCLUDE_DIRS})
+endif()
+
 
 if(USE_ALSA)
         find_package(ALSA REQUIRED)
