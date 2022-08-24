@@ -10,8 +10,9 @@ extern int config_open(void *hwnd);
 
 char *validate_config_name(const char *name) {
         char notAllowed[] = {'/', '<', '>', ':', '"', '\\', '|', '?', '*'};
+        int i;
 
-        for (int i = 0; i < sizeof(notAllowed) / sizeof(char); i++) {
+        for (i = 0; i < sizeof(notAllowed) / sizeof(char); i++) {
                 char *ret = strchr(name, notAllowed[i]);
                 if (ret != NULL)
                         return ret;
