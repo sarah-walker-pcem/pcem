@@ -466,8 +466,9 @@ static void recalc_ems(void) {
                                        0xd8000, 0xdc000, 0xe0000, 0xe4000, 0xe8000, 0xec000};
         uint32_t new_mappings[20];
         uint16_t ems_enable;
+        int segment;
 
-        for (int segment = 0; segment < 20; segment++)
+        for (segment = 0; segment < 20; segment++)
                 new_mappings[segment] = 0xa0000 + segment * 0x4000;
 
         if (scamp.cfg_regs[CFG_EMSEN1] & EMSEN1_EMSENAB)
@@ -475,7 +476,7 @@ static void recalc_ems(void) {
         else
                 ems_enable = 0;
 
-        for (int segment = 0; segment < 12; segment++) {
+        for (segment = 0; segment < 12; segment++) {
                 if (ems_enable & (1 << segment)) {
                         uint32_t phys_addr = scamp.ems[segment] << 14;
 
@@ -487,7 +488,7 @@ static void recalc_ems(void) {
                 }
         }
 
-        for (int segment = 0; segment < 20; segment++) {
+        for (segment = 0; segment < 20; segment++) {
                 if (new_mappings[segment] != scamp.mappings[segment]) {
                         scamp.mappings[segment] = new_mappings[segment];
                         if (new_mappings[segment] < (mem_size * 1024)) {
