@@ -17,7 +17,7 @@ jobs:
         include:
           - name: Ubuntu 64bit (gcc)
             os: ubuntu-latest
-            args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="${{ github.event.inputs.version }}"
+            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="${{ github.event.inputs.version }}"
             artifacts_name: PCem-${{ github.event.inputs.version }}-Ubuntu-${{ github.run_number }}
             artifacts_path: PCem-${{ github.event.inputs.version }}-Linux64.tar.bz2
             installdeps: >-
@@ -30,7 +30,7 @@ jobs:
           - name: Windows 32bits (MSYS2)
             os: windows-latest
             compiler: MINGW32
-            args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="${{ github.event.inputs.version }}"
+            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="${{ github.event.inputs.version }}"
             artifacts_name: PCem-${{ github.event.inputs.version }}-Windows-MINGW32-${{ github.run_number }}
             artifacts_path: PCem-${{ github.event.inputs.version }}-Windows32.zip
             installdeps: >-
@@ -48,7 +48,7 @@ jobs:
           - name: Windows 64bits (MSYS2)
             os: windows-latest
             compiler: MINGW64
-            args: -DUSE_NETWORKING=ON -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="${{ github.event.inputs.version }}"
+            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="${{ github.event.inputs.version }}"
             artifacts_name: PCem-${{ github.event.inputs.version }}-Windows-MINGW64-${{ github.run_number }}
             artifacts_path: PCem-${{ github.event.inputs.version }}-Windows64.zip
             installdeps: >-
