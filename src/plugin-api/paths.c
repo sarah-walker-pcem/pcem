@@ -200,19 +200,14 @@ void paths_init() {
 
         /* set up default paths for this session */
         append_filename(s, pcem_path, "roms/", 512);
-        set_roms_paths(s);
         set_default_roms_paths(s);
         append_filename(s, pcem_path, "nvr/", 512);
-        set_nvr_path(s);
         set_default_nvr_path(s);
         append_filename(s, pcem_path, "configs/", 512);
-        set_configs_path(s);
         set_default_configs_path(s);
         append_filename(s, pcem_path, "screenshots/", 512);
-        set_screenshots_path(s);
         set_default_screenshots_path(s);
         append_filename(s, pcem_path, "logs/", 512);
-        set_logs_path(s);
         set_default_logs_path(s);
         append_filename(s, pcem_path, "nvr/default/", 512);
         set_default_nvr_default_path(s);
@@ -221,10 +216,7 @@ void paths_init() {
 }
 
 void get_pcem_path(char *s, int size) {
-#ifdef __linux
-        wx_get_home_directory(s);
-        strcat(s, ".pcem/");
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
         /*TODO: Use CoreFoundation functions to get proper directory, in case
           the Application Support directory is different (I.E., with signing)*/
         wx_get_home_directory(s);
@@ -238,7 +230,10 @@ void get_pcem_path(char *s, int size) {
                 mkdir(s, 0700);
         }
 #else
-        char *path = SDL_GetBasePath();
-        strcpy(s, path);
+        wx_get_home_directory(s);
+        strcat(s, ".pcem/");
+
+        if (!wx_dir_exists(pcem_path))
+                wx_create_directory(pcem_path);
 #endif
 }

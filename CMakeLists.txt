@@ -32,10 +32,10 @@ message("System Processor: ${PCEM_CPU_TYPE}")
 message("PCem Display Engine: ${PCEM_DISPLAY_ENGINE}")
 message("***************************************************************")
 
-option(PLUGIN_ENGINE "Build PCem with plugin support" OFF)
+option(PLUGIN_ENGINE "Build PCem with plugin support" ON)
 message("Plugin Support: ${PLUGIN_ENGINE}")
 
-option(USE_NETWORKING "Build PCem with networking support" OFF)
+option(USE_NETWORKING "Build PCem with networking support" ON)
 message("Networking Support: ${USE_NETWORKING}")
 
 if(USE_NETWORKING)
