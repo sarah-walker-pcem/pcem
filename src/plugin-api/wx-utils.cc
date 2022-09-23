@@ -14,3 +14,5 @@ void wx_get_home_directory(char *path) {
         }
         strcpy(path, home.mb_str());
 }
+
+int wx_create_directory(char *path) { return wxFileName::Mkdir(path); }

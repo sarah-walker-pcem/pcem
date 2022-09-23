@@ -444,8 +444,6 @@ void wx_close_status(void *window) {
         }
 }
 
-int wx_create_directory(char *path) { return wxFileName::Mkdir(path); }
-
 int wx_setup(char *path) {
         wxFileName p(path);
         if (!p.DirExists()) {
