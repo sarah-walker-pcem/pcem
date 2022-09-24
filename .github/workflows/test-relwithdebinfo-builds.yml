@@ -1,4 +1,4 @@
-name: Test Release Builds
+name: Test Release Builds (With Logging and Debugging)
 
 on:
     push:
