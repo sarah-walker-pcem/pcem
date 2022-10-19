@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "ibm.h"
@@ -103,4 +104,11 @@ int rom_init_interleaved(rom_t *rom, char *fn_low, char *fn_high, uint32_t addre
                         mem_write_nulll, rom->rom, flags | MEM_MAPPING_ROM, rom);
 
         return 0;
+}
+
+void rom_deinit(rom_t *rom)
+{
+    assert(rom);
+
+    mem_mapping_remove(&rom->mapping);
 }
