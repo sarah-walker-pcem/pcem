@@ -225,7 +225,7 @@ void config_new() {
 
 static section_t *find_section(char *name, int is_global) {
         section_t *current_section;
-        char blank[] = "";
+        char blank[256] = "";
         list_t *head = is_global ? &global_config_head : &machine_config_head;
 
         current_section = (section_t *)head->next;
