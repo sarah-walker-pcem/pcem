@@ -747,9 +747,9 @@ MODEL m_genxt = {"[8088] Generic XT clone",
                  16,
                  xt_init,
                  NULL};
-MODEL m_hyundaixt = {"[8088] Hyundai Super16T",
-                     ROM_SUPER16T,
-                     "hyundaixt",
+MODEL m_super16t = {"[8088] Hyundai Super16T",
+                     ROM_HYUNDAI_SUPER16T,
+                     "super16t",
                      {{"", cpus_8088}, {"", NULL}, {"", NULL}},
                      MODEL_GFX_NONE,
                      640,
@@ -757,9 +757,9 @@ MODEL m_hyundaixt = {"[8088] Hyundai Super16T",
                      64,
                      xt_init,
                      NULL};
-MODEL m_hyundaixte = {"[8088] Hyundai Super16TE",
-                      ROM_SUPER16TE,
-                      "hyundaixte",
+MODEL m_super16te = {"[8088] Hyundai Super16TE",
+                      ROM_HYUNDAI_SUPER16TE,
+                      "super16te",
                       {{"", cpus_8088}, {"", NULL}, {"", NULL}},
                       MODEL_GFX_NONE,
                       640,
@@ -1613,8 +1613,8 @@ void model_init_builtin() {
         pcem_add_model(&m_compaq_pip);
         pcem_add_model(&m_dtk);
         pcem_add_model(&m_genxt);
-        pcem_add_model(&m_hyundaixt);
-        pcem_add_model(&m_hyundaixte);
+        pcem_add_model(&m_super16t);
+        pcem_add_model(&m_super16te);
         pcem_add_model(&m_ibmpc);
         pcem_add_model(&m_ibmpcjr);
         pcem_add_model(&m_ibmxt);

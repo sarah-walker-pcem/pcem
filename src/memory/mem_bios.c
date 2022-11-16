@@ -208,16 +208,16 @@ int loadbios() {
                 fclose(f);
                 return 1;
 
-        case ROM_SUPER16T:
-                f = romfopen("huyndaixt/super16t_v1.12ta.bin", "rb");
+        case ROM_HYUNDAI_SUPER16T:
+                f = romfopen("super16t/hyundai-super-16t-system-bios-hea-v1.12ta.bin", "rb");
                 if (!f)
                         break;
                 romfread(rom + 0xC000, 16384, 1, f);
                 fclose(f);
                 return 1;
 
-        case ROM_SUPER16TE:
-                f = romfopen("huyndaixte/super16te_v2.00id.bin", "rb");
+        case ROM_HYUNDAI_SUPER16TE:
+                f = romfopen("super16te/hyundai-super-16te-system-bios-v2.00id.bin", "rb");
                 if (!f)
                         break;
                 romfread(rom + 0xC000, 16384, 1, f);
