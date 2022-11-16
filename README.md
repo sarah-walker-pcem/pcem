@@ -116,7 +116,7 @@ Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 1985 | <b>NCR PC4i</b><br/>8088 at 4.77 MHz<br/>256KB - 640KB RAM | ncr_pc4i/NCR_PC4i_BIOSROM_1985.BIN
 1986 | <b>DTK Clone XT</b><br/>8088 at 8/10 MHz<br/>64KB - 640KB RAM | dtk/dtk_erso_2.42_2764.bin
 1986 | <b>Phoenix XT clone</b><br/>8088 at 8/10 MHz<br/>64KB - 640KB RAM | pxxt/000p001.bin
-1987 | <b>Hyundai Super 16T</b><br/>8088/8087 at 4.77/8.0 MHz<br/>640KB RAM<br/>EGA 16 colour graphics<br/> | ./huyndaixte/super16te_v2.00id.bin
+1987 | <b>Hyundai Super 16T</b><br/>8088/8087 at 4.77/8.0 MHz<br/>640KB RAM<br/>EGA 16 colour graphics<br/> | super16t/hyundai-super-16t-system-bios-hea-v1.12ta.bin
 1987 | <b>Tandy 1000HX</b><br/>8088 at 7.16 MHz<br/>256KB - 640KB RAM<br/>Built-in 16 colour graphics<br/>3 voice sound<br/>Has DOS 2.11 in ROM | tandy1000hx/v020000.u12
 1987 | <b>Thomson TO16 PC</b><br/>8088 at 9.54 MHz<br/>512KB - 640KB RAM | to16_pc/TO16_103.bin
 1987 | <b>Toshiba T1000</b> <i>[[1]](#system-note-1)</i> <i>[[5]](#system-note-5)</i><br/>8088 at 4.77 MHz<br/>512KB - 1024KB RAM<br/>CGA on built-in LCD | t1000/t1000.rom<br/>t1000/t1000font.rom
@@ -127,7 +127,7 @@ Release | Machine | ROM file needed<br/>(within ./roms/ folder)
 1988 | <b>Juko XT clone</b> | jukopc/000o001.bin
 1988 | <b>Schneider Euro PC</b><br/>8088 at 9.54 MHz<br/>512KB - 640KB RAM | europc/50145<br/>europc/50146
 1989 | <b>AMI XT clone</b><br/>8088 at 8+ MHz<br/>64KB - 640KB RAM | amixt/ami_8088_bios_31jan89.bin
-1989 | <b>Hyundai Super 16TE</b><br/>8088/8087 at 10 MHz<br/>640KB RAM<br/>EGA 16 colour graphics<br/> | ./huyndaixte/super16te_v2.00id.bin
+1989 | <b>Hyundai Super 16TE</b><br/>8088/8087 at 10 MHz<br/>640KB RAM<br/>EGA 16 colour graphics<br/> | super16te/hyundai-super-16te-system-bios-v2.00id.bin
 2015 | <b>Xi8088</b><br/>8088 at 4.77-13.33 MHz<br/>640KB RAM | xi8088/bios-xi8088.bin
 
 ### 8086 based
