@@ -109,11 +109,12 @@ message("***************************************************************")
 set(PCEM_DEFINES ${PCEM_DEFINES} PLUGIN_DIR="${CMAKE_INSTALL_PREFIX}/${PCEM_PLUGIN_DIR}")
 
 include(${CMAKE_SOURCE_DIR}/cmake/debugdefines.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
+
+include(${CMAKE_SOURCE_DIR}/cmake/apple.cmake)
 
 find_package(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})

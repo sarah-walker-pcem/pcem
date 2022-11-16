@@ -629,12 +629,14 @@ int renderer_thread(void *params) {
 
                 renderer_doreset = 1;
                 internal_rendering = 1;
+                pclog ("Start rendering...\n");
                 while (rendering && internal_rendering) {
                         if (!render())
                                 internal_rendering = 0;
-
+                    
                         SDL_Delay(1);
                 }
+                pclog ("Stop rendering...\n");
                 window_close();
         }
 
@@ -688,7 +690,7 @@ void renderer_start() {
 }
 
 void renderer_stop(int timeout) {
-#if defined(PCEM_RENDER_WITH_TIMER) && !defined(PCEM_RENDER_TIMER_LOOP)
+#if defined(PCEM_RENDER_WITH_TIMER) && defined(PCEM_RENDER_TIMER_LOOP)
         rendering = 0;
         window_close();
         wx_destroytimer(timer);

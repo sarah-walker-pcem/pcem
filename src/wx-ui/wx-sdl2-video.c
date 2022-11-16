@@ -239,6 +239,9 @@ void sdl_renderer_close() {
 }
 
 int sdl_renderer_update(SDL_Window *window) {
+        // When using timer-based rendering, window might be NULL
+        if ((window == NULL) || (renderer == NULL))
+                return 0;
         int render = 0;
         SDL_LockMutex(blitMutex);
         if (updated) {
