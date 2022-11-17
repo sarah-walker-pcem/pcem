@@ -85,5 +85,5 @@ static void dss_close(void *p) {
         free(dss);
 }
 
-lpt_device_t dss_device = {"Disney Sound Source", NULL,           dss_init,        dss_close, NULL, NULL, NULL, NULL, NULL,
+lpt_device_t dss_device = {"Disney Sound Source", 0,           dss_init,        dss_close, NULL, NULL, NULL, NULL, NULL,
                            dss_write_data,        dss_write_ctrl, dss_read_status};
