@@ -14,6 +14,7 @@ You can submit patches on our [forum](https://pcem-emulator.co.uk/phpBB3). Befor
 ## BSD and Linux supplement (v17)
 
 You will need the following libraries and buildtools (and their dependencies):
+- pcap
 - SDL2
 - wxWidgets 3.x
 - OpenAL
