@@ -23,9 +23,9 @@ static ALuint source[2]; // audio source
 #endif
 #define FREQ 48000
 
-int SOUNDBUFLEN = 48000 / 20;
+int sound_buf_len_al = 48000 / 20;
 
-#define BUFLEN SOUNDBUFLEN
+#define BUFLEN sound_buf_len_al
 
 void closeal();
 ALvoid alutInit(ALint *argc, ALbyte **argv) {
