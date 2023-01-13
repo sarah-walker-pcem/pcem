@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ibm.h"
@@ -629,9 +630,10 @@ void adgold_timer_poll(void *p) {
 
 static void adgold_get_buffer(int32_t *buffer, int len, void *p) {
         adgold_t *adgold = (adgold_t *)p;
-        int16_t adgold_buffer[len * 2];
-
+        int16_t adgold_buffer[MAXSOUNDBUFLEN * 2];
         int c;
+
+        assert(len <= MAXSOUNDBUFLEN);
 
         opl3_update2(&adgold->opl);
         adgold_update(adgold);
