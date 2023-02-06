@@ -36,7 +36,7 @@ void sound_update_buf_length();
 
 extern int sound_gain;
 
-extern int SOUNDBUFLEN;
+extern int sound_buf_len_al;
 #define MAXSOUNDBUFLEN (48000 / 10)
 
 #endif /* _SOUND_H_ */

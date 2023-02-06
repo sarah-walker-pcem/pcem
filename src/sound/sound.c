@@ -128,7 +128,7 @@ void sound_update_buf_length() {
         if (new_buf_len > MAXSOUNDBUFLEN)
                 new_buf_len = MAXSOUNDBUFLEN;
 
-        SOUNDBUFLEN = new_buf_len;
+        sound_buf_len_al = new_buf_len;
 }
 
 void sound_set_cd_volume(unsigned int vol_l, unsigned int vol_r) {
@@ -221,16 +221,16 @@ void sound_poll(void *priv) {
         }
 
         sound_pos_global++;
-        if (sound_pos_global == SOUNDBUFLEN) {
+        if (sound_pos_global == sound_buf_len_al) {
                 int c;
-                /*                int16_t buf16[SOUNDBUFLEN * 2 ];*/
+                /*                int16_t buf16[sound_buf_len_al * 2 ];*/
 
-                memset(outbuffer, 0, SOUNDBUFLEN * 2 * sizeof(int32_t));
+                memset(outbuffer, 0, sound_buf_len_al * 2 * sizeof(int32_t));
 
                 for (c = 0; c < sound_handlers_num; c++)
-                        sound_handlers[c].get_buffer(outbuffer, SOUNDBUFLEN, sound_handlers[c].priv);
+                        sound_handlers[c].get_buffer(outbuffer, sound_buf_len_al, sound_handlers[c].priv);
 
-                /*                for (c=0;c<SOUNDBUFLEN*2;c++)
+                /*                for (c=0;c<sound_buf_len_al*2;c++)
                                 {
                                         if (outbuffer[c] < -32768)
                                                 buf16[c] = -32768;
@@ -241,7 +241,7 @@ void sound_poll(void *priv) {
                                 }
 
                         if (!soundf) soundf=fopen("sound.pcm","wb");
-                        fwrite(buf16,(SOUNDBUFLEN)*2*2,1,soundf);*/
+                        fwrite(buf16,(sound_buf_len_al)*2*2,1,soundf);*/
 
                 if (soundon)
                         givealbuffer(outbuffer);
