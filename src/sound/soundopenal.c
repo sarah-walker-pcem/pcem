@@ -1,4 +1,5 @@
 #define USE_OPENAL
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,9 +24,7 @@ static ALuint source[2]; // audio source
 #endif
 #define FREQ 48000
 
-int SOUNDBUFLEN = 48000 / 20;
-
-#define BUFLEN SOUNDBUFLEN
+int sound_buf_len_al = 48000 / 20;
 
 void closeal();
 ALvoid alutInit(ALint *argc, ALbyte **argv) {
@@ -87,8 +86,10 @@ void check() {
 void inital() {
 #ifdef USE_OPENAL
         int c;
-        int16_t buf[BUFLEN * 2];
+        int16_t buf[MAXSOUNDBUFLEN * 2];
         int16_t cd_buf[CD_BUFLEN * 2];
+
+        assert(sound_buf_len_al <= MAXSOUNDBUFLEN);
 
         //        printf("1\n");
         check();
@@ -117,12 +118,12 @@ void inital() {
         alSourcei(source[1], AL_SOURCE_RELATIVE, AL_TRUE);
         check();
 
-        memset(buf, 0, BUFLEN * 4);
+        memset(buf, 0, sound_buf_len_al * 4);
         memset(cd_buf, 0, CD_BUFLEN * 4);
 
         //        printf("5\n");
         for (c = 0; c < 4; c++) {
-                alBufferData(buffers[c], AL_FORMAT_STEREO16, buf, BUFLEN * 2 * 2, FREQ);
+                alBufferData(buffers[c], AL_FORMAT_STEREO16, buf, sound_buf_len_al * 2 * 2, FREQ);
                 alBufferData(buffers_cd[c], AL_FORMAT_STEREO16, cd_buf, CD_BUFLEN * 2 * 2, CD_FREQ);
         }
 
@@ -141,9 +142,11 @@ void inital() {
 
 void givealbuffer(int32_t *buf) {
 #ifdef USE_OPENAL
-        int16_t buf16[BUFLEN * 2];
+        int16_t buf16[MAXSOUNDBUFLEN * 2];
         int processed;
         int state;
+
+        assert(sound_buf_len_al <= MAXSOUNDBUFLEN);
 
         // return;
 
@@ -178,7 +181,7 @@ void givealbuffer(int32_t *buf) {
                 //                printf("U ");
                 check();
 
-                for (c = 0; c < BUFLEN * 2; c++) {
+                for (c = 0; c < sound_buf_len_al * 2; c++) {
                         if (buf[c] < -32768)
                                 buf16[c] = -32768;
                         else if (buf[c] > 32767)
@@ -186,8 +189,8 @@ void givealbuffer(int32_t *buf) {
                         else
                                 buf16[c] = buf[c];
                 }
-                //                for (c=0;c<BUFLEN*2;c++) buf[c]^=0x8000;
-                alBufferData(buffer, AL_FORMAT_STEREO16, buf16, BUFLEN * 2 * 2, FREQ);
+                //                for (c=0;c<sound_buf_len_al*2;c++) buf[c]^=0x8000;
+                alBufferData(buffer, AL_FORMAT_STEREO16, buf16, sound_buf_len_al * 2 * 2, FREQ);
                 //                printf("B ");
                 check();
 
@@ -198,7 +201,7 @@ void givealbuffer(int32_t *buf) {
                 //                printf("\n");
 
                 //                if (!allog) allog=fopen("al.pcm","wb");
-                //                fwrite(buf,BUFLEN*2,1,allog);
+                //                fwrite(buf,sound_buf_len_al*2,1,allog);
         }
 //        printf("\n");
 #endif
@@ -241,7 +244,7 @@ void givealbuffer_cd(int16_t *buf) {
                 //                printf("U ");
                 check();
 
-                //                for (c=0;c<BUFLEN*2;c++) buf[c]^=0x8000;
+                //                for (c=0;c<sound_buf_len_al*2;c++) buf[c]^=0x8000;
                 alBufferData(buffer, AL_FORMAT_STEREO16, buf, CD_BUFLEN * 2 * 2, CD_FREQ);
                 //                printf("B ");
                 check();
@@ -253,7 +256,7 @@ void givealbuffer_cd(int16_t *buf) {
                 //                printf("\n");
 
                 //                if (!allog) allog=fopen("al.pcm","wb");
-                //                fwrite(buf,BUFLEN*2,1,allog);
+                //                fwrite(buf,sound_buf_len_al*2,1,allog);
         }
 //        printf("\n");
 #endif

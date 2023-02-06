@@ -116,9 +116,8 @@ uint8_t opl_read(int nr, uint16_t addr) {
         return opl[nr].is_opl3 ? 0 : 0xff;
 }
 
-void opl2_update(int nr, int16_t *buffer, int samples) {
+static void opl2_update_impl(int nr, int16_t *buffer, Bit32s *buffer_32, int samples) {
         int c;
-        Bit32s buffer_32[samples];
 
         opl[nr].chip.GenerateBlock2(samples, buffer_32);
 
@@ -126,9 +125,26 @@ void opl2_update(int nr, int16_t *buffer, int samples) {
                 buffer[c * 2] = (int16_t)buffer_32[c];
 }
 
-void opl3_update(int nr, int16_t *buffer, int samples) {
+void opl2_update(int nr, int16_t *buffer, int samples) {
+        #define chunk_size 1024
+
+        int n_chunks;
+        int rest;
+        int i_chunks;
+        Bit32s buffer_32[chunk_size];
+
+        n_chunks = samples / chunk_size;
+        rest = samples - n_chunks * chunk_size;
+        for(i_chunks = 0; i_chunks != n_chunks; ++i_chunks)
+                opl2_update_impl(nr, buffer + i_chunks * chunk_size * 2, buffer_32, chunk_size);
+        if(rest != 0)
+                opl2_update_impl(nr, buffer + n_chunks * chunk_size * 2, buffer_32, rest);
+
+        #undef chunk_size
+}
+
+static void opl3_update_impl(int nr, int16_t *buffer, Bit32s *buffer_32, int samples) {
         int c;
-        Bit32s buffer_32[samples * 2];
 
         if (opl[nr].opl_emu) {
                 OPL3_GenerateStream(&opl[nr].opl3chip, buffer, samples);
@@ -138,4 +154,22 @@ void opl3_update(int nr, int16_t *buffer, int samples) {
                 for (c = 0; c < samples * 2; c++)
                         buffer[c] = (int16_t)buffer_32[c];
         }
+}
+
+void opl3_update(int nr, int16_t *buffer, int samples) {
+        #define chunk_size 1024
+
+        int n_chunks;
+        int rest;
+        int i_chunk;
+        Bit32s buffer_32[chunk_size * 2];
+
+        n_chunks = samples / chunk_size;
+        rest = samples - n_chunks * chunk_size;
+        for(i_chunk = 0; i_chunk != n_chunks; ++i_chunk)
+                opl3_update_impl(nr, buffer + i_chunk * chunk_size * 2, buffer_32, chunk_size);
+        if(rest != 0)
+                opl3_update_impl(nr, buffer + n_chunks * chunk_size * 2, buffer_32, rest);
+
+        #undef chunk_size
 }
