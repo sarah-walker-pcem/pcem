@@ -3,7 +3,7 @@
 ![Test Release Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-release-builds.yml/badge.svg)
 ## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)
 
-Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
+Latest version: <b>v18</b> [Changelog](CHANGELOG.md)
 
 PCem is licensed under GPL v2.0, see [COPYING](COPYING) for more details.
 
