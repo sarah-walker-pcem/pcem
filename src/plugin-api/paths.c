@@ -230,10 +230,12 @@ void get_pcem_path(char *s, int size) {
                 mkdir(s, 0700);
         }
 #else
-        wx_get_home_directory(s);
+        char* sdlBasePath = SDL_GetBasePath();
+        strcpy(s, sdlBasePath);
         strcat(s, ".pcem/");
-
-        if (!wx_dir_exists(pcem_path))
-                wx_create_directory(pcem_path);
+        if(!wx_dir_exists(s)) {
+                wx_get_home_directory(s);
+                strcat(s, ".pcem/");
+        }
 #endif
 }

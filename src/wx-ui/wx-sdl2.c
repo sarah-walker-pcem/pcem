@@ -418,6 +418,8 @@ void sdl_onconfigloaded() {
                 wx_callback(ghwnd, wx_setupmenu, 0);
 
         /* create directories */
+        if (!wx_dir_exists(pcem_path))
+                wx_create_directory(pcem_path);
         if (!wx_dir_exists(configs_path))
                 wx_create_directory(configs_path);
         if (!wx_dir_exists(nvr_path))
