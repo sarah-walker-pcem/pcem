@@ -279,6 +279,7 @@ void mda_setcol(int chr, int blink, int fg, uint8_t cga_ink) { mdacols[chr][blin
 void mda_close(void *p) {
         mda_t *mda = (mda_t *)p;
 
+        mem_mapping_remove(&mda->mapping);
         free(mda->vram);
         free(mda);
 }

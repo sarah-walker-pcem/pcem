@@ -766,6 +766,7 @@ static void *xebec_init() {
 static void xebec_close(void *p) {
         xebec_t *xebec = (xebec_t *)p;
 
+        rom_deinit(&xebec->bios_rom);
         hdd_close(&xebec->drives[0].hdd_file);
         hdd_close(&xebec->drives[1].hdd_file);
 
