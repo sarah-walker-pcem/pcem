@@ -42,6 +42,7 @@ void mem_mapping_add(mem_mapping_t *mapping, uint32_t base, uint32_t size, uint8
                      uint16_t (*read_w)(uint32_t addr, void *p), uint32_t (*read_l)(uint32_t addr, void *p),
                      void (*write_b)(uint32_t addr, uint8_t val, void *p), void (*write_w)(uint32_t addr, uint16_t val, void *p),
                      void (*write_l)(uint32_t addr, uint32_t val, void *p), uint8_t *exec, uint32_t flags, void *p);
+void mem_mapping_remove(mem_mapping_t *mapping);
 void mem_mapping_set_handler(mem_mapping_t *mapping, uint8_t (*read_b)(uint32_t addr, void *p),
                              uint16_t (*read_w)(uint32_t addr, void *p), uint32_t (*read_l)(uint32_t addr, void *p),
                              void (*write_b)(uint32_t addr, uint8_t val, void *p),

@@ -5,6 +5,7 @@
         - c386sx16 BIOS fails checksum
 */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ibm.h"
@@ -1142,6 +1143,26 @@ void mem_mapping_add(mem_mapping_t *mapping, uint32_t base, uint32_t size, uint8
         mapping->next = NULL;
 
         mem_mapping_recalc(mapping->base, mapping->size);
+}
+
+void mem_mapping_remove(mem_mapping_t *mapping)
+{
+    mem_mapping_t *prev;
+    mem_mapping_t *dest;
+
+    assert(mapping);
+    assert(mapping != &base_mapping);
+
+    prev = &base_mapping;
+    dest = prev->next;
+    while(dest != mapping)
+    {
+        prev = dest;
+        dest = dest->next;
+    }
+    prev->next = mapping->next;
+    
+    mem_mapping_recalc(mapping->base, mapping->size);
 }
 
 void mem_mapping_set_handler(mem_mapping_t *mapping, uint8_t (*read_b)(uint32_t addr, void *p),
