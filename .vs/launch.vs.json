@@ -1,0 +1,32 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "project": "CMakeLists.txt",
+      "projectTarget": "pcem.exe (src\\pcem.exe)",
+      "name": "PCem 64-bit Debugger",
+      "type": "cppdbg",
+      "miDebuggerPath": "C:\\msys64\\mingw64\\bin\\gdb.exe",
+      "inheritEnvironments": [
+        "mingw_64"
+      ],
+      "MIMode": "gdb",
+      "program": "${debugInfo.target}",
+      "externalConsole": true
+    },
+    {
+      "project": "CMakeLists.txt",
+      "projectTarget": "pcem.exe (src\\pcem.exe)",
+      "name": "PCem 32-bit Debugger",
+      "type": "cppdbg",
+      "miDebuggerPath": "C:\\msys64\\mingw32\\bin\\gdb.exe",
+      "inheritEnvironments": [
+        "mingw_i686"
+      ],
+      "MIMode": "gdb",
+      "program": "${debugInfo.target}",
+      "externalConsole": true
+    }
+  ]
+}
