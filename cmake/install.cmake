@@ -103,6 +103,6 @@ install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION ${PCEM_SHARE_DIR}/ro
 install(FILES ${CMAKE_SOURCE_DIR}/docs/roms.txt DESTINATION ${PCEM_SHARE_DIR}/roms/zdsupers)
 install(FILES ${CMAKE_SOURCE_DIR}/docs/configs.txt DESTINATION ${PCEM_SHARE_DIR}/configs)
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        install(FILES ${CMAKE_SOURCE_DIR}/docs/pcem.man.1 DESTINATION share/man/man1/pcem.man)
+	install(FILES ${CMAKE_SOURCE_DIR}/docs/pcem.man.1 DESTINATION share/man/man1 RENAME pcem.1)
 endif()
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/includes/public/ DESTINATION ${PCEM_INCLUDE_DIR} FILES_MATCHING PATTERN *.h)
