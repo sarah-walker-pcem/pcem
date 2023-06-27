@@ -20,6 +20,15 @@ int main(int argc, char **argv)
 #if WIN32
         int argc = __argc;
         char **argv = __argv;
+#else
+	/*
+	 * PCem does not work properly on Wayland at the moment, so force
+	 * SDL and GTK to use the x11 backend.
+	 *
+	 * See https://github.com/sarah-walker-pcem/pcem/issues/128 for details
+	 */
+	setenv("SDL_VIDEODRIVER", "x11", 1);
+	setenv("GDK_BACKEND", "x11", 1);
 #endif
 
         if (!pc_main(argc, argv))
