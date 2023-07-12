@@ -35,6 +35,8 @@ set(archdetect_c_code "
     #else
         #error cmake_ARCH ppc
     #endif
+#elif defined(__aarch64__) || defined(_M_ARM64)
+    #error cmake_ARCH arm64
 #endif
 
 #error cmake_ARCH unknown
