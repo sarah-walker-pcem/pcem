@@ -22,6 +22,11 @@ int main(int argc, char **argv)
         char **argv = __argv;
 #endif
 
+#ifdef FORCE_X11
+        setenv("SDL_VIDEODRIVER", "x11", 1);
+        setenv("GDK_BACKEND", "x11", 1);
+#endif
+
         if (!pc_main(argc, argv))
                 return -1;
 

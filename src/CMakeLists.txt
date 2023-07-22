@@ -1,3 +1,7 @@
+if(FORCE_X11)
+        set(PCEM_DEFINES ${PCEM_DEFINES} FORCE_X11)
+endif()
+
 set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/bswap.h
         ${CMAKE_SOURCE_DIR}/includes/private/fdi2raw.h

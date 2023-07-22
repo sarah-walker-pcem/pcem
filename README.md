@@ -42,9 +42,10 @@ configure options are :
 ```
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
   -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
-  -DUSE_NETWORKING=OFF       : Build with networking support.
+  -DUSE_NETWORKING=ON        : Build with networking support.
   -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (Needs USE_NETWORKING to compile) Requires libpcap.
   -DUSE_ALSA=OFF             : Build with support for MIDI output through ALSA. Requires libasound. (Linux Only)
+  -DFORCE_X11=ON             : Enables a hack to force X11 on Wayland systems. See #128 for details. (Linux Only)
   -DPLUGIN_ENGINE=OFF        : Build with plugin support. Builds libpcem-plugin-api and links PCem with it. 
 ```
 
