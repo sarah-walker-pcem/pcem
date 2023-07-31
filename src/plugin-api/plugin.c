@@ -25,7 +25,6 @@ char plugin_path[512];
 #ifdef PLUGIN_ENGINE
 void set_plugin_path(char *s) {
         safe_strncpy(plugin_path, s, 512);
-        set_screenshots_path(s);
 }
 
 void pluginengine_load_config() {
