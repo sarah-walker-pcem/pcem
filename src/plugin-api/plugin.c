@@ -10,6 +10,7 @@
 #include "tinydir.h"
 #include "paths.h"
 #include "config.h"
+#include "wx-utils.h"
 
 #include <pcem/logging.h>
 
@@ -21,6 +22,7 @@ extern NETWORK_CARD *network_cards[NETWORK_CARD_MAX];
 extern LPT_DEVICE *lpt_devices[LPT_MAX];
 
 char plugin_path[512];
+char default_plugin_path[512];
 
 #ifdef PLUGIN_ENGINE
 void set_plugin_path(char *s) {
@@ -37,9 +39,11 @@ void pluginengine_load_config() {
 void pluginengine_save_config() { config_set_string(CFG_GLOBAL, "Paths", "plugin_path", plugin_path); }
 
 void pluginengine_init_config() {
-        char s[512];
-        append_filename(s, pcem_path, "plugins/", 512);
-        set_plugin_path(s);
+        if (strlen(plugin_path) == 0)
+                set_plugin_path(default_plugin_path);
+
+        if (!wx_dir_exists(plugin_path))
+                wx_create_directory(plugin_path);
 }
 #endif
 
@@ -50,6 +54,8 @@ void init_plugin_engine() {
         memset(sound_cards, 0, sizeof(sound_cards));
         memset(hdd_controllers, 0, sizeof(hdd_controllers));
         memset(network_cards, 0, sizeof(network_cards));
+
+        append_filename(default_plugin_path, pcem_path, "plugins/", 512);
 
 #ifdef PLUGIN_ENGINE
         add_config_callback(pluginengine_load_config, pluginengine_save_config, pluginengine_init_config);
