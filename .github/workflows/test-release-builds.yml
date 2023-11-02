@@ -163,6 +163,6 @@ jobs:
                   aws_key_id: ${{secrets.nte_cdn_s3_key_id}}
                   aws_secret_access_key: ${{secrets.nte_cdn_s3_secret_access_key}}
                   aws_bucket: bucketName
-                  source_dir: ./dist/${{ matrix.artifacts_path }}
+                  source_dir: ./dist
                   destination_dir: ${{ matrix.artifacts_name }}
                   endpoint: cdn.ntgecdn.com                  
