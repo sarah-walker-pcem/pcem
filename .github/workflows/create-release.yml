@@ -158,3 +158,14 @@ jobs:
         with:
           name: ${{ matrix.artifacts_name }}
           path: ./dist/${{ matrix.artifacts_path }}
+                  
+      - name: Upload to NasuTek MinIO S3
+        uses: shallwefootball/s3-upload-action@master
+        id: S3
+        with:
+          aws_key_id: ${{secrets.nte_cdn_s3_key_id}}
+          aws_secret_access_key: ${{secrets.nte_cdn_s3_secret_access_key}}
+          aws_bucket: bucketName
+          source_dir: ./dist/${{ matrix.artifacts_path }}
+          destination_dir: ${{ matrix.artifacts_name }}
+          endpoint: cdn.ntgecdn.com          
