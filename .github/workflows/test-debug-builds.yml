@@ -117,11 +117,14 @@ jobs:
               shell: msys2 {0}
               run: |
                   export INSTALL_PREFIX=$(pwd)/dist
+                  export ARTIFACTSDIR=$(pwd)/artifacts
+                  mkdir -p $ARTIFACTSDIR
                   cd temp/build
                   ninja install
                   cd $INSTALL_PREFIX
                   ntldd -R "bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang)(32|64)' | sed -e 's|\\|/|g' | xargs cp --target-directory="bin"
                   zip -r -9 ${{ matrix.artifacts_path }} *
+                  cp ${{ matrix.artifacts_path }} $ARTIFACTSDIR
 
             - name: prepare-package (Linux)
               if: runner.os == 'Linux'
@@ -145,16 +148,19 @@ jobs:
               if: runner.os == 'Linux'
               run: |
                   export DESTDIR=$(pwd)/dist
+                  export ARTIFACTSDIR=$(pwd)/artifacts
+                  mkdir -p $ARTIFACTSDIR
                   cd temp/build
                   ninja install
                   cd $DESTDIR
                   tar -cjf ${{ matrix.artifacts_path }} *
+                  cp ${{ matrix.artifacts_path }} $ARTIFACTSDIR
 
             - name: 'Upload GitHub Actions artifacts'
               uses: actions/upload-artifact@v2
               with:
                   name: ${{ matrix.artifacts_name }}
-                  path: ./dist/${{ matrix.artifacts_path }}
+                  path: ./artifacts
                   
             - name: Upload to NasuTek MinIO S3
               uses: shallwefootball/s3-upload-action@master
@@ -163,6 +169,6 @@ jobs:
                   aws_key_id: ${{secrets.nte_cdn_s3_key_id}}
                   aws_secret_access_key: ${{secrets.nte_cdn_s3_secret_access_key}}
                   aws_bucket: pcem-dev-builds
-                  source_dir: ./dist/${{ matrix.artifacts_path }}
+                  source_dir: ./artifacts
                   destination_dir: ''
                   endpoint:  https://cdn.ntgecdn.com:443               
