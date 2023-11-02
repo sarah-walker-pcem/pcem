@@ -16,7 +16,7 @@ jobs:
                       os: ubuntu-latest
                       args: -DCMAKE_BUILD_TYPE=Debug -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
                       artifacts_name: PCem-Debug-vNext-Ubuntu-${{ github.run_number }}
-                      artifacts_path: PCem-Debug-${{ github.sha }}.tar.bz2
+                      artifacts_path: PCem-Debug-vNext-Ubuntu-${{ github.run_number }}-${{ github.sha }}.tar.bz2
                       installdeps: >-
                           libsdl2-dev
                           libopenal-dev
@@ -29,7 +29,7 @@ jobs:
                       compiler: MINGW32
                       args: -DCMAKE_BUILD_TYPE=Debug -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
                       artifacts_name: PCem-Debug-vNext-Windows-MINGW32-${{ github.run_number }}
-                      artifacts_path: PCem-Debug-${{ github.sha }}.zip
+                      artifacts_path: PCem-Debug-vNext-Windows-MINGW32-${{ github.run_number }}-${{ github.sha }}.zip
                       installdeps: >-
                           base-devel
                           zip
@@ -47,7 +47,7 @@ jobs:
                       compiler: MINGW64
                       args: -DCMAKE_BUILD_TYPE=Debug -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
                       artifacts_name: PCem-Debug-vNext-Windows-MINGW64-${{ github.run_number }}
-                      artifacts_path: PCem-Debug-${{ github.sha }}.zip
+                      artifacts_path: PCem-Debug-vNext-Windows-MINGW64-${{ github.run_number }}-${{ github.sha }}.zip
                       installdeps: >-
                           base-devel
                           zip
@@ -163,6 +163,6 @@ jobs:
                   aws_key_id: ${{secrets.nte_cdn_s3_key_id}}
                   aws_secret_access_key: ${{secrets.nte_cdn_s3_secret_access_key}}
                   aws_bucket: pcem-dev-builds
-                  source_dir: ./dist
-                  destination_dir: ${{ matrix.artifacts_name }}
-                  endpoint: https://cdn.ntgecdn.com:443               
+                  source_dir: ./dist/${{ matrix.artifacts_path }}
+                  destination_dir: ''
+                  endpoint:  https://cdn.ntgecdn.com:443               
