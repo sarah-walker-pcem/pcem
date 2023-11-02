@@ -165,4 +165,4 @@ jobs:
                   aws_bucket: pcem-dev-builds
                   source_dir: ./dist
                   destination_dir: ${{ matrix.artifacts_name }}
-                  endpoint: cdn.ntgecdn.com                  
+                  endpoint: https://cdn.ntgecdn.com:443            
