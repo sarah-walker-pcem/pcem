@@ -106,19 +106,17 @@ if(${PCEM_CPU_TYPE} STREQUAL "i386")
                 )
 endif()
 
-if(${PCEM_CPU_TYPE} STREQUAL "arm")
-        set(PCEM_SRC ${PCEM_SRC}
-                codegen/arm32/codegen_backend_arm.c
-                codegen/arm32/codegen_backend_arm_ops.c
-                codegen/arm32/codegen_backend_arm_uops.c
-                )
-endif()
-
 if(${PCEM_CPU_TYPE} STREQUAL "arm64")
         set(PCEM_SRC ${PCEM_SRC}
                 codegen/arm64/codegen_backend_arm64.c
                 codegen/arm64/codegen_backend_arm64_imm.c
                 codegen/arm64/codegen_backend_arm64_ops.c
                 codegen/arm64/codegen_backend_arm64_uops.c
+                )
+elseif(${PCEM_CPU_TYPE} MATCHES "armv.*")
+        set(PCEM_SRC ${PCEM_SRC}
+                codegen/arm32/codegen_backend_arm.c
+                codegen/arm32/codegen_backend_arm_ops.c
+                codegen/arm32/codegen_backend_arm_uops.c
                 )
 endif()
