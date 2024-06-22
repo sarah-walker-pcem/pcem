@@ -53,7 +53,7 @@ static const p6_instruction_t alu6_op = {.nr_uops = 6,
                                          .uop[5] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
 static const p6_instruction_t aluc_op = {.nr_uops = 2,
                                          .uop[0] = {.type = UOP_ALU01, .throughput = 1, .latency = 1},
-                                         .uop[0] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
+                                         .uop[1] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
 static const p6_instruction_t load_alu_op = {.nr_uops = 2,
                                              .uop[0] = {.type = UOP_LOAD, .throughput = 1, .latency = 2},
                                              .uop[1] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
@@ -89,7 +89,7 @@ static const p6_instruction_t store_op = {.nr_uops = 2,
 
 static const p6_instruction_t bswap_op = {.nr_uops = 2,
                                           .uop[0] = {.type = UOP_ALU0, .throughput = 1, .latency = 1},
-                                          .uop[0] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
+                                          .uop[1] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
 static const p6_instruction_t leave_op = {.nr_uops = 3,
                                           .uop[0] = {.type = UOP_LOAD, .throughput = 1, .latency = 2},
                                           .uop[1] = {.type = UOP_ALU01, .throughput = 1, .latency = 1},
@@ -349,18 +349,18 @@ static const p6_instruction_t div16_op = {.nr_uops = 3,
                                           .uop[2] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
 static const p6_instruction_t div16_mem_op = {.nr_uops = 4,
                                               .uop[0] = {.type = UOP_LOAD, .throughput = 1, .latency = 2},
-                                              .uop[0] = {.type = UOP_ALU0, .throughput = 21, .latency = 21},
-                                              .uop[1] = {.type = UOP_ALU0, .throughput = 1, .latency = 1},
-                                              .uop[2] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
+                                              .uop[1] = {.type = UOP_ALU0, .throughput = 21, .latency = 21},
+                                              .uop[2] = {.type = UOP_ALU0, .throughput = 1, .latency = 1},
+                                              .uop[3] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
 static const p6_instruction_t div32_op = {.nr_uops = 3,
                                           .uop[0] = {.type = UOP_ALU0, .throughput = 35, .latency = 35},
                                           .uop[1] = {.type = UOP_ALU0, .throughput = 1, .latency = 1},
                                           .uop[2] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
 static const p6_instruction_t div32_mem_op = {.nr_uops = 4,
                                               .uop[0] = {.type = UOP_LOAD, .throughput = 1, .latency = 2},
-                                              .uop[0] = {.type = UOP_ALU0, .throughput = 35, .latency = 35},
-                                              .uop[1] = {.type = UOP_ALU0, .throughput = 1, .latency = 1},
-                                              .uop[2] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
+                                              .uop[1] = {.type = UOP_ALU0, .throughput = 35, .latency = 35},
+                                              .uop[2] = {.type = UOP_ALU0, .throughput = 1, .latency = 1},
+                                              .uop[3] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
 static const p6_instruction_t emms_op = {.nr_uops = 11,
                                          .uop[0] = {.type = UOP_ALU0, .throughput = 1, .latency = 1},
                                          .uop[1] = {.type = UOP_ALU0, .throughput = 1, .latency = 1},
@@ -393,7 +393,7 @@ static const p6_instruction_t ins_op = {.nr_uops = 4,
                                         .uop[0] = {.type = UOP_ALU0, .throughput = 18, .latency = 18},
                                         .uop[1] = {.type = UOP_STOREADDR, .throughput = 1, .latency = 1},
                                         .uop[2] = {.type = UOP_STOREDATA, .throughput = 1, .latency = 1},
-                                        .uop[2] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
+                                        .uop[3] = {.type = UOP_ALU01, .throughput = 1, .latency = 1}};
 static const p6_instruction_t int_op = {
         .nr_uops = 7,
         .uop[0] = {.type = UOP_ALU0, .throughput = 20, .latency = 20},

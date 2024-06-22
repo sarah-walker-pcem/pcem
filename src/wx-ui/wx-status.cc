@@ -138,18 +138,20 @@ void StatusPane::Render(wxDC &dc) {
         if (emulation_state != EMULATION_STOPPED) {
                 // draw status text
                 if (show_status) {
+                        char charMac = statusMachineText[0];
+                        char charDev = statusDeviceText[0];
                         if (updatestatus) {
                                 updatestatus = 0;
                                 get_status(statusMachineText, statusDeviceText);
                         }
-                        if (statusMachineText) {
+                        if (charMac != 0 || statusMachineText[0] != charMac) {
                                 int statusX = 5;
                                 int statusY = height + 5;
                                 wxSize size = dc.GetMultiLineTextExtent(statusMachineText);
                                 dc.DrawText(statusMachineText, statusX, statusY);
                                 width = MAX(width, statusX + size.GetWidth());
                                 height = MAX(height, statusY + size.GetHeight());
-                                if (statusDeviceText) {
+                                if (charDev != 0 || statusDeviceText[0] != charDev) {
                                         wxSize dSize = dc.GetMultiLineTextExtent(statusDeviceText);
                                         dc.DrawText(statusDeviceText, statusX + ceil((size.GetWidth() + 50) / 100.0) * 100,
                                                     statusY);

@@ -149,8 +149,10 @@ static void tc8521_set_nvrram(uint8_t *nvrram, struct tm *cur_time_tm) {
                 nvrram[TC8521_HOUR1] = cur_time_tm->tm_hour % 10;
                 nvrram[TC8521_HOUR10] = cur_time_tm->tm_hour / 10;
         } else {
-                nvrram[TC8521_HOUR1] = (cur_time_tm->tm_hour % 12) % 10;
-                nvrram[TC8521_HOUR10] = ((cur_time_tm->tm_hour % 12) / 10) | (cur_time_tm->tm_hour >= 12) ? 2 : 0;
+                int hour12 = (cur_time_tm->tm_hour % 12);
+                if (hour12 == 0) hour12 = 12;
+                nvrram[TC8521_HOUR1] = hour12 % 10;
+                nvrram[TC8521_HOUR10] = hour12 / 10;
         }
         nvrram[TC8521_WEEKDAY] = cur_time_tm->tm_wday;
         nvrram[TC8521_DAY1] = cur_time_tm->tm_mday % 10;

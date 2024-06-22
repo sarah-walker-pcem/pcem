@@ -81,6 +81,7 @@ int sound_card_has_config(int card) {
 char *sound_card_get_internal_name(int card) {
         if (sound_cards[card] != NULL)
                 return sound_cards[card]->internal_name;
+        return "error-no-name";
 }
 
 int sound_card_get_from_internal_name(char *s) {

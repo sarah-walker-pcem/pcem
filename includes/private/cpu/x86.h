@@ -262,7 +262,7 @@ enum { ABRT_NONE = 0, ABRT_GEN, ABRT_TS = 0xA, ABRT_NP = 0xB, ABRT_SS = 0xC, ABR
   This distinction is used by the dynarec; a block that hits an 'expected' exception
   would be compiled, a block that hits an 'unexpected' exception would be rejected so
   that we don't end up with an unnecessarily short block*/
-#define ABRT_EXPECTED 0x80
+#define ABRT_EXPECTED ((int8_t)0x80)
 extern uint32_t abrt_error;
 
 void x86_doabrt(int x86_abrt);

@@ -251,7 +251,7 @@ void disc_stop(int drive) {
         drive ^= fdd_swap;
 
         if (drive < 2 && drives[drive].stop)
-                drives[drive].stop(drive);
+                drives[drive].stop();
 }
 
 void disc_set_drivesel(int drive) {
