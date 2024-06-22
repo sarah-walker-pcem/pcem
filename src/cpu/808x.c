@@ -9,7 +9,10 @@
                                         4 clocks - fetch mod/rm
         2 clocks - fetch opcode 1       2 clocks - execute
         2 clocks - fetch opcode 2  etc*/
+#if defined(__linux__) || defined(__APPLE__)
 #include <unistd.h>
+#endif
+
 #include <stdio.h>
 #include "ibm.h"
 

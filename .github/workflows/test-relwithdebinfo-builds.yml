@@ -14,7 +14,7 @@ jobs:
                 include:
                     - name: Ubuntu 64bit (gcc)
                       os: ubuntu-latest
-                      args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_RELDEB_AS_RELEASE=OFF -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+                      args: -DUSE_EXPERIMENTAL=ON -DUSE_EXPERIMENTAL_PRINTER=OFF -DUSE_EXPERIMENTAL_PGC=ON -DUSE_NETWORKING=OFF -DUSE_PCAP_NETWORKING=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_RELDEB_AS_RELEASE=OFF -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
                       artifacts_name: PCem-RelWithDebInfo-vNext-Ubuntu-${{ github.run_number }}
                       artifacts_path: PCem-RelWithDebInfo-vNext-Ubuntu-${{ github.run_number }}-${{ github.sha }}.tar.bz2
                       installdeps: >-
@@ -27,7 +27,7 @@ jobs:
                     - name: Windows 32bits (MSYS2)
                       os: windows-latest
                       compiler: MINGW32
-                      args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_RELDEB_AS_RELEASE=OFF -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+                      args: -DUSE_EXPERIMENTAL=ON -DUSE_EXPERIMENTAL_PRINTER=OFF -DUSE_EXPERIMENTAL_PGC=ON -DUSE_NETWORKING=OFF -DUSE_PCAP_NETWORKING=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_RELDEB_AS_RELEASE=OFF -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
                       artifacts_name: PCem-RelWithDebInfo-vNext-Windows-MINGW32-${{ github.run_number }}
                       artifacts_path: PCem-RelWithDebInfo-vNext-Windows-MINGW32-${{ github.run_number }}-${{ github.sha }}.zip
                       installdeps: >-
@@ -38,14 +38,13 @@ jobs:
                           mingw-w64-i686-toolchain 
                           mingw-w64-i686-SDL2 
                           mingw-w64-i686-openal 
-                          mingw-w64-i686-wxWidgets
+                          mingw-w64-i686-wxwidgets3.2-msw
                           mingw-w64-i686-cmake
-                          mingw-w64-i686-libpcap
                           mingw-w64-i686-ninja
                     - name: Windows 64bits (MSYS2)
                       os: windows-latest
                       compiler: MINGW64
-                      args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_RELDEB_AS_RELEASE=OFF -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+                      args: -DUSE_EXPERIMENTAL=ON -DUSE_EXPERIMENTAL_PRINTER=OFF -DUSE_EXPERIMENTAL_PGC=ON -DUSE_NETWORKING=OFF -DUSE_PCAP_NETWORKING=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_RELDEB_AS_RELEASE=OFF -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
                       artifacts_name: PCem-RelWithDebInfo-vNext-Windows-MINGW64-${{ github.run_number }}
                       artifacts_path: PCem-RelWithDebInfo-vNext-Windows-MINGW64-${{ github.run_number }}-${{ github.sha }}.zip
                       installdeps: >-
@@ -56,7 +55,7 @@ jobs:
                           mingw-w64-x86_64-toolchain
                           mingw-w64-x86_64-SDL2
                           mingw-w64-x86_64-openal
-                          mingw-w64-x86_64-wxWidgets
+                          mingw-w64-x86_64-wxwidgets3.2-msw
                           mingw-w64-x86_64-cmake
                           mingw-w64-x86_64-libpcap
                           mingw-w64-x86_64-ninja
@@ -64,7 +63,8 @@ jobs:
         name: ${{ matrix.name }}
 
         steps:
-            - uses: actions/checkout@v2
+            - name: "Check out repository"
+              uses: actions/checkout@v4.1.1
               with:
                   path: temp
                   fetch-depth: 0
@@ -157,13 +157,16 @@ jobs:
                   cp ${{ matrix.artifacts_path }} $ARTIFACTSDIR
 
             - name: 'Upload GitHub Actions artifacts'
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v4.3.1
               with:
                   name: ${{ matrix.artifacts_name }}
                   path: ./artifacts
                   
             - name: Upload to NasuTek MinIO S3
               uses: shallwefootball/s3-upload-action@master
+              env: 
+                  super_secret: ${{secrets.nte_cdn_s3_key_id}}
+              if: ${{ env.super_secret != null }}
               id: S3
               with:
                   aws_key_id: ${{secrets.nte_cdn_s3_key_id}}
