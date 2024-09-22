@@ -525,6 +525,14 @@ void makeznptable() {
 
 int indump = 0;
 
+FILE* dofopen(const char *filepath, const char* filename, const char * mode) {
+    int c = strlen(filepath) - 1;
+    char* sep = (filepath[c] == '/' || filepath[c] == '\\') ? "" : "/";
+    char buf[1024];
+    sprintf(buf, "%s%s%s", filepath, sep, filename);
+    return fopen(buf, mode);
+}
+
 void dumpregs() {
         int c, d = 0, e = 0;
 #ifndef RELEASE_BUILD
@@ -532,74 +540,69 @@ void dumpregs() {
         if (indump)
                 return;
         indump = 1;
-        //        return;
         output = 0;
-        //        return;
-        //        savenvr();
-        //        return;
-        chdir(logs_path);
-        /*        f=fopen("rram3.dmp","wb");
+        /*        f=dofopen(logs_path, "rram3.dmp","wb");
                 for (c=0;c<0x8000000;c++) putc(readmemb(c+0x10000000),f);
                 fclose(f);*/
-        f = fopen("ram.dmp", "wb");
+        f = dofopen(logs_path, "ram.dmp", "wb");
         fwrite(ram, mem_size * 1024, 1, f);
         fclose(f);
         /*        pclog("Dumping rram5.dmp\n");
-                f=fopen("rram5.dmp","wb");
+                f=dofopen(logs_path, "rram5.dmp","wb");
                 for (c=0;c<0x1000000;c++) putc(readmemb(c+0x10150000),f);
                 fclose(f);*/
         pclog("Dumping rram.dmp\n");
-        f = fopen("rram.dmp", "wb");
+        f = dofopen(logs_path, "rram.dmp", "wb");
         for (c = 0; c < 0x1000000; c++)
                 putc(readmemb(c), f);
         fclose(f);
-        /*        f=fopen("rram2.dmp","wb");
+        /*        f=dofopen(logs_path, "rram2.dmp","wb");
                 for (c=0;c<0x100000;c++) putc(readmemb(c+0xbff00000),f);
                 fclose(f);
-                f = fopen("stack.dmp","wb");
+                f = dofopen(logs_path, "stack.dmp","wb");
                 for (c = 0; c < 0x6000; c++) putc(readmemb(c+0xFFDFA000), f);
                 fclose(f);
-                f = fopen("tempx.dmp","wb");
+                f = dofopen(logs_path, "tempx.dmp","wb");
                 for (c = 0; c < 0x10000; c++) putc(readmemb(c+0xFC816000), f);
                 fclose(f);
-                f = fopen("tempx2.dmp","wb");
+                f = dofopen(logs_path, "tempx2.dmp","wb");
                 for (c = 0; c < 0x10000; c++) putc(readmemb(c+0xFDEF5000), f);
                 fclose(f);*/
         pclog("Dumping rram4.dmp\n");
-        f = fopen("rram4.dmp", "wb");
+        f = dofopen(logs_path, "rram4.dmp", "wb");
         for (c = 0; c < 0x0050000; c++) {
                 cpu_state.abrt = 0;
                 putc(readmembl(c + 0x80000000), f);
         }
         fclose(f);
         pclog("Dumping done\n");
-/*        f=fopen("rram6.dmp","wb");
+/*        f=dofopen(logs_path, "rram6.dmp","wb");
         for (c=0;c<0x1000000;c++) putc(readmemb(c+0xBF000000),f);
         fclose(f);*/
-/*        f=fopen("ram6.bin","wb");
+/*        f=dofopen(logs_path, "ram6.bin","wb");
         fwrite(ram+0x10100,0xA000,1,f);
         fclose(f);
-        f=fopen("boot.bin","wb");
+        f=dofopen(logs_path, "boot.bin","wb");
         fwrite(ram+0x7C00,0x200,1,f);
         fclose(f);
-        f=fopen("ram7.bin","wb");
+        f=dofopen(logs_path, "ram7.bin","wb");
         fwrite(ram+0x11100,0x2000,1,f);
         fclose(f);
-        f=fopen("ram8.bin","wb");
+        f=dofopen(logs_path, "ram8.bin","wb");
         fwrite(ram+0x3D210,0x200,1,f);
         fclose(f);        */
-/*        f=fopen("bios.dmp","wb");
+/*        f=dofopen(logs_path, "bios.dmp","wb");
         fwrite(rom,0x20000,1,f);
         fclose(f);*/
-/*        f=fopen("kernel.dmp","wb");
+/*        f=dofopen(logs_path, "kernel.dmp","wb");
         for (c=0;c<0x200000;c++) putc(readmemb(c+0xC0000000),f);
         fclose(f);*/
-/*        f=fopen("rram.dmp","wb");
+/*        f=dofopen(logs_path, "rram.dmp","wb");
         for (c=0;c<0x1500000;c++) putc(readmemb(c),f);
         fclose(f);
         if (!times)
         {
-                f=fopen("thing.dmp","wb");
+                f=dofopen(logs_path, "thing.dmp","wb");
                 fwrite(ram+0x11E50,0x1000,1,f);
                 fclose(f);
         }*/

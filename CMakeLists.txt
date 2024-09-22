@@ -48,6 +48,9 @@ option(USE_NETWORKING "Build PCem with networking support" ON)
 message("Networking Support: ${USE_NETWORKING}")
 
 if(USE_NETWORKING)
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=gnu17")
+        message("       Switching C to gnu17 to allow slirp to build")
+
         option(USE_PCAP_NETWORKING "Build PCem with PCAP support" ON)
         message("       PCAP Networking Support: ${USE_PCAP_NETWORKING}")
 endif()

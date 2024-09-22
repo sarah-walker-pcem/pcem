@@ -572,7 +572,7 @@ int flags;
             (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) || (listen(s, 1) < 0)) {
                 int tmperrno = errno; /* Don't clobber the real reason we failed */
 
-                close(s);
+                closesocket(s);
                 sofree(so);
                 /* Restore the real errno */
 #ifdef _WIN32
