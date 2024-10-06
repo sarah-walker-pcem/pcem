@@ -174,4 +174,4 @@ jobs:
                   aws_bucket: pcem-dev-builds
                   source_dir: ./artifacts
                   destination_dir: ''
-                  endpoint:  https://cdn.ntgecdn.com:443          
+                  endpoint:  https://cdn.wisegs.net:443          
