@@ -79,7 +79,7 @@ typedef struct IDE {
 } IDE;
 
 typedef struct IDE_HDD_EMU {
-        int romset,
+        int romset;
         char *model;
         int tracks, hpc, spt;
 } IDE_HDD_EMU;
