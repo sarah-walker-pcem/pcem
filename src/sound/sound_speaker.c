@@ -2,6 +2,9 @@
 #include "sound.h"
 #include "sound_speaker.h"
 
+int gated, speakval, speakon;
+int ppispeakon;
+
 int speaker_mute = 0;
 
 static int16_t speaker_buffer[MAXSOUNDBUFLEN];

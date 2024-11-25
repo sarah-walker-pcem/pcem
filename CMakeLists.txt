@@ -134,7 +134,7 @@ find_package(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})
 
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
-        find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
+        find_package(wxWidgets REQUIRED COMPONENTS core base xrc adv)
         include(${wxWidgets_USE_FILE})
         set(DISPLAY_ENGINE_LIBRARIES ${wxWidgets_LIBRARIES})
 endif()

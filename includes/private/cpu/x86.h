@@ -55,7 +55,7 @@ typedef union MMX_REG {
         float f[2];
 } MMX_REG;
 
-struct {
+typedef struct cpu_state_t {
         x86reg regs[8];
 
         uint8_t tag[8];
@@ -113,7 +113,9 @@ struct {
         uint16_t flags, eflags;
 
         uint32_t smbase;
-} cpu_state;
+} cpu_state_t;
+
+extern cpu_state_t cpu_state;
 
 #define cpu_state_offset(MEMBER) ((uintptr_t)&cpu_state.MEMBER - (uintptr_t)&cpu_state - 128)
 
@@ -318,12 +320,14 @@ void cyrix_write_seg_descriptor(uint32_t addr, x86seg *seg);
 #define SMHR_VALID (1 << 0)
 #define SMHR_ADDR_MASK (0xfffffffc)
 
-struct {
+typedef struct cyrix_t {
         struct {
                 uint32_t base;
                 uint64_t size;
         } arr[8];
         uint32_t smhr;
-} cyrix;
+} cyrix_t;
+
+extern cyrix_t cyrix;
 
 #endif /* _X86_H_ */

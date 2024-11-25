@@ -4,6 +4,9 @@
 #include "x86_flags.h"
 #include "codegen.h"
 
+cpu_state_t cpu_state;
+cyrix_t cyrix;
+
 x86seg gdt, ldt, idt, tr;
 
 uint32_t cr2, cr3, cr4;

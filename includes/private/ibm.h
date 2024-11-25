@@ -23,16 +23,16 @@
 #define readflash_get(offset, drive) ((readflash & (1 << ((offset) + (drive)))) != 0)
 
 /*Memory*/
-uint8_t *ram;
+extern uint8_t *ram;
 
-uint32_t rammask;
+extern uint32_t rammask;
 
-int readlookup[256], readlookupp[256];
-uintptr_t *readlookup2;
-int readlnext;
-int writelookup[256], writelookupp[256];
-uintptr_t *writelookup2;
-int writelnext;
+extern int readlookup[256], readlookupp[256];
+extern uintptr_t *readlookup2;
+extern int readlnext;
+extern int writelookup[256], writelookupp[256];
+extern uintptr_t *writelookup2;
+extern int writelnext;
 
 extern int mmu_perm;
 
@@ -104,7 +104,7 @@ typedef struct PIT {
         void (*set_out_funcs[3])(int new_out, int old_out);
 } PIT;
 
-PIT pit, pit2;
+extern PIT pit, pit2;
 void setpitclock(float clock);
 
 float pit_timer0_freq();
@@ -130,7 +130,7 @@ typedef struct dma_t {
         uint16_t io_addr;
 } dma_t;
 
-dma_t dma[8];
+extern dma_t dma[8];
 
 /*PPI*/
 typedef struct PPI {
@@ -138,7 +138,7 @@ typedef struct PPI {
         uint8_t pa, pb;
 } PPI;
 
-PPI ppi;
+extern PPI ppi;
 
 /*PIC*/
 typedef struct PIC {
@@ -149,15 +149,15 @@ typedef struct PIC {
         uint8_t level_sensitive;
 } PIC;
 
-PIC pic, pic2;
+extern PIC pic, pic2;
 extern int pic_intpending;
 
-char discfns[2][256];
-int driveempty[2];
+extern char discfns[2][256];
+extern int driveempty[2];
 
 #define PCJR (romset == ROM_IBMPCJR)
 
-int GAMEBLASTER, GUS, SSI2001, voodoo_enabled;
+extern int GAMEBLASTER, GUS, SSI2001, voodoo_enabled;
 extern int AMSTRAD, AT, is386, PCI, TANDY, MCA;
 
 enum {
@@ -268,8 +268,8 @@ enum {
 
 extern int romspresent[ROM_MAX];
 
-int hasfpu;
-int romset;
+extern int hasfpu;
+extern int romset;
 
 enum {
         GFX_BUILTIN = -1,
@@ -327,12 +327,12 @@ enum {
 
 extern int gfx_present[GFX_MAX];
 
-int gfxcard;
+extern int gfxcard;
 
-int cpuspeed;
+extern int cpuspeed;
 
 /*Video*/
-int readflash;
+extern int readflash;
 extern int egareads, egawrites;
 extern int vid_resize;
 extern int vid_api;
@@ -341,12 +341,12 @@ extern int winsizex, winsizey;
 extern int changeframecount;
 
 /*Sound*/
-int ppispeakon;
+extern int ppispeakon;
 extern uint64_t CGACONST;
 extern uint64_t MDACONST;
 extern uint64_t VGACONST1, VGACONST2;
 extern uint64_t RTCCONST;
-int gated, speakval, speakon;
+extern int gated, speakval, speakon;
 
 /*Sound Blaster*/
 #define SADLIB 1     /*No DSP*/
@@ -368,10 +368,10 @@ typedef struct {
         int tracks;
 } PcemHDC;
 
-PcemHDC hdc[7];
+extern PcemHDC hdc[7];
 
 /*Keyboard*/
-int keybsenddelay;
+extern int keybsenddelay;
 
 /*CD-ROM*/
 extern int cdrom_drive;

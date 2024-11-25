@@ -11,6 +11,8 @@
 #include "plat-keyboard.h"
 #include "plat-mouse.h"
 
+PPI ppi;
+
 void ppi_reset() {
         ppi.pa = 0x0; // 0x1D;
         ppi.pb = 0x40;

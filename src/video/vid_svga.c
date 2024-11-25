@@ -8,6 +8,7 @@
 #include "vid_svga_render.h"
 #include "io.h"
 #include "timer.h"
+#include "viewer.h"
 
 #define svga_output 0
 
@@ -600,6 +601,8 @@ void svga_poll(void *p) {
                         }
                 }
                 if (svga->vc == svga->dispend) {
+                        int changed = 0;
+
                         if (svga->vblank_start)
                                 svga->vblank_start(svga);
                         //                        pclog("VC dispend\n");
@@ -614,11 +617,21 @@ void svga_poll(void *p) {
 
                         for (x = 0; x < ((svga->vram_mask + 1) >> 12); x++) {
                                 if (svga->changedvram[x])
+                                {
                                         svga->changedvram[x]--;
+                                        changed = 1;
+                                }
                         }
                         //                        memset(changedvram,0,2048);
-                        if (svga->fullchange)
+                        if (svga->fullchange) {
                                 svga->fullchange--;
+                                viewer_update(&viewer_palette, svga);
+                                viewer_update(&viewer_palette_16, svga);
+                        }
+                        if (changed) {
+                                viewer_update(&viewer_font, svga);
+                                viewer_update(&viewer_vram, svga);
+                        }
                 }
                 if (svga->vc == svga->vsyncstart) {
                         int wx, wy;
@@ -779,6 +792,11 @@ int svga_init(svga_t *svga, void *p, int memsize, void (*recalctimings_ex)(struc
         svga_pri = svga;
 
         svga->ramdac_type = RAMDAC_6BIT;
+
+        viewer_add("256-colour palette", &viewer_palette, svga);
+        viewer_add("16-colour palette", &viewer_palette_16, svga);
+        viewer_add("Font", &viewer_font, svga);
+        viewer_add("Video memory", &viewer_vram, svga);
 
         return 0;
 }

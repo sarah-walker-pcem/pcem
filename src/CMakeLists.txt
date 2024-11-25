@@ -51,6 +51,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/video/video.cmake)
 
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/wx-ui.cmake)
+        include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/viewers/viewers.cmake)
 endif()
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
         message(FATAL_ERROR "Qt Mode is not yet implemented.")

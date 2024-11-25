@@ -12,6 +12,8 @@
 #include "vid_voodoo_regs.h"
 #include "vid_voodoo_render.h"
 #include "vid_voodoo_texture.h"
+#include "viewer.h"
+#include "viewer_voodoo.h"
 
 typedef struct voodoo_state_t {
         int xstart, xend, xdir;
@@ -1503,6 +1505,9 @@ void voodoo_queue_triangle(voodoo_t *voodoo, voodoo_params_t *params) {
         voodoo_use_texture(voodoo, params, 0);
         if (voodoo->dual_tmus)
                 voodoo_use_texture(voodoo, params, 1);
+
+        if (voodoo->viewer_active)
+                viewer_call(&viewer_voodoo, voodoo, voodoo_viewer_queue_triangle, NULL);
 
         memcpy(params_new, params, sizeof(voodoo_params_t));
 

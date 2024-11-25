@@ -17,6 +17,8 @@ static int cpu_turbo = 1;
 int isa_cycles;
 int has_vlb;
 static uint8_t ccr0, ccr1, ccr2, ccr3, ccr4, ccr5, ccr6;
+int hasfpu;
+int cpuspeed;
 
 OpFn *x86_dynarec_opcodes;
 OpFn *x86_dynarec_opcodes_0f;

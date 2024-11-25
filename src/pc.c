@@ -61,6 +61,7 @@
 #include "x86.h"
 #include "paths.h"
 #include "plugin.h"
+#include "viewer.h"
 
 #ifdef USE_NETWORKING
 #include "nethandler.h"
@@ -69,6 +70,11 @@
 uint8_t ethif;
 int inum;
 #endif
+
+int GAMEBLASTER, GUS, SSI2001, voodoo_enabled;
+int gfxcard;
+int readflash;
+int romset;
 
 int window_w, window_h, window_x, window_y, window_remember;
 
@@ -248,6 +254,7 @@ void initpc(int argc, char *argv[]) {
         atfullspeed = 0;
 
         device_init();
+        viewer_reset();
 
         initvideo();
         mem_init();
@@ -344,7 +351,9 @@ void resetpc_cad() {
 void resetpchard() {
         device_close_all();
         mouse_emu_close();
+        viewer_close_all();
         device_init();
+        viewer_reset();
 
         timer_reset();
         sound_reset();

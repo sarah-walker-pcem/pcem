@@ -17,6 +17,8 @@
 #include "vid_voodoo_render.h"
 #include "vid_voodoo_setup.h"
 #include "vid_voodoo_texture.h"
+#include "viewer.h"
+#include "viewer_voodoo.h"
 
 enum { CHIP_FBI = 0x1, CHIP_TREX0 = 0x2, CHIP_TREX1 = 0x4, CHIP_TREX2 = 0x8 };
 
@@ -43,6 +45,8 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p) {
                         //                        pclog("swapbufferCMD %08x %08x\n", val, voodoo->leftOverlayBuf);
 
                         voodoo_wait_for_render_thread_idle(voodoo);
+                        if (voodoo->viewer_active)
+                                viewer_call(&viewer_voodoo, voodoo, voodoo_viewer_swap_buffer, NULL);
                         if (!(val & 1)) {
                                 banshee_set_overlay_addr(voodoo->p, voodoo->leftOverlayBuf);
                                 thread_lock_mutex(voodoo->swap_mutex);
@@ -82,6 +86,8 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p) {
                 //                pclog("Swap buffer %08x %d %p %i\n", val, voodoo->swap_count, &voodoo->swap_count, (voodoo ==
                 //                voodoo->set->voodoos[1]) ? 1 : 0); voodoo->front_offset = params->front_offset;
                 voodoo_wait_for_render_thread_idle(voodoo);
+                if (voodoo->viewer_active)
+                        viewer_call(&viewer_voodoo, voodoo, voodoo_viewer_swap_buffer, NULL);
                 if (!(val & 1)) {
                         memset(voodoo->dirty_line, 1, sizeof(voodoo->dirty_line));
                         voodoo->front_offset = voodoo->params.front_offset;
@@ -265,6 +271,11 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p) {
 
         case SST_triangleCMD:
         case SST_remap_triangleCMD:
+                if (voodoo->in_strip) {
+                        voodoo->in_strip = 0;
+                        if (voodoo->viewer_active)
+                                viewer_call(&viewer_voodoo, voodoo, voodoo_viewer_end_strip, NULL);
+                }
                 voodoo->params.sign = val & (1 << 31);
 
                 if (voodoo->ncc_dirty[0])
@@ -466,6 +477,11 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p) {
                 break;
 
         case SST_ftriangleCMD:
+                if (voodoo->in_strip) {
+                        voodoo->in_strip = 0;
+                        if (voodoo->viewer_active)
+                                viewer_call(&viewer_voodoo, voodoo, voodoo_viewer_end_strip, NULL);
+                }
                 voodoo->params.sign = val & (1 << 31);
 
                 if (voodoo->ncc_dirty[0])
@@ -745,6 +761,9 @@ void voodoo_reg_writel(uint32_t addr, uint32_t val, void *p) {
 
                 voodoo->num_verticies = 1;
                 voodoo->cull_pingpong = 0;
+                if (voodoo->viewer_active)
+                        viewer_call(&viewer_voodoo, voodoo, voodoo_viewer_begin_strip, NULL);
+                voodoo->in_strip = 1;
                 break;
         case SST_sDrawTriCMD:
                 //                pclog("sDrawTriCMD %i %i\n", voodoo->num_verticies, voodoo->sSetupMode & SETUPMODE_STRIP_MODE);

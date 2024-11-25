@@ -20,6 +20,7 @@
 #include "vid_voodoo_regs.h"
 #include "vid_voodoo_render.h"
 #include "vid_voodoo_texture.h"
+#include "viewer.h"
 
 rgba8_t rgb332[0x100], ai44[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000], ai88[0x10000];
 
@@ -1156,6 +1157,8 @@ void *voodoo_2d3d_card_init(int type) {
         voodoo->disp_buffer = 0;
         voodoo->draw_buffer = 1;
 
+        viewer_add("3DFX Voodoo render", &viewer_voodoo, voodoo);
+
         return voodoo;
 }
 
@@ -1208,6 +1211,8 @@ void *voodoo_init() {
 
         mem_mapping_add(&voodoo_set->snoop_mapping, 0, 0, NULL, voodoo_snoop_readw, voodoo_snoop_readl, NULL, voodoo_snoop_writew,
                         voodoo_snoop_writel, NULL, MEM_MAPPING_EXTERNAL, voodoo_set);
+
+        viewer_add("3DFX Voodoo render", &viewer_voodoo, voodoo_set->voodoos[0]);
 
         return voodoo_set;
 }

@@ -3,6 +3,8 @@
 #include "fdc.h"
 #include "fdd.h"
 
+char discfns[2][256];
+
 static struct {
         int type;
 
