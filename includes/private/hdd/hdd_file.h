@@ -3,6 +3,7 @@
 typedef enum hdd_img_type {
         HDD_IMG_RAW,
         HDD_IMG_VHD,
+        HDD_IMG_RAW_RAM,
 } hdd_img_type;
 
 typedef struct hdd_file_t {

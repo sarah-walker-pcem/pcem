@@ -2036,7 +2036,7 @@ static int hd_new(void *hdlg, int drive) {
 }
 
 static int hd_file(void *hdlg, int drive) {
-        if (!getfile(hdlg, "Hard disc image (*.img;*.vhd)|*.img;*.vhd|All files (*.*)|*.*", "")) {
+        if (!getfile(hdlg, "Hard disk image (*.img;*.vhd)|*.img;*.vhd|RAM disk image (*.rdimg;*.rdvhd)|*.rdimg;*.rdvhd|All files (*.*)|*.*", "")) {
                 off_t sz;
                 FILE *f = fopen64(openfilestring, "rb");
                 if (!f) {

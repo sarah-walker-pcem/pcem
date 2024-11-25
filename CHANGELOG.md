@@ -4,6 +4,9 @@
 - Numerous bugfixes in this build
 - Changed some GUI elements.
 - Preliminary Plugin Extensions Created
+- Added RAM disk preloaded with RAW/VHD images (*.rdimg;*.rdvhd)
+  - Load up to 2GB disks to temporary disk (doesn't modify the image file)
+  - Mounts as read-only if memory allocation fails (mind the 32bit PCem memory limits)
 
 ## Added the following machines to v18
 - Hyundai SUPER-16T
