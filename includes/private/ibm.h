@@ -192,6 +192,7 @@ enum {
         ROM_TG286M,
         ROM_AWARD286,
         ROM_GDC212M,
+        ROM_GRID1520,
         ROM_GW286CT,
         ROM_SPC4200P,
         ROM_SPC4216P,

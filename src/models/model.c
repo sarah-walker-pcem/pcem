@@ -24,6 +24,7 @@
 #include "fdc37c665.h"
 #include "fdc37c93x.h"
 #include "gameport.h"
+#include "grid.h"
 #include "headland.h"
 #include "i430fx.h"
 #include "i430hx.h"
@@ -117,6 +118,7 @@ void at_wd76c10_init();
 void at_cs8230_init();
 void at_ali1429_init();
 void at_headland_init();
+void at_grid1520_init();
 void at_opti495_init();
 void at_sis496_init();
 void at_p55va_init();
@@ -480,6 +482,11 @@ void at_wd76c10_init() {
 void at_headland_init() {
         at_init();
         headland_init();
+}
+
+void at_grid1520_init() {
+        at_init();
+        grid_init();
 }
 
 void at_opti495_init() {
@@ -1065,6 +1072,16 @@ MODEL m_gdc212m = {"[286] Goldstar GDC-212M",
                    4096,
                    512,
                    at_scat_init,
+                   NULL};
+MODEL m_grid1520 = {"[286] GRiD GRiDcase 1520",
+                   ROM_GRID1520,
+                   "grid1520",
+                   {{"", cpus_286}, {"", NULL}, {"", NULL}},
+                   MODEL_AT | MODEL_HAS_IDE,
+                   1024,
+                   8192,
+                   1024,
+                   at_grid1520_init,
                    NULL};
 MODEL m_gw286ct = {"[286] GW-286CT GEAR",
                    ROM_GW286CT,
@@ -1655,6 +1672,7 @@ void model_init_builtin() {
         pcem_add_model(&m_epson_pcax);
         pcem_add_model(&m_epson_pcax2e);
         pcem_add_model(&m_gdc212m);
+        pcem_add_model(&m_grid1520);
         pcem_add_model(&m_gw286ct);
         pcem_add_model(&m_super286tr);
         pcem_add_model(&m_ibmat);

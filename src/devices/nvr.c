@@ -306,6 +306,10 @@ void loadnvr() {
                 f = nvrfopen("super286tr.nvr", "rb");
                 nvrmask = 127;
                 break;
+        case ROM_GRID1520:
+                f = nvrfopen("grid1520.nvr", "rb");
+                nvrmask = 127;
+                break;
         case ROM_GW286CT:
                 f = nvrfopen("gw286ct.nvr", "rb");
                 nvrmask = 127;
@@ -602,6 +606,9 @@ void savenvr() {
                 break;
         case ROM_HYUNDAI_SUPER286TR:
                 f = nvrfopen("super286tr.nvr", "wb");
+                break;
+        case ROM_GRID1520:
+                f = nvrfopen("grid1520.nvr", "wb");
                 break;
         case ROM_GW286CT:
                 f = nvrfopen("gw286ct.nvr", "wb");
