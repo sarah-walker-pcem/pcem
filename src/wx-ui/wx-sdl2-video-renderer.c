@@ -60,7 +60,7 @@ void sdl_video_renderer_close() {
         }
 }
 
-void sdl_video_renderer_update(SDL_Window *window, SDL_Rect updated_rect, BITMAP *screen) {
+void sdl_video_renderer_update(SDL_Window *window, SDL_Rect updated_rect, VIDEO_BITMAP *screen) {
         SDL_UpdateTexture(texture, &updated_rect, &((uint32_t *)screen->dat)[updated_rect.y * screen->w + updated_rect.x],
                           screen->w * 4);
 }

@@ -5,11 +5,11 @@ typedef struct {
         int w, h;
         uint8_t *dat;
         uint8_t *line[0];
-} BITMAP;
+} VIDEO_BITMAP;
 
-extern BITMAP *screen;
+extern VIDEO_BITMAP *screen;
 
-BITMAP *create_bitmap(int w, int h);
+VIDEO_BITMAP *create_bitmap(int w, int h);
 
 typedef struct {
         uint8_t r, g, b;
@@ -20,7 +20,7 @@ typedef RGB PALETTE[256];
 #define makecol(r, g, b) ((b) | ((g) << 8) | ((r) << 16))
 #define makecol32(r, g, b) ((b) | ((g) << 8) | ((r) << 16))
 
-extern BITMAP *buffer32;
+extern VIDEO_BITMAP *buffer32;
 
 int video_card_available(int card);
 char *video_card_getname(int card);
@@ -99,9 +99,9 @@ void closevideo();
 
 void video_updatetiming();
 
-void hline(BITMAP *b, int x1, int y, int x2, int col);
+void hline(VIDEO_BITMAP *b, int x1, int y, int x2, int col);
 
-void destroy_bitmap(BITMAP *b);
+void destroy_bitmap(VIDEO_BITMAP *b);
 
 extern uint32_t cgapal[16];
 

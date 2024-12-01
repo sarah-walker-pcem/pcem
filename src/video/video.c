@@ -907,7 +907,7 @@ void video_init() {
         device_add(video_cards[video_old_to_new(gfxcard)]->device);
 }
 
-BITMAP *buffer32;
+VIDEO_BITMAP *buffer32;
 
 uint8_t fontdat[2048][8];
 uint8_t fontdatm[2048][16];

@@ -952,7 +952,7 @@ void gl3_close() {
         glw_free(glw);
 }
 
-void gl3_update(SDL_Window *window, SDL_Rect updated_rect, BITMAP *screen) {
+void gl3_update(SDL_Window *window, SDL_Rect updated_rect, VIDEO_BITMAP *screen) {
         if (!context)
                 return;
         glBindTexture(GL_TEXTURE_2D, scene_texture.id);
