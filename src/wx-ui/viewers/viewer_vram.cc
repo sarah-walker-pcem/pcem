@@ -190,7 +190,7 @@ private:
 		for (int y = 0; y < h; y++)
 		{
 			unsigned char *data = buffer_data + y*3*buffer.GetWidth();
-			uint old_addr = addr;
+			uint32_t old_addr = addr;
 
 			addr += y_offset * offset;
 
