@@ -12,7 +12,10 @@ target_architecture(PCEM_CPU_TYPE)
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -fomit-frame-pointer -fno-strict-aliasing -flto")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -fomit-frame-pointer -fno-strict-aliasing -flto")
-	
+
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE} -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -DDEBUG")
+
 if(${PCEM_CPU_TYPE} STREQUAL "i386")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
@@ -73,7 +76,7 @@ if(USE_EXPERIMENTAL)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-	option(PCEM_RELDEB_AS_RELEASE "Build PCem RelWithDebInfo as Release Mode" ON)
+	option(PCEM_RELDEB_AS_RELEASE "Build PCem RelWithDebInfo as Release Mode" OFF)
         message("Build PCem RelWithDebInfo as Release Mode: ${PCEM_RELDEB_AS_RELEASE}")
 endif()
 

@@ -11,7 +11,7 @@ You can submit patches on our [forum](https://pcem-emulator.co.uk/phpBB3). Befor
 
 :exclamation: Note: <b>NO COPYRIGHTED ROM FILES ARE INCLUDED NOR WILL THEY BE. PLEASE DO NOT ASK FOR THEM.</b>
 
-## BSD and Linux supplement (v17)
+## BSD and Linux supplement
 
 You will need the following libraries and buildtools (and their dependencies):
 - SDL2
@@ -37,8 +37,11 @@ then `./src/pcem` to run.
 
 The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
 
-You can specify the Display Engine using `-DPCEM_DISPLAY_ENGINE=` The options you have are wxWidgets, and Qt
-configure options are :
+You can specify the Display Engine using `-DPCEM_DISPLAY_ENGINE=` The only valid option you have at this time is
+wxWidgets 
+
+The configure options are specified below. They are in the format of -D`Option`=`Value`. `Value` under here is the
+default value.
 ```
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
   -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
@@ -46,18 +49,18 @@ configure options are :
   -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (Needs USE_NETWORKING to compile) Requires libpcap.
   -DUSE_ALSA=OFF             : Build with support for MIDI output through ALSA. Requires libasound. (Linux Only)
   -DFORCE_X11=ON             : Enables a hack to force X11 on Wayland systems. See #128 for details. (Linux Only)
-  -DPLUGIN_ENGINE=OFF        : Build with plugin support. Builds libpcem-plugin-api and links PCem with it. 
+  -DPLUGIN_ENGINE=ON         : Build with plugin support. Builds libpcem-plugin-api and links PCem with it. 
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
 ```
-  -DPCEM_SLIRP_DEBUG=ON           : Build PCem with SLIRP_DEBUG debug output
-  -DPCEM_RECOMPILER_DEBUG=ON      : Build PCem with RECOMPILER_DEBUG debug output
-  -DPCEM_NE2000_DEBUG=ON          : Build PCem with NE2000_DEBUG debug output
-  -DPCEM_EMU8K_DEBUG_REGISTERS=ON : Build PCem with EMU8K_DEBUG_REGISTERS debug output
-  -DPCEM_SB_DSP_RECORD_DEBUG=ON   : Build PCem with SB_DSP_RECORD_DEBUG debug output
-  -DPCEM_MACH64_DEBUG=ON          : Build PCem with MACH64_DEBUG debug output
-  -DPCEM_DEBUG_EXTRA=ON           : Build PCem with DEBUG_EXTRA debug output
+  -DPCEM_SLIRP_DEBUG=OFF           : Build PCem with SLIRP_DEBUG debug output
+  -DPCEM_RECOMPILER_DEBUG=OFF      : Build PCem with RECOMPILER_DEBUG debug output
+  -DPCEM_NE2000_DEBUG=OFF          : Build PCem with NE2000_DEBUG debug output
+  -DPCEM_EMU8K_DEBUG_REGISTERS=OFF : Build PCem with EMU8K_DEBUG_REGISTERS debug output
+  -DPCEM_SB_DSP_RECORD_DEBUG=OFF   : Build PCem with SB_DSP_RECORD_DEBUG debug output
+  -DPCEM_MACH64_DEBUG=OFF          : Build PCem with MACH64_DEBUG debug output
+  -DPCEM_DEBUG_EXTRA=OFF           : Build PCem with DEBUG_EXTRA debug output
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=RelWithDebInfo, there are additional options you can do
@@ -79,7 +82,7 @@ CD-ROM support currently only accesses `/dev/cdrom`. It has not been heavily tes
 
 ## Links
 
-### PCem emulates the following hardware (as of v17):
+### PCem emulates the following hardware:
 
 Hardware | Links
 --- | ---
