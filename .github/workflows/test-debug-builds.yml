@@ -20,27 +20,10 @@ jobs:
                       installdeps: >-
                           libsdl2-dev
                           libopenal-dev
-                          libwxgtk3.0-gtk3-dev
+                          libwxgtk3.2-dev
                           libpcap-dev
                           cmake
                           ninja-build
-                    - name: Windows 32bits (MSYS2)
-                      os: windows-latest
-                      compiler: MINGW32
-                      args: -DUSE_EXPERIMENTAL=ON -DUSE_EXPERIMENTAL_PRINTER=OFF -DUSE_EXPERIMENTAL_PGC=ON -DUSE_NETWORKING=ON -DUSE_PCAP_NETWORKING=OFF -DCMAKE_BUILD_TYPE=Debug -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
-                      artifacts_name: PCem-Debug-vNext-Windows-MINGW32-${{ github.run_number }}
-                      artifacts_path: PCem-Debug-vNext-Windows-MINGW32-${{ github.run_number }}-${{ github.sha }}.zip
-                      installdeps: >-
-                          base-devel
-                          zip
-                          unzip
-                          mingw-w64-i686-ntldd-git
-                          mingw-w64-i686-toolchain 
-                          mingw-w64-i686-SDL2 
-                          mingw-w64-i686-openal 
-                          mingw-w64-i686-wxwidgets3.2-msw
-                          mingw-w64-i686-cmake
-                          mingw-w64-i686-ninja
                     - name: Windows 64bits (MSYS2)
                       os: windows-latest
                       compiler: MINGW64

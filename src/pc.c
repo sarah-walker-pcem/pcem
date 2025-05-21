@@ -280,7 +280,7 @@ void initpc(int argc, char *argv[]) {
         img_init();
 #ifdef USE_NETWORKING
         vlan_reset(); // NETWORK
-        network_card_init(network_card_current);
+        network_card_init();
 #endif
 
         // loadfont();
@@ -375,7 +375,7 @@ void resetpchard() {
 
 #ifdef USE_NETWORKING
         vlan_reset(); // NETWORK
-        network_card_init(network_card_current);
+        network_card_init();
 #endif
 
         sound_card_init();

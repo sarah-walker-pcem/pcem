@@ -1174,8 +1174,8 @@ static void *ide_init() {
         ide_pri_enable();
         ide_sec_enable();
 
-        timer_add(&ide_timer[0], ide_callback_pri, NULL, 0);
-        timer_add(&ide_timer[1], ide_callback_sec, NULL, 0);
+        timer_add(&ide_timer[0], (void *)ide_callback_pri, NULL, 0);
+        timer_add(&ide_timer[1], (void *)ide_callback_sec, NULL, 0);
 
         return (void *)-1;
 }

@@ -314,5 +314,5 @@ void keyboard_olim24_init() {
         keyboard_send = keyboard_olim24_adddata;
         keyboard_poll = keyboard_olim24_poll;
 
-        timer_add(&keyboard_olim24.send_delay_timer, keyboard_olim24_poll, NULL, 1);
+        timer_add(&keyboard_olim24.send_delay_timer, (void *)keyboard_olim24_poll, NULL, 1);
 }

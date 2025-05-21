@@ -844,7 +844,7 @@ void keyboard_at_init() {
         keyboard_set_scancode_set(SCANCODE_SET_2);
         keyboard_at.scancode_set = SCANCODE_SET_2;
 
-        timer_add(&keyboard_at.send_delay_timer, keyboard_at_poll, NULL, 1);
+        timer_add(&keyboard_at.send_delay_timer, (void *)keyboard_at_poll, NULL, 1);
 }
 
 void keyboard_at_set_mouse(void (*mouse_write)(uint8_t val, void *p), void *p) {

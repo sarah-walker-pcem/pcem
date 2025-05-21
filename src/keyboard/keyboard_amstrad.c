@@ -159,5 +159,5 @@ void keyboard_amstrad_init() {
         keyboard_send = keyboard_amstrad_adddata;
         keyboard_poll = keyboard_amstrad_poll;
 
-        timer_add(&keyboard_amstrad.send_delay_timer, keyboard_amstrad_poll, NULL, 1);
+        timer_add(&keyboard_amstrad.send_delay_timer, (void *)keyboard_amstrad_poll, NULL, 1);
 }
