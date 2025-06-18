@@ -145,7 +145,7 @@ jobs:
                   name: ${{ matrix.artifacts_name }}
                   path: ./artifacts
                   
-            - name: Upload to NasuTek MinIO S3
+            - name: Upload to Wise MinIO S3
               uses: shallwefootball/s3-upload-action@master
               env: 
                   super_secret: ${{secrets.nte_cdn_s3_key_id}}
@@ -157,4 +157,4 @@ jobs:
                   aws_bucket: pcem-dev-builds
                   source_dir: ./artifacts
                   destination_dir: ''
-                  endpoint:  https://cdn.wisegs.net:443          
+                  endpoint:  https://wgs-menifee-1.cdn.wisegs.net:443          
