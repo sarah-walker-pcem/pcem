@@ -207,6 +207,7 @@ static void grid_io_write(uint16_t port, uint8_t val, void *priv) {
                 break;
         }
         default:
+                break;
         }
 }
 
@@ -245,6 +246,7 @@ static uint8_t grid_io_read(uint16_t port, void *priv) {
                 return grid_ems_page[slot];
         }
         default:
+                break;
         }
 
         return 0xff;
