@@ -321,6 +321,7 @@ enum {
         GFX_VOODOO_3_2000,  /*Voodoo 3 2000*/
         GFX_VOODOO_3_3000,  /*Voodoo 3 3000*/
         GFX_MILLENNIUM,     /*Matrox Millennium*/
+        GFX_QUADCOLOR,      /*Quadram Quadcolor I/II*/
 
         GFX_BUILTIN_MAX,
 };

@@ -21,6 +21,7 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pcjr.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pgc.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ps1_svga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_quadcolor.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_s3.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_s3_virge.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_sdac_ramdac.h
@@ -106,6 +107,7 @@ set(PCEM_SRC ${PCEM_SRC}
         video/vid_pcjr.c
         video/vid_pgc.c
         video/vid_ps1_svga.c
+        video/vid_quadcolor.c
         video/vid_s3.c
         video/vid_s3_virge.c
         video/vid_sdac_ramdac.c

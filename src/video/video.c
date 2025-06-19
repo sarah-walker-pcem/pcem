@@ -39,6 +39,7 @@
 #include "vid_pcjr.h"
 #include "vid_pgc.h"
 #include "vid_ps1_svga.h"
+#include "vid_quadcolor.h"
 #include "vid_s3.h"
 #include "vid_s3_virge.h"
 #include "vid_sigma.h"
@@ -164,6 +165,9 @@ VIDEO_CARD v_px_trio64 = {"Phoenix S3 Trio64",       "px_trio64",
                           VIDEO_FLAG_TYPE_SPECIAL,   {VIDEO_BUS, 3, 2, 4, 25, 25, 40}};
 VIDEO_CARD v_plantronics = {"Plantronics ColorPlus", "plantronics",       &colorplus_device,
                             GFX_COLORPLUS,           VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_quadcolor = {
+        "Quadram Quadcolor I / I+II", "quadcolor", &quadcolor_device, GFX_QUADCOLOR, VIDEO_FLAG_TYPE_CGA,
+        {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
 VIDEO_CARD v_virge375 = {
         "S3 ViRGE/DX", "virge375", &s3_virge_375_device, GFX_VIRGEDX, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_BUS, 2, 2, 3, 28, 28, 45}};
 VIDEO_CARD v_sigma400 = {"Sigma Color 400", "sigma400",          &sigma_device,
@@ -929,18 +933,22 @@ void loadfont(char *s, fontformat_t format) {
         }
         switch (format) {
         case FONT_MDA: /* MDA */
-                for (c = 0; c < 256; c++) {
+                for (c = 0; c < 256; c++) { /* 8x14 MDA in 8x8 cell (lines 0-7) */
                         for (d = 0; d < 8; d++) {
                                 fontdatm[c][d] = getc(f);
                         }
                 }
-                for (c = 0; c < 256; c++) {
+                for (c = 0; c < 256; c++) { /* 8x14 MDA in 8x8 cell (lines 8-13 + padding lines) */
                         for (d = 0; d < 8; d++) {
                                 fontdatm[c][d + 8] = getc(f);
                         }
                 }
-                fseek(f, 4096 + 2048, SEEK_SET);
-                for (c = 0; c < 256; c++) {
+                for (c = 0; c < 256; c++) { /* 8x8 CGA (thin, secondary, normally unused) */
+                        for (d = 0; d < 8; d++) {
+                                fontdat[c + 256][d] = getc(f);
+                        }
+                }
+                for (c = 0; c < 256; c++) { /* 8x8 CGA (thick, primary) */
                         for (d = 0; d < 8; d++) {
                                 fontdat[c][d] = getc(f);
                         }
@@ -1327,6 +1335,7 @@ void video_init_builtin() {
         pcem_add_video(&v_px_trio32);
         pcem_add_video(&v_px_trio64);
         pcem_add_video(&v_plantronics);
+        pcem_add_video(&v_quadcolor);
         pcem_add_video(&v_virge375);
         pcem_add_video(&v_sigma400);
         pcem_add_video(&v_tvga8900d);

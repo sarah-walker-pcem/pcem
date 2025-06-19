@@ -25,6 +25,7 @@
 
 ## Added the following Video Cards to v18
 - Matrox Millennium
+- Quadram Quadcolor I / I+II
 
 ## Developer Changes to v18
 - First release to switch from autotools/make to CMake/Ninja
