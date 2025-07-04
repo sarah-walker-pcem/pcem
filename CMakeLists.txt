@@ -10,8 +10,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/arch-detect.cmake)
 
 target_architecture(PCEM_CPU_TYPE)
 
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -fomit-frame-pointer -fno-strict-aliasing -flto")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -fomit-frame-pointer -fno-strict-aliasing -flto")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -fomit-frame-pointer -fno-strict-aliasing -flto")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer -fno-strict-aliasing -flto")
 
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE} -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -DDEBUG")
@@ -21,10 +21,11 @@ if(${PCEM_CPU_TYPE} STREQUAL "i386")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
 endif()
 
-if(NOT ${PCEM_CPU_TYPE} MATCHES "arm.*")
-        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mstackrealign")
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mstackrealign")
-endif()
+# Turning this off, maybe this is whats causing issues as i noticed in an older build, 64-bit builds dont do stack realign
+#if(NOT ${PCEM_CPU_TYPE} MATCHES "arm.*")
+#        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mstackrealign")
+#        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mstackrealign")
+#endif()
 
 if (UNIX)
 	add_definitions(-D_FILE_OFFSET_BITS=64)
