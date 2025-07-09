@@ -23,6 +23,8 @@ jobs:
                           libwxgtk3.2-dev
                           libpcap-dev
                           cmake
+                          llvm
+                          clang
                           ninja-build
                     - name: Windows 64bits (MSYS2)
                       os: windows-latest

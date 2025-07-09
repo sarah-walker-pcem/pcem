@@ -7,6 +7,7 @@
 - Added RAM disk preloaded with RAW/VHD images (*.rdimg;*.rdvhd)
   - Load up to 2GB disks to temporary disk (doesn't modify the image file)
   - Mounts as read-only if memory allocation fails (mind the 32bit PCem memory limits)
+- 32-bit Windows builds will now be deprecated due to technical issues. v17 will be the last 32-bit PCem.
 
 ## Added the following machines to v18
 - Hyundai SUPER-16T
@@ -33,6 +34,7 @@
 ## Developer Changes to v18
 - First release to switch from autotools/make to CMake/Ninja
 - Legacy autotools and mingw makefiles are removed
+- Windows and Linux builds now will be built in Clang, and are required to be built with Clang
 
 # PCem v17
 - New machines added - Amstrad PC5086, Compaq Deskpro, Samsung SPC-6033P, Samsung SPC-6000A, Intel VS440FX, Gigabyte GA-686BX

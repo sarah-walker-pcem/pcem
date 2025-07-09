@@ -1,6 +1,15 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.20)
+
+# We are going to force clang on both Linux and Windows builds to be uniform
+set(CMAKE_C_COMPILER "clang" CACHE FILEPATH "C compiler")
+set(CMAKE_CXX_COMPILER "clang++" CACHE FILEPATH "C++ compiler")
 
 project(PCem)
+
+# Dont allow GCC Building anymore, force Clang
+if(NOT (CMAKE_C_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+        message(FATAL_ERROR "Detected compiler is not Clang! Please ensure Clang is in your PATH or specified correctly.")
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
@@ -74,6 +83,32 @@ if(USE_EXPERIMENTAL)
         message("       PGC Support: ${USE_EXPERIMENTAL_PGC}")
         option(USE_EXPERIMENTAL_PRINTER "Build Printer Support" OFF)
         message("       Printer Support: ${USE_EXPERIMENTAL_PRINTER}")
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    option(USE_PGO "Build PCem using PGO Data" OFF)
+    option(GENERATE_PGO "Build PCem to generate PGO Data for PGO" OFF)
+
+    message("Generate PGO Data: ${GENERATE_PGO}")
+    message("Use PGO Data: ${USE_PGO}")
+endif()
+
+if(GENERATE_PGO)
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fprofile-generate")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-generate")
+endif()
+
+if(USE_PGO)
+    if(GENERATE_PGO)
+        message(FATAL_ERROR "USE_PGO cannot be used with GENERATE_PGO enabled")
+    endif()
+
+    if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/default.profdata")
+            message(FATAL_ERROR "Missing default.profdata in output directory. Make sure you run llvm-profdata merge -output=default.profdata *.profraw")
+    endif()
+
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fprofile-use")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-use")
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
