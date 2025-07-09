@@ -26,22 +26,22 @@ jobs:
                           ninja-build
                     - name: Windows 64bits (MSYS2)
                       os: windows-latest
-                      compiler: MINGW64
+                      compiler: CLANG64
                       args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
-                      artifacts_name: PCem-RelWithDebInfo-vNext-Windows-MINGW64-${{ github.run_number }}
-                      artifacts_path: PCem-RelWithDebInfo-vNext-Windows-MINGW64-${{ github.run_number }}-${{ github.sha }}.zip
+                      artifacts_name: PCem-RelWithDebInfo-vNext-Windows-CLANG64-${{ github.run_number }}
+                      artifacts_path: PCem-RelWithDebInfo-vNext-Windows-CLANG64-${{ github.run_number }}-${{ github.sha }}.zip
                       installdeps: >-
                           base-devel
                           zip
                           unzip
-                          mingw-w64-x86_64-ntldd-git
-                          mingw-w64-x86_64-toolchain
-                          mingw-w64-x86_64-SDL2
-                          mingw-w64-x86_64-openal
-                          mingw-w64-x86_64-wxwidgets3.2-msw
-                          mingw-w64-x86_64-cmake
-                          mingw-w64-x86_64-libpcap
-                          mingw-w64-x86_64-ninja
+                          mingw-w64-clang-x86_64-ntldd-git
+                          mingw-w64-clang-x86_64-toolchain
+                          mingw-w64-clang-x86_64-SDL2
+                          mingw-w64-clang-x86_64-openal
+                          mingw-w64-clang-x86_64-wxwidgets3.2-msw
+                          mingw-w64-clang-x86_64-cmake
+                          mingw-w64-clang-x86_64-libpcap
+                          mingw-w64-clang-x86_64-ninja
         runs-on: ${{ matrix.os }}
         name: ${{ matrix.name }}
 
@@ -58,7 +58,7 @@ jobs:
               # uses: msys2/setup-msys2@a43b8403533fffe0c157dd8498f021ddec66bff7
               uses: msys2/setup-msys2@v2
               with:
-                  # Variant of the environment to set by default: MSYS, MINGW32, MINGW64, UCRT64 or CLANG64
+                  # Variant of the environment to set by default: MSYS, MINGW32, CLANG64, UCRT64 or CLANG64
                   msystem: ${{ matrix.compiler }}
                   # Retrieve and extract base installation from upstream GitHub Releases
                   release: false # optional, default is true
