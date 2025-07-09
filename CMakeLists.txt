@@ -1,14 +1,28 @@
 cmake_minimum_required(VERSION 3.20)
 
+# This is created if someone wants to use GCC still. Although I am targeting CLang, I am trying not to use non-GCC compatable
+# options. So if you really dont care, and want to try to make GCC build again, enable this option. It is only documented here
+#
+# To use just add -DI_WANT_TO_USE_GCC=YES to your cmake command.
+
+option(I_WANT_TO_USE_GCC "I dont care, I want to use GCC even if its not supported anymore" OFF)
+
 # We are going to force clang on both Linux and Windows builds to be uniform
-set(CMAKE_C_COMPILER "clang" CACHE FILEPATH "C compiler")
-set(CMAKE_CXX_COMPILER "clang++" CACHE FILEPATH "C++ compiler")
+if(NOT I_WANT_TO_USE_GCC)
+    set(CMAKE_C_COMPILER "clang" CACHE FILEPATH "C compiler")
+    set(CMAKE_CXX_COMPILER "clang++" CACHE FILEPATH "C++ compiler")
+endif()
 
 project(PCem)
 
-# Dont allow GCC Building anymore, force Clang
-if(NOT (CMAKE_C_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
-        message(FATAL_ERROR "Detected compiler is not Clang! Please ensure Clang is in your PATH or specified correctly.")
+# Dont allow GCC Building anymore, force Clang, unless I_WANT_TO_USE_GCC is on
+if(NOT I_WANT_TO_USE_GCC)
+    string(TOUPPER "${CMAKE_C_COMPILER_ID}" CMAKE_C_COMPILER_ID_UPPER) # This is to deal with some distros showing compiler id as clang instead of Clang
+    string(TOUPPER "${CMAKE_CXX_COMPILER_ID}" CMAKE_CXX_COMPILER_ID_UPPER) # This is to deal with some distros showing compiler id as clang instead of Clang
+
+    if(NOT (CMAKE_C_COMPILER_ID_UPPER MATCHES "CLANG" AND CMAKE_CXX_COMPILER_ID_UPPER MATCHES "CLANG"))
+            message(FATAL_ERROR "Detected compiler is not Clang! Please ensure Clang is in your PATH or specified correctly.")
+    endif()
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -25,20 +39,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE} -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -DDEBUG")
 
-if(${PCEM_CPU_TYPE} STREQUAL "i386")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=x86-64-v2")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64-v2")
 endif()
-
-# Turning this off, maybe this is whats causing issues as i noticed in an older build, 64-bit builds dont do stack realign
-#if(NOT ${PCEM_CPU_TYPE} MATCHES "arm.*")
-#        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mstackrealign")
-#        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mstackrealign")
-#endif()
-
-if (UNIX)
-	add_definitions(-D_FILE_OFFSET_BITS=64)
-endif ()
 
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
 set(PCEM_DISPLAY_ENGINE "wxWidgets" CACHE STRING "PCem Display Engine")
@@ -61,9 +65,9 @@ option(USE_NETWORKING "Build PCem with networking support" ON)
 message("Networking Support: ${USE_NETWORKING}")
 
 if(USE_NETWORKING)
-        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=gnu17")
-        message("       Switching C to gnu17 to allow slirp to build")
-
+# Turning off to see if it does build with CLang, I think it passes warnings but still builds.
+#        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=gnu17")
+#        message("       Switching C to gnu17 to allow slirp to build")
         option(USE_PCAP_NETWORKING "Build PCem with PCAP support" ON)
         message("       PCAP Networking Support: ${USE_PCAP_NETWORKING}")
 endif()
