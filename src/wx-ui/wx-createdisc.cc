@@ -55,7 +55,7 @@ static int creatediscimage_dlgproc(void *hdlg, int message, INT_PARAM wParam, LO
 
                                 memset(openfilestring, 0, sizeof(openfilestring));
                                 ret = wx_filedialog(hdlg, "Save", "", "Disc image (*.img;*.ima)|*.img;*.ima|All files (*.*)|*.*",
-                                                    ".img", 0, openfilestring);
+                                                    "img", 0, openfilestring);
 
                                 if (!ret) {
                                         FILE *f = fopen(openfilestring, "wb");
