@@ -213,14 +213,14 @@ static void ide_identify(IDE *ide) {
 /*
  * Return the sector offset for the current register values
  */
-static off64_t ide_get_sector(IDE *ide) {
+static off_t ide_get_sector(IDE *ide) {
         if (ide->lba) {
-                return (off64_t)ide->lba_addr + ide->skip512;
+                return (off_t)ide->lba_addr + ide->skip512;
         } else {
                 int heads = ide->hdd_file.hpc;
                 int sectors = ide->hdd_file.spt;
 
-                return ((((off64_t)ide->cylinder * heads) + ide->head) * sectors) + (ide->sector - 1) + ide->skip512;
+                return ((((off_t)ide->cylinder * heads) + ide->head) * sectors) + (ide->sector - 1) + ide->skip512;
         }
 }
 

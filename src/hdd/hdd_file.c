@@ -32,9 +32,9 @@ void hdd_load_ext(hdd_file_t *hdd, const char *fn, int spt, int hpc, int tracks,
         if (hdd->f == NULL) {
                 /* Try to open existing hard disk image */
                 if (read_only)
-                        hdd->f = (void *)fopen64(fn, "rb");
+                        hdd->f = (void *)fopen(fn, "rb");
                 else
-                        hdd->f = (void *)fopen64(fn, "rb+");
+                        hdd->f = (void *)fopen(fn, "rb+");
                 if (hdd->f != NULL) {
                         hdd->img_type = HDD_IMG_RAW;
 
@@ -67,7 +67,7 @@ void hdd_load_ext(hdd_file_t *hdd, const char *fn, int spt, int hpc, int tracks,
                         if (errno == ENOENT && !read_only) {
                                 /* Failed because it does not exist,
                                    so try to create new file */
-                                hdd->f = (void *)fopen64(fn, "wb+");
+                                hdd->f = (void *)fopen(fn, "wb+");
                                 if (hdd->f == NULL) {
                                         pclog("Cannot create file '%s': %s", fn, strerror(errno));
                                         return;
@@ -167,7 +167,7 @@ int hdd_read_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer) 
                 return mvhd_read_sectors((MVHDMeta *)hdd->f, offset, nr_sectors, buffer);
         } else if (hdd->img_type == HDD_IMG_RAW ||
                         hdd->img_type == HDD_IMG_RAW_RAM) {
-                off64_t addr;
+                off_t addr;
                 int transfer_sectors = nr_sectors;
 
                 if ((hdd->sectors - offset) < transfer_sectors)
@@ -197,7 +197,7 @@ int hdd_write_sectors(hdd_file_t *hdd, int offset, int nr_sectors, void *buffer)
                 return mvhd_write_sectors((MVHDMeta *)hdd->f, offset, nr_sectors, buffer);
         } else if (hdd->img_type == HDD_IMG_RAW ||
                         hdd->img_type == HDD_IMG_RAW_RAM) {
-                off64_t addr;
+                off_t addr;
                 int transfer_sectors = nr_sectors;
 
                 if (hdd->read_only)
@@ -230,7 +230,7 @@ int hdd_format_sectors(hdd_file_t *hdd, int offset, int nr_sectors) {
                 return mvhd_format_sectors((MVHDMeta *)hdd->f, offset, nr_sectors);
         } else if (hdd->img_type == HDD_IMG_RAW ||
                         hdd->img_type == HDD_IMG_RAW_RAM) {
-                off64_t addr;
+                off_t addr;
                 int c;
                 uint8_t zero_buffer[512];
                 int transfer_sectors = nr_sectors;
