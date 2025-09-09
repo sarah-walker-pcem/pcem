@@ -1,6 +1,8 @@
 # [PCem](https://pcem-emulator.co.uk/)
 ![Test Debug Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-debug-builds.yml/badge.svg)
 ![Test Release Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-release-builds.yml/badge.svg)
+![Test Release Builds (With Logging and Debugging)](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-relwithdebinfo-builds.yml/badge.svg)
+
 ## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)/[vNext (Wise Global Solutions Mirror)](https://mirror.wiseglobalsolutions.com/pcem/)
 
 Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
@@ -19,23 +21,19 @@ You will need the following libraries and buildtools (and their dependencies):
 - OpenAL
 - CMake
 - Ninja (Recommended, but you can use a Makefile generator if you prefer)
+- CLang Toolchain
 
-Open a terminal window, navigate to the PCem directory then enter:
+Open a terminal window, navigate to the PCem directory, create a build directory, then enter in that build directory: 
 ### Linux/BSD
 ```
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release .
-ninja
-```
-
-### Windows (MSYS2)
-```
-cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_BUILD_TYPE=Release .
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
 ninja
 ```
 
 then `./src/pcem` to run.
 
-The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
+BIOS ROM images, configuration files, and other data are stored in `~/.pcem`. You can also create a `.pcem` folder with
+the Binary, and run it in a portable mode.
 
 You can specify the Display Engine using `-DPCEM_DISPLAY_ENGINE=` The only valid option you have at this time is
 wxWidgets 
@@ -49,7 +47,9 @@ default value.
   -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (Needs USE_NETWORKING to compile) Requires libpcap.
   -DUSE_ALSA=OFF             : Build with support for MIDI output through ALSA. Requires libasound. (Linux Only)
   -DFORCE_X11=ON             : Enables a hack to force X11 on Wayland systems. See #128 for details. (Linux Only)
-  -DPLUGIN_ENGINE=ON         : Build with plugin support. Builds libpcem-plugin-api and links PCem with it. 
+  -DPLUGIN_ENGINE=ON         : Build with plugin support. Builds libpcem-plugin-api and links PCem with it.
+  -DPCEM_MARCH=x86_64-v2     : Change the architecture used for generated instructions, by default we set it for
+                               >= Nehalem for Intel, and >= Bulldozer for AMD. 
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
