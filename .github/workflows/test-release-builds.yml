@@ -108,6 +108,7 @@ jobs:
                   ninja install
                   cd $INSTALL_PREFIX
                   ntldd -R "bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang)(32|64)' | sed -e 's|\\|/|g' | xargs cp --target-directory="bin"
+                  wget https://mirror.wisegs.com/pcem/libpcap.dll -O $INSTALL_PREFIX/bin/libpcap.dll
                   zip -r -9 ${{ matrix.artifacts_path }} *
                   cp ${{ matrix.artifacts_path }} $ARTIFACTSDIR
 
