@@ -68,6 +68,7 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_compaq_cga.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ddc.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ega.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_v6355.h
         )
 
 if(USE_EXPERIMENTAL AND USE_EXPERIMENTAL_PGC)
@@ -124,6 +125,7 @@ set(PCEM_SRC ${PCEM_SRC}
         video/vid_tvga.c
         video/vid_tvp3026_ramdac.c
         video/vid_unk_ramdac.c
+        video/vid_v6355.c
         video/vid_vga.c
         video/vid_voodoo.c
         video/vid_voodoo_banshee.c

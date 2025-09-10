@@ -322,7 +322,7 @@ enum {
         GFX_VOODOO_3_3000,  /*Voodoo 3 3000*/
         GFX_MILLENNIUM,     /*Matrox Millennium*/
         GFX_QUADCOLOR,      /*Quadram Quadcolor I/II*/
-
+	GFX_V6355,	    /*Yamaha V6355D */
         GFX_BUILTIN_MAX,
 };
 

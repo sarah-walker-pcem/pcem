@@ -51,6 +51,7 @@
 #include "vid_wy700.h"
 #include "vid_t3100e.h"
 #include "vid_t1000.h"
+#include "vid_v6355.h"
 #include "vid_voodoo_banshee.h"
 
 #include <pcem/devices.h>
@@ -188,6 +189,8 @@ VIDEO_CARD v_et4000ax = {
         "Tseng ET4000AX", "et4000ax", &et4000_device, GFX_ET4000, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 3, 3, 6, 5, 5, 10}};
 VIDEO_CARD v_vga = {"VGA", "vga", &vga_device, GFX_VGA, VIDEO_FLAG_TYPE_SPECIAL, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
 VIDEO_CARD v_wy700 = {"Wyse 700", "wy700", &wy700_device, GFX_WY700, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+VIDEO_CARD v_v6355 = {"Yamaha V6355D", "v6355d", &v6355d_device, GFX_V6355, VIDEO_FLAG_TYPE_CGA, {VIDEO_ISA, 8, 16, 32, 8, 16, 32}};
+
 
 static video_timings_t timing_dram = {VIDEO_BUS, 0, 0, 0, 0, 0, 0};   /*No additional waitstates*/
 static video_timings_t timing_pc1512 = {VIDEO_BUS, 0, 0, 0, 0, 0, 0}; /*PC1512 video code handles waitstates itself*/
@@ -1346,4 +1349,5 @@ void video_init_builtin() {
         pcem_add_video(&v_et4000ax);
         pcem_add_video(&v_vga);
         pcem_add_video(&v_wy700);
+        pcem_add_video(&v_v6355);
 }

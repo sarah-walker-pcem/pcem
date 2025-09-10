@@ -296,6 +296,7 @@ Hardware | Addl. Info | ROM file needed<br/>(within ./roms/ folder)
 <b>IBM EGA</b> <i>(1984)</i> | Text up to 80x43<br/>Graphics up to 640x350 in 16 colours | ibm_6277356_ega_card_u44_27128.bin
 <b>ATI EGA Wonder 800+</b> | An enhanced EGA-compatible board with support for up to 800x600 in 16 colours | ATI EGA Wonder 800+ N1.00.BIN
 <b>Hercules InColor</b> | An enhanced Hercules with a custom 720x350 16 colour mode | <i>(none)</i>
+<b>Yamaha V6335D</b> | A CGA-compatible chip originally for laptops with LCDs, also used in cards like the ACV-1030 and systems such as the Olivetti Prodest PC1. | <i>(none)</i>
 
 ### Unaccelerated (S)VGA cards
 Hardware | Addl. Info | ROM file needed<br/>(within ./roms/ folder)

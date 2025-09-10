@@ -111,6 +111,7 @@ extern uint32_t cgapal[16];
 #define DISPLAY_GREEN 3
 #define DISPLAY_AMBER 4
 #define DISPLAY_WHITE 5
+#define DISPLAY_TRUECOLOUR 6
 
 void cgapal_rebuild(int display_type, int contrast);
 
