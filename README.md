@@ -1,8 +1,5 @@
 # [PCem](https://pcem-emulator.co.uk/)
-![Test Debug Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-debug-builds.yml/badge.svg)
-![Test Release Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-release-builds.yml/badge.svg)
-![Test Release Builds (With Logging and Debugging)](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-relwithdebinfo-builds.yml/badge.svg)
-
+![GitHub Actions](https://github.com/sarah-walker-pcem/pcem/actions/workflows/workflow.yml/badge.svg)
 ## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)/[vNext (Wise Global Solutions Mirror)](https://mirror.wiseglobalsolutions.com/pcem/)
 
 Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
