@@ -92,8 +92,10 @@
 #include <math.h>
 #include "lpt_epsonlx810.h"
 
+#include "config.h"
+#include "device.h"
+
 #include <pcem/devices.h>
-#include <pcem/unsafe/config.h>
 #include <pcem/logging.h>
 #include <SDL.h>
 
@@ -1619,8 +1621,8 @@ void outputPage(lpt_epsonprinter_t *printer) {
         if (printer->output_type == OUTPUT_TYPE_FORWARD_TO_REAL_PRINTER) {
 #if defined(WIN32)
                 // You'll need the mouse for the print dialog
-                if (mouselocked)
-                        CaptureMouse();
+                //if (mouselocked)
+                //        CaptureMouse();
 
                 uint16_t physW = GetDeviceCaps(printer->printerDC, PHYSICALWIDTH);
                 uint16_t physH = GetDeviceCaps(printer->printerDC, PHYSICALHEIGHT);
