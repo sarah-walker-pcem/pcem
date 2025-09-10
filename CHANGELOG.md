@@ -3,7 +3,7 @@
 - PCAP Support is now both Windows and Linux
 - Numerous bugfixes in this build
 - Changed some GUI elements.
-- Preliminary Plugin Extensions Created
+- Plugin interface added. Allows you to create your own machines or features to extend PCem.
 - Added RAM disk preloaded with RAW/VHD images (*.rdimg;*.rdvhd)
   - Load up to 2GB disks to temporary disk (doesn't modify the image file)
   - Mounts as read-only if memory allocation fails (mind the 32bit PCem memory limits)
@@ -27,6 +27,7 @@
 ## Added the following Video Cards to v18
 - Matrox Millennium
 - Quadram Quadcolor I / I+II
+- Yamaha V6335D Video Chipset
 
 ## Added the following Sound Cards to v18
 - Mindscape Music Board
