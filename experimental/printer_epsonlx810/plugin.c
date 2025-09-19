@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <pcem/plugin.h>
 #include <pcem/config.h>
 #include <string.h>

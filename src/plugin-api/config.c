@@ -199,7 +199,7 @@ void config_load(int is_global, char *fn) {
 
                         data_pos = c;
                         while (buffer[c]) {
-                                if (buffer[c] == '\n')
+                                if (buffer[c] == '\n' || buffer[c] == '\r')
                                         buffer[c] = 0;
                                 c++;
                         }

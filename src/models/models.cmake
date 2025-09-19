@@ -12,6 +12,7 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/models/cs8230.h
         ${CMAKE_SOURCE_DIR}/includes/private/models/dells200.h
         ${CMAKE_SOURCE_DIR}/includes/private/models/dma.h
+        ${CMAKE_SOURCE_DIR}/includes/private/models/grid.h
         ${CMAKE_SOURCE_DIR}/includes/private/models/headland.h
         ${CMAKE_SOURCE_DIR}/includes/private/models/i430fx.h
         ${CMAKE_SOURCE_DIR}/includes/private/models/i430hx.h
@@ -69,6 +70,7 @@ set(PCEM_SRC ${PCEM_SRC}
         models/cs8230.c
         models/dells200.c
         models/dma.c
+        models/grid.c
         models/headland.c
         models/i430fx.c
         models/i430hx.c

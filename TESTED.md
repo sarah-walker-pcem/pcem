@@ -1,4 +1,4 @@
-## Software tested (v17):
+## Software tested:
 
 ### DOS
 - PC-DOS 1.0

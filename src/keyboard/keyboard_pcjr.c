@@ -195,5 +195,5 @@ void keyboard_pcjr_init() {
         keyboard_send = keyboard_pcjr_adddata;
         keyboard_poll = keyboard_pcjr_poll;
 
-        timer_add(&keyboard_pcjr.send_delay_timer, keyboard_pcjr_poll, NULL, 1);
+        timer_add(&keyboard_pcjr.send_delay_timer, (void *)keyboard_pcjr_poll, NULL, 1);
 }

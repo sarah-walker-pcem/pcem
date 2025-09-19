@@ -8,6 +8,8 @@
 #include "video.h"
 #include "x86.h"
 
+dma_t dma[8];
+
 static uint8_t dmaregs[16];
 static uint8_t dma16regs[16];
 static uint8_t dmapages[16];

@@ -50,17 +50,17 @@ typedef unsigned long ioctlsockopt_t;
 
 #include <winsock2.h> //needs to be on top otherwise, it'll pull in winsock1
 #include <windows.h>
-
+#include <ws2tcpip.h>
 #include <sys/timeb.h>
 #include <iphlpapi.h>
 
 #define USE_FIONBIO 1
-#define EWOULDBLOCK WSAEWOULDBLOCK
+/*#define EWOULDBLOCK WSAEWOULDBLOCK
 #define EINPROGRESS WSAEINPROGRESS
 #define ENOTCONN WSAENOTCONN
 #define EHOSTUNREACH WSAEHOSTUNREACH
 #define ENETUNREACH WSAENETUNREACH
-#define ECONNREFUSED WSAECONNREFUSED
+#define ECONNREFUSED WSAECONNREFUSED*/
 
 /* Basilisk II Router defines those */
 #define udp_read_completion slirp_udp_read_completion

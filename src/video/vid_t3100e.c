@@ -13,6 +13,10 @@
 #define T3100E_XSIZE 640
 #define T3100E_YSIZE 400
 
+#define T3100E_OUTPUT_DISPLAY_INTERNAL 1u
+#define T3100E_OUTPUT_DISPLAY_EXTERNAL 0u
+#define T3100E_OUTPUT_DISPLAY_UNSET 255u
+
 /*Very rough estimate*/
 #define VID_CLOCK (double)(651 * 416 * 60)
 
@@ -45,7 +49,7 @@ static uint32_t normcols[256][2];
  * Bits 0,1: Font set (not currently implemented)
  */
 static uint8_t st_video_options;
-static uint8_t st_display_internal = -1;
+static uint8_t st_display_internal = T3100E_OUTPUT_DISPLAY_UNSET;
 
 void t3100e_video_options_set(uint8_t options) { st_video_options = options; }
 
@@ -402,7 +406,7 @@ void t3100e_poll(void *p) {
                 t3100e->cga.fontbase = (512 * (t3100e->video_options & 3)) + ((t3100e->video_options & 4) ? 256 : 0);
         }
         /* Switch between internal plasma and external CRT display. */
-        if (st_display_internal != -1 && st_display_internal != t3100e->internal) {
+        if (st_display_internal != T3100E_OUTPUT_DISPLAY_UNSET && st_display_internal != t3100e->internal) {
                 t3100e->internal = st_display_internal;
                 t3100e_recalctimings(t3100e);
         }

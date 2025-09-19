@@ -21,6 +21,7 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pcjr.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_pgc.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ps1_svga.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_quadcolor.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_s3.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_s3_virge.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_sdac_ramdac.h
@@ -67,6 +68,7 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_compaq_cga.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ddc.h
         ${CMAKE_SOURCE_DIR}/includes/private/video/vid_ega.h
+        ${CMAKE_SOURCE_DIR}/includes/private/video/vid_v6355.h
         )
 
 if(USE_EXPERIMENTAL AND USE_EXPERIMENTAL_PGC)
@@ -106,6 +108,7 @@ set(PCEM_SRC ${PCEM_SRC}
         video/vid_pcjr.c
         video/vid_pgc.c
         video/vid_ps1_svga.c
+        video/vid_quadcolor.c
         video/vid_s3.c
         video/vid_s3_virge.c
         video/vid_sdac_ramdac.c
@@ -122,6 +125,7 @@ set(PCEM_SRC ${PCEM_SRC}
         video/vid_tvga.c
         video/vid_tvp3026_ramdac.c
         video/vid_unk_ramdac.c
+        video/vid_v6355.c
         video/vid_vga.c
         video/vid_voodoo.c
         video/vid_voodoo_banshee.c

@@ -1,4 +1,5 @@
 set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
+        ${CMAKE_SOURCE_DIR}/includes/private/sound/ayumi/ayumi.h
         ${CMAKE_SOURCE_DIR}/includes/private/sound/resid-fp/envelope.h
         ${CMAKE_SOURCE_DIR}/includes/private/sound/resid-fp/extfilt.h
         ${CMAKE_SOURCE_DIR}/includes/private/sound/resid-fp/filter.h
@@ -17,6 +18,7 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/sound/sound_emu8k.h
         ${CMAKE_SOURCE_DIR}/includes/private/sound/sound_gus.h
         ${CMAKE_SOURCE_DIR}/includes/private/sound/sound.h
+        ${CMAKE_SOURCE_DIR}/includes/private/sound/sound_mmb.h
         ${CMAKE_SOURCE_DIR}/includes/private/sound/sound_mpu401_uart.h
         ${CMAKE_SOURCE_DIR}/includes/private/sound/sound_opl.h
         ${CMAKE_SOURCE_DIR}/includes/private/sound/sound_pas16.h
@@ -43,6 +45,7 @@ set(PCEM_SRC ${PCEM_SRC}
         sound/sound_dbopl.cc
         sound/sound_emu8k.c
         sound/sound_gus.c
+        sound/sound_mmb.c
         sound/sound_mpu401_uart.c
         sound/sound_opl.c
         sound/sound_pas16.c
@@ -57,6 +60,11 @@ set(PCEM_SRC ${PCEM_SRC}
         sound/sound_wss.c
         sound/sound_ym7128.c
         sound/soundopenal.c
+        )
+
+# AYUMI
+set(PCEM_SRC ${PCEM_SRC}
+        sound/ayumi/ayumi.c
         )
 
 # RESID-FP

@@ -12,6 +12,8 @@
 #include "vid_voodoo_regs.h"
 #include "vid_voodoo_render.h"
 #include "vid_voodoo_texture.h"
+#include "viewer.h"
+#include "viewer_voodoo.h"
 
 void voodoo_recalc_tex(voodoo_t *voodoo, int tmu) {
         int aspect = (voodoo->params.tLOD[tmu] >> 21) & 3;
@@ -133,6 +135,7 @@ void voodoo_use_texture(voodoo_t *voodoo, voodoo_params_t *params, int tmu) {
         else
                 addr = params->texBaseAddr[tmu];
 
+
         /*Try to find texture in cache*/
         for (c = 0; c < TEX_CACHE_MAX; c++) {
                 if (voodoo->texture_cache[tmu][c].base == addr &&
@@ -140,6 +143,8 @@ void voodoo_use_texture(voodoo_t *voodoo, voodoo_params_t *params, int tmu) {
                     voodoo->texture_cache[tmu][c].palette_checksum == palette_checksum) {
                         params->tex_entry[tmu] = c;
                         voodoo->texture_cache[tmu][c].refcount++;
+                        if (voodoo->viewer_active)
+                                viewer_call(&viewer_voodoo, voodoo, voodoo_viewer_use_texture, (void *)(uintptr_t)tmu);
                         return;
                 }
         }
@@ -428,6 +433,9 @@ void voodoo_use_texture(voodoo_t *voodoo, voodoo_params_t *params, int tmu) {
 
         params->tex_entry[tmu] = c;
         voodoo->texture_cache[tmu][c].refcount++;
+
+        if (voodoo->viewer_active)
+                viewer_call(&viewer_voodoo, voodoo, voodoo_viewer_use_texture, (void *)(uintptr_t)tmu);
 }
 
 void flush_texture_cache(voodoo_t *voodoo, uint32_t dirty_addr, int tmu) {

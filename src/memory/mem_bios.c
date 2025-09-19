@@ -427,6 +427,14 @@ int loadbios() {
                 fclose(f);
                 return 1;
 
+        case ROM_GRID1520:
+                f = romfopen("grid1520/grid1520_891025.bin", "rb");
+                if (!f)
+                        break;
+                romfread(rom + 0x8000, 32768, 1, f);
+                fclose(f);
+                return 1;
+
         case ROM_HYUNDAI_SUPER286TR:
                 f = romfopen("super286tr/award.bin", "rb");
                 if (!f)

@@ -555,7 +555,7 @@ int window_create() {
                 info.cch = 256;
                 info.dwTypeData = label;
                 if (GetMenuItemInfo(native_menu, i, 1, &info))
-                        AppendMenu(menu, MF_STRING | MF_POPUP, (UINT)GetSubMenu(native_menu, i), info.dwTypeData);
+                        AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)GetSubMenu(native_menu, i), info.dwTypeData);
         }
 
         /* The class is registered, let's create the program*/

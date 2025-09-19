@@ -15,6 +15,8 @@
 #include <pcem/devices.h>
 #include <pcem/defines.h>
 
+PcemHDC hdc[7];
+
 extern HDD_CONTROLLER *hdd_controllers[HDDCONTROLLERS_MAX];
 char hdd_controller_name[16];
 

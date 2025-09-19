@@ -184,7 +184,7 @@ void disc_reset() {
 
         curdrive = 0;
         disc_period = 32;
-        timer_add(&disc_poll_timer, disc_poll, NULL, 0);
+        timer_add(&disc_poll_timer, (void *)disc_poll, NULL, 0);
 
         for (drive = 0; drive < 2; drive++) {
                 if (loaders[driveloaders[drive]].close)
@@ -251,7 +251,7 @@ void disc_stop(int drive) {
         drive ^= fdd_swap;
 
         if (drive < 2 && drives[drive].stop)
-                drives[drive].stop(drive);
+                drives[drive].stop();
 }
 
 void disc_set_drivesel(int drive) {

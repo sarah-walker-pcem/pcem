@@ -99,7 +99,7 @@ void esdi_irq_update(esdi_t *esdi) {
 /*
  * Return the sector offset for the current register values
  */
-int esdi_get_sector(esdi_t *esdi, off64_t *addr) {
+int esdi_get_sector(esdi_t *esdi, off_t *addr) {
         esdi_drive_t *drive = &esdi->drives[esdi->drive_sel];
         int heads = drive->cfg_hpc;
         int sectors = drive->cfg_spt;
@@ -114,18 +114,18 @@ int esdi_get_sector(esdi_t *esdi, off64_t *addr) {
         }
 
         if (drive->cfg_spt == drive->hdd_file.spt && drive->cfg_hpc == drive->hdd_file.hpc) {
-                *addr = ((((off64_t)esdi->cylinder * heads) + esdi->head) * sectors) + (esdi->sector - 1);
+                *addr = ((((off_t)esdi->cylinder * heads) + esdi->head) * sectors) + (esdi->sector - 1);
         } else {
                 /*When performing translation, the firmware seems to leave 1
                   sector per track inaccessible (spare sector)*/
                 int c, h, s;
-                *addr = ((((off64_t)esdi->cylinder * heads) + esdi->head) * sectors) + (esdi->sector - 1);
+                *addr = ((((off_t)esdi->cylinder * heads) + esdi->head) * sectors) + (esdi->sector - 1);
 
                 s = *addr % (drive->hdd_file.spt - 1);
                 h = (*addr / (drive->hdd_file.spt - 1)) % drive->hdd_file.hpc;
                 c = (*addr / (drive->hdd_file.spt - 1)) / drive->hdd_file.hpc;
 
-                *addr = ((((off64_t)c * drive->hdd_file.hpc) + h) * drive->hdd_file.spt) + s;
+                *addr = ((((off_t)c * drive->hdd_file.hpc) + h) * drive->hdd_file.spt) + s;
         }
 
         return 0;
@@ -392,7 +392,7 @@ uint16_t esdi_readw(uint16_t port, void *p) {
 void esdi_callback(void *p) {
         esdi_t *esdi = (esdi_t *)p;
         esdi_drive_t *drive = &esdi->drives[esdi->drive_sel];
-        off64_t addr;
+        off_t addr;
 
         //        pclog("esdi_callback: command=%02x reset=%i\n", esdi->command, esdi->reset);
 

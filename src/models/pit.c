@@ -16,6 +16,9 @@
 #include "timer.h"
 #include "video.h"
 #include "model.h"
+
+PIT pit, pit2;
+
 /*B0 to 40, two writes to 43, then two reads - value does not change!*/
 /*B4 to 40, two writes to 43, then two reads - value _does_ change!*/
 // Tyrian writes 4300 or 17512

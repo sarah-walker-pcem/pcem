@@ -1,3 +1,7 @@
+if(FORCE_X11)
+        set(PCEM_DEFINES ${PCEM_DEFINES} FORCE_X11)
+endif()
+
 set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/bswap.h
         ${CMAKE_SOURCE_DIR}/includes/private/fdi2raw.h
@@ -47,6 +51,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/video/video.cmake)
 
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/wx-ui.cmake)
+        include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/viewers/viewers.cmake)
 endif()
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
         message(FATAL_ERROR "Qt Mode is not yet implemented.")
@@ -68,7 +73,12 @@ set(PCEM_LIBRARIES ${DISPLAY_ENGINE_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRAR
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/plugin-api/plugin-api.cmake)
 
+set(PCEM_LIBRARIES ${PCEM_LIBRARIES} PARENT_SCOPE)
+
 add_executable(pcem ${PCEM_SRC} ${PCEM_PRIVATE_API} ${PCEM_EMBEDDED_PLUGIN_API})
 target_compile_definitions(pcem PUBLIC ${PCEM_DEFINES})
 target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fcommon> $<$<COMPILE_LANGUAGE:C>:-fcommon>)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+        target_link_options(pcem PRIVATE "-Wl,--subsystem,windows")
+endif()
 target_link_libraries(pcem ${PCEM_LIBRARIES})

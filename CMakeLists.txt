@@ -1,6 +1,29 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.20)
+
+# This is created if someone wants to use GCC still. Although I am targeting CLang, I am trying not to use non-GCC compatable
+# options. So if you really dont care, and want to try to make GCC build again, enable this option. It is only documented here
+#
+# To use just add -DI_WANT_TO_USE_GCC=YES to your cmake command.
+
+option(I_WANT_TO_USE_GCC "I dont care, I want to use GCC even if its not supported anymore" OFF)
+
+# We are going to force clang on both Linux and Windows builds to be uniform
+if(NOT I_WANT_TO_USE_GCC)
+    set(CMAKE_C_COMPILER "clang" CACHE FILEPATH "C compiler")
+    set(CMAKE_CXX_COMPILER "clang++" CACHE FILEPATH "C++ compiler")
+endif()
 
 project(PCem)
+
+# Dont allow GCC Building anymore, force Clang, unless I_WANT_TO_USE_GCC is on
+if(NOT I_WANT_TO_USE_GCC)
+    string(TOUPPER "${CMAKE_C_COMPILER_ID}" CMAKE_C_COMPILER_ID_UPPER) # This is to deal with some distros showing compiler id as clang instead of Clang
+    string(TOUPPER "${CMAKE_CXX_COMPILER_ID}" CMAKE_CXX_COMPILER_ID_UPPER) # This is to deal with some distros showing compiler id as clang instead of Clang
+
+    if(NOT (CMAKE_C_COMPILER_ID_UPPER MATCHES "CLANG" AND CMAKE_CXX_COMPILER_ID_UPPER MATCHES "CLANG"))
+            message(FATAL_ERROR "Detected compiler is not Clang! Please ensure Clang is in your PATH or specified correctly.")
+    endif()
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
@@ -10,13 +33,16 @@ include(${CMAKE_SOURCE_DIR}/cmake/arch-detect.cmake)
 
 target_architecture(PCEM_CPU_TYPE)
 
-if(${PCEM_CPU_TYPE} STREQUAL "i386")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
-endif()
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -fomit-frame-pointer -fno-strict-aliasing -flto")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fomit-frame-pointer -fno-strict-aliasing -flto")
 
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -mstackrealign -fno-strict-aliasing")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -mstackrealign -fno-strict-aliasing")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE} -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -DDEBUG")
+
+if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_FILE_OFFSET_BITS=64")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_FILE_OFFSET_BITS=64")
+endif()
 
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
 set(PCEM_DISPLAY_ENGINE "wxWidgets" CACHE STRING "PCem Display Engine")
@@ -32,6 +58,13 @@ message("System Processor: ${PCEM_CPU_TYPE}")
 message("PCem Display Engine: ${PCEM_DISPLAY_ENGINE}")
 message("***************************************************************")
 
+if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
+    set(PCEM_MARCH "x86-64-v2" CACHE STRING "march CPU architecture")
+    message("MArch: ${PCEM_MARCH}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=${PCEM_MARCH}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${PCEM_MARCH}")
+endif()
+
 option(PLUGIN_ENGINE "Build PCem with plugin support" ON)
 message("Plugin Support: ${PLUGIN_ENGINE}")
 
@@ -39,6 +72,9 @@ option(USE_NETWORKING "Build PCem with networking support" ON)
 message("Networking Support: ${USE_NETWORKING}")
 
 if(USE_NETWORKING)
+# Turning off to see if it does build with CLang, I think it passes warnings but still builds.
+#        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=gnu17")
+#        message("       Switching C to gnu17 to allow slirp to build")
         option(USE_PCAP_NETWORKING "Build PCem with PCAP support" ON)
         message("       PCAP Networking Support: ${USE_PCAP_NETWORKING}")
 endif()
@@ -46,6 +82,8 @@ endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         option(USE_ALSA "Build PCem with MIDI output using ALSA" OFF)
         message("ALSA MIDI Support: ${USE_ALSA}")
+        option(FORCE_X11 "Force X11 Mode on Wayland Systems" ON)
+        message("Force X11 Mode on Wayland Systems: ${FORCE_X11}")
 endif()
 
 option(USE_EXPERIMENTAL "Build PCem with experimental code" OFF)
@@ -58,8 +96,34 @@ if(USE_EXPERIMENTAL)
         message("       Printer Support: ${USE_EXPERIMENTAL_PRINTER}")
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    option(USE_PGO "Build PCem using PGO Data" OFF)
+    option(GENERATE_PGO "Build PCem to generate PGO Data for PGO" OFF)
+
+    message("Generate PGO Data: ${GENERATE_PGO}")
+    message("Use PGO Data: ${USE_PGO}")
+endif()
+
+if(GENERATE_PGO)
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fprofile-generate")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-generate")
+endif()
+
+if(USE_PGO)
+    if(GENERATE_PGO)
+        message(FATAL_ERROR "USE_PGO cannot be used with GENERATE_PGO enabled")
+    endif()
+
+    if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/default.profdata")
+            message(FATAL_ERROR "Missing default.profdata in output directory. Make sure you run llvm-profdata merge -output=default.profdata *.profraw")
+    endif()
+
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fprofile-use")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-use")
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-	option(PCEM_RELDEB_AS_RELEASE "Build PCem RelWithDebInfo as Release Mode" ON)
+	option(PCEM_RELDEB_AS_RELEASE "Build PCem RelWithDebInfo as Release Mode" OFF)
         message("Build PCem RelWithDebInfo as Release Mode: ${PCEM_RELDEB_AS_RELEASE}")
 endif()
 
@@ -120,7 +184,7 @@ find_package(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})
 
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
-        find_package(wxWidgets REQUIRED COMPONENTS core base xrc)
+        find_package(wxWidgets REQUIRED COMPONENTS core base xrc adv)
         include(${wxWidgets_USE_FILE})
         set(DISPLAY_ENGINE_LIBRARIES ${wxWidgets_LIBRARIES})
 endif()

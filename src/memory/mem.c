@@ -58,6 +58,15 @@ void (*smram_disable)(void);
 int mmuflush = 0;
 int mmu_perm = 4;
 
+int readlookup[256], readlookupp[256];
+uintptr_t *readlookup2;
+int readlnext;
+int writelookup[256], writelookupp[256];
+uintptr_t *writelookup2;
+int writelnext;
+
+uint32_t rammask;
+
 int mem_addr_is_ram(uint32_t addr) {
         mem_mapping_t *mapping = read_mapping[addr >> 14];
 
@@ -1161,7 +1170,7 @@ void mem_mapping_remove(mem_mapping_t *mapping)
         dest = dest->next;
     }
     prev->next = mapping->next;
-    
+
     mem_mapping_recalc(mapping->base, mapping->size);
 }
 

@@ -106,7 +106,6 @@ static int treble_cut[6] = {
         (int)(0.354 * 16384)  /*-3 dB - filter output is at +6 dB*/
 };
 
-void adgold_timer_poll();
 void adgold_update(adgold_t *adgold);
 
 void adgold_update_irq_status(adgold_t *adgold) {

@@ -294,6 +294,7 @@ typedef struct voodoo_t {
         unsigned int vertex_next_age;
         int num_verticies;
         int cull_pingpong;
+        int in_strip;
 
         int flush;
 
@@ -463,6 +464,8 @@ typedef struct voodoo_t {
         uint8_t *vram, *changedvram;
 
         void *p;
+
+        int viewer_active;
 } voodoo_t;
 
 typedef struct voodoo_set_t {

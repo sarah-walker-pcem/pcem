@@ -12,8 +12,8 @@
 
 void video_blit_complete();
 
-BITMAP *screen;
-static BITMAP *screen_copy = NULL;
+VIDEO_BITMAP *screen;
+static VIDEO_BITMAP *screen_copy = NULL;
 static SDL_Rect screen_rect;
 static SDL_Rect updated_rect;
 static SDL_Rect updated_rect_copy;
@@ -45,7 +45,7 @@ sdl_render_driver requested_render_driver;
 char current_render_driver_name[50];
 static sdl_renderer_t *renderer = NULL;
 
-void hline(BITMAP *b, int x1, int y, int x2, int col) {
+void hline(VIDEO_BITMAP *b, int x1, int y, int x2, int col) {
         if (y < 0 || y >= buffer32->h)
                 return;
 
@@ -53,10 +53,10 @@ void hline(BITMAP *b, int x1, int y, int x2, int col) {
                 ((uint32_t *)b->line[y])[x1] = col;
 }
 
-void destroy_bitmap(BITMAP *b) { free(b); }
+void destroy_bitmap(VIDEO_BITMAP *b) { free(b); }
 
-BITMAP *create_bitmap(int x, int y) {
-        BITMAP *b = malloc(sizeof(BITMAP) + (y * sizeof(uint8_t *)));
+VIDEO_BITMAP *create_bitmap(int x, int y) {
+        VIDEO_BITMAP *b = malloc(sizeof(VIDEO_BITMAP) + (y * sizeof(uint8_t *)));
         int c;
         b->dat = malloc(x * y * 4);
         for (c = 0; c < y; c++) {

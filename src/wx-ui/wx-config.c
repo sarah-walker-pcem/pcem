@@ -1337,7 +1337,7 @@ static device_t *hdd_controller_selected_get_device(void *hdlg) {
         return NULL;
 }
 
-static void check_hd_type(void *hdlg, off64_t sz) {
+static void check_hd_type(void *hdlg, off_t sz) {
         int c;
 
         hd_new_type = 0;
@@ -1644,7 +1644,7 @@ static int hdnew_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM l
 
                         if (hd_format == 0) /* Raw .img */
                         {
-                                f = fopen64(hd_new_name, "wb");
+                                f = fopen(hd_new_name, "wb");
                                 if (!f) {
                                         wx_messagebox(hdlg, "Can't open file for write", "PCem error", WX_MB_OK);
                                         return TRUE;
@@ -2036,9 +2036,9 @@ static int hd_new(void *hdlg, int drive) {
 }
 
 static int hd_file(void *hdlg, int drive) {
-        if (!getfile(hdlg, "Hard disc image (*.img;*.vhd)|*.img;*.vhd|All files (*.*)|*.*", "")) {
-                off64_t sz;
-                FILE *f = fopen64(openfilestring, "rb");
+        if (!getfile(hdlg, "Hard disk image (*.img;*.vhd)|*.img;*.vhd|RAM disk image (*.rdimg;*.rdvhd)|*.rdimg;*.rdvhd|All files (*.*)|*.*", "")) {
+                off_t sz;
+                FILE *f = fopen(openfilestring, "rb");
                 if (!f) {
                         wx_messagebox(hdlg, "Can't open file for read", "PCem error", WX_MB_OK);
                         return TRUE;

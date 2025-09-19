@@ -4,6 +4,8 @@
 #include "pit.h"
 #include "video.h"
 
+PIC pic, pic2;
+
 int intclear;
 int keywaiting = 0;
 int pic_intpending;

@@ -24,6 +24,8 @@
 
 #include "slirp/slirp.h"
 
+#include <stdio.h>
+
 struct tftp_session {
         int in_use;
         char filename[TFTP_FILENAME_MAX];
@@ -92,22 +94,22 @@ static int tftp_session_find(struct tftp_t *tp) {
 }
 
 static int tftp_read_data(struct tftp_session *spt, u_int16_t block_nr, u_int8_t *buf, int len) {
-        int fd;
+        FILE* file;
         int bytes_read = 0;
 
-        fd = open(spt->filename, O_RDONLY | O_BINARY);
+        file = fopen(spt->filename, "rb");
 
-        if (fd < 0) {
+        if (file == NULL) {
                 return -1;
         }
 
         if (len) {
-                lseek(fd, block_nr * 512, SEEK_SET);
+                fseek(file, block_nr * 512, SEEK_SET);
 
-                bytes_read = read(fd, buf, len);
+                bytes_read = fread(buf, len, 1, file);
         }
 
-        close(fd);
+        fclose(file);
 
         return bytes_read;
 }

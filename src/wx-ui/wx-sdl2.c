@@ -49,6 +49,8 @@
 #include "plugin.h"
 #include "pic.h"
 
+#include "viewer.h"
+
 #if __APPLE__
 #define pause __pause
 #include <util.h>
@@ -355,6 +357,7 @@ void wx_initmenu() {
 int wx_setupmenu(void *data) {
         int c;
         update_cdrom_menu(menu);
+        update_viewers_menu(menu);
         sprintf(menuitem, "IDM_VID_RESOLUTION[%d]", vid_resize);
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
         wx_enablemenuitem(menu, wx_xrcid("IDM_VID_SCALE_MENU"), !vid_resize);
@@ -521,6 +524,7 @@ int resume_emulation() {
         if (emulation_state == EMULATION_PAUSED) {
                 emulation_state = EMULATION_RUNNING;
                 pause = 0;
+                viewer_notify_resume();
                 return TRUE;
         }
         return FALSE;
@@ -588,6 +592,7 @@ int pause_emulation() {
         pclog("Emulation paused.\n");
         emulation_state = EMULATION_PAUSED;
         pause = 1;
+        viewer_notify_pause();
         return TRUE;
 }
 
@@ -621,6 +626,7 @@ int stop_emulation() {
 
         pclog("Emulation stopped.\n");
 
+        viewer_close_all();
         wx_close_status(ghwnd);
 
         return TRUE;
@@ -948,6 +954,8 @@ int wx_handle_command(void *hwnd, int wParam, int checked) {
                 cdrom_drive = new_cdrom_drive;
                 saveconfig(NULL);
                 update_cdrom_menu(hmenu);
+        } else if (wParam >= IDM_VIEWER && wParam < IDM_VIEWER_MAX) {
+                viewer_open(hwnd, wParam - IDM_VIEWER);
         }
         return 0;
 }

@@ -1,7 +1,6 @@
 # [PCem](https://pcem-emulator.co.uk/)
-![Test Debug Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-debug-builds.yml/badge.svg)
-![Test Release Builds](https://github.com/sarah-walker-pcem/pcem/actions/workflows/test-release-builds.yml/badge.svg)
-## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)
+![GitHub Actions](https://github.com/sarah-walker-pcem/pcem/actions/workflows/workflow.yml/badge.svg)
+## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)/[vNext (Wise Global Solutions Mirror)](https://mirror.wiseglobalsolutions.com/pcem/)
 
 Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
 
@@ -11,7 +10,7 @@ You can submit patches on our [forum](https://pcem-emulator.co.uk/phpBB3). Befor
 
 :exclamation: Note: <b>NO COPYRIGHTED ROM FILES ARE INCLUDED NOR WILL THEY BE. PLEASE DO NOT ASK FOR THEM.</b>
 
-## BSD and Linux supplement (v17)
+## BSD and Linux supplement
 
 You will need the following libraries and buildtools (and their dependencies):
 - SDL2
@@ -19,44 +18,46 @@ You will need the following libraries and buildtools (and their dependencies):
 - OpenAL
 - CMake
 - Ninja (Recommended, but you can use a Makefile generator if you prefer)
+- CLang Toolchain
 
-Open a terminal window, navigate to the PCem directory then enter:
+Open a terminal window, navigate to the PCem directory, create a build directory, then enter in that build directory: 
 ### Linux/BSD
 ```
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release .
-ninja
-```
-
-### Windows (MSYS2)
-```
-cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_BUILD_TYPE=Release .
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
 ninja
 ```
 
 then `./src/pcem` to run.
 
-The Linux/BSD versions store BIOS ROM images, configuration files, and other data in `~/.pcem`
+BIOS ROM images, configuration files, and other data are stored in `~/.pcem`. You can also create a `.pcem` folder with
+the Binary, and run it in a portable mode.
 
-You can specify the Display Engine using `-DPCEM_DISPLAY_ENGINE=` The options you have are wxWidgets, and Qt
-configure options are :
+You can specify the Display Engine using `-DPCEM_DISPLAY_ENGINE=` The only valid option you have at this time is
+wxWidgets 
+
+The configure options are specified below. They are in the format of -D`Option`=`Value`. `Value` under here is the
+default value.
 ```
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
   -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
-  -DUSE_NETWORKING=OFF       : Build with networking support.
+  -DUSE_NETWORKING=ON        : Build with networking support.
   -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (Needs USE_NETWORKING to compile) Requires libpcap.
   -DUSE_ALSA=OFF             : Build with support for MIDI output through ALSA. Requires libasound. (Linux Only)
-  -DPLUGIN_ENGINE=OFF        : Build with plugin support. Builds libpcem-plugin-api and links PCem with it. 
+  -DFORCE_X11=ON             : Enables a hack to force X11 on Wayland systems. See #128 for details. (Linux Only)
+  -DPLUGIN_ENGINE=ON         : Build with plugin support. Builds libpcem-plugin-api and links PCem with it.
+  -DPCEM_MARCH=x86_64-v2     : Change the architecture used for generated instructions, by default we set it for
+                               >= Nehalem for Intel, and >= Bulldozer for AMD. 
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=Debug, there are some more debug options you can enable if needed
 ```
-  -DPCEM_SLIRP_DEBUG=ON           : Build PCem with SLIRP_DEBUG debug output
-  -DPCEM_RECOMPILER_DEBUG=ON      : Build PCem with RECOMPILER_DEBUG debug output
-  -DPCEM_NE2000_DEBUG=ON          : Build PCem with NE2000_DEBUG debug output
-  -DPCEM_EMU8K_DEBUG_REGISTERS=ON : Build PCem with EMU8K_DEBUG_REGISTERS debug output
-  -DPCEM_SB_DSP_RECORD_DEBUG=ON   : Build PCem with SB_DSP_RECORD_DEBUG debug output
-  -DPCEM_MACH64_DEBUG=ON          : Build PCem with MACH64_DEBUG debug output
-  -DPCEM_DEBUG_EXTRA=ON           : Build PCem with DEBUG_EXTRA debug output
+  -DPCEM_SLIRP_DEBUG=OFF           : Build PCem with SLIRP_DEBUG debug output
+  -DPCEM_RECOMPILER_DEBUG=OFF      : Build PCem with RECOMPILER_DEBUG debug output
+  -DPCEM_NE2000_DEBUG=OFF          : Build PCem with NE2000_DEBUG debug output
+  -DPCEM_EMU8K_DEBUG_REGISTERS=OFF : Build PCem with EMU8K_DEBUG_REGISTERS debug output
+  -DPCEM_SB_DSP_RECORD_DEBUG=OFF   : Build PCem with SB_DSP_RECORD_DEBUG debug output
+  -DPCEM_MACH64_DEBUG=OFF          : Build PCem with MACH64_DEBUG debug output
+  -DPCEM_DEBUG_EXTRA=OFF           : Build PCem with DEBUG_EXTRA debug output
 ```
 
 If you are using -DCMAKE_BUILD_TYPE=RelWithDebInfo, there are additional options you can do
@@ -78,7 +79,7 @@ CD-ROM support currently only accesses `/dev/cdrom`. It has not been heavily tes
 
 ## Links
 
-### PCem emulates the following hardware (as of v17):
+### PCem emulates the following hardware:
 
 Hardware | Links
 --- | ---
@@ -295,6 +296,7 @@ Hardware | Addl. Info | ROM file needed<br/>(within ./roms/ folder)
 <b>IBM EGA</b> <i>(1984)</i> | Text up to 80x43<br/>Graphics up to 640x350 in 16 colours | ibm_6277356_ega_card_u44_27128.bin
 <b>ATI EGA Wonder 800+</b> | An enhanced EGA-compatible board with support for up to 800x600 in 16 colours | ATI EGA Wonder 800+ N1.00.BIN
 <b>Hercules InColor</b> | An enhanced Hercules with a custom 720x350 16 colour mode | <i>(none)</i>
+<b>Yamaha V6335D</b> | A CGA-compatible chip originally for laptops with LCDs, also used in cards like the ACV-1030 and systems such as the Olivetti Prodest PC1. | <i>(none)</i>
 
 ### Unaccelerated (S)VGA cards
 Hardware | Addl. Info | ROM file needed<br/>(within ./roms/ folder)

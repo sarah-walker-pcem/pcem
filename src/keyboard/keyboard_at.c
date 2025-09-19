@@ -304,7 +304,6 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv) {
                                 if (romset == ROM_T3100E)
                                         t3100e_mono_set(val);
                                 break;
-
                         case 0xcb: /*AMI - set keyboard mode*/
                                 break;
 
@@ -483,6 +482,10 @@ void keyboard_at_write(uint16_t port, uint8_t val, void *priv) {
                 keyboard_at.command = val;
                 /*New controller command*/
                 switch (val) {
+                case 0x09: /* GRID1520 - set backlight timeout */
+                        if (romset != ROM_GRID1520)
+                                pclog("Bad AT keyboard controller command %02X\n", val);
+                        break;
                 case 0x20:
                 case 0x21:
                 case 0x22:
@@ -841,7 +844,7 @@ void keyboard_at_init() {
         keyboard_set_scancode_set(SCANCODE_SET_2);
         keyboard_at.scancode_set = SCANCODE_SET_2;
 
-        timer_add(&keyboard_at.send_delay_timer, keyboard_at_poll, NULL, 1);
+        timer_add(&keyboard_at.send_delay_timer, (void *)keyboard_at_poll, NULL, 1);
 }
 
 void keyboard_at_set_mouse(void (*mouse_write)(uint8_t val, void *p), void *p) {

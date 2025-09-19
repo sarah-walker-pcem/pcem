@@ -16,6 +16,9 @@
 /*Very rough estimate*/
 #define VID_CLOCK (double)(651 * 216 * 60)
 
+#define T1000_OUTPUT_DISPLAY_INTERNAL 1u
+#define T1000_OUTPUT_DISPLAY_EXTERNAL 0u
+#define T1000_OUTPUT_DISPLAY_UNSET 255u
 /* Mapping of attributes to colours */
 static uint32_t blue, grey;
 static uint8_t boldcols[256]; /* Which attributes use the bold font */
@@ -31,7 +34,7 @@ static uint8_t language;
  */
 static uint8_t st_video_options;
 static uint8_t st_enabled = 1;
-static uint8_t st_display_internal = -1;
+static uint8_t st_display_internal = T1000_OUTPUT_DISPLAY_UNSET;
 
 void t1000_video_options_set(uint8_t options) {
         st_video_options = options & 1;
@@ -385,7 +388,7 @@ static void t1000_poll(void *p) {
                         mem_mapping_disable(&t1000->mapping);
         }
         /* Switch between internal plasma and external CRT display. */
-        if (st_display_internal != -1 && st_display_internal != t1000->internal) {
+        if (st_display_internal != T1000_OUTPUT_DISPLAY_UNSET && st_display_internal != t1000->internal) {
                 t1000->internal = st_display_internal;
                 t1000_recalctimings(t1000);
         }
