@@ -93,7 +93,13 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND USE_ALSA)
                 sound/midi_alsa.c
                 )
         set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} ${ALSA_LIBRARIES})
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(PCEM_SRC ${PCEM_SRC}
+                sound/win-midi.c
+                )
+                set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} winmm)
 else()
+    message(STATUS "Warning: Using sdl2-midi. It currently is an empty midi implementation")
         set(PCEM_SRC ${PCEM_SRC}
                 sound/sdl2-midi.c
                 )
