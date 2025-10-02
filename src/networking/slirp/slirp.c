@@ -367,6 +367,8 @@ void slirp_select_poll(fd_set *readfds, fd_set *writefds, fd_set *xfds) {
                 }
         }
 
+	    ret = 0; //FIX: Temp hack for Issue #305
+	
         /*
          * Check sockets
          */
@@ -656,3 +658,4 @@ int slirp_redir(int is_udp, int host_port, struct in_addr guest_addr, int guest_
 int slirp_add_exec(int do_pty, const char *args, int addr_low_byte, int guest_port) {
         return add_exec(&exec_list, do_pty, (char *)args, addr_low_byte, htons(guest_port));
 }
+
