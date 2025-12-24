@@ -1592,9 +1592,9 @@ MODEL m_fic_va503p = {"[Super 7] FIC VA-503+",
                       "fic_va503p",
                       {{"Intel", cpus_Pentium}, {"AMD", cpus_K6_SS7}, {"IDT", cpus_WinChip_SS7}, {"Cyrix", cpus_6x86_SS7}},
                       MODEL_GFX_NONE | MODEL_AT | MODEL_PCI | MODEL_PS2 | MODEL_HAS_IDE,
-                      1,
+                      8,
                       512,
-                      1,
+                      8,
                       at_mvp3_init,
                       NULL};
 
@@ -1744,3 +1744,4 @@ void model_init_builtin() {
         /* Slot 1 PC's */
         pcem_add_model(&m_ga686bx);
 }
+
