@@ -1317,9 +1317,16 @@ void s3_updatemapping(s3_t *s3) {
                 case 2: /*2mb*/
                         s3->linear_size = 0x200000;
                         break;
-                case 3: /*8mb*/
-                        s3->linear_size = 0x800000;
-                        break;
+                case 3: /* 4MB or 8MB depending on card maximum */
+                        switch(s3->chip) { 
+                            case S3_TRIO64: /* 4MB cards go first.... */
+                                s3->linear_size = 0x400000;
+                                break;
+                        default: /* All other S3's should be 8MB maximum */
+                                s3->linear_size = 0x800000;
+                                break;
+                    }
+                    break;
                 }
                 s3->linear_base &= ~(s3->linear_size - 1);
                 //                pclog("%08X %08X  %02X %02X %02X\n", linear_base, linear_size, crtc[0x58], crtc[0x59],
