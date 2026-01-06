@@ -222,4 +222,4 @@ jobs:
           aws_bucket: pcem-dev-builds
           source_dir: ./artifacts
           destination_dir: ''
-          endpoint:  https://wgs-menifee-1.cdn.wisegs.net:443
+          endpoint:  https://harbor.us-west-1.hyperion.wisegs.net:443
