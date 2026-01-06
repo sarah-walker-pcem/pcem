@@ -210,8 +210,8 @@ jobs:
           name: ${{ matrix.artifacts_name }}
           path: ./artifacts
 
-      - name: Upload to Wise MinIO S3
-        uses: shallwefootball/s3-upload-action@master
+      - name: Upload to Wise Hyperion Harbor (S3)
+        uses: michael-manley/s3-upload-action@master
         env:
           super_secret: ${{secrets.nte_cdn_s3_key_id}}
         if: ${{ env.super_secret != null }}
@@ -223,3 +223,4 @@ jobs:
           source_dir: ./artifacts
           destination_dir: ''
           endpoint:  https://harbor.us-west-1.hyperion.wisegs.net:443
+          use_path_style_requests: true
