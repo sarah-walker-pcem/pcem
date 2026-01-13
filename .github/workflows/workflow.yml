@@ -211,7 +211,7 @@ jobs:
           path: ./artifacts
 
       - name: Upload to Wise Hyperion Harbor (S3)
-        uses: michael-manley/upload-s3-action@master
+        uses: shallwefootball/s3-upload-action@master
         env:
           super_secret: ${{secrets.nte_cdn_s3_key_id}}
         if: ${{ env.super_secret != null }}
@@ -222,5 +222,4 @@ jobs:
           aws_bucket: pcem-dev-builds
           source_dir: ./artifacts
           destination_dir: ''
-          endpoint:  https://harbor.us-west-1.hyperion.wisegs.net:443
-          use_path_style_requests: true
+          endpoint:  https://s3.us-west-1.hyperion.wisegs.net:443
