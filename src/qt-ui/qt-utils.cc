@@ -49,9 +49,9 @@
 #include "qt-dialogbox.h"
 #include "qt-common.h"
 #include "qt-status.h"
-
 extern "C" {
 #include "thread.h"
+extern void pclog(const char *format, ...);
 }
 
 int (*wx_keydown_func)(void *window, void *event, int keycode, int modifiers) = nullptr;
@@ -351,7 +351,7 @@ void *wx_getdlgitem(void *window, int id) {
                 void *result = dlg->findWidgetById(id);
 #ifndef RELEASE_BUILD
                 if (!result)
-                        fprintf(stderr, "wx_getdlgitem: widget id %d not found\n", id);
+                        pclog("wx_getdlgitem: widget id %d not found\n", id);
 #endif
                 return result;
         }
@@ -711,24 +711,19 @@ int wx_sendmessage(void *window, int type, LONG_PARAM param1, LONG_PARAM param2)
 
 int wx_dialogbox(void *window, const char *name,
                  int (*callback)(void *window, int message, INT_PARAM param1, LONG_PARAM param2)) {
-        fprintf(stderr, "wx_dialogbox: loading '%s'...\n", name);
-        fflush(stderr);
+        pclog("wx_dialogbox: loading '%s'...\n", name);
         PCemDialogBox dlg(static_cast<QWidget *>(window), callback);
         if (!dlg.loadUi(name)) {
-                fprintf(stderr, "wx_dialogbox: loadUi FAILED for '%s'\n", name);
-                fflush(stderr);
+                pclog("wx_dialogbox: loadUi FAILED for '%s'\n", name);
                 return 0;
         }
-        fprintf(stderr, "wx_dialogbox: calling onInit for '%s'...\n", name);
-        fflush(stderr);
+        pclog("wx_dialogbox: calling onInit for '%s'...\n", name);
         dlg.onInit();
-        fprintf(stderr, "wx_dialogbox: onInit done, calling exec for '%s'...\n", name);
-        fflush(stderr);
+        pclog("wx_dialogbox: onInit done, calling exec for '%s'...\n", name);
         dlg.adjustSize();
         dlg.setReady(true);
         int ret = dlg.exec();
-        fprintf(stderr, "wx_dialogbox: exec returned %d for '%s'\n", ret, name);
-        fflush(stderr);
+        pclog("wx_dialogbox: exec returned %d for '%s'\n", ret, name);
         return ret;
 }
 

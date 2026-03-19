@@ -137,20 +137,17 @@ extern "C" void display_close() { SDL_Quit(); }
 
 extern "C" void display_start(void *wnd_ptr) {
         mainWindowPtr = static_cast<MainWindow *>(wnd_ptr);
-        fprintf(stderr, "display_start: mainWindowPtr=%p, sdlCanvas=%p\n",
+        pclog("display_start: mainWindowPtr=%p, sdlCanvas=%p\n",
                 (void *)mainWindowPtr, mainWindowPtr ? (void *)mainWindowPtr->sdlCanvas() : nullptr);
-        fflush(stderr);
 
         infocus = 1;
 
         atexit(releasemouse);
         rendererMutex = SDL_CreateMutex();
         rendererCond = SDL_CreateCond();
-        fprintf(stderr, "display_start: calling renderer_start\n");
-        fflush(stderr);
+        pclog("display_start: calling renderer_start\n");
         renderer_start();
-        fprintf(stderr, "display_start: renderer_start returned\n");
-        fflush(stderr);
+        pclog("display_start: renderer_start returned\n");
 }
 
 extern "C" void display_stop() {
@@ -271,22 +268,18 @@ void window_setup() {
 }
 
 int window_create() {
-        fprintf(stderr, "window_create: mainWindowPtr=%p\n", (void *)mainWindowPtr);
-        fflush(stderr);
+        pclog("window_create: mainWindowPtr=%p\n", (void *)mainWindowPtr);
         if (!mainWindowPtr || !mainWindowPtr->sdlCanvas()) {
-                fprintf(stderr, "window_create: FAILED - no mainWindow or canvas\n");
-                fflush(stderr);
+                pclog("window_create: FAILED - no mainWindow or canvas\n");
                 return 0;
         }
 
         QWidget *canvas = mainWindowPtr->sdlCanvas();
-        fprintf(stderr, "window_create: canvas=%p, getting winId...\n", (void *)canvas);
-        fflush(stderr);
+        pclog("window_create: canvas=%p, getting winId...\n", (void *)canvas);
 
         /* Ensure the widget has a native window handle */
         WId cachedWinId = canvas->winId();
-        fprintf(stderr, "window_create: winId=%p\n", (void *)cachedWinId);
-        fflush(stderr);
+        pclog("window_create: winId=%p\n", (void *)cachedWinId);
 
         if (requested_render_driver.sdl_window_params & SDL_WINDOW_OPENGL) {
                 dummy_window = SDL_CreateWindow("GL3 test", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1, 1,
@@ -300,16 +293,13 @@ int window_create() {
         }
 
         /* Create SDL window from the Qt widget's native handle */
-        fprintf(stderr, "window_create: calling SDL_CreateWindowFrom with winId=%p\n", (void *)cachedWinId);
-        fflush(stderr);
+        pclog("window_create: calling SDL_CreateWindowFrom with winId=%p\n", (void *)cachedWinId);
         window = SDL_CreateWindowFrom((void *)cachedWinId);
         if (!window) {
-                fprintf(stderr, "window_create: SDL_CreateWindowFrom FAILED: %s\n", SDL_GetError());
-                fflush(stderr);
+                pclog("window_create: SDL_CreateWindowFrom FAILED: %s\n", SDL_GetError());
                 return 0;
         }
-        fprintf(stderr, "window_create: SDL window created OK\n");
-        fflush(stderr);
+        pclog("window_create: SDL window created OK\n");
 
         SDL_SetWindowSize(window, rect.w, rect.h);
 
@@ -381,12 +371,12 @@ int render() {
                 device_force_redraw();
         }
         if (renderer_doreset) {
-                fprintf(stderr, "renderer_doreset: closing old renderer\n"); fflush(stderr);
+                pclog("renderer_doreset: closing old renderer\n");
                 renderer_doreset = 0;
                 sdl_renderer_close();
-                fprintf(stderr, "renderer_doreset: calling sdl_renderer_init\n"); fflush(stderr);
+                pclog("renderer_doreset: calling sdl_renderer_init\n");
                 int rinit = sdl_renderer_init(window);
-                fprintf(stderr, "renderer_doreset: sdl_renderer_init returned %d\n", rinit); fflush(stderr);
+                pclog("renderer_doreset: sdl_renderer_init returned %d\n", rinit);
 
                 device_force_redraw();
                 video_wait_for_blit();
@@ -562,15 +552,8 @@ int render() {
                 }
         }
 
-        static int render_log_count = 0;
-        int did_update = sdl_renderer_update(window);
-        if (did_update)
+        if (sdl_renderer_update(window))
                 sdl_renderer_present(window);
-        if (render_log_count < 5) {
-                fprintf(stderr, "render: update=%d, render_frames=%d\n", did_update, render_frames);
-                fflush(stderr);
-                render_log_count++;
-        }
 
         end_time = timer_read();
         render_time += end_time - start_time;

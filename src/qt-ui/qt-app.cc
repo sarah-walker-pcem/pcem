@@ -36,7 +36,7 @@ int stop_emulation();
 extern int config_override;
 
 extern "C" {
-extern int rawinputkey[512];
+extern int rawinputkey[272];
 extern int fps;
 extern int mousecapture;
 drive_info_t *get_machine_info(char *s, int *num_drive_info);
@@ -103,7 +103,7 @@ void SDLCanvas::keyPressEvent(QKeyEvent *event) {
         if (!hasFocus())
                 return;
         int sc = qt_key_to_scancode(event->key());
-        if (sc >= 0 && sc < 512)
+        if (sc >= 0 && sc < 272)
                 rawinputkey[sc] = 1;
 
         /* Left Ctrl + Alt + End releases mouse capture */
@@ -119,7 +119,7 @@ void SDLCanvas::keyPressEvent(QKeyEvent *event) {
 
 void SDLCanvas::keyReleaseEvent(QKeyEvent *event) {
         int sc = qt_key_to_scancode(event->key());
-        if (sc >= 0 && sc < 512)
+        if (sc >= 0 && sc < 272)
                 rawinputkey[sc] = 0;
         event->accept();
 }
@@ -128,18 +128,11 @@ extern "C" { extern int infocus; }
 
 void SDLCanvas::focusOutEvent(QFocusEvent *event) {
         /* Release all keys when losing focus */
-        memset(rawinputkey, 0, sizeof(int) * 512);
-        /* Don't clear infocus for transient focus loss (menus, dialogs) —
-           only clear if the whole application loses focus */
-        if (event->reason() != Qt::PopupFocusReason &&
-            event->reason() != Qt::MenuBarFocusReason &&
-            event->reason() != Qt::ActiveWindowFocusReason)
-                infocus = 0;
+        memset(rawinputkey, 0, sizeof(int) * 272);
         QWidget::focusOutEvent(event);
 }
 
 void SDLCanvas::focusInEvent(QFocusEvent *event) {
-        infocus = 1;
         QWidget::focusInEvent(event);
 }
 

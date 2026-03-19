@@ -12,7 +12,7 @@ jobs:
         include:
           - name: Ubuntu 64bit Debug (GCC QT6 Build)
             os: ubuntu-latest
-            args: -DCMAKE_BUILD_TYPE=Debug -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+            args: -DCMAKE_BUILD_TYPE=Debug -DPCEM_DISPLAY_ENGINE=Qt -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: qtPCem-Debug-vNext-Ubuntu-GCC64-${{ github.run_number }}
             artifacts_path: qtPCem-Debug-vNext-Ubuntu-GCC64-${{ github.run_number }}-${{ github.sha }}.tar.bz2
             installdeps: >-
@@ -27,7 +27,7 @@ jobs:
           - name: Windows 64bit Debug (GCC MSYS2 QT6 Build)
             os: windows-latest
             compiler: MINGW64
-            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_DISPLAY_ENGINE=Qt -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: qtPCem-Debug-vNext-Windows-GCC64-${{ github.run_number }}
             artifacts_path: qtPCem-Debug-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
             installdeps: >-
@@ -40,11 +40,12 @@ jobs:
               mingw-w64-x86_64-openal
               mingw-w64-x86_64-qt6
               mingw-w64-x86_64-cmake
+              mingw-w64-x86_64-libslirp
               mingw-w64-x86_64-libpcap
               mingw-w64-x86_64-ninja
           - name: Ubuntu 64bit Release (GCC QT6 Build)
             os: ubuntu-latest
-            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_DISPLAY_ENGINE=Qt -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: qtPCem-vNext-Ubuntu-GCC64-${{ github.run_number }}
             artifacts_path: qtPCem-vNext-Ubuntu-GCC64-${{ github.run_number }}-${{ github.sha }}.tar.bz2
             installdeps: >-
@@ -59,7 +60,7 @@ jobs:
           - name: Windows 64bit Release (GCC MSYS2 QT6 Build)
             os: windows-latest
             compiler: MINGW64
-            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_DISPLAY_ENGINE=Qt -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: qtPCem-vNext-Windows-GCC64-${{ github.run_number }}
             artifacts_path: qtPCem-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
             installdeps: >-
@@ -72,11 +73,12 @@ jobs:
               mingw-w64-x86_64-openal
               mingw-w64-x86_64-qt6
               mingw-w64-x86_64-cmake
+              mingw-w64-x86_64-libslirp
               mingw-w64-x86_64-libpcap
               mingw-w64-x86_64-ninja
           - name: Ubuntu 64bit Release With Debug Info (GCC QT6 Build)
             os: ubuntu-latest
-            args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+            args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_DISPLAY_ENGINE=Qt -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: qtPCem-RelWithDebInfo-vNext-Ubuntu-GCC64-${{ github.run_number }}
             artifacts_path: qtPCem-RelWithDebInfo-vNext-Ubuntu-GCC64-${{ github.run_number }}-${{ github.sha }}.tar.bz2
             installdeps: >-
@@ -91,7 +93,7 @@ jobs:
           - name: Windows 64bit Release With Debug Info (GCC MSYS2 QT6 Build)
             os: windows-latest
             compiler: MINGW64
-            args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+            args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_DISPLAY_ENGINE=Qt -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: qtPCem-RelWithDebInfo-vNext-Windows-GCC64-${{ github.run_number }}
             artifacts_path: qtPCem-RelWithDebInfo-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
             installdeps: >-
@@ -104,6 +106,7 @@ jobs:
               mingw-w64-x86_64-openal
               mingw-w64-x86_64-qt6
               mingw-w64-x86_64-cmake
+              mingw-w64-x86_64-libslirp
               mingw-w64-x86_64-libpcap
               mingw-w64-x86_64-ninja
 
@@ -153,7 +156,7 @@ jobs:
           export INSTALL_PREFIX=$(pwd)/dist
           mkdir temp/build
           cd temp/build
-          cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX ${{ matrix.args }} ..
+          cmake -G "Ninja" -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX ${{ matrix.args }} ..
       - name: ninja (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}

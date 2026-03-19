@@ -40,6 +40,7 @@ jobs:
               mingw-w64-x86_64-openal
               mingw-w64-x86_64-wxwidgets3.2-msw
               mingw-w64-x86_64-cmake
+              mingw-w64-x86_64-libslirp
               mingw-w64-x86_64-libpcap
               mingw-w64-x86_64-ninja
           - name: Ubuntu 64bit Release (GCC wxWidgets Build)
@@ -72,6 +73,7 @@ jobs:
               mingw-w64-x86_64-openal
               mingw-w64-x86_64-wxwidgets3.2-msw
               mingw-w64-x86_64-cmake
+              mingw-w64-x86_64-libslirp
               mingw-w64-x86_64-libpcap
               mingw-w64-x86_64-ninja
           - name: Ubuntu 64bit Release With Debug Info (GCC wxWidgets Build)
@@ -104,6 +106,7 @@ jobs:
               mingw-w64-x86_64-openal
               mingw-w64-x86_64-wxwidgets3.2-msw
               mingw-w64-x86_64-cmake
+              mingw-w64-x86_64-libslirp
               mingw-w64-x86_64-libpcap
               mingw-w64-x86_64-ninja
 

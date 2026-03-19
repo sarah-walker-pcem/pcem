@@ -71,13 +71,8 @@ void sdl_video_renderer_present(SDL_Window *window, SDL_Rect texture_rect, SDL_R
         SDL_RenderCopy(renderer, texture, &texture_rect, &window_rect);
         int sshot = take_screenshot;
         if (!sshot) {
-                if (video_focus_dim && !infocus) {
-                        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-                        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0x80);
-                        SDL_RenderFillRect(renderer, NULL);
-                        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xff);
-                        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-                }
+                /* Focus dim disabled for Qt build — causes rendering issues
+                   with embedded SDL window */
                 if (flash.enabled) {
                         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
                         SDL_SetRenderDrawColor(renderer, flash.color[0], flash.color[1], flash.color[2], flash.color[3]);

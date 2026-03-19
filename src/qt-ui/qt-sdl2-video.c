@@ -10,6 +10,8 @@
 #include "qt-sdl2-video-gl3.h"
 #include "qt-sdl2-video-renderer.h"
 
+#include "pcem/logging.h"
+
 void video_blit_complete();
 
 VIDEO_BITMAP *screen = NULL;
@@ -181,13 +183,6 @@ static void sdl_blit_memtoscreen(int x, int y, int y1, int y2, int w, int h) {
         int yy;
         SDL_LockMutex(blitMutex);
         if (!screen || !screen->dat || !buffer32) {
-                static int blit_warn = 0;
-                if (blit_warn < 5) {
-                        fprintf(stderr, "sdl_blit_memtoscreen: skipping - screen=%p &screen=%p buffer32=%p\n",
-                                (void *)screen, (void *)&screen, (void *)buffer32);
-                        fflush(stderr);
-                        blit_warn++;
-                }
                 SDL_UnlockMutex(blitMutex);
                 video_blit_complete();
                 return;
@@ -219,18 +214,22 @@ int sdl_video_init() {
         screen_rect.w = screen_rect.h = 2048;
 
         screen = create_bitmap(screen_rect.w, screen_rect.h);
-        fprintf(stderr, "sdl_video_init: screen=%p, &screen=%p\n", (void *)screen, (void *)&screen);
-        fflush(stderr);
+        pclog("sdl_video_init: screen=%p, &screen=%p\n", (void *)screen, (void *)&screen);
 
         return SDL_TRUE;
 }
 
 void sdl_video_close() {
-        requested_render_driver.renderer_close(renderer);
+        pclog("sdl_video_close: destroying screen=%p\n", (void *)screen);
+        if (renderer && requested_render_driver.renderer_close)
+                requested_render_driver.renderer_close(renderer);
         renderer = NULL;
-        destroy_bitmap(screen);
+        if (screen)
+                destroy_bitmap(screen);
         screen = NULL;
-        SDL_DestroyMutex(blitMutex);
+        if (blitMutex)
+                SDL_DestroyMutex(blitMutex);
+        blitMutex = NULL;
 }
 
 int sdl_renderer_init(SDL_Window *window) {
@@ -240,20 +239,19 @@ int sdl_renderer_init(SDL_Window *window) {
                 screen_copy = NULL;
 
         if (!requested_render_driver.renderer_create) {
-                fprintf(stderr, "sdl_renderer_init: renderer_create is NULL, falling back to auto\n");
-                fflush(stderr);
+                pclog("sdl_renderer_init: renderer_create is NULL, falling back to auto\n");
                 requested_render_driver = sdl_get_render_driver_by_id(RENDERER_AUTO, RENDERER_AUTO);
         }
         renderer = requested_render_driver.renderer_create();
         if (!renderer) {
-                fprintf(stderr, "sdl_renderer_init: renderer_create returned NULL\n");
-                fflush(stderr);
+                pclog("sdl_renderer_init: renderer_create returned NULL\n");
                 return 0;
         }
         return renderer->init(window, requested_render_driver, screen_rect);
 }
 
 void sdl_renderer_close() {
+        pclog("sdl_renderer_close called! renderer=%p\n", (void *)renderer);
         if (renderer)
                 renderer->close();
         renderer = NULL;

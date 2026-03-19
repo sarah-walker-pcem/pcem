@@ -537,6 +537,10 @@ int start_emulation(void *params) {
         pclog("Starting emulation...\n");
         loadconfig(NULL);
 
+        /* Reinitialize video if it was closed by a previous wx_stop */
+        if (!screen)
+                sdl_video_init();
+
         emulation_state = EMULATION_RUNNING;
         pause = 0;
 
