@@ -12,8 +12,9 @@
 
 void video_blit_complete();
 
-VIDEO_BITMAP *screen;
+VIDEO_BITMAP *screen = NULL;
 static VIDEO_BITMAP *screen_copy = NULL;
+flash_t flash = {0};
 static SDL_Rect screen_rect;
 static SDL_Rect updated_rect;
 static SDL_Rect updated_rect_copy;

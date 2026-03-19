@@ -7,8 +7,8 @@
 
 extern "C" {
 int get_status(char *, char *);
-int fps;
-int updatestatus;
+extern int fps;
+extern int updatestatus;
 drive_info_t *get_machine_info(char *, int *);
 }
 
@@ -217,7 +217,7 @@ void StatusPane::Render(wxDC &dc) {
 }
 
 extern "C" {
-int window_remember;
+extern int window_remember;
 void wx_handle_command(void *, int, int);
 
 void resume_emulation();

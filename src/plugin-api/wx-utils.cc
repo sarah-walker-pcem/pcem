@@ -1,32 +1,55 @@
 #include "wx-utils.h"
 
-#include <wx/filename.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#ifdef _WIN32
+#include <direct.h>
+#include <shlobj.h>
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 int wx_dir_exists(char *path) {
-        wxFileName p(path);
-        return p.DirExists();
+        struct stat st;
+        if (stat(path, &st) == 0)
+                return (st.st_mode & S_IFDIR) != 0;
+        return 0;
 }
 
 void wx_get_home_directory(char *path) {
-        wxString home = wxFileName::GetHomeDir();
-        if (!home.EndsWith(wxFileName::GetPathSeparator())) {
-                home.Append(wxFileName::GetPathSeparator());
+#ifdef _WIN32
+        const char *home = getenv("USERPROFILE");
+        if (!home)
+                home = getenv("HOME");
+        if (home) {
+                strcpy(path, home);
+                int len = strlen(path);
+                if (len > 0 && path[len - 1] != '\\' && path[len - 1] != '/')
+                        strcat(path, "\\");
+        } else {
+                strcpy(path, ".\\");
         }
-        #ifdef _WIN32
-        wxString str = home;
-        int i1, i2, len = str.length();
-        for (i1 = 0; i1 < len; i1++) {
-            if (str[i1] == '\"') {
-                for (i2 = i1; i2 < len - 1; i2++) {
-                    str[i2] = str[i2+1];
-                }
-                len--;
-                i1--;
-            }
-        }        
-        home = str;
-        #endif        
-        strcpy(path, home.mb_str());
+#else
+        const char *home = getenv("HOME");
+        if (home) {
+                strcpy(path, home);
+                int len = strlen(path);
+                if (len > 0 && path[len - 1] != '/')
+                        strcat(path, "/");
+        } else {
+                strcpy(path, "./");
+        }
+#endif
 }
 
-int wx_create_directory(char *path) { return wxFileName::Mkdir(path); }
+int wx_create_directory(char *path) {
+#ifdef _WIN32
+        return _mkdir(path) == 0 || errno == EEXIST;
+#else
+        return mkdir(path, 0755) == 0 || errno == EEXIST;
+#endif
+}

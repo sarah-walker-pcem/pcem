@@ -19,6 +19,9 @@
 #include "x87.h"
 #include "386_common.h"
 
+uint32_t x87_pc_off, x87_op_off;
+uint16_t x87_pc_seg, x87_op_seg;
+
 #define X87_TAG_VALID 0
 #define X87_TAG_ZERO 1
 #define X87_TAG_INVALID 2

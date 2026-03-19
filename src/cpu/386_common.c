@@ -21,7 +21,7 @@ int optype;
 
 int trap;
 
-uint32_t rmdat;
+extern uint32_t rmdat;
 
 uint32_t *eal_r, *eal_w;
 
