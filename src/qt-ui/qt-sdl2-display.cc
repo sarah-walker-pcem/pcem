@@ -37,8 +37,8 @@ extern "C" {
 #undef BITMAP
 #endif
 
-SDL_mutex *rendererMutex;
-SDL_cond *rendererCond;
+SDL_mutex *rendererMutex = NULL;
+SDL_cond *rendererCond = NULL;
 SDL_Thread *renderthread = NULL;
 
 SDL_Window *window = NULL;
@@ -56,7 +56,7 @@ extern int take_screenshot;
 
 static MainWindow *mainWindowPtr = NULL;
 
-SDL_Rect remembered_rect;
+SDL_Rect remembered_rect = {0};
 int remembered_mouse_x = 0;
 int remembered_mouse_y = 0;
 
@@ -231,8 +231,8 @@ extern "C" int sdl_scancode(SDL_Scancode scancode) {
         return -1;
 }
 
-SDL_Event event;
-SDL_Rect rect;
+SDL_Event event = {0};
+SDL_Rect rect = {0};
 
 uint64_t render_time = 0;
 int render_fps = 0;

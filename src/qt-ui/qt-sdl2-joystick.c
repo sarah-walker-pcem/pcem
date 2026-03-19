@@ -6,10 +6,10 @@
 #include "gameport.h"
 #include "plat-joystick.h"
 
-int joysticks_present;
-joystick_t joystick_state[MAX_JOYSTICKS];
+int joysticks_present = 0;
+joystick_t joystick_state[MAX_JOYSTICKS] = {0};
 
-plat_joystick_t plat_joystick_state[MAX_PLAT_JOYSTICKS];
+plat_joystick_t plat_joystick_state[MAX_PLAT_JOYSTICKS] = {0};
 static SDL_Joystick *sdl_joy[MAX_PLAT_JOYSTICKS];
 
 void joystick_init() {

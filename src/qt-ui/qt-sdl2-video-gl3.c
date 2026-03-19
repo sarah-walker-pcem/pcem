@@ -30,7 +30,7 @@ extern void screenshot_taken(unsigned char *rgb, int width, int height);
 float gl3_shader_refresh_rate = 0;
 float gl3_input_scale = 1.0f;
 int gl3_input_stretch = FULLSCR_SCALE_FULL;
-char gl3_shader_file[MAX_USER_SHADERS][512];
+char gl3_shader_file[MAX_USER_SHADERS][512] = {0};
 
 static int max_texture_size;
 

@@ -2,7 +2,7 @@
 #include "ide.h"
 #include "cdrom-ioctl.h"
 
-int cdrom_drive;
+extern int cdrom_drive;
 
 static ATAPI null_atapi;
 

@@ -578,7 +578,7 @@ void MainWindow::quit(bool stopEmulator) {
         if (m_closing)
                 return;
         m_closing = true;
-        if (stopEmulator) {
+        if (stopEmulator && emulation_state != EMULATION_STOPPED) {
                 if (!wx_stop(this)) {
                         m_closing = false;
                         return;
@@ -586,6 +586,9 @@ void MainWindow::quit(bool stopEmulator) {
         }
         pclog_end();
         QApplication::quit();
+        /* Force exit if the event loop isn't running yet (e.g. window never shown) */
+        if (!isVisible())
+                _exit(0);
 }
 
 PCemExitThread::PCemExitThread(MainWindow *mainWindow) : mainWindow(mainWindow) {}

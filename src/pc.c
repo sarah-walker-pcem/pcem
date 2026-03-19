@@ -76,7 +76,7 @@ int gfxcard;
 int readflash;
 int romset;
 
-int window_w, window_h, window_x, window_y, window_remember;
+int window_w = 0, window_h = 0, window_x = 0, window_y = 0, window_remember = 0;
 
 int start_in_fullscreen = 0;
 
@@ -94,15 +94,15 @@ extern int mmuflush;
 extern int readlnum, writelnum;
 void fullspeed();
 
-int framecount, fps;
+int framecount = 0, fps = 0;
 
 int atfullspeed;
 
 void saveconfig(char *fn);
-int infocus;
-int mousecapture;
+int infocus = 0;
+extern int mousecapture;
 
-uint8_t cgastat;
+extern uint8_t cgastat;
 
 int pollmouse_delay = 2;
 void pollmouse() {
@@ -160,7 +160,7 @@ int clocks[3][12][4] = {{
                                 {133000000, 96000 * 4, 454000 * 4, 0},    /*133MHz*/
                         }};
 
-int updatestatus;
+int updatestatus = 0;
 int win_title_update = 0;
 
 void onesec() {

@@ -2,19 +2,17 @@
 #include <string.h>
 #include <stdio.h>
 
-/* tinydir uses TCHAR which breaks with Qt's UNICODE defines on Windows.
-   Force non-Unicode mode for this file. */
-#ifdef _WIN32
-#undef UNICODE
-#undef _UNICODE
+#if defined(linux) || defined(__linux__)
+#include <dlfcn.h>
+#include <dirent.h>
 #endif
 
-#if linux
-#include <dlfcn.h>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #endif
 
 #include "plugin.h"
-#include "tinydir.h"
 #include "paths.h"
 #include "config.h"
 #include "ui-utils.h"
@@ -28,8 +26,8 @@ extern HDD_CONTROLLER *hdd_controllers[HDDCONTROLLERS_MAX];
 extern NETWORK_CARD *network_cards[NETWORK_CARD_MAX];
 extern LPT_DEVICE *lpt_devices[LPT_MAX];
 
-char plugin_path[512];
-char default_plugin_path[512];
+char plugin_path[512] = {0};
+char default_plugin_path[512] = {0};
 
 #ifdef PLUGIN_ENGINE
 void set_plugin_path(char *s) {
@@ -52,6 +50,49 @@ void pluginengine_init_config() {
         if (!wx_dir_exists(plugin_path))
                 wx_create_directory(plugin_path);
 }
+
+static int has_extension(const char *name, const char *ext) {
+        const char *dot = strrchr(name, '.');
+        if (!dot)
+                return 0;
+        return strcmp(dot + 1, ext) == 0;
+}
+
+static void load_plugin_file(const char *dir_path, const char *filename) {
+        char full_path[1024];
+        void (*initialize_loaded_plugin)();
+
+        snprintf(full_path, sizeof(full_path), "%s%s", dir_path, filename);
+        pclog("plugin loading: %s\n", filename);
+
+#if defined(linux) || defined(__linux__)
+        void *handle = dlopen(full_path, RTLD_NOW);
+        if (!handle) {
+                error("Error: %s\n", dlerror());
+        } else {
+                *(void **)(&initialize_loaded_plugin) = dlsym(handle, "init_plugin");
+                if (!initialize_loaded_plugin) {
+                        error("Error: %s\n", dlerror());
+                        dlclose(handle);
+                } else {
+                        initialize_loaded_plugin();
+                }
+        }
+#elif defined(_WIN32)
+        HMODULE handle = LoadLibraryA(full_path);
+        if (!handle) {
+                error("Cannot load DLL: %s", full_path);
+        } else {
+                *(void **)(&initialize_loaded_plugin) = (void *)GetProcAddress(handle, "init_plugin");
+                if (!initialize_loaded_plugin) {
+                        error("Cannot load init_plugin function from: %s", full_path);
+                } else {
+                        initialize_loaded_plugin();
+                }
+        }
+#endif
+        pclog("plugin finished loading: %s\n", filename);
+}
 #endif
 
 void init_plugin_engine() {
@@ -71,53 +112,32 @@ void init_plugin_engine() {
 
 void load_plugins() {
 #ifdef PLUGIN_ENGINE
-        tinydir_dir dir;
-        tinydir_open(&dir, plugin_path);
+#if defined(_WIN32)
+        char search_path[1024];
+        WIN32_FIND_DATAA fd;
+        HANDLE hFind;
 
-        while (dir.has_next) {
-                tinydir_file file;
-                tinydir_readfile(&dir, &file);
-
-                if (!strcmp(file.extension, "pplg")) {
-                        pclog("plugin loading: %s\n", file.name);
-                        void (*initialize_loaded_plugin)();
-#if defined(linux)
-                        void *handle;
-                        char *plugin_name;
-
-                        handle = dlopen(file.path, RTLD_NOW);
-                        if (!handle) {
-                                error("Error: %s\n", dlerror());
-                        } else {
-                                *(void **)(&initialize_loaded_plugin) = dlsym(handle, "init_plugin");
-
-                                if (!initialize_loaded_plugin) {
-                                        error("Error: %s\n", dlerror());
-                                        dlclose(handle);
-                                } else {
-                                        initialize_loaded_plugin();
-                                }
+        snprintf(search_path, sizeof(search_path), "%s*.pplg", plugin_path);
+        hFind = FindFirstFileA(search_path, &fd);
+        if (hFind != INVALID_HANDLE_VALUE) {
+                do {
+                        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                                load_plugin_file(plugin_path, fd.cFileName);
                         }
-#elif defined(WIN32)
-                        HMODULE handle = LoadLibrary(file.path);
-
-                        if (!handle) {
-                                error("Cannot load DLL: %s", file.path);
-                        } else {
-                                *(void **)(&initialize_loaded_plugin) = GetProcAddress(handle, "init_plugin");
-                                if (!initialize_loaded_plugin) {
-                                        error("Cannot load init_plugin function from: %s", file.path);
-                                } else {
-                                        initialize_loaded_plugin();
-                                }
-                        }
-#endif
-                        pclog("plugin finished loading: %s\n", file.name);
-                }
-
-                tinydir_next(&dir);
+                } while (FindNextFileA(hFind, &fd));
+                FindClose(hFind);
         }
-
-        tinydir_close(&dir);
+#elif defined(linux) || defined(__linux__)
+        DIR *d = opendir(plugin_path);
+        if (d) {
+                struct dirent *entry;
+                while ((entry = readdir(d)) != NULL) {
+                        if (has_extension(entry->d_name, "pplg")) {
+                                load_plugin_file(plugin_path, entry->d_name);
+                        }
+                }
+                closedir(d);
+        }
+#endif
 #endif
 }

@@ -344,9 +344,17 @@ void *wx_gettoolbar(void *window) {
 }
 
 void *wx_getdlgitem(void *window, int id) {
+        if (!window)
+                return nullptr;
         PCemDialogBox *dlg = qobject_cast<PCemDialogBox *>(static_cast<QObject *>(window));
-        if (dlg)
-                return dlg->findWidgetById(id);
+        if (dlg) {
+                void *result = dlg->findWidgetById(id);
+#ifndef RELEASE_BUILD
+                if (!result)
+                        fprintf(stderr, "wx_getdlgitem: widget id %d not found\n", id);
+#endif
+                return result;
+        }
 
         /* Fallback: search children by property */
         QWidget *widget = static_cast<QWidget *>(window);
@@ -593,36 +601,73 @@ int wx_sendmessage(void *window, int type, LONG_PARAM param1, LONG_PARAM param2)
         }
         case WX_CHB_SETPAGETEXT: {
                 QTabWidget *tw = qobject_cast<QTabWidget *>(w);
-                if (tw)
+                if (tw) {
                         tw->setTabText(param1, (char *)param2);
+                        break;
+                }
+                QStackedWidget *sw = qobject_cast<QStackedWidget *>(w);
+                if (sw) {
+                        /* Update companion combo box */
+                        QComboBox *combo = sw->parentWidget()
+                                ? sw->parentWidget()->findChild<QComboBox *>(sw->objectName() + "_COMBO")
+                                : nullptr;
+                        if (combo && param1 < combo->count())
+                                combo->setItemText(param1, (char *)param2);
+                }
                 break;
         }
         case WX_CHB_ADDPAGE: {
+                QWidget *page = static_cast<QWidget *>((void *)param1);
+                if (!page)
+                        break;
                 QTabWidget *tw = qobject_cast<QTabWidget *>(w);
                 if (tw) {
                         bool wasBlocked = tw->blockSignals(true);
-                        QWidget *page = static_cast<QWidget *>((void *)param1);
-                        if (page) {
-                                page->show();
-                                tw->addTab(page, (char *)param2);
-                        }
+                        page->show();
+                        tw->addTab(page, (char *)param2);
                         tw->blockSignals(wasBlocked);
+                        break;
+                }
+                QStackedWidget *sw = qobject_cast<QStackedWidget *>(w);
+                if (sw) {
+                        page->show();
+                        sw->addWidget(page);
+                        QComboBox *combo = sw->parentWidget()
+                                ? sw->parentWidget()->findChild<QComboBox *>(sw->objectName() + "_COMBO")
+                                : nullptr;
+                        if (combo) {
+                                bool wasBlocked = combo->blockSignals(true);
+                                combo->addItem((char *)param2);
+                                combo->blockSignals(wasBlocked);
+                        }
                 }
                 break;
         }
         case WX_CHB_REMOVEPAGE: {
                 QTabWidget *tw = qobject_cast<QTabWidget *>(w);
-                if (tw) {
+                if (tw && param1 < tw->count()) {
                         bool wasBlocked = tw->blockSignals(true);
                         QWidget *page = tw->widget(param1);
                         tw->removeTab(param1);
-                        /* Hide the detached page but keep it as a child of the dialog
-                           so wx_getdlgitem can still find it for re-adding later */
-                        if (page) {
-                                page->setParent(tw->parentWidget());
+                        if (page)
                                 page->hide();
-                        }
                         tw->blockSignals(wasBlocked);
+                        break;
+                }
+                QStackedWidget *sw = qobject_cast<QStackedWidget *>(w);
+                if (sw && param1 < sw->count()) {
+                        QWidget *page = sw->widget(param1);
+                        sw->removeWidget(page);
+                        if (page)
+                                page->hide();
+                        QComboBox *combo = sw->parentWidget()
+                                ? sw->parentWidget()->findChild<QComboBox *>(sw->objectName() + "_COMBO")
+                                : nullptr;
+                        if (combo && param1 < combo->count()) {
+                                bool wasBlocked = combo->blockSignals(true);
+                                combo->removeItem(param1);
+                                combo->blockSignals(wasBlocked);
+                        }
                 }
                 break;
         }
@@ -630,11 +675,14 @@ int wx_sendmessage(void *window, int type, LONG_PARAM param1, LONG_PARAM param2)
                 QTabWidget *tw = qobject_cast<QTabWidget *>(w);
                 if (tw)
                         return tw->count();
+                QStackedWidget *sw = qobject_cast<QStackedWidget *>(w);
+                if (sw)
+                        return sw->count();
                 return 0;
         }
         case WX_REPARENT: {
-                /* Don't actually reparent - the C code uses this before CHB_ADDPAGE
-                   to move panels into a tab widget. addTab handles parenting. */
+                /* No-op - the C code uses this before CHB_ADDPAGE to move
+                   panels into a tab widget. Qt's addTab handles parenting. */
                 break;
         }
         case WX_WM_ENABLE: {
@@ -677,6 +725,7 @@ int wx_dialogbox(void *window, const char *name,
         fprintf(stderr, "wx_dialogbox: onInit done, calling exec for '%s'...\n", name);
         fflush(stderr);
         dlg.adjustSize();
+        dlg.setReady(true);
         int ret = dlg.exec();
         fprintf(stderr, "wx_dialogbox: exec returned %d for '%s'\n", ret, name);
         fflush(stderr);

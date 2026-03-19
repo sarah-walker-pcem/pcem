@@ -142,6 +142,9 @@ static int config_selection_dlgproc(void *hdlg, int message, INT_PARAM wParam, L
                                                 pclog("Config %s\n", cfg);
 
                                                 if (!wx_file_exists(cfg)) {
+                                                        /* Load from the new (empty) file to reset
+                                                           globals to defaults for a fresh config */
+                                                        loadconfig(cfg);
                                                         if (config_open(hdlg)) {
                                                                 saveconfig(cfg);
 
@@ -166,6 +169,7 @@ static int config_selection_dlgproc(void *hdlg, int message, INT_PARAM wParam, L
                         pclog("wx_dlgdirselectex returned %i %s\n", ret, s);
                         if (s[0]) {
                                 char cfg[512];
+                                char prev_cfg[512];
 
                                 strcpy(cfg, configs_path);
                                 put_backslash(cfg);
@@ -173,9 +177,16 @@ static int config_selection_dlgproc(void *hdlg, int message, INT_PARAM wParam, L
                                 strcat(cfg, "cfg");
                                 pclog("Config name %s\n", cfg);
 
+                                /* Save current config path so we can restore on cancel */
+                                strcpy(prev_cfg, config_file_default);
                                 loadconfig(cfg);
-                                config_open(hdlg);
-                                saveconfig(cfg);
+                                if (config_open(hdlg)) {
+                                        saveconfig(cfg);
+                                } else {
+                                        /* Cancelled — restore previous config state */
+                                        if (prev_cfg[0])
+                                                loadconfig(prev_cfg);
+                                }
                         }
 
                         return TRUE;

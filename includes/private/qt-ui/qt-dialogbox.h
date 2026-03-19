@@ -15,6 +15,7 @@ public:
 
         bool loadUi(const char *name);
         void onInit();
+        void setReady(bool ready) { m_ready = ready; }
 
         void registerWidget(int id, QWidget *widget);
         QWidget *findWidgetById(int id);
@@ -25,6 +26,7 @@ private:
         int processEvent(int message, INT_PARAM param1, LONG_PARAM param2);
         int (*m_callback)(void *window, int message, INT_PARAM param1, LONG_PARAM param2);
         bool m_commandActive;
+        bool m_ready;
         QHash<int, QWidget *> m_widgets;
 };
 

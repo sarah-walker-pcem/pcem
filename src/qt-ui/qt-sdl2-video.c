@@ -239,7 +239,17 @@ int sdl_renderer_init(SDL_Window *window) {
         else
                 screen_copy = NULL;
 
+        if (!requested_render_driver.renderer_create) {
+                fprintf(stderr, "sdl_renderer_init: renderer_create is NULL, falling back to auto\n");
+                fflush(stderr);
+                requested_render_driver = sdl_get_render_driver_by_id(RENDERER_AUTO, RENDERER_AUTO);
+        }
         renderer = requested_render_driver.renderer_create();
+        if (!renderer) {
+                fprintf(stderr, "sdl_renderer_init: renderer_create returned NULL\n");
+                fflush(stderr);
+                return 0;
+        }
         return renderer->init(window, requested_render_driver, screen_rect);
 }
 

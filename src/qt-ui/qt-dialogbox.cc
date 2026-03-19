@@ -10,6 +10,7 @@
 #include <QListWidget>
 #include <QTabWidget>
 #include <QStackedWidget>
+#include <QComboBox>
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QFile>
@@ -19,7 +20,7 @@
 
 PCemDialogBox::PCemDialogBox(QWidget *parent,
                              int (*callback)(void *window, int message, INT_PARAM param1, LONG_PARAM param2))
-        : QDialog(parent), m_callback(callback), m_commandActive(false) {
+        : QDialog(parent), m_callback(callback), m_commandActive(false), m_ready(false) {
 }
 
 PCemDialogBox::~PCemDialogBox() {}
@@ -91,6 +92,18 @@ void PCemDialogBox::autoRegisterWidgets(QWidget *root) {
                                 registerWidget(bracketId, child);
                 }
         }
+
+        /* Connect any QComboBox + QStackedWidget pairs in container widgets.
+           Convention: QStackedWidget named "FOO" pairs with QComboBox named "FOO_COMBO". */
+        QList<QStackedWidget *> stacks = root->findChildren<QStackedWidget *>();
+        for (QStackedWidget *sw : stacks) {
+                QString comboName = sw->objectName() + "_COMBO";
+                QComboBox *combo = root->findChild<QComboBox *>(comboName);
+                if (combo) {
+                        connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                                sw, &QStackedWidget::setCurrentIndex);
+                }
+        }
 }
 
 void PCemDialogBox::onInit() {
@@ -103,7 +116,9 @@ void PCemDialogBox::onInit() {
 
                 m_callback(this, WX_INITDIALOG, 0, 0);
 
-                /* Unblock signals and connect them now that widgets are populated */
+                /* Re-scan for new widgets that may have been dynamically added
+                   during INITDIALOG (e.g. pages added to stacked widgets) */
+                children = findChildren<QWidget *>();
                 for (QWidget *child : children)
                         child->blockSignals(false);
 
@@ -157,11 +172,11 @@ QWidget *PCemDialogBox::findWidgetById(int id) {
 }
 
 int PCemDialogBox::processEvent(int message, INT_PARAM param1, LONG_PARAM param2) {
+        if (!m_ready || m_commandActive)
+                return 0;
         int result = 0;
-        if (!m_commandActive) {
-                m_commandActive = true;
-                result = m_callback(this, message, param1, param2);
-                m_commandActive = false;
-        }
+        m_commandActive = true;
+        result = m_callback(this, message, param1, param2);
+        m_commandActive = false;
         return result;
 }

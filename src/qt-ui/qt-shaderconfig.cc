@@ -18,7 +18,7 @@ void saveconfig(char *);
 void resetpchard();
 int deviceconfig_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam);
 void write_shader_config(glslp_t *shader);
-struct glslp_t *current_glsl;
+struct glslp_t *current_glsl = NULL;
 int confirm();
 }
 #define IDC_CONFIG_BASE 1000

@@ -39,7 +39,7 @@ typedef struct flash_t {
         FLASH_FUNC func;
 } flash_t;
 
-flash_t flash;
+extern flash_t flash;
 
 #ifdef __cplusplus
 extern "C" {

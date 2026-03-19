@@ -70,30 +70,30 @@ extern void creatediscimage_open(void *hwnd);
 
 #define MIN_SND_BUF 50
 
-uint64_t timer_freq;
+uint64_t timer_freq = 0;
 
-int gfx_present[GFX_MAX];
+int gfx_present[GFX_MAX] = {0};
 
-SDL_mutex *ghMutex;
-SDL_mutex *mainMutex;
-SDL_cond *mainCond;
+SDL_mutex *ghMutex = NULL;
+SDL_mutex *mainMutex = NULL;
+SDL_cond *mainCond = NULL;
 
 SDL_Thread *mainthreadh = NULL;
 
-SDL_TimerID onesectimer;
+SDL_TimerID onesectimer = 0;
 
 int running = 0;
 
 int drawits = 0;
 
-int romspresent[ROM_MAX];
+int romspresent[ROM_MAX] = {0};
 int quited = 0;
 
-SDL_Rect oldclip;
+SDL_Rect oldclip = {0};
 
 void *ghwnd = 0;
 
-void *menu;
+void *menu = NULL;
 
 emulation_state_t emulation_state = EMULATION_STOPPED;
 int pause = 0;
@@ -113,7 +113,7 @@ int video_scale = 1;
 int video_width = 640;
 int video_height = 480;
 
-char menuitem[60];
+char menuitem[60] = {0};
 
 extern int config_selection_open(void *hwnd, int inited);
 extern int shader_manager_open(void *hwnd);
@@ -125,7 +125,7 @@ extern float gl3_input_scale;
 extern int gl3_input_stretch;
 extern char gl3_shader_file[20][512];
 
-char screenshot_format[10];
+char screenshot_format[10] = {0};
 int screenshot_flash = 1;
 int take_screenshot = 0;
 
@@ -153,7 +153,7 @@ void leave_fullscreen() { window_dowindowed = window_doinputrelease = 1; }
 
 void toggle_fullscreen() { window_dotogglefullscreen = 1; }
 
-uint64_t main_time;
+uint64_t main_time = 0;
 
 int mainthread(void *param) {
         SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
@@ -649,7 +649,7 @@ int wx_stop() {
         return TRUE;
 }
 
-char openfilestring[260];
+char openfilestring[260] = {0};
 int getfile(void *hwnd, char *f, char *fn) {
         int ret = wx_filedialog(hwnd, "Open", fn, f, 0, 1, openfilestring);
 #ifdef __APPLE__

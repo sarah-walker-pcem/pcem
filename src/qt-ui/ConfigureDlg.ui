@@ -2,8 +2,13 @@
 <ui version="4.0">
  <class>ConfigureDlg</class>
  <widget class="QWidget" name="ConfigureDlg">
-  <property name="windowTitle">
-   <string>Configure PCem</string>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>801</width>
+    <height>550</height>
+   </rect>
   </property>
   <property name="minimumSize">
    <size>
@@ -11,67 +16,126 @@
     <height>550</height>
    </size>
   </property>
+  <property name="windowTitle">
+   <string>Configure PCem</string>
+  </property>
   <layout class="QGridLayout" name="rootGridLayout">
-   <!-- Left: page selection list -->
    <item row="0" column="0">
     <widget class="QListWidget" name="IDC_PAGESELECTION">
-     <property name="maximumSize">
-      <size>
-       <width>250</width>
-       <height>16777215</height>
-      </size>
-     </property>
      <property name="minimumSize">
       <size>
        <width>180</width>
        <height>0</height>
       </size>
      </property>
+     <property name="maximumSize">
+      <size>
+       <width>250</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="currentRow">
-      <number>0</number>
+      <number>-1</number>
      </property>
      <item>
-      <property name="text"><string>Motherboard</string></property>
+      <property name="text">
+       <string>Motherboard</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/icons/16x16/motherboard.png</normalon>
+       </iconset>
+      </property>
      </item>
      <item>
-      <property name="text"><string>Video Devices</string></property>
+      <property name="text">
+       <string>Video Devices</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/icons/16x16/video_mode.png</normalon>
+       </iconset>
+      </property>
      </item>
      <item>
-      <property name="text"><string>Sound Devices</string></property>
+      <property name="text">
+       <string>Sound Devices</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/icons/16x16/sound.png</normalon>
+       </iconset>
+      </property>
      </item>
      <item>
-      <property name="text"><string>Storage Devices</string></property>
+      <property name="text">
+       <string>Storage Devices</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/icons/16x16/drive.png</normalon>
+       </iconset>
+      </property>
      </item>
      <item>
-      <property name="text"><string>Port Devices</string></property>
+      <property name="text">
+       <string>Port Devices</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/icons/16x16/port.png</normalon>
+       </iconset>
+      </property>
      </item>
      <item>
-      <property name="text"><string>Mouse Device</string></property>
+      <property name="text">
+       <string>Mouse Device</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/icons/16x16/mouse_pc.png</normalon>
+       </iconset>
+      </property>
      </item>
      <item>
-      <property name="text"><string>GamePad/Joystick</string></property>
+      <property name="text">
+       <string>GamePad/Joystick</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/icons/16x16/joystick.png</normalon>
+       </iconset>
+      </property>
      </item>
      <item>
-      <property name="text"><string>Network Device</string></property>
+      <property name="text">
+       <string>Network Device</string>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normalon>:/icons/16x16/network_ethernet.png</normalon>
+       </iconset>
+      </property>
      </item>
     </widget>
    </item>
-   <!-- Right: stacked widget (simulating wxSimplebook) -->
    <item row="0" column="1">
     <widget class="QStackedWidget" name="IDC_NOTEBOOK">
-     <!-- Page 0: Motherboard -->
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
      <widget class="QWidget" name="pageMotherboard">
       <layout class="QGridLayout" name="motherboardLayout">
        <item row="0" column="0">
         <widget class="QLabel" name="labelMachine">
-         <property name="text">
-          <string>Machine:</string>
-         </property>
          <property name="minimumSize">
           <size>
            <width>80</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="text">
+          <string>Machine:</string>
          </property>
         </widget>
        </item>
@@ -87,17 +151,17 @@
        </item>
        <item row="0" column="2">
         <widget class="QPushButton" name="IDC_CONFIGUREMOD">
-         <property name="text">
-          <string>...</string>
-         </property>
-         <property name="toolTip">
-          <string>Configure machine</string>
-         </property>
          <property name="maximumSize">
           <size>
            <width>32</width>
            <height>32</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Configure machine</string>
+         </property>
+         <property name="text">
+          <string>...</string>
          </property>
         </widget>
        </item>
@@ -210,19 +274,18 @@
        </item>
       </layout>
      </widget>
-     <!-- Page 1: Video -->
      <widget class="QWidget" name="pageVideo">
       <layout class="QGridLayout" name="videoLayout">
        <item row="0" column="0">
         <widget class="QLabel" name="labelVideoDevice">
-         <property name="text">
-          <string>Device:</string>
-         </property>
          <property name="minimumSize">
           <size>
            <width>80</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="text">
+          <string>Device:</string>
          </property>
         </widget>
        </item>
@@ -238,17 +301,17 @@
        </item>
        <item row="0" column="2">
         <widget class="QPushButton" name="IDC_CONFIGUREVID">
-         <property name="text">
-          <string>...</string>
-         </property>
-         <property name="toolTip">
-          <string>Configure video</string>
-         </property>
          <property name="maximumSize">
           <size>
            <width>32</width>
            <height>32</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Configure video</string>
+         </property>
+         <property name="text">
+          <string>...</string>
          </property>
         </widget>
        </item>
@@ -271,35 +334,34 @@
        </item>
        <item row="2" column="2">
         <widget class="QPushButton" name="IDC_CONFIGUREVOODOO">
-         <property name="text">
-          <string>...</string>
-         </property>
-         <property name="toolTip">
-          <string>Configure Voodoo</string>
-         </property>
          <property name="maximumSize">
           <size>
            <width>32</width>
            <height>32</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Configure Voodoo</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
         </widget>
        </item>
       </layout>
      </widget>
-     <!-- Page 2: Sound -->
      <widget class="QWidget" name="pageSound">
       <layout class="QGridLayout" name="soundLayout">
        <item row="0" column="0">
         <widget class="QLabel" name="labelSoundDevice">
-         <property name="text">
-          <string>Device:</string>
-         </property>
          <property name="minimumSize">
           <size>
            <width>80</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="text">
+          <string>Device:</string>
          </property>
         </widget>
        </item>
@@ -315,17 +377,17 @@
        </item>
        <item row="0" column="2">
         <widget class="QPushButton" name="IDC_CONFIGURESND">
-         <property name="text">
-          <string>...</string>
-         </property>
-         <property name="toolTip">
-          <string>Configure sound</string>
-         </property>
          <property name="maximumSize">
           <size>
            <width>32</width>
            <height>32</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Configure sound</string>
+         </property>
+         <property name="text">
+          <string>...</string>
          </property>
         </widget>
        </item>
@@ -352,21 +414,20 @@
        </item>
       </layout>
      </widget>
-     <!-- Page 3: Storage Devices (Drives) -->
      <widget class="QWidget" name="pageDrives">
       <layout class="QVBoxLayout" name="drivesMainLayout">
        <item>
         <layout class="QGridLayout" name="drivesTopLayout">
          <item row="0" column="0">
           <widget class="QLabel" name="labelHDD">
-           <property name="text">
-            <string>HDD:</string>
-           </property>
            <property name="minimumSize">
             <size>
              <width>80</width>
              <height>0</height>
             </size>
+           </property>
+           <property name="text">
+            <string>HDD:</string>
            </property>
           </widget>
          </item>
@@ -382,17 +443,17 @@
          </item>
          <item row="0" column="2">
           <widget class="QPushButton" name="IDC_CONFIGUREHDD">
-           <property name="text">
-            <string>...</string>
-           </property>
-           <property name="toolTip">
-            <string>Configure HDD controller</string>
-           </property>
            <property name="maximumSize">
             <size>
              <width>32</width>
              <height>32</height>
             </size>
+           </property>
+           <property name="toolTip">
+            <string>Configure HDD controller</string>
+           </property>
+           <property name="text">
+            <string>...</string>
            </property>
           </widget>
          </item>
@@ -469,874 +530,852 @@
        <item>
         <widget class="Line" name="driveSeparator">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QTabWidget" name="IDC_HDCBOOK">
-         <!-- HD Panel 0 -->
-         <widget class="QWidget" name="IDC_HDPANEL_0">
-          <attribute name="title">
-           <string>Drive 0</string>
-          </attribute>
-          <layout class="QGridLayout" name="hdPanel0Layout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_0">
-             <property name="text">
-              <string>Type:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="IDC_COMBODRIVETYPE_0">
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="IDC_NEW_0">
-             <property name="text">
-              <string>New</string>
-             </property>
-             <property name="toolTip">
-              <string>New</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QPushButton" name="IDC_FILE_0">
-             <property name="text">
-              <string>...</string>
-             </property>
-             <property name="toolTip">
-              <string>Browse</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_1">
-             <property name="text">
-              <string>File:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="2">
-            <widget class="QLineEdit" name="IDC_EDIT_FN_0">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>350</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="IDC_EJECT_0">
-             <property name="text">
-              <string>Eject</string>
-             </property>
-             <property name="toolTip">
-              <string>Eject</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_2">
-             <property name="text">
-              <string>Sectors:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="IDC_EDIT_SPT_0">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_3">
-             <property name="text">
-              <string>Heads:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="IDC_EDIT_HPC_0">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_4">
-             <property name="text">
-              <string>Cylinder:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="IDC_EDIT_CYL_0">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_5">
-             <property name="text">
-              <string>Size:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="IDC_TEXT_SIZE_0">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <!-- HD Panel 1 -->
-         <widget class="QWidget" name="IDC_HDPANEL_1">
-          <attribute name="title">
-           <string>Drive 1</string>
-          </attribute>
-          <layout class="QGridLayout" name="hdPanel1Layout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_10">
-             <property name="text">
-              <string>Type:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="IDC_COMBODRIVETYPE_1">
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="IDC_NEW_1">
-             <property name="text">
-              <string>New</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QPushButton" name="IDC_FILE_1">
-             <property name="text">
-              <string>...</string>
-             </property>
-             <property name="toolTip">
-              <string>Browse</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_11">
-             <property name="text">
-              <string>File:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="2">
-            <widget class="QLineEdit" name="IDC_EDIT_FN_1">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="IDC_EJECT_1">
-             <property name="text">
-              <string>Eject</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_12">
-             <property name="text">
-              <string>Sectors:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="IDC_EDIT_SPT_1">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_13">
-             <property name="text">
-              <string>Heads:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="IDC_EDIT_HPC_1">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_14">
-             <property name="text">
-              <string>Cylinder:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="IDC_EDIT_CYL_1">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_15">
-             <property name="text">
-              <string>Size:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="IDC_TEXT_SIZE_1">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <!-- HD Panel 2 -->
-         <widget class="QWidget" name="IDC_HDPANEL_2">
-          <attribute name="title">
-           <string>Drive 2</string>
-          </attribute>
-          <layout class="QGridLayout" name="hdPanel2Layout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_20">
-             <property name="text">
-              <string>Type:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="IDC_COMBODRIVETYPE_2">
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="IDC_NEW_2">
-             <property name="text">
-              <string>New</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QPushButton" name="IDC_FILE_2">
-             <property name="text">
-              <string>...</string>
-             </property>
-             <property name="toolTip">
-              <string>Browse</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_21">
-             <property name="text">
-              <string>File:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="2">
-            <widget class="QLineEdit" name="IDC_EDIT_FN_2">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="IDC_EJECT_2">
-             <property name="text">
-              <string>Eject</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_22">
-             <property name="text">
-              <string>Sectors:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="IDC_EDIT_SPT_2">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_23">
-             <property name="text">
-              <string>Heads:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="IDC_EDIT_HPC_2">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_24">
-             <property name="text">
-              <string>Cylinder:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="IDC_EDIT_CYL_2">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_25">
-             <property name="text">
-              <string>Size:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="IDC_TEXT_SIZE_2">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <!-- HD Panel 3 -->
-         <widget class="QWidget" name="IDC_HDPANEL_3">
-          <attribute name="title">
-           <string>Drive 3</string>
-          </attribute>
-          <layout class="QGridLayout" name="hdPanel3Layout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_30">
-             <property name="text">
-              <string>Type:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="IDC_COMBODRIVETYPE_3">
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="IDC_NEW_3">
-             <property name="text">
-              <string>New</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QPushButton" name="IDC_FILE_3">
-             <property name="text">
-              <string>...</string>
-             </property>
-             <property name="toolTip">
-              <string>Browse</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_31">
-             <property name="text">
-              <string>File:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="2">
-            <widget class="QLineEdit" name="IDC_EDIT_FN_3">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="IDC_EJECT_3">
-             <property name="text">
-              <string>Eject</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_32">
-             <property name="text">
-              <string>Sectors:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="IDC_EDIT_SPT_3">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_33">
-             <property name="text">
-              <string>Heads:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="IDC_EDIT_HPC_3">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_34">
-             <property name="text">
-              <string>Cylinder:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="IDC_EDIT_CYL_3">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_35">
-             <property name="text">
-              <string>Size:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="IDC_TEXT_SIZE_3">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <!-- HD Panel 4 -->
-         <widget class="QWidget" name="IDC_HDPANEL_4">
-          <attribute name="title">
-           <string>Drive 4</string>
-          </attribute>
-          <layout class="QGridLayout" name="hdPanel4Layout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_40">
-             <property name="text">
-              <string>Type:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="IDC_COMBODRIVETYPE_4">
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="IDC_NEW_4">
-             <property name="text">
-              <string>New</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QPushButton" name="IDC_FILE_4">
-             <property name="text">
-              <string>...</string>
-             </property>
-             <property name="toolTip">
-              <string>Browse</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_41">
-             <property name="text">
-              <string>File:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="2">
-            <widget class="QLineEdit" name="IDC_EDIT_FN_4">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="IDC_EJECT_4">
-             <property name="text">
-              <string>Eject</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_42">
-             <property name="text">
-              <string>Sectors:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="IDC_EDIT_SPT_4">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_43">
-             <property name="text">
-              <string>Heads:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="IDC_EDIT_HPC_4">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_44">
-             <property name="text">
-              <string>Cylinder:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="IDC_EDIT_CYL_4">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_45">
-             <property name="text">
-              <string>Size:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="IDC_TEXT_SIZE_4">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <!-- HD Panel 5 -->
-         <widget class="QWidget" name="IDC_HDPANEL_5">
-          <attribute name="title">
-           <string>Drive 5</string>
-          </attribute>
-          <layout class="QGridLayout" name="hdPanel5Layout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_50">
-             <property name="text">
-              <string>Type:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="IDC_COMBODRIVETYPE_5">
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="IDC_NEW_5">
-             <property name="text">
-              <string>New</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QPushButton" name="IDC_FILE_5">
-             <property name="text">
-              <string>...</string>
-             </property>
-             <property name="toolTip">
-              <string>Browse</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_51">
-             <property name="text">
-              <string>File:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="2">
-            <widget class="QLineEdit" name="IDC_EDIT_FN_5">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="IDC_EJECT_5">
-             <property name="text">
-              <string>Eject</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_52">
-             <property name="text">
-              <string>Sectors:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="IDC_EDIT_SPT_5">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_53">
-             <property name="text">
-              <string>Heads:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="IDC_EDIT_HPC_5">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_54">
-             <property name="text">
-              <string>Cylinder:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="IDC_EDIT_CYL_5">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_55">
-             <property name="text">
-              <string>Size:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="IDC_TEXT_SIZE_5">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <!-- HD Panel 6 -->
-         <widget class="QWidget" name="IDC_HDPANEL_6">
-          <attribute name="title">
-           <string>Drive 6</string>
-          </attribute>
-          <layout class="QGridLayout" name="hdPanel6Layout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_60">
-             <property name="text">
-              <string>Type:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="IDC_COMBODRIVETYPE_6">
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="IDC_NEW_6">
-             <property name="text">
-              <string>New</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QPushButton" name="IDC_FILE_6">
-             <property name="text">
-              <string>...</string>
-             </property>
-             <property name="toolTip">
-              <string>Browse</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_61">
-             <property name="text">
-              <string>File:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="2">
-            <widget class="QLineEdit" name="IDC_EDIT_FN_6">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QPushButton" name="IDC_EJECT_6">
-             <property name="text">
-              <string>Eject</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_62">
-             <property name="text">
-              <string>Sectors:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="IDC_EDIT_SPT_6">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_63">
-             <property name="text">
-              <string>Heads:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="IDC_EDIT_HPC_6">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="IDC_HDD_LABEL_64">
-             <property name="text">
-              <string>Cylinder:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="IDC_EDIT_CYL_6">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="IDC_HDD_LABEL_65">
-             <property name="text">
-              <string>Size:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="IDC_TEXT_SIZE_6">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </widget>
+        <layout class="QVBoxLayout" name="hdcbookContainerLayout">
+         <item>
+          <widget class="QComboBox" name="IDC_HDCBOOK_COMBO"/>
+         </item>
+         <item>
+          <widget class="QStackedWidget" name="IDC_HDCBOOK">
+           <widget class="QWidget" name="IDC_HDPANEL_0">
+            <layout class="QGridLayout" name="hdPanel0Layout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_0">
+               <property name="text">
+                <string>Type:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="IDC_COMBODRIVETYPE_0">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="IDC_NEW_0">
+               <property name="toolTip">
+                <string>New</string>
+               </property>
+               <property name="text">
+                <string>New</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="IDC_FILE_0">
+               <property name="toolTip">
+                <string>Browse</string>
+               </property>
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_1">
+               <property name="text">
+                <string>File:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QLineEdit" name="IDC_EDIT_FN_0">
+               <property name="minimumSize">
+                <size>
+                 <width>350</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPushButton" name="IDC_EJECT_0">
+               <property name="toolTip">
+                <string>Eject</string>
+               </property>
+               <property name="text">
+                <string>Eject</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_2">
+               <property name="text">
+                <string>Sectors:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="IDC_EDIT_SPT_0">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_3">
+               <property name="text">
+                <string>Heads:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="IDC_EDIT_HPC_0">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_4">
+               <property name="text">
+                <string>Cylinder:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="IDC_EDIT_CYL_0">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_5">
+               <property name="text">
+                <string>Size:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="IDC_TEXT_SIZE_0">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="IDC_HDPANEL_1">
+            <layout class="QGridLayout" name="hdPanel1Layout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_10">
+               <property name="text">
+                <string>Type:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="IDC_COMBODRIVETYPE_1">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="IDC_NEW_1">
+               <property name="text">
+                <string>New</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="IDC_FILE_1">
+               <property name="toolTip">
+                <string>Browse</string>
+               </property>
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_11">
+               <property name="text">
+                <string>File:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QLineEdit" name="IDC_EDIT_FN_1">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPushButton" name="IDC_EJECT_1">
+               <property name="text">
+                <string>Eject</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_12">
+               <property name="text">
+                <string>Sectors:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="IDC_EDIT_SPT_1">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_13">
+               <property name="text">
+                <string>Heads:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="IDC_EDIT_HPC_1">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_14">
+               <property name="text">
+                <string>Cylinder:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="IDC_EDIT_CYL_1">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_15">
+               <property name="text">
+                <string>Size:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="IDC_TEXT_SIZE_1">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="IDC_HDPANEL_2">
+            <layout class="QGridLayout" name="hdPanel2Layout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_20">
+               <property name="text">
+                <string>Type:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="IDC_COMBODRIVETYPE_2">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="IDC_NEW_2">
+               <property name="text">
+                <string>New</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="IDC_FILE_2">
+               <property name="toolTip">
+                <string>Browse</string>
+               </property>
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_21">
+               <property name="text">
+                <string>File:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QLineEdit" name="IDC_EDIT_FN_2">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPushButton" name="IDC_EJECT_2">
+               <property name="text">
+                <string>Eject</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_22">
+               <property name="text">
+                <string>Sectors:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="IDC_EDIT_SPT_2">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_23">
+               <property name="text">
+                <string>Heads:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="IDC_EDIT_HPC_2">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_24">
+               <property name="text">
+                <string>Cylinder:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="IDC_EDIT_CYL_2">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_25">
+               <property name="text">
+                <string>Size:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="IDC_TEXT_SIZE_2">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="IDC_HDPANEL_3">
+            <layout class="QGridLayout" name="hdPanel3Layout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_30">
+               <property name="text">
+                <string>Type:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="IDC_COMBODRIVETYPE_3">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="IDC_NEW_3">
+               <property name="text">
+                <string>New</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="IDC_FILE_3">
+               <property name="toolTip">
+                <string>Browse</string>
+               </property>
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_31">
+               <property name="text">
+                <string>File:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QLineEdit" name="IDC_EDIT_FN_3">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPushButton" name="IDC_EJECT_3">
+               <property name="text">
+                <string>Eject</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_32">
+               <property name="text">
+                <string>Sectors:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="IDC_EDIT_SPT_3">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_33">
+               <property name="text">
+                <string>Heads:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="IDC_EDIT_HPC_3">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_34">
+               <property name="text">
+                <string>Cylinder:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="IDC_EDIT_CYL_3">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_35">
+               <property name="text">
+                <string>Size:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="IDC_TEXT_SIZE_3">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="IDC_HDPANEL_4">
+            <layout class="QGridLayout" name="hdPanel4Layout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_40">
+               <property name="text">
+                <string>Type:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="IDC_COMBODRIVETYPE_4">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="IDC_NEW_4">
+               <property name="text">
+                <string>New</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="IDC_FILE_4">
+               <property name="toolTip">
+                <string>Browse</string>
+               </property>
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_41">
+               <property name="text">
+                <string>File:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QLineEdit" name="IDC_EDIT_FN_4">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPushButton" name="IDC_EJECT_4">
+               <property name="text">
+                <string>Eject</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_42">
+               <property name="text">
+                <string>Sectors:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="IDC_EDIT_SPT_4">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_43">
+               <property name="text">
+                <string>Heads:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="IDC_EDIT_HPC_4">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_44">
+               <property name="text">
+                <string>Cylinder:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="IDC_EDIT_CYL_4">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_45">
+               <property name="text">
+                <string>Size:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="IDC_TEXT_SIZE_4">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="IDC_HDPANEL_5">
+            <layout class="QGridLayout" name="hdPanel5Layout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_50">
+               <property name="text">
+                <string>Type:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="IDC_COMBODRIVETYPE_5">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="IDC_NEW_5">
+               <property name="text">
+                <string>New</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="IDC_FILE_5">
+               <property name="toolTip">
+                <string>Browse</string>
+               </property>
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_51">
+               <property name="text">
+                <string>File:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QLineEdit" name="IDC_EDIT_FN_5">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPushButton" name="IDC_EJECT_5">
+               <property name="text">
+                <string>Eject</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_52">
+               <property name="text">
+                <string>Sectors:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="IDC_EDIT_SPT_5">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_53">
+               <property name="text">
+                <string>Heads:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="IDC_EDIT_HPC_5">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_54">
+               <property name="text">
+                <string>Cylinder:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="IDC_EDIT_CYL_5">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_55">
+               <property name="text">
+                <string>Size:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="IDC_TEXT_SIZE_5">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="IDC_HDPANEL_6">
+            <layout class="QGridLayout" name="hdPanel6Layout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_60">
+               <property name="text">
+                <string>Type:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="IDC_COMBODRIVETYPE_6">
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="IDC_NEW_6">
+               <property name="text">
+                <string>New</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="IDC_FILE_6">
+               <property name="toolTip">
+                <string>Browse</string>
+               </property>
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_61">
+               <property name="text">
+                <string>File:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" colspan="2">
+              <widget class="QLineEdit" name="IDC_EDIT_FN_6">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPushButton" name="IDC_EJECT_6">
+               <property name="text">
+                <string>Eject</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_62">
+               <property name="text">
+                <string>Sectors:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="IDC_EDIT_SPT_6">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_63">
+               <property name="text">
+                <string>Heads:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="IDC_EDIT_HPC_6">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="IDC_HDD_LABEL_64">
+               <property name="text">
+                <string>Cylinder:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="IDC_EDIT_CYL_6">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="IDC_HDD_LABEL_65">
+               <property name="text">
+                <string>Size:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="IDC_TEXT_SIZE_6">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
-     <!-- Page 4: Port Devices -->
      <widget class="QWidget" name="pagePorts">
       <layout class="QGridLayout" name="portsLayout">
        <item row="0" column="0">
         <widget class="QLabel" name="labelLPT">
-         <property name="text">
-          <string>LPT Device:</string>
-         </property>
          <property name="minimumSize">
           <size>
            <width>80</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="text">
+          <string>LPT Device:</string>
          </property>
         </widget>
        </item>
@@ -1352,35 +1391,34 @@
        </item>
        <item row="0" column="2">
         <widget class="QPushButton" name="IDC_CONFIGURELPT1">
-         <property name="text">
-          <string>...</string>
-         </property>
-         <property name="toolTip">
-          <string>Configure LPT</string>
-         </property>
          <property name="maximumSize">
           <size>
            <width>32</width>
            <height>32</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Configure LPT</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
         </widget>
        </item>
       </layout>
      </widget>
-     <!-- Page 5: Mouse -->
      <widget class="QWidget" name="pageMouse">
       <layout class="QGridLayout" name="mouseLayout">
        <item row="0" column="0">
         <widget class="QLabel" name="labelMouse">
-         <property name="text">
-          <string>Mouse:</string>
-         </property>
          <property name="minimumSize">
           <size>
            <width>80</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="text">
+          <string>Mouse:</string>
          </property>
         </widget>
        </item>
@@ -1396,21 +1434,20 @@
        </item>
       </layout>
      </widget>
-     <!-- Page 6: Joystick -->
      <widget class="QWidget" name="pageJoystick">
       <layout class="QVBoxLayout" name="joystickMainLayout">
        <item>
         <layout class="QHBoxLayout" name="joystickComboLayout">
          <item>
           <widget class="QLabel" name="labelJoystick">
-           <property name="text">
-            <string>Joystick:</string>
-           </property>
            <property name="minimumSize">
             <size>
              <width>80</width>
              <height>0</height>
             </size>
+           </property>
+           <property name="text">
+            <string>Joystick:</string>
            </property>
           </widget>
          </item>
@@ -1461,25 +1498,30 @@
        <item>
         <spacer name="joystickSpacer">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
          </property>
         </spacer>
        </item>
       </layout>
      </widget>
-     <!-- Page 7: Network -->
      <widget class="QWidget" name="pageNetwork">
       <layout class="QGridLayout" name="networkLayout">
        <item row="0" column="0">
         <widget class="QLabel" name="labelNetCard">
-         <property name="text">
-          <string>Network card :</string>
-         </property>
          <property name="minimumSize">
           <size>
            <width>80</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="text">
+          <string>Network card :</string>
          </property>
         </widget>
        </item>
@@ -1495,17 +1537,17 @@
        </item>
        <item row="0" column="2">
         <widget class="QPushButton" name="IDC_CONFIGURE_NETCARD">
-         <property name="text">
-          <string>...</string>
-         </property>
-         <property name="toolTip">
-          <string>Configure network card</string>
-         </property>
          <property name="maximumSize">
           <size>
            <width>32</width>
            <height>32</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Configure network card</string>
+         </property>
+         <property name="text">
+          <string>...</string>
          </property>
         </widget>
        </item>
@@ -1513,13 +1555,18 @@
      </widget>
     </widget>
    </item>
-   <!-- Bottom buttons -->
    <item row="1" column="0" colspan="2">
     <layout class="QHBoxLayout" name="dialogButtonLayout">
      <item>
       <spacer name="dialogButtonSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
       </spacer>
      </item>
@@ -1544,6 +1591,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="qt-resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

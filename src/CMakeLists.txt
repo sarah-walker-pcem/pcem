@@ -78,7 +78,7 @@ set(PCEM_LIBRARIES ${PCEM_LIBRARIES} PARENT_SCOPE)
 
 add_executable(pcem ${PCEM_SRC} ${PCEM_PRIVATE_API} ${PCEM_EMBEDDED_PLUGIN_API})
 target_compile_definitions(pcem PUBLIC ${PCEM_DEFINES})
-target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fcommon> $<$<COMPILE_LANGUAGE:C>:-fcommon>)
+target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fno-common> $<$<COMPILE_LANGUAGE:C>:-fno-common>)
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         target_link_options(pcem PRIVATE "-Wl,--subsystem,windows")
 endif()

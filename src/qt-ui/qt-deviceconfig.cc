@@ -17,7 +17,7 @@ extern "C" {
 void saveconfig(char *);
 void resetpchard();
 int deviceconfig_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam);
-device_t *config_device;
+device_t *config_device = NULL;
 int confirm();
 }
 #define IDC_CONFIG_BASE 1000

@@ -276,11 +276,8 @@ static void recalc_hdd_list(void *hdlg, int model, int use_selected_hdd, int for
         hdd_type = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
         h = wx_getdlgitem(hdlg, WX_ID("IDC_HDCBOOK"));
 
-        {
-                int _max = 100;
-                while (wx_sendmessage(h, WX_CHB_GETPAGECOUNT, 0, 0) && _max-- > 0)
-                        wx_sendmessage(h, WX_CHB_REMOVEPAGE, 0, 0);
-        }
+        while (wx_sendmessage(h, WX_CHB_GETPAGECOUNT, 0, 0))
+                wx_sendmessage(h, WX_CHB_REMOVEPAGE, 0, 0);
 
         for (c = 0; c < 7; c++) {
                 void *page;

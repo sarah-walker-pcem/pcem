@@ -17,7 +17,7 @@
 #include "codegen_allocator.h"
 #include "qt-common.h"
 
-drive_info_t drive_info[10];
+drive_info_t drive_info[10] = {0};
 
 int status_is_open = 0;
 

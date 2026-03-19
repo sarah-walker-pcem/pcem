@@ -4,10 +4,10 @@
 
 extern int mousecapture;
 
-int mouse_buttons;
+int mouse_buttons = 0;
 static int mouse_x = 0, mouse_y = 0, mouse_z = 0;
 
-int mouse[3];
+int mouse[3] = {0};
 
 /* Accumulated relative motion from Qt mouse events */
 static volatile int qt_mouse_dx = 0, qt_mouse_dy = 0;

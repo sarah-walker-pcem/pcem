@@ -11,7 +11,7 @@
 
 #define peek2(a) (nvrram[(a##1)] + 10 * nvrram[(a##10)])
 
-struct {
+extern struct {
         int sec;
         int min;
         int hour;
