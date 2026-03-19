@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HostConfig</class>
+ <widget class="QWidget" name="HostConfig">
+  <property name="windowTitle">
+   <string>Host Configuration</string>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>499</width>
+    <height>175</height>
+   </size>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QTabWidget" name="m_notebook2">
+     <widget class="QWidget" name="networkTab">
+      <attribute name="title">
+       <string>Network</string>
+      </attribute>
+      <layout class="QGridLayout" name="networkGridLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="m_staticText72">
+         <property name="text">
+          <string>Network type :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="IDC_COMBO_NETWORK_TYPE">
+         <property name="minimumSize">
+          <size>
+           <width>350</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="m_staticText73">
+         <property name="text">
+          <string>Network device :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="IDC_COMBO_NETWORK_DEVICE">
+         <property name="minimumSize">
+          <size>
+           <width>350</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <spacer name="buttonSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="wxID_OK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="wxID_CANCEL">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

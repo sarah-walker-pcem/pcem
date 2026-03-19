@@ -1,32 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
-# This is created if someone wants to use GCC still. Although I am targeting CLang, I am trying not to use non-GCC compatable
-# options. So if you really dont care, and want to try to make GCC build again, enable this option. It is only documented here
-#
-# To use just add -DI_WANT_TO_USE_GCC=YES to your cmake command.
-
-option(I_WANT_TO_USE_GCC "I dont care, I want to use GCC even if its not supported anymore" OFF)
-
-# We are going to force clang on both Linux and Windows builds to be uniform
-if(NOT I_WANT_TO_USE_GCC)
-    set(CMAKE_C_COMPILER "clang" CACHE FILEPATH "C compiler")
-    set(CMAKE_CXX_COMPILER "clang++" CACHE FILEPATH "C++ compiler")
-endif()
-
 project(PCem)
-
-# Dont allow GCC Building anymore, force Clang, unless I_WANT_TO_USE_GCC is on
-if(NOT I_WANT_TO_USE_GCC)
-    string(TOUPPER "${CMAKE_C_COMPILER_ID}" CMAKE_C_COMPILER_ID_UPPER) # This is to deal with some distros showing compiler id as clang instead of Clang
-    string(TOUPPER "${CMAKE_CXX_COMPILER_ID}" CMAKE_CXX_COMPILER_ID_UPPER) # This is to deal with some distros showing compiler id as clang instead of Clang
-
-    if(NOT (CMAKE_C_COMPILER_ID_UPPER MATCHES "CLANG" AND CMAKE_CXX_COMPILER_ID_UPPER MATCHES "CLANG"))
-            message(FATAL_ERROR "Detected compiler is not Clang! Please ensure Clang is in your PATH or specified correctly.")
-    endif()
-endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
+
+set(PCEM_DISPLAY_ENGINE "wxWidgets" CACHE STRING "PCem Display Engine")
 
 include(${CMAKE_SOURCE_DIR}/includes/includes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/arch-detect.cmake)
@@ -45,7 +24,6 @@ if(${PCEM_CPU_TYPE} STREQUAL "x86_64")
 endif()
 
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
-set(PCEM_DISPLAY_ENGINE "wxWidgets" CACHE STRING "PCem Display Engine")
 set(PCEM_DEFINES ${PCEM_DEFINES} PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
 
 message("PCem ${PCEM_VERSION_STRING} - Build Type: ${CMAKE_BUILD_TYPE}")
@@ -189,12 +167,17 @@ if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         set(DISPLAY_ENGINE_LIBRARIES ${wxWidgets_LIBRARIES})
 endif()
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
-        find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
-        set(DISPLAY_ENGINE_LIBRARIES Qt5::Core Qt5::Widgets)
+        find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGLWidgets UiTools)
+        set(DISPLAY_ENGINE_LIBRARIES Qt6::Core Qt6::Widgets Qt6::OpenGLWidgets Qt6::UiTools)
         set(CMAKE_AUTOMOC ON)
         set(CMAKE_AUTORCC ON)
         set(CMAKE_AUTOUIC ON)
-        include_directories(${Qt5_INCLUDE_DIRS})
+
+        # Qt6 propagates UNICODE/_UNICODE defines which cause Win32 APIs
+        # (CreateFile, etc.) to resolve to wide-char variants (CreateFileW).
+        # PCem uses char* (ANSI) Win32 APIs throughout, so disable these.
+        # This sets a property that Qt6's generator expression checks.
+        set(PCEM_QT_NO_UNICODE ON)
 endif()
 
 

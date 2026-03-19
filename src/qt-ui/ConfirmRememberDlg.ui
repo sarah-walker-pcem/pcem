@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConfirmRememberDlg</class>
+ <widget class="QWidget" name="ConfirmRememberDlg">
+  <property name="windowTitle">
+   <string>PCem</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <layout class="QHBoxLayout" name="messageLayout">
+     <item>
+      <widget class="QLabel" name="iconLabel">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="IDC_CONFIRM_LABEL">
+       <property name="text">
+        <string>IDC_CONFIRM_LABEL</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="IDC_CONFIRM_REMEMBER">
+     <property name="text">
+      <string>IDC_CONFIRM_REMEMBER</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <spacer name="buttonSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="wxID_OK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="wxID_CANCEL">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

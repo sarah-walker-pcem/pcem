@@ -65,7 +65,7 @@
 
 #ifdef USE_NETWORKING
 #include "nethandler.h"
-#include "wx-utils.h"
+#include "ui-utils.h"
 #define NE2000 1
 uint8_t ethif;
 int inum;

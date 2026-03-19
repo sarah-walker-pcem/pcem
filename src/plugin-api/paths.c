@@ -4,7 +4,7 @@
 #include <SDL.h>
 #include <sys/stat.h>
 #include "ibm.h"
-#include "wx-utils.h"
+#include "ui-utils.h"
 
 char default_roms_paths[4096];
 char default_nvr_path[512];

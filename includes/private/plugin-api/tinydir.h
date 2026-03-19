@@ -33,6 +33,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+/* On MinGW, use the Windows FindFirst/FindNext API path (same as MSVC)
+   instead of the POSIX dirent.h path, to avoid broken dirent.h on
+   recent MinGW toolchains. */
+#if defined(__MINGW32__) && !defined(_MSC_VER)
+#define _TINYDIR_USE_WINDAPI
+#endif
+#ifdef _TINYDIR_USE_WINDAPI
+#define _TINYDIR_USE_WINDAPI
+#endif
+
 #if ((defined _UNICODE) && !(defined UNICODE))
 #define UNICODE
 #endif
@@ -69,22 +79,21 @@ struct _wfinddata_t {
         wchar_t name[FILENAME_MAX]; /* may include spaces. */
 };
 #endif
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
 #include <tchar.h>
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4996)
+#endif
 #else
 #include <dirent.h>
 #include <libgen.h>
 #include <sys/stat.h>
 #include <stddef.h>
-#endif
-#ifdef __MINGW32__
-#include <tchar.h>
 #endif
 
 /* types */
@@ -132,7 +141,7 @@ struct _wfinddata_t {
 #define _TINYDIR_PATH_MAX 4096
 #endif
 
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
 /* extra chars for the "\\*" mask */
 #define _TINYDIR_PATH_EXTRA 2
 #else
@@ -145,7 +154,7 @@ struct _wfinddata_t {
 #define _TINYDIR_DRIVE_MAX 3
 #endif
 
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
 #define _TINYDIR_FUNC static __inline
 #elif !defined __STDC_VERSION__ || __STDC_VERSION__ < 199901L
 #define _TINYDIR_FUNC static __inline__
@@ -187,7 +196,7 @@ struct _wfinddata_t {
 #endif
 
 /* MINGW32 has two versions of dirent, ASCII and UNICODE*/
-#ifndef _MSC_VER
+#ifndef _TINYDIR_USE_WINDAPI
 #if (defined __MINGW32__) && (defined _UNICODE)
 #define _TINYDIR_DIR _WDIR
 #define _tinydir_dirent _wdirent
@@ -222,7 +231,7 @@ typedef struct tinydir_file {
         int is_dir;
         int is_reg;
 
-#ifndef _MSC_VER
+#ifndef _TINYDIR_USE_WINDAPI
 #ifdef __MINGW32__
         struct _stat _s;
 #else
@@ -237,7 +246,7 @@ typedef struct tinydir_dir {
         size_t n_files;
 
         tinydir_file *_files;
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
         HANDLE _h;
         WIN32_FIND_DATA _f;
 #else
@@ -273,7 +282,7 @@ _TINYDIR_FUNC
 void _tinydir_get_ext(tinydir_file *file);
 _TINYDIR_FUNC
 int _tinydir_file_cmp(const void *a, const void *b);
-#ifndef _MSC_VER
+#ifndef _TINYDIR_USE_WINDAPI
 #ifndef _TINYDIR_USE_READDIR
 _TINYDIR_FUNC
 size_t _tinydir_dirent_buf_size(_TINYDIR_DIR *dirp);
@@ -284,7 +293,7 @@ size_t _tinydir_dirent_buf_size(_TINYDIR_DIR *dirp);
 
 _TINYDIR_FUNC
 int tinydir_open(tinydir_dir *dir, const _tinydir_char_t *path) {
-#ifndef _MSC_VER
+#ifndef _TINYDIR_USE_WINDAPI
 #ifndef _TINYDIR_USE_READDIR
         int error;
         int size; /* using int size */
@@ -305,7 +314,7 @@ int tinydir_open(tinydir_dir *dir, const _tinydir_char_t *path) {
 
         /* initialise dir */
         dir->_files = NULL;
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
         dir->_h = INVALID_HANDLE_VALUE;
 #else
         dir->_d = NULL;
@@ -322,7 +331,7 @@ int tinydir_open(tinydir_dir *dir, const _tinydir_char_t *path) {
                 *pathp = TINYDIR_STRING('\0');
                 pathp++;
         }
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
         _tinydir_strcpy(path_buf, dir->path);
         _tinydir_strcat(path_buf, TINYDIR_STRING("\\*"));
 #if (defined WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP)
@@ -341,7 +350,7 @@ int tinydir_open(tinydir_dir *dir, const _tinydir_char_t *path) {
 
         /* read first file */
         dir->has_next = 1;
-#ifndef _MSC_VER
+#ifndef _TINYDIR_USE_WINDAPI
 #ifdef _TINYDIR_USE_READDIR
         dir->_e = _tinydir_readdir(dir->_d);
 #else
@@ -433,7 +442,7 @@ void tinydir_close(tinydir_dir *dir) {
         dir->n_files = 0;
         _TINYDIR_FREE(dir->_files);
         dir->_files = NULL;
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
         if (dir->_h != INVALID_HANDLE_VALUE) {
                 FindClose(dir->_h);
         }
@@ -462,7 +471,7 @@ int tinydir_next(tinydir_dir *dir) {
                 return -1;
         }
 
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
         if (FindNextFile(dir->_h, &dir->_f) == 0)
 #else
 #ifdef _TINYDIR_USE_READDIR
@@ -479,7 +488,7 @@ int tinydir_next(tinydir_dir *dir) {
 #endif
         {
                 dir->has_next = 0;
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
                 if (GetLastError() != ERROR_SUCCESS && GetLastError() != ERROR_NO_MORE_FILES) {
                         tinydir_close(dir);
                         errno = EIO;
@@ -498,7 +507,7 @@ int tinydir_readfile(const tinydir_dir *dir, tinydir_file *file) {
                 errno = EINVAL;
                 return -1;
         }
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
         if (dir->_h == INVALID_HANDLE_VALUE)
 #else
         if (dir->_e == NULL)
@@ -508,7 +517,7 @@ int tinydir_readfile(const tinydir_dir *dir, tinydir_file *file) {
                 return -1;
         }
         filename =
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
                 dir->_f.cFileName;
 #else
                 dir->_e->d_name;
@@ -528,7 +537,7 @@ int tinydir_readfile(const tinydir_dir *dir, tinydir_file *file) {
                 _tinydir_strcat(file->path, TINYDIR_STRING("/"));
         _tinydir_strcpy(file->name, filename);
         _tinydir_strcat(file->path, filename);
-#ifndef _MSC_VER
+#ifndef _TINYDIR_USE_WINDAPI
 #ifdef __MINGW32__
         if (_tstat(
 #elif (defined _BSD_SOURCE) || (defined _DEFAULT_SOURCE) || ((defined _XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)) ||               \
@@ -545,13 +554,13 @@ int tinydir_readfile(const tinydir_dir *dir, tinydir_file *file) {
         _tinydir_get_ext(file);
 
         file->is_dir =
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
                 !!(dir->_f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 #else
                 S_ISDIR(file->_s.st_mode);
 #endif
         file->is_reg =
-#ifdef _MSC_VER
+#ifdef _TINYDIR_USE_WINDAPI
                 !!(dir->_f.dwFileAttributes & FILE_ATTRIBUTE_NORMAL) ||
                 (!(dir->_f.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) && !(dir->_f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
                  !(dir->_f.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED) &&
@@ -733,7 +742,7 @@ int _tinydir_file_cmp(const void *a, const void *b) {
         return _tinydir_strncmp(fa->name, fb->name, _TINYDIR_FILENAME_MAX);
 }
 
-#ifndef _MSC_VER
+#ifndef _TINYDIR_USE_WINDAPI
 #ifndef _TINYDIR_USE_READDIR
 /*
 The following authored by Ben Hutchings <ben@decadent.org.uk>

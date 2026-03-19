@@ -54,7 +54,8 @@ if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/viewers/viewers.cmake)
 endif()
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
-        message(FATAL_ERROR "Qt Mode is not yet implemented.")
+        include(${CMAKE_CURRENT_SOURCE_DIR}/qt-ui/qt-ui.cmake)
+        include(${CMAKE_CURRENT_SOURCE_DIR}/qt-ui/viewers/viewers.cmake)
 endif()
 
 set(PCEM_SRC ${PCEM_SRC}
@@ -82,3 +83,8 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         target_link_options(pcem PRIVATE "-Wl,--subsystem,windows")
 endif()
 target_link_libraries(pcem ${PCEM_LIBRARIES})
+
+# Disable Qt6 UNICODE defines - PCem uses ANSI (char*) Win32 APIs
+if(PCEM_QT_NO_UNICODE)
+        set_target_properties(pcem PROPERTIES QT_NO_UNICODE_DEFINES TRUE)
+endif()

@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/ui">
+        <file alias="ConfigureSelectionDlg.ui">ConfigureSelectionDlg.ui</file>
+        <file alias="ConfigureDlg.ui">ConfigureDlg.ui</file>
+        <file alias="HdNewDlg.ui">HdNewDlg.ui</file>
+        <file alias="HdSizeDlg.ui">HdSizeDlg.ui</file>
+        <file alias="CustomResolutionDlg.ui">CustomResolutionDlg.ui</file>
+        <file alias="HostConfig.ui">HostConfig.ui</file>
+        <file alias="ShaderManagerDlg.ui">ShaderManagerDlg.ui</file>
+        <file alias="ConfirmRememberDlg.ui">ConfirmRememberDlg.ui</file>
+        <file alias="AboutDlg.ui">AboutDlg.ui</file>
+    </qresource>
+</RCC>

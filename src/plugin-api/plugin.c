@@ -2,6 +2,13 @@
 #include <string.h>
 #include <stdio.h>
 
+/* tinydir uses TCHAR which breaks with Qt's UNICODE defines on Windows.
+   Force non-Unicode mode for this file. */
+#ifdef _WIN32
+#undef UNICODE
+#undef _UNICODE
+#endif
+
 #if linux
 #include <dlfcn.h>
 #endif
@@ -10,7 +17,7 @@
 #include "tinydir.h"
 #include "paths.h"
 #include "config.h"
-#include "wx-utils.h"
+#include "ui-utils.h"
 
 #include <pcem/logging.h>
 

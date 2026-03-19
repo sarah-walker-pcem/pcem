@@ -26,13 +26,22 @@ set(PCEM_SRC_PLUGINAPI
         plugin-api/logging.c
         plugin-api/device.c
         plugin-api/plugin.c
-        plugin-api/wx-utils.cc
         )
+
+if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
+        set(PCEM_SRC_PLUGINAPI ${PCEM_SRC_PLUGINAPI} plugin-api/wx-utils.cc)
+endif()
+if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
+        set(PCEM_SRC_PLUGINAPI ${PCEM_SRC_PLUGINAPI} plugin-api/qt-utils.cc)
+endif()
 
 if(PLUGIN_ENGINE)
         add_library(pcem-plugin-api SHARED ${PCEM_SRC_PLUGINAPI} ${PCEM_PUBLIC_API})
         target_link_libraries(pcem-plugin-api ${SDL2_LIBRARIES} ${DISPLAY_ENGINE_LIBRARIES})
         target_compile_definitions(pcem-plugin-api PUBLIC ${PCEM_DEFINES})
+        if(PCEM_QT_NO_UNICODE)
+                set_target_properties(pcem-plugin-api PROPERTIES QT_NO_UNICODE_DEFINES TRUE)
+        endif()
         install(TARGETS pcem-plugin-api RUNTIME DESTINATION ${PCEM_BIN_DIR} LIBRARY DESTINATION ${PCEM_LIB_DIR} ARCHIVE DESTINATION ${PCEM_LIB_DIR})
         set(PCEM_LIBRARIES ${PCEM_LIBRARIES} pcem-plugin-api)
 else()

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConfigureSelectionDlg</class>
+ <widget class="QWidget" name="ConfigureSelectionDlg">
+  <property name="windowTitle">
+   <string>PCem Configuration Manager</string>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>380</height>
+   </size>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QListWidget" name="IDC_LIST">
+     <property name="minimumSize">
+      <size>
+       <width>250</width>
+       <height>300</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <layout class="QVBoxLayout" name="rightButtonLayout">
+     <item>
+      <widget class="QPushButton" name="wxID_OK">
+       <property name="toolTip">
+        <string>Load</string>
+       </property>
+       <property name="text">
+        <string>Load</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="IDC_CONFIG">
+       <property name="toolTip">
+        <string>Configure</string>
+       </property>
+       <property name="text">
+        <string>Configure</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="IDC_CONFIG_HOST">
+       <property name="toolTip">
+        <string>Configure Host</string>
+       </property>
+       <property name="text">
+        <string>Host</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="bottomButtonLayout">
+     <item>
+      <widget class="QPushButton" name="IDC_NEW">
+       <property name="toolTip">
+        <string>New</string>
+       </property>
+       <property name="text">
+        <string>New</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="IDC_RENAME">
+       <property name="toolTip">
+        <string>Rename</string>
+       </property>
+       <property name="text">
+        <string>Rename</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="IDC_COPY">
+       <property name="toolTip">
+        <string>Copy</string>
+       </property>
+       <property name="text">
+        <string>Copy</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="IDC_DELETE">
+       <property name="toolTip">
+        <string>Delete</string>
+       </property>
+       <property name="text">
+        <string>Delete</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="wxID_CANCEL">
+     <property name="toolTip">
+      <string>Quit</string>
+     </property>
+     <property name="text">
+      <string>Quit</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
