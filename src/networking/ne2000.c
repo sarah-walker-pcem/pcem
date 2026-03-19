@@ -32,8 +32,16 @@
 #include <string.h>
 #include <time.h>
 
-#include "slirp/slirp.h"
-#include "slirp/queue.h"
+#include <slirp/libslirp.h>
+#include "queue.h"
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/select.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif
 #ifdef USE_PCAP_NETWORKING
 #include <pcap.h>
 #endif
@@ -66,11 +74,65 @@ typedef enum { NE2000_NE2000, NE2000_RTL8029AS } ne2000_type;
 pcap_t *net_pcap;
 #endif
 
-queueADT slirpq;
+queueADT slirpq = NULL;
 int net_slirp_inited = 0;
 int net_is_slirp = 1; // by default we go with slirp
 int net_is_pcap = 0;  // and pretend pcap is dead.
 int fizz = 0;
+
+/* libslirp instance */
+static Slirp *slirp_instance = NULL;
+
+/* libslirp callbacks */
+static ssize_t pcem_slirp_send_packet(const void *buf, size_t len, void *opaque) {
+        struct queuepacket *p = (struct queuepacket *)malloc(sizeof(struct queuepacket));
+        if (!p)
+                return -1;
+        p->len = (int)(len > 2000 ? 2000 : len);
+        memcpy(p->data, buf, p->len);
+        QueueEnter(slirpq, p);
+        return (ssize_t)len;
+}
+
+static void pcem_slirp_guest_error(const char *msg, void *opaque) {
+        pclog("slirp guest error: %s\n", msg);
+}
+
+static int64_t pcem_slirp_clock_get_ns(void *opaque) {
+        struct timespec ts;
+#ifdef _WIN32
+        LARGE_INTEGER count, freq;
+        QueryPerformanceCounter(&count);
+        QueryPerformanceFrequency(&freq);
+        return (int64_t)((double)count.QuadPart / (double)freq.QuadPart * 1e9);
+#else
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        return (int64_t)ts.tv_sec * 1000000000LL + ts.tv_nsec;
+#endif
+}
+
+static void *pcem_slirp_timer_new(SlirpTimerCb cb, void *cb_opaque, void *opaque) {
+        /* libslirp timer — not implemented, use polling instead */
+        return NULL;
+}
+
+static void pcem_slirp_timer_free(void *timer, void *opaque) {}
+static void pcem_slirp_timer_mod(void *timer, int64_t expire_time, void *opaque) {}
+static void pcem_slirp_register_poll_fd(int fd, void *opaque) {}
+static void pcem_slirp_unregister_poll_fd(int fd, void *opaque) {}
+static void pcem_slirp_notify(void *opaque) {}
+
+static const SlirpCb pcem_slirp_callbacks = {
+        .send_packet = pcem_slirp_send_packet,
+        .guest_error = pcem_slirp_guest_error,
+        .clock_get_ns = pcem_slirp_clock_get_ns,
+        .timer_new = pcem_slirp_timer_new,
+        .timer_free = pcem_slirp_timer_free,
+        .timer_mod = pcem_slirp_timer_mod,
+        .register_poll_fd = pcem_slirp_register_poll_fd,
+        .unregister_poll_fd = pcem_slirp_unregister_poll_fd,
+        .notify = pcem_slirp_notify,
+};
 void slirp_tic();
 
 #define BX_RESET_HARDWARE 0
@@ -797,8 +859,10 @@ void ne2000_write(uint16_t address, uint8_t value, void *p) {
                         // BX_NE2K_THIS ethdev->sendpkt(& ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART],
                         // ne2000->tx_bytes); pcap_sendpacket(adhandle,&ne2000->mem[ne2000->tx_page_start*256 - BX_NE2K_MEMSTART],
                         // ne2000->tx_bytes);
-                        if (net_is_slirp) {
-                                slirp_input(&ne2000->mem[ne2000->tx_page_start * 256 - BX_NE2K_MEMSTART], ne2000->tx_bytes);
+                        if (net_is_slirp && slirp_instance) {
+                                slirp_input(slirp_instance,
+                                            &ne2000->mem[ne2000->tx_page_start * 256 - BX_NE2K_MEMSTART],
+                                            ne2000->tx_bytes);
 #ifdef NE2000_DEBUG
                                 pclog("ne2000 slirp sending packet\n");
 #endif
@@ -1558,37 +1622,44 @@ void *ne2000_common_init() {
         // need a switch statment for more network types.
 
         if (net_is_slirp) {
-                pclog("ne2000 initalizing SLiRP\n");
+                pclog("ne2000 initializing libslirp\n");
                 net_is_pcap = 0;
-                rc = slirp_init();
-                pclog("ne2000 slirp_init returned: %d\n", rc);
-                if (rc == 0) {
-                        pclog("ne2000 slirp initalized!\n");
-                        inet_aton("10.0.2.15", &myaddr);
-                        // YES THIS NEEDS TO PULL FROM A CONFIG FILE... but for now.
-                        rc = slirp_redir(0, 42323, myaddr, 23);
-                        pclog("ne2000 slirp redir returned %d on port 42323 -> 23\n", rc);
-                        rc = slirp_redir(0, 42380, myaddr, 80);
-                        pclog("ne2000 slirp redir returned %d on port 42380 -> 80\n", rc);
-                        rc = slirp_redir(0, 42443, myaddr, 443);
-                        pclog("ne2000 slirp redir returned %d on port 42443 -> 443\n", rc);
-                        rc = slirp_redir(0, 42322, myaddr, 22);
-                        pclog("ne2000 slirp redir returned %d on port 42322 -> 22\n", rc);
 
-                        // Kali
-                        rc = slirp_redir(1, 2213, myaddr, 2213);
-                        pclog("ne2000 slirp redir returned %d on port 2213 -> 2213\n", rc);
-                        rc = slirp_redir(1, 2231, myaddr, 2231);
-                        pclog("ne2000 slirp redir returned %d on port 2231 -> 2231\n", rc);
-                        rc = slirp_redir(1, 2271, myaddr, 2271);
-                        pclog("ne2000 slirp redir returned %d on port 2271 -> 2271\n", rc);
+                SlirpConfig cfg;
+                memset(&cfg, 0, sizeof(cfg));
+                cfg.version = 4;
+                cfg.restricted = 0;
+                cfg.in_enabled = 1;
+                cfg.vnetwork.s_addr = htonl(0x0A020000);      /* 10.2.0.0 */
+                cfg.vnetmask.s_addr = htonl(0xFFFFFF00);      /* 255.255.255.0 */
+                cfg.vhost.s_addr = htonl(0x0A020002);          /* 10.2.0.2 */
+                cfg.vdhcp_start.s_addr = htonl(0x0A02000F);    /* 10.2.0.15 */
+                cfg.vnameserver.s_addr = htonl(0x0A020003);    /* 10.2.0.3 */
+
+                slirp_instance = slirp_new(&cfg, &pcem_slirp_callbacks, NULL);
+                if (slirp_instance) {
+                        pclog("ne2000 libslirp initialized!\n");
+
+                        /* Port redirections */
+                        struct in_addr guest_addr;
+                        guest_addr.s_addr = htonl(0x0A02000F); /* 10.2.0.15 */
+
+                        slirp_add_hostfwd(slirp_instance, 0, (struct in_addr){.s_addr = INADDR_ANY}, 42323, guest_addr, 23);
+                        slirp_add_hostfwd(slirp_instance, 0, (struct in_addr){.s_addr = INADDR_ANY}, 42380, guest_addr, 80);
+                        slirp_add_hostfwd(slirp_instance, 0, (struct in_addr){.s_addr = INADDR_ANY}, 42443, guest_addr, 443);
+                        slirp_add_hostfwd(slirp_instance, 0, (struct in_addr){.s_addr = INADDR_ANY}, 42322, guest_addr, 22);
+                        /* Kali UDP ports */
+                        slirp_add_hostfwd(slirp_instance, 1, (struct in_addr){.s_addr = INADDR_ANY}, 2213, guest_addr, 2213);
+                        slirp_add_hostfwd(slirp_instance, 1, (struct in_addr){.s_addr = INADDR_ANY}, 2231, guest_addr, 2231);
+                        slirp_add_hostfwd(slirp_instance, 1, (struct in_addr){.s_addr = INADDR_ANY}, 2271, guest_addr, 2271);
 
                         net_slirp_inited = 1;
                         slirpq = QueueCreate();
                         net_is_slirp = 1;
                         fizz = 0;
-                        pclog("ne2000 slirpq is %x\n", &slirpq);
+                        pclog("ne2000 slirpq is %p\n", (void *)slirpq);
                 } else {
+                        pclog("ne2000 libslirp init failed!\n");
                         net_slirp_inited = 0;
                         net_is_slirp = 0;
                 }
@@ -1720,7 +1791,11 @@ void ne2000_close(void *p) {
         free(ne2000);
         if (net_is_slirp) {
                 QueueDestroy(slirpq);
-                slirp_exit(0);
+                slirpq = NULL;
+                if (slirp_instance) {
+                        slirp_cleanup(slirp_instance);
+                        slirp_instance = NULL;
+                }
                 net_slirp_inited = 0;
                 pclog("ne2000 exiting slirp\n");
         }
@@ -1762,45 +1837,75 @@ device_t ne2000_device = {"Novell NE2000", 0, ne2000_init, ne2000_close, NULL, N
 
 device_t rtl8029as_device = {"Realtek RTL8029AS", DEVICE_PCI, rtl8029_init, ne2000_close, NULL, NULL, NULL, NULL, NULL};
 
-// SLIRP stuff
-int slirp_can_output(void) { return net_slirp_inited; }
+/* libslirp polling state */
+#define MAX_POLL_FDS 256
 
-void slirp_output(const unsigned char *pkt, int pkt_len) {
-        struct queuepacket *p;
-        p = (struct queuepacket *)malloc(sizeof(struct queuepacket));
-        p->len = pkt_len;
-        memcpy(p->data, pkt, pkt_len);
-        QueueEnter(slirpq, p);
-#ifdef NE2000_DEBUG
-        pclog("ne2000 slirp_output %d @%d\n", pkt_len, p);
-#endif
+static struct {
+        int fd;
+        int events;
+} poll_fds[MAX_POLL_FDS];
+static int poll_fd_count = 0;
+
+static fd_set slirp_rfds, slirp_wfds, slirp_xfds;
+static int slirp_nfds = 0;
+
+static int pcem_add_poll(int fd, int events, void *opaque) {
+        if (poll_fd_count >= MAX_POLL_FDS)
+                return -1;
+
+        int idx = poll_fd_count++;
+        poll_fds[idx].fd = fd;
+        poll_fds[idx].events = events;
+
+        if (events & SLIRP_POLL_IN)
+                FD_SET(fd, &slirp_rfds);
+        if (events & SLIRP_POLL_OUT)
+                FD_SET(fd, &slirp_wfds);
+        FD_SET(fd, &slirp_xfds);
+
+        if (fd >= slirp_nfds)
+                slirp_nfds = fd + 1;
+
+        return idx;
 }
 
-// Instead of calling this and crashing some times
-// or experencing jitter, this is called by the
-// 60Hz clock which seems to do the job.
+static int pcem_get_revents(int idx, void *opaque) {
+        if (idx < 0 || idx >= poll_fd_count)
+                return 0;
+
+        int fd = poll_fds[idx].fd;
+        int revents = 0;
+
+        if (FD_ISSET(fd, &slirp_rfds))
+                revents |= SLIRP_POLL_IN;
+        if (FD_ISSET(fd, &slirp_wfds))
+                revents |= SLIRP_POLL_OUT;
+        if (FD_ISSET(fd, &slirp_xfds))
+                revents |= SLIRP_POLL_PRI;
+
+        return revents;
+}
+
+/* libslirp polling — called periodically from the NE2000 poller */
 void slirp_tic() {
-        int ret2, nfds;
+        if (!net_slirp_inited || !slirp_instance)
+                return;
+
+        FD_ZERO(&slirp_rfds);
+        FD_ZERO(&slirp_wfds);
+        FD_ZERO(&slirp_xfds);
+        slirp_nfds = 0;
+        poll_fd_count = 0;
+
+        uint32_t timeout = 0;
+        slirp_pollfds_fill(slirp_instance, &timeout, pcem_add_poll, NULL);
+
+        /* Non-blocking poll — don't let select() stall the emulation loop */
         struct timeval tv;
-        fd_set rfds, wfds, xfds;
-        int timeout;
-        nfds = -1;
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
 
-        if (net_slirp_inited) {
-                FD_ZERO(&rfds);
-                FD_ZERO(&wfds);
-                FD_ZERO(&xfds);
-                timeout = slirp_select_fill(&nfds, &rfds, &wfds, &xfds); // this can crash
+        int ret = select(slirp_nfds, &slirp_rfds, &slirp_wfds, &slirp_xfds, &tv);
 
-                if (timeout < 0)
-                        timeout = 500;
-                tv.tv_sec = 0;
-                tv.tv_usec = timeout; // basilisk default 10000
-
-                ret2 = select(nfds + 1, &rfds, &wfds, &xfds, &tv);
-                if (ret2 >= 0) {
-                        slirp_select_poll(&rfds, &wfds, &xfds);
-                }
-                // pclog("ne2000 slirp_tic()\n");
-        } // end if slirp inited
+        slirp_pollfds_poll(slirp_instance, ret < 0, pcem_get_revents, NULL);
 }
