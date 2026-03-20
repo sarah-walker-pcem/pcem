@@ -25,7 +25,7 @@
 
 //#define MAX_CYLINDERS ((((1 << 28)-1) / 16) / 63)
 #define MAX_CYLINDERS 265264 /*Award 430VX won't POST with a larger drive*/
-extern int pause;
+extern volatile int pause;
 
 extern int is486;
 static int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
@@ -47,7 +47,7 @@ static int hd_new_type;
 static int new_cdrom_channel;
 static int new_zip_channel;
 
-extern int pause;
+extern volatile int pause;
 
 static int memspin_old;
 

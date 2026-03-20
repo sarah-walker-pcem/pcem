@@ -9,10 +9,23 @@ uint32_t timer_target;
   the head.*/
 static pc_timer_t *timer_head = NULL;
 
-void timer_enable(pc_timer_t *timer) {
-        pc_timer_t *timer_node = timer_head;
+/*All timers ever registered via timer_add are tracked here so we can
+  safely disable them all on reset, even if the caller forgot to call
+  timer_disable before freeing the containing struct.*/
+#define MAX_TIMERS 256
+static pc_timer_t *all_timers[MAX_TIMERS];
+static int num_timers = 0;
 
-        //	pclog("timer->enable %p %i\n", timer, timer->enabled);
+static inline int timer_valid(pc_timer_t *timer) {
+        return timer && timer->magic == TIMER_MAGIC;
+}
+
+void timer_enable(pc_timer_t *timer) {
+        pc_timer_t *timer_node;
+
+        if (!timer_valid(timer))
+                return;
+
         if (timer->enabled)
                 timer_disable(timer);
 
@@ -32,6 +45,26 @@ void timer_enable(pc_timer_t *timer) {
         timer_node = timer_head;
 
         while (1) {
+                if (!timer_valid(timer_node)) {
+                        /* Corrupted list - truncate here */
+                        pclog("timer_enable: corrupted node %p in list, truncating\n", timer_node);
+                        /* Find the previous valid node and cap the list */
+                        if (timer_node == timer_head) {
+                                timer_head = timer;
+                                timer->next = timer->prev = NULL;
+                                timer_target = timer->ts_integer;
+                        } else {
+                                /* The prev pointer of the corrupt node is unreliable,
+                                   so just append to head */
+                                timer->next = timer_head;
+                                timer->prev = NULL;
+                                timer_head->prev = timer;
+                                timer_head = timer;
+                                timer_target = timer->ts_integer;
+                        }
+                        return;
+                }
+
                 /*Timer expires before timer_node. Add to list in front of timer_node*/
                 if (TIMER_LESS_THAN(timer, timer_node)) {
                         timer->next = timer_node;
@@ -57,7 +90,9 @@ void timer_enable(pc_timer_t *timer) {
         }
 }
 void timer_disable(pc_timer_t *timer) {
-        //	pclog("timer->disable %p\n", timer);
+        if (!timer_valid(timer))
+                return;
+
         if (!timer->enabled)
                 return;
 
@@ -77,20 +112,29 @@ void timer_disable(pc_timer_t *timer) {
 static void timer_remove_head() {
         if (timer_head) {
                 pc_timer_t *timer = timer_head;
-                //		pclog("timer_remove_head %p %p\n", timer_head, timer_head->next);
                 timer_head = timer->next;
-                timer_head->prev = NULL;
+                if (timer_head) {
+                        if (!timer_valid(timer_head)) {
+                                pclog("timer_remove_head: next node %p is corrupted, clearing list\n", timer_head);
+                                timer_head = NULL;
+                        } else {
+                                timer_head->prev = NULL;
+                        }
+                }
                 timer->next = timer->prev = NULL;
                 timer->enabled = 0;
         }
 }
 
 void timer_process() {
-        if (!timer_head)
-                return;
-
-        while (1) {
+        while (timer_head) {
                 pc_timer_t *timer = timer_head;
+
+                if (!timer_valid(timer)) {
+                        pclog("timer_process: head %p is corrupted, clearing list\n", timer);
+                        timer_head = NULL;
+                        break;
+                }
 
                 if (!TIMER_LESS_THAN_VAL(timer, (uint32_t)tsc))
                         break;
@@ -99,23 +143,49 @@ void timer_process() {
                 timer->callback(timer->p);
         }
 
-        timer_target = timer_head->ts_integer;
+        if (timer_head)
+                timer_target = timer_head->ts_integer;
 }
 
 void timer_reset() {
+        int i;
+
         pclog("timer_reset\n");
+
+        /* Disable every registered timer so their next/prev pointers are
+           cleaned up before device_close_all() frees the containing structs. */
+        for (i = 0; i < num_timers; i++) {
+                pc_timer_t *t = all_timers[i];
+                if (t && t->magic == TIMER_MAGIC) {
+                        t->enabled = 0;
+                        t->prev = t->next = NULL;
+                        t->magic = 0; /* Invalidate so freed memory is detectable */
+                }
+        }
+
         timer_target = 0;
         tsc = 0;
         timer_head = NULL;
+        num_timers = 0;
 }
 
 void timer_add(pc_timer_t *timer, void (*callback)(void *p), void *p, int start_timer) {
+        /* If this timer is still in the active list, disable it first */
+        if (timer->magic == TIMER_MAGIC && timer->enabled)
+                timer_disable(timer);
+
         memset(timer, 0, sizeof(pc_timer_t));
 
+        timer->magic = TIMER_MAGIC;
         timer->callback = callback;
         timer->p = p;
         timer->enabled = 0;
         timer->prev = timer->next = NULL;
+
+        /* Track this timer for cleanup on reset */
+        if (num_timers < MAX_TIMERS)
+                all_timers[num_timers++] = timer;
+
         if (start_timer)
                 timer_set_delay_u64(timer, 0);
 }

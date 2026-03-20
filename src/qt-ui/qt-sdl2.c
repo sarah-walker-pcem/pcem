@@ -77,6 +77,9 @@ int gfx_present[GFX_MAX] = {0};
 SDL_mutex *ghMutex = NULL;
 SDL_mutex *mainMutex = NULL;
 SDL_cond *mainCond = NULL;
+static SDL_mutex *pauseMutex = NULL;
+static SDL_cond *pauseCond = NULL;
+static volatile int pause_ack = 0;
 
 SDL_Thread *mainthreadh = NULL;
 
@@ -96,7 +99,7 @@ void *ghwnd = 0;
 void *menu = NULL;
 
 emulation_state_t emulation_state = EMULATION_STOPPED;
-int pause = 0;
+volatile int pause = 0;
 
 int window_doreset = 0;
 int window_dosetresize = 0;
@@ -184,8 +187,15 @@ int mainthread(void *param) {
                         }
                         end_time = timer_read();
                         main_time += end_time - start_time;
-                } else
+                } else {
+                        if (pause && !pause_ack) {
+                                SDL_LockMutex(pauseMutex);
+                                pause_ack = 1;
+                                SDL_CondSignal(pauseCond);
+                                SDL_UnlockMutex(pauseMutex);
+                        }
                         SDL_Delay(1);
+                }
         }
 
         SDL_LockMutex(mainMutex);
@@ -524,6 +534,7 @@ int resume_emulation() {
         if (emulation_state == EMULATION_PAUSED) {
                 emulation_state = EMULATION_RUNNING;
                 pause = 0;
+                pause_ack = 0;
                 viewer_notify_resume();
                 return TRUE;
         }
@@ -547,6 +558,9 @@ int start_emulation(void *params) {
         ghMutex = SDL_CreateMutex();
         mainMutex = SDL_CreateMutex();
         mainCond = SDL_CreateCond();
+        pauseMutex = SDL_CreateMutex();
+        pauseCond = SDL_CreateCond();
+        pause_ack = 0;
 
         if (!loadbios()) {
                 if (romset != -1)
@@ -595,6 +609,7 @@ int start_emulation(void *params) {
 int pause_emulation() {
         pclog("Emulation paused.\n");
         emulation_state = EMULATION_PAUSED;
+        pause_ack = 0;
         pause = 1;
         viewer_notify_pause();
         return TRUE;
@@ -610,6 +625,10 @@ int stop_emulation() {
 
         SDL_DestroyCond(mainCond);
         SDL_DestroyMutex(mainMutex);
+        SDL_DestroyCond(pauseCond);
+        SDL_DestroyMutex(pauseMutex);
+        pauseCond = NULL;
+        pauseMutex = NULL;
 
         startblit();
         display_stop();
@@ -636,17 +655,45 @@ int stop_emulation() {
         return TRUE;
 }
 
+static void wait_for_pause_ack() {
+        SDL_LockMutex(pauseMutex);
+        while (!pause_ack)
+                SDL_CondWaitTimeout(pauseCond, pauseMutex, 1000);
+        SDL_UnlockMutex(pauseMutex);
+}
+
+static void safe_pause() {
+        pause_ack = 0;
+        pause = 1;
+        wait_for_pause_ack();
+}
+
+static void safe_unpause() {
+        pause = 0;
+        pause_ack = 0;
+}
+
 void reset_emulation() {
         pause_emulation();
-        SDL_Delay(100);
+        wait_for_pause_ack();
         resetpchard();
         resume_emulation();
 }
 
 int wx_stop() {
         pclog("Shutting down...\n");
+
+        /* Stop the emulation thread before tearing down state */
+        if (emulation_state != EMULATION_STOPPED && running) {
+                SDL_LockMutex(mainMutex);
+                running = 0;
+                SDL_CondWaitTimeout(mainCond, mainMutex, 10 * 1000);
+                SDL_UnlockMutex(mainMutex);
+        }
+
+        timer_reset();
+        display_stop();
         closepc();
-        display_close();
         sdl_video_close();
 
         printf("Shut down successfully!\n");
@@ -724,23 +771,20 @@ int wx_handle_command(void *hwnd, int wParam, int checked) {
         if (ID_IS("IDM_STATUS")) {
                 wx_show_status(hwnd);
         } else if (ID_IS("IDM_FILE_RESET")) {
-                pause = 1;
-                SDL_Delay(100);
+                safe_pause();
                 savenvr();
                 resetpc();
-                pause = 0;
+                safe_unpause();
         } else if (ID_IS("IDM_FILE_HRESET")) {
-                pause = 1;
-                SDL_Delay(100);
+                safe_pause();
                 savenvr();
                 resetpchard();
-                pause = 0;
+                safe_unpause();
         } else if (ID_IS("IDM_FILE_RESET_CAD")) {
-                pause = 1;
-                SDL_Delay(100);
+                safe_pause();
                 savenvr();
                 resetpc_cad();
-                pause = 0;
+                safe_unpause();
         } else if (ID_IS("IDM_FILE_EXIT")) {
                 //                wx_exit(hwnd, 0);
                 wx_stop_emulation(hwnd);

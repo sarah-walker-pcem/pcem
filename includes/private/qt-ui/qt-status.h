@@ -12,11 +12,15 @@
 
 #define SPEED_HISTORY_LENGTH 240
 
+struct drive_info_t;
+
 class StatusPane : public QWidget {
         Q_OBJECT
 public:
         StatusPane(QWidget *parent);
         virtual ~StatusPane();
+
+        void refresh();
 
 protected:
         void paintEvent(QPaintEvent *event) override;
@@ -27,10 +31,8 @@ private:
         char statusDeviceText[4096];
         qint64 lastSpeedUpdate;
         char speedHistory[SPEED_HISTORY_LENGTH];
-
-        QPixmap bitmapFDD[2];
-        QPixmap bitmapCDROM[2];
-        QPixmap bitmapHDD[2];
+        drive_info_t *drives;
+        int numDrives;
 };
 
 #define STATUS_WINDOW_ID 1000
@@ -41,6 +43,8 @@ public:
         StatusFrame(QWidget *parent);
         virtual ~StatusFrame();
 
+        QTimer *statusTimer;
+
 private slots:
         void onCommand(int id);
         void onTimerTick();
@@ -48,7 +52,6 @@ private slots:
 private:
         void updateToolbar();
         StatusPane *statusPane;
-        QTimer *statusTimer;
 };
 
 #endif /* QT_STATUS_H_ */

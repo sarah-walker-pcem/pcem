@@ -1,6 +1,6 @@
 #include "qt-app.h"
 #include "qt-utils.h"
-#include "qt-common.h"
+#include "qt-dialogbox.h"
 #include "logging-internal.h"
 
 #include <QCursor>
@@ -8,10 +8,13 @@
 
 #include <QApplication>
 #include <QMessageBox>
+#include <QPixmap>
+#include <QImage>
 #include <QCheckBox>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QDialogButtonBox>
+#include <QToolButton>
 
 #ifdef _WIN32
 #define BITMAP WINDOWS_BITMAP
@@ -42,7 +45,80 @@ extern int mousecapture;
 drive_info_t *get_machine_info(char *s, int *num_drive_info);
 void qt_mouse_motion(int dx, int dy);
 void qt_mouse_set_buttons(int buttons);
+void mouse_wheel_update(int);
+int config_open(void *);
+void resetpchard();
+void savenvr();
 }
+
+#ifdef _WIN32
+static HWND sdl_canvas_hwnd = 0;
+
+bool RawMouseFilter::nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) {
+        MSG *msg = static_cast<MSG *>(message);
+
+        /* Block WM_ERASEBKGND for the SDL canvas to prevent Windows from
+           painting the background black on focus changes */
+        if (msg->message == WM_ERASEBKGND) {
+                if (sdl_canvas_hwnd && (msg->hwnd == sdl_canvas_hwnd ||
+                    IsChild(sdl_canvas_hwnd, msg->hwnd))) {
+                        *result = 1;
+                        return true;
+                }
+        }
+
+        /* Suppress cursor when captured — intercept WM_SETCURSOR so Windows
+           doesn't keep resetting the cursor shape */
+        if (msg->message == WM_SETCURSOR && mousecapture) {
+                SetCursor(NULL);
+                *result = TRUE;
+                return true;
+        }
+
+        if (!mousecapture)
+                return false;
+
+        if (msg->message != WM_INPUT)
+                return false;
+
+        UINT size = 0;
+        GetRawInputData((HRAWINPUT)msg->lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
+        if (size == 0 || size > 512)
+                return false;
+
+        BYTE buf[512];
+        if (GetRawInputData((HRAWINPUT)msg->lParam, RID_INPUT, buf, &size, sizeof(RAWINPUTHEADER)) == (UINT)-1)
+                return false;
+
+        RAWINPUT *raw = (RAWINPUT *)buf;
+        if (raw->header.dwType == RIM_TYPEMOUSE) {
+                RAWMOUSE *mouse = &raw->data.mouse;
+
+                if (!(mouse->usFlags & MOUSE_MOVE_ABSOLUTE)) {
+                        int dx = mouse->lLastX;
+                        int dy = mouse->lLastY;
+                        if (dx || dy)
+                                qt_mouse_motion(dx, dy);
+                }
+
+                static int raw_buttons = 0;
+                if (mouse->usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) raw_buttons |= 1;
+                if (mouse->usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP) raw_buttons &= ~1;
+                if (mouse->usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN) raw_buttons |= 2;
+                if (mouse->usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP) raw_buttons &= ~2;
+                if (mouse->usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN) raw_buttons |= 4;
+                if (mouse->usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP) raw_buttons &= ~4;
+                qt_mouse_set_buttons(raw_buttons);
+
+                if (mouse->usButtonFlags & RI_MOUSE_WHEEL) {
+                        short wheel = (short)mouse->usButtonData;
+                        mouse_wheel_update(wheel / WHEEL_DELTA);
+                }
+                return true;
+        }
+        return false;
+}
+#endif
 
 /* Map Qt keys to PC scancodes */
 static int qt_key_to_scancode(int qtKey) {
@@ -85,6 +161,28 @@ static int qt_key_to_scancode(int qtKey) {
         case Qt::Key_End: return 0xcf; case Qt::Key_Down: return 0xd0; case Qt::Key_PageDown: return 0xd1;
         case Qt::Key_Insert: return 0xd2; case Qt::Key_Delete: return 0xd3;
         case Qt::Key_Print: return 0xb7;
+        /* Shifted key variants — Qt reports the character, not the physical key */
+        case Qt::Key_Exclam: return 0x02;      /* Shift+1 */
+        case Qt::Key_At: return 0x03;           /* Shift+2 */
+        case Qt::Key_NumberSign: return 0x04;   /* Shift+3 */
+        case Qt::Key_Dollar: return 0x05;       /* Shift+4 */
+        case Qt::Key_Percent: return 0x06;      /* Shift+5 */
+        case Qt::Key_AsciiCircum: return 0x07;  /* Shift+6 */
+        case Qt::Key_Ampersand: return 0x08;    /* Shift+7 */
+        case Qt::Key_Asterisk: return 0x09;     /* Shift+8 */
+        case Qt::Key_ParenLeft: return 0x0A;    /* Shift+9 */
+        case Qt::Key_ParenRight: return 0x0B;   /* Shift+0 */
+        case Qt::Key_Underscore: return 0x0c;   /* Shift+- */
+        case Qt::Key_Plus: return 0x0d;         /* Shift+= */
+        case Qt::Key_BraceLeft: return 0x1a;    /* Shift+[ */
+        case Qt::Key_BraceRight: return 0x1b;   /* Shift+] */
+        case Qt::Key_Colon: return 0x27;        /* Shift+; */
+        case Qt::Key_QuoteDbl: return 0x28;     /* Shift+' */
+        case Qt::Key_AsciiTilde: return 0x29;   /* Shift+` */
+        case Qt::Key_Bar: return 0x2b;          /* Shift+\ */
+        case Qt::Key_Less: return 0x33;         /* Shift+, */
+        case Qt::Key_Greater: return 0x34;      /* Shift+. */
+        case Qt::Key_Question: return 0x35;     /* Shift+/ */
         default: return -1;
         }
 }
@@ -94,30 +192,34 @@ static int qt_key_to_scancode(int qtKey) {
 SDLCanvas::SDLCanvas(QWidget *parent) : QWidget(parent) {
         setAttribute(Qt::WA_NativeWindow);
         setAttribute(Qt::WA_OpaquePaintEvent);
+        setAttribute(Qt::WA_PaintOnScreen);   /* Prevent Qt from painting over SDL surface */
+        setAttribute(Qt::WA_NoSystemBackground); /* No background erase on focus/resize */
         setAttribute(Qt::WA_InputMethodEnabled, false);
         setFocusPolicy(Qt::StrongFocus);
         setMouseTracking(true);
+        setAutoFillBackground(false);
 }
 
 void SDLCanvas::keyPressEvent(QKeyEvent *event) {
+        /* When captured, keyboard is handled by raw input (Win) or SDL events.
+           Only use Qt keys as fallback when not captured. */
+        if (mousecapture) {
+                event->accept();
+                return;
+        }
         if (!hasFocus())
                 return;
         int sc = qt_key_to_scancode(event->key());
         if (sc >= 0 && sc < 272)
                 rawinputkey[sc] = 1;
-
-        /* Left Ctrl + Alt + End releases mouse capture */
-        if (mousecapture && event->key() == Qt::Key_End &&
-            (event->modifiers() & Qt::ControlModifier) &&
-            (event->modifiers() & Qt::AltModifier)) {
-                extern int window_doinputrelease;
-                window_doinputrelease = 1;
-        }
-
         event->accept();
 }
 
 void SDLCanvas::keyReleaseEvent(QKeyEvent *event) {
+        if (mousecapture) {
+                event->accept();
+                return;
+        }
         int sc = qt_key_to_scancode(event->key());
         if (sc >= 0 && sc < 272)
                 rawinputkey[sc] = 0;
@@ -127,8 +229,8 @@ void SDLCanvas::keyReleaseEvent(QKeyEvent *event) {
 extern "C" { extern int infocus; }
 
 void SDLCanvas::focusOutEvent(QFocusEvent *event) {
-        /* Release all keys when losing focus */
-        memset(rawinputkey, 0, sizeof(int) * 272);
+        if (!mousecapture)
+                memset(rawinputkey, 0, sizeof(int) * 272);
         QWidget::focusOutEvent(event);
 }
 
@@ -137,43 +239,29 @@ void SDLCanvas::focusInEvent(QFocusEvent *event) {
 }
 
 void SDLCanvas::mouseMoveEvent(QMouseEvent *event) {
-        if (mousecapture) {
-                QPoint center(width() / 2, height() / 2);
-                QPoint pos = event->pos();
-                int dx = pos.x() - center.x();
-                int dy = pos.y() - center.y();
-
-                if (dx != 0 || dy != 0) {
-                        qt_mouse_motion(dx, dy);
-                        /* Re-center the cursor */
-                        QCursor::setPos(mapToGlobal(center));
-                }
-        }
+        /* Mouse input when captured is handled by raw input (Windows)
+           for smooth, jitter-free movement. Qt events are ignored. */
         event->accept();
 }
 
 void SDLCanvas::mousePressEvent(QMouseEvent *event) {
-        if (mousecapture) {
-                int buttons = 0;
-                Qt::MouseButtons mb = event->buttons();
-                if (mb & Qt::LeftButton) buttons |= 1;
-                if (mb & Qt::RightButton) buttons |= 2;
-                if (mb & Qt::MiddleButton) buttons |= 4;
-                qt_mouse_set_buttons(buttons);
-        }
         event->accept();
 }
 
 void SDLCanvas::mouseReleaseEvent(QMouseEvent *event) {
-        if (mousecapture) {
-                int buttons = 0;
-                Qt::MouseButtons mb = event->buttons();
-                if (mb & Qt::LeftButton) buttons |= 1;
-                if (mb & Qt::RightButton) buttons |= 2;
-                if (mb & Qt::MiddleButton) buttons |= 4;
-                qt_mouse_set_buttons(buttons);
-        }
         event->accept();
+}
+
+void SDLCanvas::paintEvent(QPaintEvent *event) {
+        /* Do nothing — SDL manages this surface. Prevents Qt from
+           filling the widget with a background color on repaint. */
+        event->accept();
+}
+
+QPaintEngine *SDLCanvas::paintEngine() const {
+        /* Return null to tell Qt this widget does not use Qt's paint system.
+           This prevents Qt from ever trying to paint on this surface. */
+        return nullptr;
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -185,12 +273,23 @@ MainWindow::MainWindow(QWidget *parent)
         setCentralWidget(m_sdlCanvas);
         m_sdlCanvas->setFocus();
 
+#ifdef _WIN32
+        m_rawMouseFilter = new RawMouseFilter();
+        QCoreApplication::instance()->installNativeEventFilter(m_rawMouseFilter);
+        sdl_canvas_hwnd = (HWND)m_sdlCanvas->winId();
+#endif
+
         setupStatusBar();
 
         buildMenus();
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() {
+#ifdef _WIN32
+        QCoreApplication::instance()->removeNativeEventFilter(m_rawMouseFilter);
+        delete m_rawMouseFilter;
+#endif
+}
 
 QAction *MainWindow::addMenuItem(QMenu *menu, const char *id, const char *label, bool checkable, bool radio) {
         QAction *action = menu->addAction(QString(label).remove('_'));
@@ -379,6 +478,46 @@ void MainWindow::buildMenus() {
         /* View (for viewers) */
         QMenu *viewMenu = menuBar()->addMenu("View");
         viewMenu->menuAction()->setData(wx_xrcid("IDM_VIEW"));
+
+        /* Help */
+        QMenu *helpMenu = menuBar()->addMenu("Help");
+        {
+                QAction *configAction = helpMenu->addAction("Configure...");
+                connect(configAction, &QAction::triggered, this, [this]() {
+                        /* Pause emulation before opening config.
+                           config_dialog_proc also sets pause=1 on init, but we
+                           need it paused so we can resetpchard after OK. */
+                        extern volatile int pause;
+                        pause = 1;
+                        int result = config_open(this);
+                        /* config_dialog_proc sets pause=0 on OK/Cancel, but
+                           we need to stay paused for the reset if OK was pressed. */
+                        if (result == 1) {
+                                pause = 1;
+                                savenvr();
+                                resetpchard();
+                        }
+                        pause = 0;
+                });
+                helpMenu->addSeparator();
+                QAction *aboutAction = helpMenu->addAction("About PCem...");
+                connect(aboutAction, &QAction::triggered, this, [this]() {
+                        showAboutDialog();
+                });
+        }
+}
+
+static QIcon makeGrayIcon(const QPixmap &pm) {
+        QImage img = pm.toImage().convertToFormat(QImage::Format_ARGB32);
+        for (int y = 0; y < img.height(); y++) {
+                QRgb *line = reinterpret_cast<QRgb *>(img.scanLine(y));
+                for (int x = 0; x < img.width(); x++) {
+                        int a = qAlpha(line[x]);
+                        int gray = qGray(line[x]);
+                        line[x] = qRgba(gray, gray, gray, a / 2);
+                }
+        }
+        return QIcon(QPixmap::fromImage(img));
 }
 
 void MainWindow::setupStatusBar() {
@@ -386,14 +525,35 @@ void MainWindow::setupStatusBar() {
         m_statusSpeedLabel = new QLabel("Stopped", this);
         statusBar()->addPermanentWidget(m_statusSpeedLabel);
 
+        /* Load 16x16 drive type icons */
+        QPixmap fddPm(":/icons/16x16/diskette.png");
+        QPixmap hddPm(":/icons/16x16/drive.png");
+        QPixmap cdPm(":/icons/16x16/cd.png");
+        m_iconFDD = QIcon(fddPm);
+        m_iconFDDDisabled = makeGrayIcon(fddPm);
+        m_iconHDD = QIcon(hddPm);
+        m_iconCDROM = QIcon(cdPm);
+        m_iconCDROMDisabled = makeGrayIcon(cdPm);
+
         for (int i = 0; i < 10; i++) {
-                m_statusDriveLabels[i] = new QLabel(this);
-                m_statusDriveLabels[i]->setMinimumWidth(50);
-                m_statusDriveLabels[i]->setAlignment(Qt::AlignCenter);
-                m_statusDriveLabels[i]->setAutoFillBackground(true);
-                m_statusDriveLabels[i]->hide();
-                statusBar()->addWidget(m_statusDriveLabels[i]);
+                m_statusDriveButtons[i] = new QToolButton(this);
+                m_statusDriveButtons[i]->setIconSize(QSize(16, 16));
+                m_statusDriveButtons[i]->setAutoRaise(true);
+                m_statusDriveButtons[i]->setContextMenuPolicy(Qt::CustomContextMenu);
+                m_statusDriveButtons[i]->hide();
+                statusBar()->addWidget(m_statusDriveButtons[i]);
+
+                int idx = i;
+                connect(m_statusDriveButtons[i], &QToolButton::customContextMenuRequested,
+                        this, [this, idx](const QPoint &pos) {
+                                onDriveContextMenu(idx, m_statusDriveButtons[idx]->mapToGlobal(pos));
+                        });
+                connect(m_statusDriveButtons[i], &QToolButton::clicked,
+                        this, [this, idx]() {
+                                onDriveContextMenu(idx, QCursor::pos());
+                        });
         }
+        memset(m_driveCache, 0, sizeof(m_driveCache));
 
         m_statusTimer = new QTimer(this);
         connect(m_statusTimer, &QTimer::timeout, this, &MainWindow::updateStatusBar);
@@ -404,7 +564,7 @@ void MainWindow::updateStatusBar() {
         if (emulation_state != EMULATION_RUNNING) {
                 m_statusSpeedLabel->setText(emulation_state == EMULATION_PAUSED ? "Paused" : "Stopped");
                 for (int i = 0; i < 10; i++)
-                        m_statusDriveLabels[i]->hide();
+                        m_statusDriveButtons[i]->hide();
                 return;
         }
 
@@ -419,41 +579,106 @@ void MainWindow::updateStatusBar() {
 
         for (int i = 0; i < 10; i++) {
                 if (i < numDrives) {
-                        QLabel *label = m_statusDriveLabels[i];
+                        QToolButton *btn = m_statusDriveButtons[i];
                         drive_info_t *d = &drives[i];
+                        m_driveCache[i] = *d;
 
-                        QString driveText;
-                        const char *typeStr;
+                        QIcon icon;
                         switch (d->type) {
-                        case DRIVE_TYPE_FDD: typeStr = "FDD"; break;
-                        case DRIVE_TYPE_HDD: typeStr = "HDD"; break;
-                        case DRIVE_TYPE_CDROM: typeStr = "CD"; break;
-                        default: typeStr = "?"; break;
+                        case DRIVE_TYPE_FDD:
+                                icon = d->enabled ? m_iconFDD : m_iconFDDDisabled;
+                                break;
+                        case DRIVE_TYPE_HDD:
+                                icon = m_iconHDD;
+                                break;
+                        case DRIVE_TYPE_CDROM:
+                                icon = d->enabled ? m_iconCDROM : m_iconCDROMDisabled;
+                                break;
+                        default:
+                                icon = m_iconHDD;
+                                break;
                         }
-                        driveText = QString("%1: %2").arg(QChar(d->drive_letter), typeStr);
-                        label->setText(driveText);
 
-                        QPalette pal = label->palette();
                         if (d->readflash) {
-                                /* Activity — green flash */
-                                pal.setColor(QPalette::Window, QColor(0, 200, 0));
-                                pal.setColor(QPalette::WindowText, Qt::white);
-                        } else if (d->enabled) {
-                                /* Mounted but idle */
-                                pal.setColor(QPalette::Window, QColor(60, 60, 60));
-                                pal.setColor(QPalette::WindowText, QColor(180, 180, 180));
+                                btn->setStyleSheet("QToolButton { background-color: #00c800; }");
                         } else {
-                                /* Empty drive */
-                                pal.setColor(QPalette::Window, QColor(40, 40, 40));
-                                pal.setColor(QPalette::WindowText, QColor(100, 100, 100));
+                                btn->setStyleSheet("");
                         }
-                        label->setPalette(pal);
-                        label->show();
+
+                        btn->setIcon(icon);
+                        btn->setToolTip(QString("%1: %2").arg(QChar(d->drive_letter),
+                                d->enabled ? QString(d->fn) : "Empty"));
+                        btn->show();
                 } else {
-                        m_statusDriveLabels[i]->hide();
+                        m_statusDriveButtons[i]->hide();
                 }
         }
         m_numDriveLabels = numDrives;
+}
+
+void MainWindow::onDriveContextMenu(int driveIndex, const QPoint &pos) {
+        if (driveIndex < 0 || driveIndex >= m_numDriveLabels)
+                return;
+
+        drive_info_t *d = &m_driveCache[driveIndex];
+
+        if (d->type == DRIVE_TYPE_HDD)
+                return; /* No context menu for HDDs */
+
+        QMenu menu(this);
+
+        if (d->type == DRIVE_TYPE_FDD) {
+                int driveNum = d->drive; /* 0=A, 1=B */
+                const char *changeId = (driveNum == 0) ? "IDM_DISC_A" : "IDM_DISC_B";
+                const char *ejectId = (driveNum == 0) ? "IDM_EJECT_A" : "IDM_EJECT_B";
+
+                QAction *loadAct = menu.addAction(
+                        m_iconFDD,
+                        QString("Change drive %1:...").arg(QChar(d->drive_letter)));
+                connect(loadAct, &QAction::triggered, this, [this, changeId]() {
+                        wx_handle_command(this, wx_xrcid(changeId), 0);
+                });
+
+                QAction *ejectAct = menu.addAction(
+                        QString("Eject drive %1:").arg(QChar(d->drive_letter)));
+                ejectAct->setEnabled(d->enabled);
+                connect(ejectAct, &QAction::triggered, this, [this, ejectId]() {
+                        wx_handle_command(this, wx_xrcid(ejectId), 0);
+                });
+        } else if (d->type == DRIVE_TYPE_CDROM) {
+                QAction *loadAct = menu.addAction(
+                        m_iconCDROM,
+                        "Load image...");
+                connect(loadAct, &QAction::triggered, this, [this]() {
+                        wx_handle_command(this, wx_xrcid("IDM_CDROM_IMAGE_LOAD"), 0);
+                });
+
+                QAction *emptyAct = menu.addAction("Eject");
+                emptyAct->setEnabled(d->enabled);
+                connect(emptyAct, &QAction::triggered, this, [this]() {
+                        wx_handle_command(this, wx_xrcid("IDM_CDROM_EMPTY"), 0);
+                });
+        }
+
+        menu.exec(pos);
+}
+
+static int about_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam) {
+        if (message == WX_COMMAND && wParam == wxID_OK) {
+                wx_enddialog(hdlg, 0);
+                return TRUE;
+        }
+        return FALSE;
+}
+
+void MainWindow::showAboutDialog() {
+        PCemDialogBox dlg(this, about_dlgproc);
+        if (dlg.loadUi("AboutDlg")) {
+                dlg.onInit();
+                dlg.setReady(true);
+                dlg.adjustSize();
+                dlg.exec();
+        }
 }
 
 void MainWindow::start() {

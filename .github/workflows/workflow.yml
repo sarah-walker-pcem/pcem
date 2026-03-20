@@ -20,6 +20,7 @@ jobs:
               libopenal-dev
               libwxgtk3.2-dev
               libpcap-dev
+              libslirp-dev
               cmake
               llvm
               clang
@@ -53,6 +54,7 @@ jobs:
               libopenal-dev
               libwxgtk3.2-dev
               libpcap-dev
+              libslirp-dev
               cmake
               llvm
               clang
@@ -86,6 +88,7 @@ jobs:
               libopenal-dev
               libwxgtk3.2-dev
               libpcap-dev
+              libslirp-dev
               cmake
               llvm
               clang

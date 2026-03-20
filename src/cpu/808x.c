@@ -539,6 +539,10 @@ void dumpregs() {
         FILE *f;
         if (indump)
                 return;
+        if (!ram) {
+                pclog("dumpregs: ram is NULL, skipping\n");
+                return;
+        }
         indump = 1;
         output = 0;
         /*        f=dofopen(logs_path, "rram3.dmp","wb");

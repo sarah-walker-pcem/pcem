@@ -19,7 +19,9 @@ jobs:
               libsdl2-dev
               libopenal-dev
               qt6-base-dev
+              qt6-tools-dev
               libpcap-dev
+              libslirp-dev
               cmake
               llvm
               clang
@@ -52,7 +54,9 @@ jobs:
               libsdl2-dev
               libopenal-dev
               qt6-base-dev
+              qt6-tools-dev
               libpcap-dev
+              libslirp-dev
               cmake
               llvm
               clang
@@ -85,7 +89,9 @@ jobs:
               libsdl2-dev
               libopenal-dev
               qt6-base-dev
+              qt6-tools-dev
               libpcap-dev
+              libslirp-dev
               cmake
               llvm
               clang

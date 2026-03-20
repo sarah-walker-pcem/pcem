@@ -7,7 +7,11 @@
 #include <string>
 #include <vector>
 
-extern "C" void pclog(const char *format, ...);
+extern "C" {
+void pclog(const char *format, ...);
+void wx_handle_command(void *, int, int);
+extern void *ghwnd;
+}
 
 class ViewerRout
 {
@@ -129,6 +133,11 @@ void update_viewers_menu(void *menu)
 	for (std::vector<ViewerRout>::iterator it = viewer_routs.begin(); it != viewer_routs.end(); it++)
 	{
 		QAction *action = viewMenu->addAction(QString::fromStdString((*it).title));
-		action->setData(id++);
+		action->setData(id);
+		int viewerId = id;
+		QObject::connect(action, &QAction::triggered, [viewerId]() {
+			wx_handle_command(ghwnd, viewerId, 0);
+		});
+		id++;
 	}
 }

@@ -20,6 +20,18 @@
    <string>Configure PCem</string>
   </property>
   <layout class="QGridLayout" name="rootGridLayout">
+   <property name="leftMargin">
+    <number>10</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
+   </property>
+   <property name="rightMargin">
+    <number>10</number>
+   </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
    <item row="0" column="0">
     <widget class="QListWidget" name="IDC_PAGESELECTION">
      <property name="minimumSize">
@@ -272,6 +284,19 @@
          </property>
         </widget>
        </item>
+       <item row="7" column="0">
+        <spacer name="motherboardSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="pageVideo">
@@ -348,6 +373,19 @@
          </property>
         </widget>
        </item>
+       <item row="3" column="0">
+        <spacer name="videoSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="pageSound">
@@ -411,6 +449,19 @@
           <string>Innovation SSI-2001</string>
          </property>
         </widget>
+       </item>
+       <item row="4" column="0">
+        <spacer name="soundSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -1405,6 +1456,19 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="0">
+        <spacer name="portsSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="pageMouse">
@@ -1431,6 +1495,19 @@
           </size>
          </property>
         </widget>
+       </item>
+       <item row="1" column="0">
+        <spacer name="mouseSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -1550,6 +1627,19 @@
           <string>...</string>
          </property>
         </widget>
+       </item>
+       <item row="1" column="0">
+        <spacer name="networkSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>

@@ -16,7 +16,7 @@ void screenshot_taken(unsigned char *rgb, int width, int height);
 
 extern char openfilestring[260];
 
-extern int pause;
+extern volatile int pause;
 
 extern int take_screenshot;
 

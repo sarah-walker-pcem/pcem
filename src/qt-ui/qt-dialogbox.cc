@@ -123,6 +123,7 @@ void PCemDialogBox::onInit() {
                         child->blockSignals(false);
 
                 connectWidgetSignals();
+                m_ready = true;
         }
 }
 

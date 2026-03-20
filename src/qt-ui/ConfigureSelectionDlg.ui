@@ -12,6 +12,18 @@
    </size>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>10</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
+   </property>
+   <property name="rightMargin">
+    <number>10</number>
+   </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
    <item row="0" column="0">
     <widget class="QListWidget" name="IDC_LIST">
      <property name="minimumSize">

@@ -34,8 +34,8 @@ int main(int argc, char **argv)
         QApplication app(argc, argv);
         app.setApplicationName("PCem");
 
-        /* Track application focus for the emulation display */
         extern int infocus;
+        infocus = 1;
         QObject::connect(&app, &QApplication::applicationStateChanged, [](Qt::ApplicationState state) {
                 extern int infocus;
                 infocus = (state == Qt::ApplicationActive) ? 1 : 0;

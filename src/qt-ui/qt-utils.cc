@@ -52,6 +52,8 @@
 extern "C" {
 #include "thread.h"
 extern void pclog(const char *format, ...);
+extern void *ghwnd;
+void wx_handle_command(void *, int, int);
 }
 
 int (*wx_keydown_func)(void *window, void *event, int keycode, int modifiers) = nullptr;
@@ -218,6 +220,23 @@ int wx_filedialog(void *window, const char *title, const char *path, const char 
         return 1;
 }
 
+static QAction *findActionById(QList<QAction *> actions, int id, QMenu **parentMenu) {
+        for (QAction *action : actions) {
+                if (action->data().toInt() == id) {
+                        return action;
+                }
+                if (action->menu()) {
+                        QAction *found = findActionById(action->menu()->actions(), id, parentMenu);
+                        if (found) {
+                                if (parentMenu && !*parentMenu)
+                                        *parentMenu = action->menu();
+                                return found;
+                        }
+                }
+        }
+        return nullptr;
+}
+
 void wx_checkmenuitem(void *menu, int id, int checked) {
         QMenuBar *menuBar = qobject_cast<QMenuBar *>(static_cast<QObject *>(menu));
         QMenu *qmenu = qobject_cast<QMenu *>(static_cast<QObject *>(menu));
@@ -228,14 +247,19 @@ void wx_checkmenuitem(void *menu, int id, int checked) {
         else if (qmenu)
                 actions = qmenu->actions();
 
-        for (QAction *action : actions) {
-                if (action->data().toInt() == id) {
-                        action->setChecked(checked);
-                        return;
-                }
-                if (action->menu()) {
-                        /* Recurse into submenus */
-                        wx_checkmenuitem(action->menu(), id, checked);
+        QMenu *parentMenu = nullptr;
+        QAction *target = findActionById(actions, id, &parentMenu);
+        if (!target)
+                return;
+
+        target->setChecked(checked);
+
+        /* Radio behavior: if checking a checkable item, uncheck all other
+           checkable items in the same menu (simulates QActionGroup) */
+        if (checked && target->isCheckable() && parentMenu) {
+                for (QAction *sibling : parentMenu->actions()) {
+                        if (sibling != target && sibling->isCheckable())
+                                sibling->setChecked(false);
                 }
         }
 }
@@ -322,6 +346,12 @@ void wx_appendmenu(void *sub_menu, int id, const char *title, int type) {
                 action->setCheckable(true);
         else if (type == 2) /* wxITEM_RADIO */
                 action->setCheckable(true);
+
+        /* Connect to command handler */
+        int actionId = id;
+        QObject::connect(action, &QAction::triggered, [actionId]() {
+                wx_handle_command(ghwnd, actionId, 0);
+        });
 }
 
 void wx_enabletoolbaritem(void *toolbar, int id, int enable) {
@@ -802,12 +832,25 @@ void wx_setwindowposition(void *window, int x, int y) { static_cast<QWidget *>(w
 
 void wx_setwindowsize(void *window, int width, int height) { static_cast<QWidget *>(window)->resize(width, height); }
 
+static StatusFrame *statusFrameInstance = nullptr;
+
 void wx_show_status(void *window) {
-        /* TODO: implement status window management */
+        QWidget *parent = static_cast<QWidget *>(window);
+        if (!statusFrameInstance) {
+                statusFrameInstance = new StatusFrame(parent);
+        }
+        statusFrameInstance->show();
+        statusFrameInstance->raise();
+        statusFrameInstance->statusTimer->start(100);
 }
 
 void wx_close_status(void *window) {
-        /* TODO: implement status window management */
+        if (statusFrameInstance) {
+                statusFrameInstance->statusTimer->stop();
+                statusFrameInstance->close();
+                delete statusFrameInstance;
+                statusFrameInstance = nullptr;
+        }
 }
 
 int wx_setup(char *path) {

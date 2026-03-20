@@ -49,7 +49,7 @@ int rendering = 0;
 int mousecapture = 0;
 
 extern "C" {
-extern int pause;
+extern volatile int pause;
 extern int video_scale;
 extern int take_screenshot;
 }
@@ -78,7 +78,91 @@ extern "C" {
 void device_force_redraw();
 void mouse_wheel_update(int);
 void toggle_fullscreen();
+void qt_mouse_motion(int dx, int dy);
+void qt_mouse_set_buttons(int buttons);
 }
+
+#ifdef _WIN32
+static HHOOK ll_keyboard_hook = NULL;
+
+static int ll_vkey_to_scancode(DWORD vkCode, DWORD scanCode, DWORD flags) {
+        int sc = scanCode;
+        int e0 = (flags & LLKHF_EXTENDED) ? 1 : 0;
+
+        if (e0) {
+                switch (sc) {
+                case 0x1c: return 0x9c;
+                case 0x1d: return 0x9d;
+                case 0x35: return 0xb5;
+                case 0x38: return 0xb8;
+                case 0x47: return 0xc7;
+                case 0x48: return 0xc8;
+                case 0x49: return 0xc9;
+                case 0x4b: return 0xcb;
+                case 0x4d: return 0xcd;
+                case 0x4f: return 0xcf;
+                case 0x50: return 0xd0;
+                case 0x51: return 0xd1;
+                case 0x52: return 0xd2;
+                case 0x53: return 0xd3;
+                case 0x5b: return 0xdb;
+                case 0x5c: return 0xdc;
+                case 0x5d: return 0xdd;
+                case 0x37: return 0xb7;
+                default: return sc | 0x80;
+                }
+        }
+        return sc;
+}
+
+static LRESULT CALLBACK ll_keyboard_proc(int nCode, WPARAM wParam, LPARAM lParam) {
+        if (nCode == HC_ACTION && mousecapture) {
+                KBDLLHOOKSTRUCT *kb = (KBDLLHOOKSTRUCT *)lParam;
+                int sc = ll_vkey_to_scancode(kb->vkCode, kb->scanCode, kb->flags);
+                int pressed = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
+
+                if (sc >= 0 && sc < 272) {
+                        rawinputkey[sc] = pressed;
+
+                        /* Ctrl+Alt+End releases capture */
+                        if (pressed && sc == 0xcf &&
+                            rawinputkey[0x1d] && rawinputkey[0x38]) {
+                                extern int window_doinputrelease;
+                                window_doinputrelease = 1;
+                        }
+                }
+                /* Block all system keys from reaching the OS */
+                return 1;
+        }
+        return CallNextHookEx(ll_keyboard_hook, nCode, wParam, lParam);
+}
+
+static void rawinput_register(int enable) {
+        if (enable && !ll_keyboard_hook) {
+                ll_keyboard_hook = SetWindowsHookExW(WH_KEYBOARD_LL, ll_keyboard_proc,
+                        GetModuleHandleW(NULL), 0);
+
+                /* Register for raw mouse input — gives unaccelerated deltas
+                   without cursor repositioning jitter */
+                RAWINPUTDEVICE rid;
+                rid.usUsagePage = 0x01;
+                rid.usUsage = 0x02; /* Mouse */
+                rid.dwFlags = 0;
+                rid.hwndTarget = NULL;
+                RegisterRawInputDevices(&rid, 1, sizeof(rid));
+        } else if (!enable && ll_keyboard_hook) {
+                UnhookWindowsHookEx(ll_keyboard_hook);
+                ll_keyboard_hook = NULL;
+
+                RAWINPUTDEVICE rid;
+                rid.usUsagePage = 0x01;
+                rid.usUsage = 0x02;
+                rid.dwFlags = RIDEV_REMOVE;
+                rid.hwndTarget = NULL;
+                RegisterRawInputDevices(&rid, 1, sizeof(rid));
+        }
+}
+#endif /* _WIN32 */
 
 extern "C" void display_resize(int width, int height) {
         winsizex = width * (video_scale + 1) >> 1;
@@ -98,12 +182,21 @@ extern "C" void display_resize(int width, int height) {
 extern "C" void releasemouse() {
         if (mousecapture) {
                 mousecapture = 0;
+
+#ifdef _WIN32
+                rawinput_register(0);
+                ClipCursor(NULL);
+                SetCursor(LoadCursor(NULL, IDC_ARROW));
+#else
                 QMetaObject::invokeMethod(mainWindowPtr, []() {
                         if (mainWindowPtr && mainWindowPtr->sdlCanvas()) {
                                 mainWindowPtr->sdlCanvas()->releaseMouse();
                                 mainWindowPtr->sdlCanvas()->setCursor(Qt::ArrowCursor);
                         }
                 }, Qt::QueuedConnection);
+#endif
+
+                memset(rawinputkey, 0, sizeof(rawinputkey));
         }
 }
 
@@ -114,8 +207,6 @@ extern "C" int is_fullscreen() {
         }
         return 0;
 }
-
-/* Keyboard input handled by Qt SDLCanvas - see qt-app.cc */
 
 extern "C" int display_init() {
 #ifdef _WIN32
@@ -396,7 +487,6 @@ int render() {
                                                 wx_popupmenu(mainWindowPtr, menu, 0, 0);
                                 }
                         }
-                        /* Mouse release is handled by Ctrl+Alt+End in SDLCanvas::keyPressEvent */
                         break;
                 case SDL_MOUSEWHEEL:
                         if (mousecapture)
@@ -407,8 +497,6 @@ int render() {
                                 wx_stop_emulation(mainWindowPtr);
                         if (event.window.event == SDL_WINDOWEVENT_RESIZED)
                                 device_force_redraw();
-                        /* SDL focus events are unreliable for embedded windows.
-                           Focus is managed by Qt's SDLCanvas focusIn/OutEvent instead. */
 
                         if (window_remember) {
                                 int flags = SDL_GetWindowFlags(window);
@@ -437,8 +525,6 @@ int render() {
                 }
                 }
         }
-
-        /* Keyboard input is handled via SDL_KEYDOWN/SDL_KEYUP events above */
 
         /* Hotkey handling */
         if ((rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEDOWN)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_3)]) &&
@@ -498,33 +584,54 @@ int render() {
                 window_doinputgrab = 0;
                 mousecapture = 1;
 
-                /* Use Qt to grab and hide cursor since SDL can't properly
-                   grab a foreign window */
+#ifdef _WIN32
+                rawinput_register(1);
+                /* Lock cursor to single pixel at canvas center */
+                {
+                        HWND hwnd = (HWND)mainWindowPtr->sdlCanvas()->winId();
+                        RECT wr;
+                        GetWindowRect(hwnd, &wr);
+                        int cx = (wr.left + wr.right) / 2;
+                        int cy = (wr.top + wr.bottom) / 2;
+                        RECT clip;
+                        clip.left = cx;
+                        clip.top = cy;
+                        clip.right = cx + 1;
+                        clip.bottom = cy + 1;
+                        SetCursorPos(cx, cy);
+                        ClipCursor(&clip);
+                        SetCursor(NULL);
+                }
+#else
+                /* Non-Windows: fall back to Qt grab */
                 QMetaObject::invokeMethod(mainWindowPtr, []() {
                         if (mainWindowPtr && mainWindowPtr->sdlCanvas()) {
                                 QWidget *canvas = mainWindowPtr->sdlCanvas();
                                 canvas->setCursor(Qt::BlankCursor);
                                 canvas->grabMouse();
-                                /* Center the cursor */
-                                QPoint center = canvas->mapToGlobal(
-                                        QPoint(canvas->width() / 2, canvas->height() / 2));
-                                QCursor::setPos(center);
                         }
                 }, Qt::QueuedConnection);
-
-                SDL_GetRelativeMouseState(0, 0);
+#endif
         }
 
         if (window_doinputrelease) {
                 window_doinputrelease = 0;
                 mousecapture = 0;
 
+#ifdef _WIN32
+                rawinput_register(0);
+                ClipCursor(NULL);
+                SetCursor(LoadCursor(NULL, IDC_ARROW));
+#else
                 QMetaObject::invokeMethod(mainWindowPtr, []() {
                         if (mainWindowPtr && mainWindowPtr->sdlCanvas()) {
                                 mainWindowPtr->sdlCanvas()->releaseMouse();
                                 mainWindowPtr->sdlCanvas()->setCursor(Qt::ArrowCursor);
                         }
                 }, Qt::QueuedConnection);
+#endif
+
+                memset(rawinputkey, 0, sizeof(rawinputkey));
         }
         if (window_dowindowed) {
                 window_dowindowed = 0;

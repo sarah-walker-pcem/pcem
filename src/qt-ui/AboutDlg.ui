@@ -34,6 +34,19 @@ Other icons made by FatCow (http://www.fatcow.com/free-icons/)</string>
     </widget>
    </item>
    <item>
+    <spacer name="aboutVertSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
     <widget class="QPushButton" name="wxID_OK">
      <property name="text">
       <string>OK</string>

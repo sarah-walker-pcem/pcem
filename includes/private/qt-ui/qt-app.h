@@ -13,8 +13,24 @@
 #include <QThread>
 #include <QStatusBar>
 #include <QLabel>
+#include <QPixmap>
+#include <QToolButton>
+#include <QPaintEngine>
 
 #include "qt-utils.h"
+
+extern "C" {
+#include "qt-common.h"
+}
+
+#ifdef _WIN32
+#include <QAbstractNativeEventFilter>
+
+class RawMouseFilter : public QAbstractNativeEventFilter {
+public:
+        bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) override;
+};
+#endif
 
 class MainWindow;
 
@@ -32,6 +48,8 @@ protected:
         void mouseMoveEvent(QMouseEvent *event) override;
         void mousePressEvent(QMouseEvent *event) override;
         void mouseReleaseEvent(QMouseEvent *event) override;
+        void paintEvent(QPaintEvent *event) override;
+        QPaintEngine *paintEngine() const override;
 };
 
 class PCemExitThread : public QThread {
@@ -83,15 +101,28 @@ private:
 
         void setupStatusBar();
         void updateStatusBar();
+        void onDriveContextMenu(int driveIndex, const QPoint &pos);
+        void showAboutDialog();
 
         QMenu *m_menu;
         SDLCanvas *m_sdlCanvas;
         bool m_closing;
 
         QTimer *m_statusTimer;
-        QLabel *m_statusDriveLabels[10];
+        QToolButton *m_statusDriveButtons[10];
+        drive_info_t m_driveCache[10];
         QLabel *m_statusSpeedLabel;
         int m_numDriveLabels;
+
+        QIcon m_iconFDD;
+        QIcon m_iconFDDDisabled;
+        QIcon m_iconHDD;
+        QIcon m_iconCDROM;
+        QIcon m_iconCDROMDisabled;
+
+#ifdef _WIN32
+        RawMouseFilter *m_rawMouseFilter;
+#endif
 };
 
 #endif /* QT_APP_H_ */

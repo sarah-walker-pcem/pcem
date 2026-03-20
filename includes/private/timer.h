@@ -15,7 +15,10 @@
   When a timer callback is called, the timer has been disabled. If the timer is
   to repeat, the callback must call timer_advance_u64(). This is a change from
   the old timer API.*/
+#define TIMER_MAGIC 0x544D5243 /* 'TMRC' */
+
 typedef struct pc_timer_t {
+        uint32_t magic;
         uint32_t ts_integer;
         uint32_t ts_frac;
         int enabled;
