@@ -99,7 +99,7 @@ int framecount = 0, fps = 0;
 int atfullspeed;
 
 void saveconfig(char *fn);
-int infocus = 0;
+int infocus = 1;
 extern int mousecapture;
 
 extern uint8_t cgastat;
@@ -349,13 +349,13 @@ void resetpc_cad() {
 }
 
 void resetpchard() {
+        timer_reset();
         device_close_all();
         mouse_emu_close();
         viewer_close_all();
         device_init();
         viewer_reset();
 
-        timer_reset();
         sound_reset();
         io_init();
         cpu_set();
