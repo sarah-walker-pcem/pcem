@@ -20,6 +20,7 @@ static int toc_tracks;
 static int first_track, last_track;
 static int ioctl_fd = 0;
 
+int cdrom_drive;
 int old_cdrom_drive;
 
 #define MSFtoLBA(m, s, f) (((((m * 60) + s) * 75) + f) - 150)
