@@ -3,6 +3,8 @@
 #include "qt-dialogbox.h"
 #include "logging-internal.h"
 
+#include <cstdlib>
+
 #include <QCursor>
 #include <QMouseEvent>
 
@@ -806,7 +808,7 @@ void MainWindow::quit(bool stopEmulator) {
         QApplication::quit();
         /* Force exit if the event loop isn't running yet (e.g. window never shown) */
         if (!isVisible())
-                _exit(0);
+                _Exit(0);
 }
 
 PCemExitThread::PCemExitThread(MainWindow *mainWindow) : mainWindow(mainWindow) {}
