@@ -32,14 +32,13 @@ then `./src/pcem` to run.
 BIOS ROM images, configuration files, and other data are stored in `~/.pcem`. You can also create a `.pcem` folder with
 the Binary, and run it in a portable mode.
 
-You can specify the Display Engine using `-DPCEM_DISPLAY_ENGINE=` The only valid option you have at this time is
-wxWidgets 
-
 The configure options are specified below. They are in the format of -D`Option`=`Value`. `Value` under here is the
 default value.
 ```
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
   -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
+  -DPCEM_DISPLAY_ENGINE=wxWidgets : Compile with the WxWidgets Display Engine. Default
+  -DPCEM_DISPLAY_ENGINE=Qt   : Compile with the Qt Display Engine.
   -DUSE_NETWORKING=ON        : Build with networking support.
   -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (Needs USE_NETWORKING to compile) Requires libpcap.
   -DUSE_ALSA=OFF             : Build with support for MIDI output through ALSA. Requires libasound. (Linux Only)
@@ -76,6 +75,8 @@ The menu is a pop-up menu in the Linux/BSD port. Right-click on the main window 
 captured.
 
 CD-ROM support currently only accesses `/dev/cdrom`. It has not been heavily tested.
+
+On Windows, if you want to use PCAP networking, you will need to install [npcap](https://npcap.com) and replace the libpcap.dll in PCem dir using the wpcap.dll installed in C:\Windows\System32  
 
 ## Links
 
