@@ -32,8 +32,8 @@ extern int pause;
 extern int video_scale;
 extern int take_screenshot;
 
-void *ghwnd;
-void *menu;
+extern void *ghwnd;
+extern void *menu;
 
 SDL_Rect remembered_rect;
 int remembered_mouse_x = 0;
