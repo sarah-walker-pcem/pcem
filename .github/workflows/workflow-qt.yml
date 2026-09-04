@@ -219,16 +219,12 @@ jobs:
           name: ${{ matrix.artifacts_name }}
           path: ./artifacts
 
-      - name: Upload to Wise Hyperion Harbor (S3)
-        uses: shallwefootball/s3-upload-action@master
-        env:
-          super_secret: ${{secrets.nte_cdn_s3_key_id}}
-        if: ${{ env.super_secret != null }}
-        id: S3
+      - name: Upload to Wise Mirror Service
+        uses: Dylan700/sftp-upload-action@latest
         with:
-          aws_key_id: ${{secrets.nte_cdn_s3_key_id}}
-          aws_secret_access_key: ${{secrets.nte_cdn_s3_secret_access_key}}
-          aws_bucket: pcem-dev-builds
-          source_dir: ./artifacts
-          destination_dir: ''
-          endpoint:  https://s3.us-west-1.hyperion.wisegs.net:443
+          server: fileserver.wisegs.com
+          username: pcem
+          password: ${{secrets.nte_cdn_s3_secret_access_key}}
+          port: 22
+          uploads: |
+            ./artifacts => ./upload/
