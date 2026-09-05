@@ -603,7 +603,11 @@ void ioctl_set_drive(char d) {
 
 int ioctl_open(char d) {
         atapi = &ioctl_atapi;
-        ioctl_fd = open("/dev/cdrom", O_RDONLY | O_NONBLOCK);
+
+        if (d)
+                ioctl_fd = open("/dev/cdrom", O_RDONLY | O_NONBLOCK);
+        else
+                ioctl_fd = 0;
 
         return 0;
 }
