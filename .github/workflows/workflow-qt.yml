@@ -227,4 +227,4 @@ jobs:
           password: ${{secrets.nte_cdn_s3_secret_access_key}}
           port: 22
           uploads: |
-            ./artifacts => ./upload/
+            ./artifacts => ./
