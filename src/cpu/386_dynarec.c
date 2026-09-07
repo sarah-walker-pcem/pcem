@@ -284,7 +284,7 @@ static inline void exec_interpreter(void) {
                 insc++;
         }
 
-        if (trap) {
+        if (trap && !cpu_state.abrt) {
                 trap = 0;
                 cpu_state.oldpc = cpu_state.pc;
                 x86_int(1);
