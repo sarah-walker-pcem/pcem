@@ -5,10 +5,11 @@
 #include "qt-glslp-parser.h"
 #include "qt-shaderconfig.h"
 #include "config.h"
+#include <pcem/api.h>
 
 #define MAX_USER_SHADERS 20
 
-extern char *get_filename(char *s);
+PCEM_API extern char *get_filename(char *s);
 
 extern char gl3_shader_file[MAX_USER_SHADERS][512];
 static char shaders[MAX_USER_SHADERS][512];

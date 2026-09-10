@@ -1,0 +1,32 @@
+{
+    "name": "PCem - Linux (native)",
+    "image": "code.wisesourcery.com/docker/linuxbuildenv:latest",
+
+    "workspaceFolder": "/work/pcem",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/work/pcem,type=bind,consistency=cached",
+
+    "overrideCommand": true,
+    "userEnvProbe": "loginShell",
+
+    "remoteUser": "root",
+
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}"
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "twxs.cmake"
+            ],
+            "settings": {
+                "cmake.generator": "Ninja",
+                "cmake.buildDirectory": "${workspaceFolder}/build",
+                "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    }
+}

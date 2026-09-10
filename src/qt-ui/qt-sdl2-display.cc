@@ -34,6 +34,7 @@ extern "C" {
 #undef UNICODE
 #include <windows.h>
 #include <windowsx.h>
+#include <pcem/api.h>
 #undef BITMAP
 #endif
 
@@ -75,7 +76,7 @@ int trigger_togglewindow = 0;
 int trigger_inputrelease = 0;
 
 extern "C" {
-void device_force_redraw();
+PCEM_API void device_force_redraw();
 void mouse_wheel_update(int);
 void toggle_fullscreen();
 void qt_mouse_motion(int dx, int dy);

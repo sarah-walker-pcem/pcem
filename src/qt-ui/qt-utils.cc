@@ -51,7 +51,8 @@
 #include "qt-status.h"
 extern "C" {
 #include "thread.h"
-extern void pclog(const char *format, ...);
+#include <pcem/api.h>
+PCEM_API extern void pclog(const char *format, ...);
 extern void *ghwnd;
 void wx_handle_command(void *, int, int);
 }

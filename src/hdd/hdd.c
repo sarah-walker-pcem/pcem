@@ -14,10 +14,11 @@
 
 #include <pcem/devices.h>
 #include <pcem/defines.h>
+#include <pcem/api.h>
 
 PcemHDC hdc[7];
 
-extern HDD_CONTROLLER *hdd_controllers[HDDCONTROLLERS_MAX];
+PCEM_API extern HDD_CONTROLLER *hdd_controllers[HDDCONTROLLERS_MAX];
 char hdd_controller_name[16];
 
 static device_t null_hdd_device;

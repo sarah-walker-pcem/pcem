@@ -1,6 +1,7 @@
 #ifndef _WX_UTILS2_H_
 #define _WX_UTILS2_H_
 #include <wx/defs.h>
+#include <pcem/api.h>
 
 #ifndef LONG_PARAM
 #define LONG_PARAM wxIntPtr
@@ -77,12 +78,12 @@ void wx_setwindowsize(void *window, int width, int height);
 void wx_show_status(void *window);
 void wx_close_status(void *window);
 
-void wx_get_home_directory(char *path);
-int wx_create_directory(char *path);
+PCEM_API void wx_get_home_directory(char *path);
+PCEM_API int wx_create_directory(char *path);
 
 int wx_setup(char *path);
 int wx_file_exists(char *path);
-int wx_dir_exists(char *path);
+PCEM_API int wx_dir_exists(char *path);
 int wx_copy_file(char *from, char *to, int overwrite);
 
 void wx_date_format(char *s, const char *format);

@@ -6,9 +6,10 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <pcem/api.h>
 
 extern "C" {
-void pclog(const char *format, ...);
+PCEM_API void pclog(const char *format, ...);
 void wx_handle_command(void *, int, int);
 extern void *ghwnd;
 }

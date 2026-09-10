@@ -1,6 +1,7 @@
 #include <stdint.h>
+#include <pcem/api.h>
 
-extern "C" void pclog(const char *format, ...);
+extern "C" PCEM_API void pclog(const char *format, ...);
 
 #include "qt-createdisc.h"
 

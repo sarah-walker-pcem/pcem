@@ -1,6 +1,8 @@
 #ifndef _PCEM_DEVICES_H_
 #define _PCEM_DEVICES_H_
 
+#include <pcem/api.h>
+
 #include <pcem/cpu.h>
 
 #define CONFIG_STRING 0
@@ -115,18 +117,18 @@ typedef struct LPT_DEVICE {
         lpt_device_t *device;
 } LPT_DEVICE;
 
-extern void pcem_add_model(MODEL *model);
-extern void pcem_add_video(VIDEO_CARD *video);
-extern void pcem_add_sound(SOUND_CARD *sound);
-extern void pcem_add_lpt(LPT_DEVICE *lpt);
-extern void pcem_add_hddcontroller(HDD_CONTROLLER *hddcontroller);
-extern void pcem_add_networkcard(NETWORK_CARD *netcard);
-extern void pcem_add_device(device_t *device);
+PCEM_API extern void pcem_add_model(MODEL *model);
+PCEM_API extern void pcem_add_video(VIDEO_CARD *video);
+PCEM_API extern void pcem_add_sound(SOUND_CARD *sound);
+PCEM_API extern void pcem_add_lpt(LPT_DEVICE *lpt);
+PCEM_API extern void pcem_add_hddcontroller(HDD_CONTROLLER *hddcontroller);
+PCEM_API extern void pcem_add_networkcard(NETWORK_CARD *netcard);
+PCEM_API extern void pcem_add_device(device_t *device);
 
-extern int pcem_device_get_config_int(device_t *device, char *name);
-extern char *pcem_device_get_config_string(device_t *device, char *s);
-extern int pcem_model_get_config_int(device_t *device, char *s);
-extern char *pcem_model_get_config_string(device_t *device, char *s);
-extern device_t *pcem_model_getdevice(int model);
+PCEM_API extern int pcem_device_get_config_int(device_t *device, char *name);
+PCEM_API extern char *pcem_device_get_config_string(device_t *device, char *s);
+PCEM_API extern int pcem_model_get_config_int(device_t *device, char *s);
+PCEM_API extern char *pcem_model_get_config_string(device_t *device, char *s);
+PCEM_API extern device_t *pcem_model_getdevice(int model);
 
 #endif /* _PCEM_DEVICES_H_ */
