@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "wx-utils.h"
+#include <pcem/api.h>
 
 #define safe_strncpy(a, b, n)                                                                                                    \
         do {                                                                                                                     \
@@ -12,8 +13,8 @@
                 (a)[(n)-1] = 0;                                                                                                  \
         } while (0)
 
-extern char *get_filename(char *);
-extern void pclog(const char *format, ...);
+PCEM_API extern char *get_filename(char *);
+PCEM_API extern void pclog(const char *format, ...);
 
 static int endswith(const char *str, const char *ext) {
         int i;

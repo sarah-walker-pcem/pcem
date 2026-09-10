@@ -16,11 +16,12 @@
 
 #include <pcem/defines.h>
 #include <pcem/devices.h>
+#include <pcem/api.h>
 
 int network_card_current = 0;
 static int network_card_last = 0;
 
-extern NETWORK_CARD *network_cards[NETWORK_CARD_MAX];
+PCEM_API extern NETWORK_CARD *network_cards[NETWORK_CARD_MAX];
 
 NETWORK_CARD n_none = {"None", "", NULL};
 NETWORK_CARD n_ne2000 = {"Novell NE2000", "ne2000", &ne2000_device};

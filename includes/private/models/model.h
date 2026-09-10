@@ -2,6 +2,7 @@
 #define _MODEL_H_
 
 #include <pcem/devices.h>
+#include <pcem/api.h>
 
 #define MODEL_AT 1
 #define MODEL_PS2 2
@@ -21,11 +22,11 @@
 #define MODEL_GFX_DISABLE_SW 0x300
 #define MODEL_GFX_MASK 0x300
 
-extern MODEL *models[ROM_MAX];
+PCEM_API extern MODEL *models[ROM_MAX];
 
-extern int model;
+PCEM_API extern int model;
 
-int model_count();
+PCEM_API int model_count();
 int model_getromset();
 int model_getromset_from_model(int model);
 int model_getmodel(int romset);

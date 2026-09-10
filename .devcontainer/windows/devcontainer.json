@@ -1,0 +1,32 @@
+{
+    "name": "PCem - Windows (mingw-w64 cross)",
+    "image": "code.wisesourcery.com/docker/winbuildenv:latest",
+
+    "workspaceFolder": "/work/pcem",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/work/pcem,type=bind,consistency=cached",
+
+    "overrideCommand": true,
+    "userEnvProbe": "loginShell",
+
+    "remoteUser": "root",
+
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}"
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "twxs.cmake"
+            ],
+            "settings": {
+                "cmake.generator": "Ninja",
+                "cmake.buildDirectory": "${workspaceFolder}/build-win64",
+                "C_Cpp.default.compileCommands": "${workspaceFolder}/build-win64/compile_commands.json",
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    }
+}

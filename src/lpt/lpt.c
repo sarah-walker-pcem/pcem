@@ -10,13 +10,14 @@
 
 #ifdef USE_EXPERIMENTAL_PRINTER
 #include "lpt_epsonlx810.h"
+#include <pcem/api.h>
 #endif
 
 char lpt1_device_name[16];
 
 int lpt1_current = 0;
 
-extern LPT_DEVICE *lpt_devices[LPT_MAX];
+PCEM_API extern LPT_DEVICE *lpt_devices[LPT_MAX];
 
 LPT_DEVICE l_none = {"None", "none", NULL};
 LPT_DEVICE l_dss = {"Disney Sound Source", "dss", &dss_device};

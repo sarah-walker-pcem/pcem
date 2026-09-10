@@ -10,6 +10,7 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         )
 
 set(PCEM_PUBLIC_API ${PCEM_PUBLIC_API}
+        ${CMAKE_SOURCE_DIR}/includes/public/pcem/api.h
         ${CMAKE_SOURCE_DIR}/includes/public/pcem/cpu.h
         ${CMAKE_SOURCE_DIR}/includes/public/pcem/defines.h
         ${CMAKE_SOURCE_DIR}/includes/public/pcem/devices.h

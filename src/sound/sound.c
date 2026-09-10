@@ -26,8 +26,9 @@
 #include "thread.h"
 
 #include <pcem/devices.h>
+#include <pcem/api.h>
 
-extern SOUND_CARD *sound_cards[SOUND_MAX];
+PCEM_API extern SOUND_CARD *sound_cards[SOUND_MAX];
 
 int sound_card_current = 0;
 static int sound_card_last = 0;
