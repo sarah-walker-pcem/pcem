@@ -367,24 +367,22 @@ static int ioctl_readsector(uint8_t *b, int sector, int count) {
         return 0;
 }
 
-union {
-        struct cdrom_msf *msf;
-        char b[CD_FRAMESIZE_RAW];
-} raw_read_params;
-
 static int lba_to_msf(int lba) { return (((lba / 75) / 60) << 16) + (((lba / 75) % 60) << 8) + (lba % 75); }
 
 static void ioctl_readsector_raw(uint8_t *b, int sector) {
         int err;
         int imsf = lba_to_msf(sector);
+        union {
+                struct cdrom_msf msf;
+                char b[CD_FRAMESIZE_RAW];
+        } raw_read_params;
 
         if (ioctl_fd <= 0)
                 return;
 
-        raw_read_params.msf = malloc(sizeof(struct cdrom_msf));
-        raw_read_params.msf->cdmsf_frame0 = imsf & 0xff;
-        raw_read_params.msf->cdmsf_sec0 = (imsf >> 8) & 0xff;
-        raw_read_params.msf->cdmsf_min0 = (imsf >> 16) & 0xff;
+        raw_read_params.msf.cdmsf_frame0 = imsf & 0xff;
+        raw_read_params.msf.cdmsf_sec0 = (imsf >> 8) & 0xff;
+        raw_read_params.msf.cdmsf_min0 = (imsf >> 16) & 0xff;
 
         /* This will read the actual raw sectors from the disc. */
         err = ioctl(ioctl_fd, CDROMREADRAW, (void *)&raw_read_params);
@@ -394,8 +392,6 @@ static void ioctl_readsector_raw(uint8_t *b, int sector) {
         }
 
         memcpy(b, raw_read_params.b, 2352);
-
-        free(raw_read_params.msf);
 }
 
 static int ioctl_readtoc(unsigned char *b, unsigned char starttrack, int msf, int maxlen, int single) {
