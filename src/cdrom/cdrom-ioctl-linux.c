@@ -601,7 +601,7 @@ int ioctl_open(char d) {
         atapi = &ioctl_atapi;
 
         if (d)
-                ioctl_fd = open("/dev/cdrom", O_RDONLY | O_NONBLOCK);
+                ioctl_fd = open(cdrom_device_path, O_RDONLY | O_NONBLOCK);
         else
                 ioctl_fd = 0;
 

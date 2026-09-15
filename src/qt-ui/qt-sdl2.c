@@ -67,6 +67,7 @@ extern void creatediscimage_open(void *hwnd);
 #define ID_RANGE(a, b) wParam >= wx_xrcid(a) && wParam <= wx_xrcid(b)
 
 #define IDM_CDROM_REAL 1500
+#define IDM_CDROM_DEVICE 1501
 
 #define MIN_SND_BUF 50
 
@@ -319,7 +320,11 @@ void update_cdrom_menu(void *hmenu) {
         if (cdrom_drive == CDROM_IMAGE)
                 wx_checkmenuitem(menu, WX_ID("IDM_CDROM_IMAGE"), WX_MB_CHECKED);
         else if (cdrom_drive > 0)
+#if __linux__
+                wx_checkmenuitem(menu, IDM_CDROM_DEVICE, WX_MB_CHECKED);
+#else
                 wx_checkmenuitem(menu, IDM_CDROM_REAL + cdrom_drive, WX_MB_CHECKED);
+#endif
         else
                 wx_checkmenuitem(menu, WX_ID("IDM_CDROM_EMPTY"), WX_MB_CHECKED);
 }
@@ -988,6 +993,22 @@ int wx_handle_command(void *hwnd, int wParam, int checked) {
                         update_cdrom_menu(hmenu);
                 } else
                         update_cdrom_menu(hmenu);
+#if __linux__
+        } else if (wParam == IDM_CDROM_DEVICE) {
+                char new_device_path[1024];
+
+                if (wx_textentrydialog(hwnd, "CD-ROM device path:", "PCem", cdrom_device_path,
+                                       1, sizeof(new_device_path) - 1, (LONG_PARAM)new_device_path)) {
+                        old_cdrom_drive = cdrom_drive;
+                        atapi->exit();
+                        atapi_close();
+                        strcpy(cdrom_device_path, new_device_path);
+                        ioctl_set_drive(1);
+                        cdrom_drive = 1;
+                        saveconfig(NULL);
+                        update_cdrom_menu(hmenu);
+                }
+#else
         } else if (wParam >= IDM_CDROM_REAL && wParam < IDM_CDROM_REAL + 100) {
                 new_cdrom_drive = wParam - IDM_CDROM_REAL;
                 if (cdrom_drive == new_cdrom_drive) {
@@ -1002,6 +1023,7 @@ int wx_handle_command(void *hwnd, int wParam, int checked) {
                 cdrom_drive = new_cdrom_drive;
                 saveconfig(NULL);
                 update_cdrom_menu(hmenu);
+#endif
         } else if (wParam >= IDM_VIEWER && wParam < IDM_VIEWER_MAX) {
                 viewer_open(hwnd, wParam - IDM_VIEWER);
         }

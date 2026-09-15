@@ -11,4 +11,6 @@ void ioctl_set_drive(char d);
 void ioctl_audio_callback(int16_t *output, int len);
 void ioctl_audio_stop();
 
+extern char cdrom_device_path[1024];
+
 #endif /* ! CDROM_IOCTL_H */
