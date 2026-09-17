@@ -71,6 +71,8 @@ uint8_t ethif;
 int inum;
 #endif
 
+char cdrom_device_path[1024];
+
 int GAMEBLASTER, GUS, SSI2001, voodoo_enabled;
 int gfxcard;
 int readflash;
@@ -708,6 +710,12 @@ void loadconfig(char *fn) {
         else
                 strcpy(image_path, "");
 
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "cdrom_device_path", "/dev/cdrom");
+        if (p)
+                strcpy(cdrom_device_path, p);
+        else
+                strcpy(cdrom_device_path, "/dev/cdrom");
+
         hdc[0].spt = config_get_int(CFG_MACHINE, NULL, "hdc_sectors", 0);
         hdc[0].hpc = config_get_int(CFG_MACHINE, NULL, "hdc_heads", 0);
         hdc[0].tracks = config_get_int(CFG_MACHINE, NULL, "hdc_cylinders", 0);
@@ -880,6 +888,7 @@ void saveconfig(char *fn) {
         config_set_int(CFG_MACHINE, NULL, "cdrom_drive", cdrom_drive);
         config_set_int(CFG_MACHINE, NULL, "cdrom_channel", cdrom_channel);
         config_set_string(CFG_MACHINE, NULL, "cdrom_path", image_path);
+        config_set_string(CFG_MACHINE, NULL, "cdrom_device_path", cdrom_device_path);
 
         config_set_int(CFG_MACHINE, NULL, "zip_channel", zip_channel);
 
