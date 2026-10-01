@@ -371,7 +371,7 @@ static int lba_to_msf(int lba) { return (((lba / 75) / 60) << 16) + (((lba / 75)
 
 static void ioctl_readsector_raw(uint8_t *b, int sector) {
         int err;
-        int imsf = lba_to_msf(sector);
+        int imsf = lba_to_msf(sector + CD_MSF_OFFSET);
         union {
                 struct cdrom_msf msf;
                 char b[CD_FRAMESIZE_RAW];
@@ -387,7 +387,7 @@ static void ioctl_readsector_raw(uint8_t *b, int sector) {
         /* This will read the actual raw sectors from the disc. */
         err = ioctl(ioctl_fd, CDROMREADRAW, (void *)&raw_read_params);
         if (err == -1) {
-                pclog("read_toc: CDROMREADTOCHDR failed\n");
+                pclog("read_toc: CDROMREADRAW failed\n");
                 return;
         }
 
@@ -523,7 +523,7 @@ static int ioctl_readtoc_raw(unsigned char *b, int maxlen) {
         err = ioctl(ioctl_fd, CDROMREADTOCHDR, &toc_hdr);
 
         if (err == -1) {
-                pclog("read_toc: CDROMREADTOCHDR failed\n");
+                pclog("ioctl_readtoc_raw: CDROMREADTOCHDR failed\n");
                 return 0;
         }
 
