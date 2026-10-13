@@ -476,7 +476,12 @@ typedef struct voodoo_set_t {
         int nr_cards;
 } voodoo_set_t;
 
-extern rgba8_t rgb332[0x100], ai44[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000], ai88[0x10000];
+extern rgba8_t rgb332[0x100];
+extern rgba8_t ai44[0x100];
+extern rgba8_t rgb565[0x10000], bgr565[0x10000];
+extern rgba8_t argb1555[0x10000], abgr1555[0x10000], rgba1555[0x10000], bgra1555[0x10000];
+extern rgba8_t argb4444[0x10000];
+extern rgba8_t ai88[0x10000];
 
 void voodoo_generate_vb_filters(voodoo_t *voodoo, int fcr, int fcg);
 

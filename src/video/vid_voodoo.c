@@ -22,7 +22,12 @@
 #include "vid_voodoo_texture.h"
 #include "viewer.h"
 
-rgba8_t rgb332[0x100], ai44[0x100], rgb565[0x10000], argb1555[0x10000], argb4444[0x10000], ai88[0x10000];
+rgba8_t rgb332[0x100];
+rgba8_t ai44[0x100];
+rgba8_t rgb565[0x10000], bgr565[0x10000];
+rgba8_t argb1555[0x10000], abgr1555[0x10000], rgba1555[0x10000], bgra1555[0x10000];
+rgba8_t argb4444[0x10000];
+rgba8_t ai88[0x10000];
 
 int tris = 0;
 
@@ -1013,6 +1018,14 @@ void *voodoo_card_init() {
                 rgb565[c].b |= (rgb565[c].b >> 5);
                 rgb565[c].a = 0xff;
 
+                bgr565[c].b = (c >> 8) & 0xf8;
+                bgr565[c].g = (c >> 3) & 0xfc;
+                bgr565[c].r = (c << 3) & 0xf8;
+                bgr565[c].r |= (rgb565[c].r >> 5);
+                bgr565[c].g |= (rgb565[c].g >> 6);
+                bgr565[c].r |= (rgb565[c].b >> 5);
+                bgr565[c].a = 0xff;
+
                 argb1555[c].r = (c >> 7) & 0xf8;
                 argb1555[c].g = (c >> 2) & 0xf8;
                 argb1555[c].b = (c << 3) & 0xf8;
@@ -1020,6 +1033,30 @@ void *voodoo_card_init() {
                 argb1555[c].g |= (argb1555[c].g >> 5);
                 argb1555[c].b |= (argb1555[c].b >> 5);
                 argb1555[c].a = (c & 0x8000) ? 0xff : 0;
+
+                abgr1555[c].b = (c >> 7) & 0xf8;
+                abgr1555[c].g = (c >> 2) & 0xf8;
+                abgr1555[c].r = (c << 3) & 0xf8;
+                abgr1555[c].b |= (abgr1555[c].r >> 5);
+                abgr1555[c].g |= (abgr1555[c].g >> 5);
+                abgr1555[c].r |= (abgr1555[c].b >> 5);
+                abgr1555[c].a = (c & 0x8000) ? 0xff : 0;
+
+                rgba1555[c].r = (c >> 8) & 0xf8;
+                rgba1555[c].g = (c >> 3) & 0xf8;
+                rgba1555[c].b = (c << 2) & 0xf8;
+                rgba1555[c].r |= (rgba1555[c].r >> 5);
+                rgba1555[c].g |= (rgba1555[c].g >> 5);
+                rgba1555[c].b |= (rgba1555[c].b >> 5);
+                rgba1555[c].a = (c & 1) ? 0xff : 0;
+
+                bgra1555[c].b = (c >> 8) & 0xf8;
+                bgra1555[c].g = (c >> 3) & 0xf8;
+                bgra1555[c].r = (c << 2) & 0xf8;
+                bgra1555[c].b |= (bgra1555[c].r >> 5);
+                bgra1555[c].g |= (bgra1555[c].g >> 5);
+                bgra1555[c].r |= (bgra1555[c].b >> 5);
+                bgra1555[c].a = (c & 1) ? 0xff : 0;
 
                 argb4444[c].a = (c >> 8) & 0xf0;
                 argb4444[c].r = (c >> 4) & 0xf0;
