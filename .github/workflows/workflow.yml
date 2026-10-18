@@ -27,7 +27,7 @@ jobs:
               ninja-build
           - name: Windows 64bit Debug (GCC MSYS2 wxWidgets Build)
             os: windows-latest
-            compiler: MINGW64
+            compiler: UCRT64
             args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: wxPCem-Debug-vNext-Windows-GCC64-${{ github.run_number }}
             artifacts_path: wxPCem-Debug-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
@@ -61,7 +61,7 @@ jobs:
               ninja-build
           - name: Windows 64bit Release (GCC MSYS2 wxWidgets Build)
             os: windows-latest
-            compiler: MINGW64
+            compiler: UCRT64
             args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: wxPCem-vNext-Windows-GCC64-${{ github.run_number }}
             artifacts_path: wxPCem-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
@@ -95,7 +95,7 @@ jobs:
               ninja-build
           - name: Windows 64bit Release With Debug Info (GCC MSYS2 wxWidgets Build)
             os: windows-latest
-            compiler: MINGW64
+            compiler: UCRT64
             args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: wxPCem-RelWithDebInfo-vNext-Windows-GCC64-${{ github.run_number }}
             artifacts_path: wxPCem-RelWithDebInfo-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
