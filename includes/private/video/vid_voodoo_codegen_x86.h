@@ -2085,6 +2085,18 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                 addbyte(0x05);
                 addlong((uint32_t)&xmm_ff_b);
         }
+
+        if ((params->alphaMode & (1 << 4)) && dest_afunc == AFUNC_ACOLORBEFOREFOG) {
+                addbyte(0xf3); /*MOVQ XMM7, XMM0 - prefog*/
+                addbyte(0x0f);
+                addbyte(0x7e);
+                addbyte(0xf8);
+                addbyte(0x66); /*PUNPCKLBW XMM7, XMM2*/
+                addbyte(0x0f);
+                addbyte(0x60);
+                addbyte(0xfa);
+        }
+
         //#if 0
         //        addbyte(0x66); /*MOVD state->out[EDI], XMM0*/
         //        addbyte(0x0f);
@@ -2515,12 +2527,11 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xef);
                         addbyte(0xe4);
                         break;
-                case AFUNC_ASATURATE:
-                        addbyte(0x66); /*PMULLW XMM4, minus_254*/
+                case AFUNC_ACOLORBEFOREFOG:
+                        addbyte(0x66); /*PMULLW XMM4, XMM7*/
                         addbyte(0x0f);
                         addbyte(0xd5);
-                        addbyte(0x25);
-                        addlong((uint32_t)&minus_254);
+                        addbyte(0xe7);
                         addbyte(0xf3); /*MOVQ XMM5, XMM4*/
                         addbyte(0x0f);
                         addbyte(0x7e);
@@ -2544,6 +2555,7 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0x71);
                         addbyte(0xd4);
                         addbyte(8);
+                        break;
                 }
 
                 switch (src_afunc) {
@@ -2692,7 +2704,35 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                         addbyte(0xef);
                         addbyte(0xc0);
                         break;
-                case AFUNC_ACOLORBEFOREFOG:
+                case AFUNC_ASATURATE:
+                        addbyte(0x66); /*PMULLW XMM0, minus_254*/
+                        addbyte(0x0f);
+                        addbyte(0xd5);
+                        addbyte(0x05);
+                        addlong((uint32_t)&minus_254);
+                        addbyte(0xf3); /*MOVQ XMM5, XMM0*/
+                        addbyte(0x0f);
+                        addbyte(0x7e);
+                        addbyte(0xe8);
+                        addbyte(0x66); /*PADDW XMM0, alookup[1*8]*/
+                        addbyte(0x0f);
+                        addbyte(0xfd);
+                        addbyte(0x05);
+                        addlong((uint32_t)alookup + 16);
+                        addbyte(0x66); /*PSRLW XMM5, 8*/
+                        addbyte(0x0f);
+                        addbyte(0x71);
+                        addbyte(0xd5);
+                        addbyte(8);
+                        addbyte(0x66); /*PADDW XMM0, XMM5*/
+                        addbyte(0x0f);
+                        addbyte(0xfd);
+                        addbyte(0xc5);
+                        addbyte(0x66); /*PSRLW XMM0, 8*/
+                        addbyte(0x0f);
+                        addbyte(0x71);
+                        addbyte(0xd0);
+                        addbyte(8);
                         break;
                 }
 
@@ -2706,6 +2746,7 @@ static inline void voodoo_generate(uint8_t *code_block, voodoo_t *voodoo, voodoo
                 addbyte(0x67);
                 addbyte(0xc0);
         }
+
         //#endif
 
         //        addbyte(0x8b); /*MOV EDX, x (ESP+12)*/
