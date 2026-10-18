@@ -36,15 +36,15 @@ jobs:
               base-devel
               zip
               unzip
-              mingw-w64-x86_64-ntldd-git
-              mingw-w64-x86_64-toolchain
-              mingw-w64-x86_64-SDL2
-              mingw-w64-x86_64-openal
-              mingw-w64-x86_64-qt6
-              mingw-w64-x86_64-cmake
-              mingw-w64-x86_64-libslirp
-              mingw-w64-x86_64-libpcap
-              mingw-w64-x86_64-ninja
+              mingw-w64-ucrt-x86_64-ntldd-git
+              mingw-w64-ucrt-x86_64-toolchain
+              mingw-w64-ucrt-x86_64-SDL2
+              mingw-w64-ucrt-x86_64-openal
+              mingw-w64-ucrt-x86_64-qt6
+              mingw-w64-ucrt-x86_64-cmake
+              mingw-w64-ucrt-x86_64-libslirp
+              mingw-w64-ucrt-x86_64-libpcap
+              mingw-w64-ucrt-x86_64-ninja
           - name: Ubuntu 64bit Release (GCC QT6 Build)
             os: ubuntu-latest
             args: -DCMAKE_BUILD_TYPE=Release -DPCEM_DISPLAY_ENGINE=Qt -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
@@ -71,15 +71,15 @@ jobs:
               base-devel
               zip
               unzip
-              mingw-w64-x86_64-ntldd-git
-              mingw-w64-x86_64-toolchain
-              mingw-w64-x86_64-SDL2
-              mingw-w64-x86_64-openal
-              mingw-w64-x86_64-qt6
-              mingw-w64-x86_64-cmake
-              mingw-w64-x86_64-libslirp
-              mingw-w64-x86_64-libpcap
-              mingw-w64-x86_64-ninja
+              mingw-w64-ucrt-x86_64-ntldd-git
+              mingw-w64-ucrt-x86_64-toolchain
+              mingw-w64-ucrt-x86_64-SDL2
+              mingw-w64-ucrt-x86_64-openal
+              mingw-w64-ucrt-x86_64-qt6
+              mingw-w64-ucrt-x86_64-cmake
+              mingw-w64-ucrt-x86_64-libslirp
+              mingw-w64-ucrt-x86_64-libpcap
+              mingw-w64-ucrt-x86_64-ninja
           - name: Ubuntu 64bit Release With Debug Info (GCC QT6 Build)
             os: ubuntu-latest
             args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_DISPLAY_ENGINE=Qt -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
@@ -106,15 +106,15 @@ jobs:
               base-devel
               zip
               unzip
-              mingw-w64-x86_64-ntldd-git
-              mingw-w64-x86_64-toolchain
-              mingw-w64-x86_64-SDL2
-              mingw-w64-x86_64-openal
-              mingw-w64-x86_64-qt6
-              mingw-w64-x86_64-cmake
-              mingw-w64-x86_64-libslirp
-              mingw-w64-x86_64-libpcap
-              mingw-w64-x86_64-ninja
+              mingw-w64-ucrt-x86_64-ntldd-git
+              mingw-w64-ucrt-x86_64-toolchain
+              mingw-w64-ucrt-x86_64-SDL2
+              mingw-w64-ucrt-x86_64-openal
+              mingw-w64-ucrt-x86_64-qt6
+              mingw-w64-ucrt-x86_64-cmake
+              mingw-w64-ucrt-x86_64-libslirp
+              mingw-w64-ucrt-x86_64-libpcap
+              mingw-w64-ucrt-x86_64-ninja
 
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
