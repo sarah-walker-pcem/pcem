@@ -881,6 +881,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         uint16_t dat;
                                         int sel;
                                         int32_t new_depth, w_depth;
+                                        rgba8_t prefog;
 
                                         if (state->w & 0xffff00000000)
                                                 w_depth = 0;
@@ -1165,6 +1166,10 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                         if (cca_invert_output)
                                                 src_a ^= 0xff;
 
+                                        prefog.r = src_r;
+                                        prefog.g = src_g;
+                                        prefog.b = src_b;
+
                                         if (params->fogMode & FOG_ENABLE)
                                                 APPLY_FOG(src_r, src_g, src_b, state->z, state->ia, state->w);
 
@@ -1182,7 +1187,7 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                                         dest_g = dithersub_g2x2[dest_g][real_y & 1][x & 1];
                                                         dest_b = dithersub_rb2x2[dest_b][real_y & 1][x & 1];
                                                 }
-                                                ALPHA_BLEND(src_r, src_g, src_b, src_a);
+                                                ALPHA_BLEND(src_r, src_g, src_b, src_a, prefog);
                                         }
 
                                         if (update) {

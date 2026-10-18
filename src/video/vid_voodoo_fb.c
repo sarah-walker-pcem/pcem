@@ -115,6 +115,193 @@ static inline uint16_t do_dither(voodoo_params_t *params, rgba8_t col, int x, in
         return b | (g << 5) | (r << 11);
 }
 
+#define VOODOO_FB_CCA_PROCESS()                                                         \
+                do {                                                                    \
+                        uint8_t cother_r, cother_g, cother_b, aother;                   \
+                        uint8_t clocal_r, clocal_g, clocal_b, alocal;                   \
+                        int msel_r, msel_g, msel_b, msel_a;                             \
+                        int sel;                                                        \
+                                                                                        \
+                        if (cc_localselect_override)                                    \
+                                sel = (new_alpha & 0x80) ? 1 : 0;                       \
+                        else                                                            \
+                                sel = cc_localselect;                                   \
+                                                                                        \
+                        if (sel) {                                                      \
+                                clocal_r = (params->color0 >> 16) & 0xff;               \
+                                clocal_g = (params->color0 >> 8) & 0xff;                \
+                                clocal_b = params->color0 & 0xff;                       \
+                        } else {                                                        \
+                                clocal_r = 0; /*FIXME*/                                 \
+                                clocal_g = 0;                                           \
+                                clocal_b = 0;                                           \
+                        }                                                               \
+                                                                                        \
+                        cother_r = write_data.r;                                        \
+                        cother_g = write_data.g;                                        \
+                        cother_b = write_data.b;                                        \
+                                                                                        \
+                        switch (cca_localselect) {                                      \
+                        case CCA_LOCALSELECT_ITER_A:                                    \
+                                alocal = 0; /*FIXME*/                                   \
+                                break;                                                  \
+                                                                                        \
+                        case CCA_LOCALSELECT_COLOR0:                                    \
+                                alocal = (params->color0 >> 24) & 0xff;                 \
+                                break;                                                  \
+                                                                                        \
+                        case CCA_LOCALSELECT_ITER_Z:                                    \
+                                alocal = new_depth >> 8; /*FIXME*/                      \
+                                break;                                                  \
+                                                                                        \
+                        default:                                                        \
+                                fatal("Bad cca_localselect %i\n", cca_localselect);     \
+                                alocal = 0xff;                                          \
+                                break;                                                  \
+                        }                                                               \
+                                                                                        \
+                        aother = write_data.a;                                          \
+                                                                                        \
+                        if (cc_zero_other) {                                            \
+                                src_r = 0;                                              \
+                                src_g = 0;                                              \
+                                src_b = 0;                                              \
+                        } else {                                                        \
+                                src_r = cother_r;                                       \
+                                src_g = cother_g;                                       \
+                                src_b = cother_b;                                       \
+                        }                                                               \
+                                                                                        \
+                        if (cca_zero_other)                                             \
+                                src_a = 0;                                              \
+                        else                                                            \
+                                src_a = aother;                                         \
+                                                                                        \
+                        if (cc_sub_clocal) {                                            \
+                                src_r -= clocal_r;                                      \
+                                src_g -= clocal_g;                                      \
+                                src_b -= clocal_b;                                      \
+                        }                                                               \
+                                                                                        \
+                        if (cca_sub_clocal)                                             \
+                                src_a -= alocal;                                        \
+                                                                                        \
+                        switch (cc_mselect) {                                           \
+                        case CC_MSELECT_ZERO:                                           \
+                                msel_r = 0;                                             \
+                                msel_g = 0;                                             \
+                                msel_b = 0;                                             \
+                                break;                                                  \
+                        case CC_MSELECT_CLOCAL:                                         \
+                                msel_r = clocal_r;                                      \
+                                msel_g = clocal_g;                                      \
+                                msel_b = clocal_b;                                      \
+                                break;                                                  \
+                        case CC_MSELECT_AOTHER:                                         \
+                                msel_r = aother;                                        \
+                                msel_g = aother;                                        \
+                                msel_b = aother;                                        \
+                                break;                                                  \
+                        case CC_MSELECT_ALOCAL:                                         \
+                                msel_r = alocal;                                        \
+                                msel_g = alocal;                                        \
+                                msel_b = alocal;                                        \
+                                break;                                                  \
+                        case CC_MSELECT_TEX:                                            \
+                                msel_r = write_data.a;                                  \
+                                msel_g = write_data.a;                                  \
+                                msel_b = write_data.a;                                  \
+                                break;                                                  \
+                        case CC_MSELECT_TEXRGB:                                         \
+                                msel_r = write_data.r;                                  \
+                                msel_g = write_data.g;                                  \
+                                msel_b = write_data.b;                                  \
+                                break;                                                  \
+                                                                                        \
+                        default:                                                        \
+                                fatal("Bad cc_mselect %i\n", cc_mselect);               \
+                                msel_r = 0;                                             \
+                                msel_g = 0;                                             \
+                                msel_b = 0;                                             \
+                                break;                                                  \
+                        }                                                               \
+                                                                                        \
+                        switch (cca_mselect) {                                          \
+                        case CCA_MSELECT_ZERO:                                          \
+                                msel_a = 0;                                             \
+                                break;                                                  \
+                        case CCA_MSELECT_ALOCAL:                                        \
+                                msel_a = alocal;                                        \
+                                break;                                                  \
+                        case CCA_MSELECT_AOTHER:                                        \
+                                msel_a = aother;                                        \
+                                break;                                                  \
+                        case CCA_MSELECT_ALOCAL2:                                       \
+                                msel_a = alocal;                                        \
+                                break;                                                  \
+                        case CCA_MSELECT_TEX:                                           \
+                                msel_a = write_data.a;                                  \
+                                break;                                                  \
+                                                                                        \
+                                default:                                                \
+                                fatal("Bad cca_mselect %i\n", cca_mselect);             \
+                                msel_a = 0;                                             \
+                                break;                                                  \
+                        }                                                               \
+                                                                                        \
+                        if (!cc_reverse_blend) {                                        \
+                                msel_r ^= 0xff;                                         \
+                                msel_g ^= 0xff;                                         \
+                                msel_b ^= 0xff;                                         \
+                        }                                                               \
+                        msel_r++;                                                       \
+                        msel_g++;                                                       \
+                        msel_b++;                                                       \
+                                                                                        \
+                        if (!cca_reverse_blend)                                         \
+                                msel_a ^= 0xff;                                         \
+                        msel_a++;                                                       \
+                                                                                        \
+                        src_r = (src_r * msel_r) >> 8;                                  \
+                        src_g = (src_g * msel_g) >> 8;                                  \
+                        src_b = (src_b * msel_b) >> 8;                                  \
+                        src_a = (src_a * msel_a) >> 8;                                  \
+                                                                                        \
+                        switch (cc_add) {                                               \
+                        case CC_ADD_CLOCAL:                                             \
+                                src_r += clocal_r;                                      \
+                                src_g += clocal_g;                                      \
+                                src_b += clocal_b;                                      \
+                                break;                                                  \
+                        case CC_ADD_ALOCAL:                                             \
+                                src_r += alocal;                                        \
+                                src_g += alocal;                                        \
+                                src_b += alocal;                                        \
+                                break;                                                  \
+                        case 0:                                                         \
+                                break;                                                  \
+                        default:                                                        \
+                                fatal("Bad cc_add %i\n", cc_add);                       \
+                        }                                                               \
+                                                                                        \
+                        if (cca_add)                                                    \
+                                src_a += alocal;                                        \
+                                                                                        \
+                        write_data.r = CLAMP(src_r);                                    \
+                        write_data.g = CLAMP(src_g);                                    \
+                        write_data.b = CLAMP(src_b);                                    \
+                        write_data.a = CLAMP(src_a);                                    \
+                                                                                        \
+                        if (cc_invert_output) {                                         \
+                                write_data.r ^= 0xff;                                   \
+                                write_data.g ^= 0xff;                                   \
+                                write_data.b ^= 0xff;                                   \
+                        }                                                               \
+                        if (cca_invert_output)                                          \
+                                write_data.a ^= 0xff;                                   \
+                } while (0)
+
+
 void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p) {
         voodoo_t *voodoo = (voodoo_t *)p;
         voodoo_params_t *params = &voodoo->params;
@@ -124,6 +311,7 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p) {
         uint16_t depth_data;
         uint8_t alpha_data;
         int write_mask = 0;
+        int y_origin = (voodoo->type >= VOODOO_BANSHEE) ? voodoo->y_origin_swap : (voodoo->v_disp - 1);
 
         colour_data.r = colour_data.g = colour_data.b = colour_data.a = 0;
 
@@ -137,17 +325,52 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p) {
 
         switch (voodoo->lfbMode & LFB_FORMAT_MASK) {
         case LFB_FORMAT_RGB565:
-                colour_data = rgb565[val];
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data = rgb565[val];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data = bgr565[val];
+                        break;
+                }
                 alpha_data = 0xff;
                 write_mask = LFB_WRITE_COLOUR;
                 break;
         case LFB_FORMAT_RGB555:
-                colour_data = argb1555[val];
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                        colour_data = argb1555[val];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                        colour_data = abgr1555[val];
+                        break;
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data = rgba1555[val];
+                        break;
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data = bgra1555[val];
+                        break;
+                }
                 alpha_data = 0xff;
                 write_mask = LFB_WRITE_COLOUR;
                 break;
         case LFB_FORMAT_ARGB1555:
-                colour_data = argb1555[val];
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                        colour_data = argb1555[val];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                        colour_data = abgr1555[val];
+                        break;
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data = rgba1555[val];
+                        break;
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data = bgra1555[val];
+                        break;
+                }
                 alpha_data = colour_data.a;
                 write_mask = LFB_WRITE_COLOUR;
                 break;
@@ -167,6 +390,10 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p) {
                 x = addr & 0x7fe;
                 y = (addr >> 11) & 0x3ff;
         }
+
+        if ((!(voodoo->lfbMode & 0x100) && (voodoo->lfbMode & (1 << 13))) ||
+            ((voodoo->lfbMode & 0x100) && (params->fbzMode & (1 << 17))))
+                y = y_origin - y;
 
         if (SLI_ENABLED) {
                 if ((!(voodoo->initEnable & INITENABLE_SLI_MASTER_SLAVE) && (y & 1)) ||
@@ -193,8 +420,11 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p) {
 
         if (voodoo->lfbMode & 0x100) {
                 {
+                        int src_r = 0, src_g = 0, src_b = 0, src_a = 0;
                         rgba8_t write_data = colour_data;
                         uint16_t new_depth = depth_data;
+                        uint8_t new_alpha = alpha_data;
+                        rgba8_t prefog;
 
                         if (params->fbzMode & FBZ_DEPTH_ENABLE) {
                                 uint16_t old_depth = *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
@@ -205,6 +435,10 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p) {
                         if ((params->fbzMode & FBZ_CHROMAKEY) && write_data.r == params->chromaKey_r &&
                             write_data.g == params->chromaKey_g && write_data.b == params->chromaKey_b)
                                 goto skip_pixel;
+
+                        VOODOO_FB_CCA_PROCESS();
+
+                        prefog = write_data;
 
                         if (params->fogMode & FOG_ENABLE) {
                                 int32_t z = new_depth << 12;
@@ -220,6 +454,9 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p) {
                         if (params->alphaMode & (1 << 4)) {
                                 uint16_t dat = *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]);
                                 int dest_r, dest_g, dest_b, dest_a;
+                                int src_r = write_data.r;
+                                int src_g = write_data.g;
+                                int src_b = write_data.b;
 
                                 dest_r = (dat >> 8) & 0xf8;
                                 dest_g = (dat >> 3) & 0xfc;
@@ -229,7 +466,10 @@ void voodoo_fb_writew(uint32_t addr, uint16_t val, void *p) {
                                 dest_b |= (dest_b >> 5);
                                 dest_a = 0xff;
 
-                                ALPHA_BLEND(write_data.r, write_data.g, write_data.b, alpha_data);
+                                ALPHA_BLEND(src_r, src_g, src_b, alpha_data, prefog);
+                                write_data.r = src_r;
+                                write_data.g = src_g;
+                                write_data.b = src_b;
                         }
 
                         if (params->fbzMode & FBZ_RGB_WMASK)
@@ -259,6 +499,7 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p) {
         uint16_t depth_data[2];
         uint8_t alpha_data[2];
         int write_mask = 0, count = 1;
+        int y_origin = (voodoo->type >= VOODOO_BANSHEE) ? voodoo->y_origin_swap : (voodoo->v_disp - 1);
 
         depth_data[0] = depth_data[1] = voodoo->params.zaColor & 0xffff;
         alpha_data[0] = alpha_data[1] = voodoo->params.zaColor >> 24;
@@ -269,33 +510,178 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p) {
 
         switch (voodoo->lfbMode & LFB_FORMAT_MASK) {
         case LFB_FORMAT_RGB565:
-                colour_data[0] = rgb565[val & 0xffff];
-                colour_data[1] = rgb565[val >> 16];
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data[0] = rgb565[val & 0xffff];
+                        colour_data[1] = rgb565[val >> 16];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data[0] = bgr565[val & 0xffff];
+                        colour_data[1] = bgr565[val >> 16];
+                        break;
+                }
                 write_mask = LFB_WRITE_COLOUR;
                 count = 2;
                 break;
         case LFB_FORMAT_RGB555:
-                colour_data[0] = argb1555[val & 0xffff];
-                colour_data[1] = argb1555[val >> 16];
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                        colour_data[0] = argb1555[val & 0xffff];
+                        colour_data[1] = argb1555[val >> 16];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                        colour_data[0] = abgr1555[val & 0xffff];
+                        colour_data[1] = abgr1555[val >> 16];
+                        break;
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data[0] = rgba1555[val & 0xffff];
+                        colour_data[1] = rgba1555[val >> 16];
+                        break;
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data[0] = bgra1555[val & 0xffff];
+                        colour_data[1] = bgra1555[val >> 16];
+                        break;
+                }
                 write_mask = LFB_WRITE_COLOUR;
                 count = 2;
                 break;
         case LFB_FORMAT_ARGB1555:
-                colour_data[0] = argb1555[val & 0xffff];
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                        colour_data[0] = argb1555[val & 0xffff];
+                        colour_data[1] = argb1555[val >> 16];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                        colour_data[0] = abgr1555[val & 0xffff];
+                        colour_data[1] = abgr1555[val >> 16];
+                        break;
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data[0] = rgba1555[val & 0xffff];
+                        colour_data[1] = rgba1555[val >> 16];
+                        break;
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data[0] = bgra1555[val & 0xffff];
+                        colour_data[1] = bgra1555[val >> 16];
+                        break;
+                }
                 alpha_data[0] = colour_data[0].a;
-                colour_data[1] = argb1555[val >> 16];
                 alpha_data[1] = colour_data[1].a;
                 write_mask = LFB_WRITE_COLOUR;
                 count = 2;
                 break;
 
-        case LFB_FORMAT_ARGB8888:
-                colour_data[0].b = val & 0xff;
-                colour_data[0].g = (val >> 8) & 0xff;
-                colour_data[0].r = (val >> 16) & 0xff;
-                alpha_data[0] = (val >> 24) & 0xff;
+        case LFB_FORMAT_RGB888:
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                        colour_data[0].b = val & 0xff;
+                        colour_data[0].g = (val >> 8) & 0xff;
+                        colour_data[0].r = (val >> 16) & 0xff;
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                        colour_data[0].r = val & 0xff;
+                        colour_data[0].g = (val >> 8) & 0xff;
+                        colour_data[0].b = (val >> 16) & 0xff;
+                        break;
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data[0].b = (val >> 8) & 0xff;
+                        colour_data[0].g = (val >> 16) & 0xff;
+                        colour_data[0].r = (val >> 24) & 0xff;
+                        break;
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data[0].r = (val >> 8) & 0xff;
+                        colour_data[0].g = (val >> 16) & 0xff;
+                        colour_data[0].b = (val >> 24) & 0xff;
+                        break;
+                }
                 write_mask = LFB_WRITE_COLOUR;
                 addr >>= 1;
+                break;
+        case LFB_FORMAT_ARGB8888:
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                        colour_data[0].b = val & 0xff;
+                        colour_data[0].g = (val >> 8) & 0xff;
+                        colour_data[0].r = (val >> 16) & 0xff;
+                        alpha_data[0] = (val >> 24) & 0xff;
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                        colour_data[0].r = val & 0xff;
+                        colour_data[0].g = (val >> 8) & 0xff;
+                        colour_data[0].b = (val >> 16) & 0xff;
+                        alpha_data[0] = (val >> 24) & 0xff;
+                        break;
+                case LFB_RGBCHANNEL_RGBA:
+                        alpha_data[0] = val & 0xff;
+                        colour_data[0].b = (val >> 8) & 0xff;
+                        colour_data[0].g = (val >> 16) & 0xff;
+                        colour_data[0].r = (val >> 24) & 0xff;
+                        break;
+                case LFB_RGBCHANNEL_BGRA:
+                        alpha_data[0] = val & 0xff;
+                        colour_data[0].r = (val >> 8) & 0xff;
+                        colour_data[0].g = (val >> 16) & 0xff;
+                        colour_data[0].b = (val >> 24) & 0xff;
+                        break;
+                }
+                write_mask = LFB_WRITE_COLOUR;
+                addr >>= 1;
+                break;
+
+        case LFB_FORMAT_DEPTH_RGB565:
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data[0] = rgb565[val & 0xffff];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data[0] = bgr565[val & 0xffff];
+                        break;
+                }
+                depth_data[0] = val >> 16;
+                write_mask = LFB_WRITE_COLOUR | LFB_WRITE_DEPTH;
+                count = 1;
+                break;
+        case LFB_FORMAT_DEPTH_RGB555:
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                        colour_data[0] = argb1555[val & 0xffff];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                        colour_data[0] = abgr1555[val & 0xffff];
+                        break;
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data[0] = rgba1555[val & 0xffff];
+                        break;
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data[0] = bgra1555[val & 0xffff];
+                        break;
+                }
+                depth_data[0] = val >> 16;
+                write_mask = LFB_WRITE_COLOUR | LFB_WRITE_DEPTH;
+                count = 1;
+                break;
+        case LFB_FORMAT_DEPTH_ARGB1555:
+                switch (voodoo->lfbMode & LFB_RGBCHANNEL_MASK) {
+                case LFB_RGBCHANNEL_ARGB:
+                        colour_data[0] = argb1555[val & 0xffff];
+                        break;
+                case LFB_RGBCHANNEL_ABGR:
+                        colour_data[0] = abgr1555[val & 0xffff];
+                        break;
+                case LFB_RGBCHANNEL_RGBA:
+                        colour_data[0] = rgba1555[val & 0xffff];
+                        break;
+                case LFB_RGBCHANNEL_BGRA:
+                        colour_data[0] = bgra1555[val & 0xffff];
+                        break;
+                }
+                alpha_data[0] = colour_data[0].a;
+                depth_data[0] = val >> 16;
+                write_mask = LFB_WRITE_COLOUR | LFB_WRITE_DEPTH;
+                count = 1;
                 break;
 
         case LFB_FORMAT_DEPTH:
@@ -316,6 +702,10 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p) {
                 x = addr & 0x7fe;
                 y = (addr >> 11) & 0x3ff;
         }
+
+        if ((!(voodoo->lfbMode & 0x100) && (voodoo->lfbMode & (1 << 13))) ||
+            ((voodoo->lfbMode & 0x100) && (params->fbzMode & (1 << 17))))
+                y = y_origin - y;
 
         if (SLI_ENABLED) {
                 if ((!(voodoo->initEnable & INITENABLE_SLI_MASTER_SLAVE) && (y & 1)) ||
@@ -345,8 +735,11 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p) {
                 int c;
 
                 for (c = 0; c < count; c++) {
+                        int src_r = 0, src_g = 0, src_b = 0, src_a = 0;
                         rgba8_t write_data = colour_data[c];
                         uint16_t new_depth = depth_data[c];
+                        uint8_t new_alpha = alpha_data[c];
+                        rgba8_t prefog;
 
                         if (params->fbzMode & FBZ_DEPTH_ENABLE) {
                                 uint16_t old_depth = *(uint16_t *)(&voodoo->fb_mem[write_addr_aux & voodoo->fb_mask]);
@@ -358,20 +751,28 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p) {
                             write_data.g == params->chromaKey_g && write_data.b == params->chromaKey_b)
                                 goto skip_pixel;
 
+
+                        VOODOO_FB_CCA_PROCESS();
+
+                        prefog = write_data;
+
                         if (params->fogMode & FOG_ENABLE) {
                                 int32_t z = new_depth << 12;
                                 int64_t w_depth = new_depth;
-                                int32_t ia = alpha_data[c] << 12;
+                                int32_t ia = src_a << 12;
 
                                 APPLY_FOG(write_data.r, write_data.g, write_data.b, z, ia, w_depth);
                         }
 
                         if (params->alphaMode & 1)
-                                ALPHA_TEST(alpha_data[c]);
+                                ALPHA_TEST(src_a);
 
                         if (params->alphaMode & (1 << 4)) {
                                 uint16_t dat = *(uint16_t *)(&voodoo->fb_mem[write_addr & voodoo->fb_mask]);
                                 int dest_r, dest_g, dest_b, dest_a;
+                                int src_r = write_data.r;
+                                int src_g = write_data.g;
+                                int src_b = write_data.b;
 
                                 dest_r = (dat >> 8) & 0xf8;
                                 dest_g = (dat >> 3) & 0xfc;
@@ -381,7 +782,10 @@ void voodoo_fb_writel(uint32_t addr, uint32_t val, void *p) {
                                 dest_b |= (dest_b >> 5);
                                 dest_a = 0xff;
 
-                                ALPHA_BLEND(write_data.r, write_data.g, write_data.b, alpha_data[c]);
+                                ALPHA_BLEND(src_r, src_g, src_b, src_a, prefog);
+                                write_data.r = src_r;
+                                write_data.g = src_g;
+                                write_data.b = src_b;
                         }
 
                         if (params->fbzMode & FBZ_RGB_WMASK)
