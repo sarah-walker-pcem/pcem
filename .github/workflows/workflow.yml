@@ -27,7 +27,7 @@ jobs:
               ninja-build
           - name: Windows 64bit Debug (CLANG MSYS2)
             os: windows-latest
-            compiler: CLANG64
+            compiler: UCRT64
             args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: PCem-Debug-vNext-Windows-CLANG64-${{ github.run_number }}
             artifacts_path: PCem-Debug-vNext-Windows-CLANG64-${{ github.run_number }}-${{ github.sha }}.zip
@@ -61,7 +61,7 @@ jobs:
               ninja-build
           - name: Windows 64bit Release (CLANG MSYS2)
             os: windows-latest
-            compiler: CLANG64
+            compiler: UCRT64
             args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: PCem-vNext-Windows-CLANG64-${{ github.run_number }}
             artifacts_path: PCem-vNext-Windows-CLANG64-${{ github.run_number }}-${{ github.sha }}.zip
@@ -95,7 +95,7 @@ jobs:
               ninja-build
           - name: Windows 64bit Release With Debug Info (CLANG MSYS2)
             os: windows-latest
-            compiler: CLANG64
+            compiler: UCRT64
             args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
             artifacts_name: PCem-RelWithDebInfo-vNext-Windows-CLANG64-${{ github.run_number }}
             artifacts_path: PCem-RelWithDebInfo-vNext-Windows-CLANG64-${{ github.run_number }}-${{ github.sha }}.zip
