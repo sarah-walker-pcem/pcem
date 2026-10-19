@@ -179,7 +179,7 @@ jobs:
           cd temp/build
           ninja install
           cd $INSTALL_PREFIX
-          ntldd -R "bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang)(32|64)' | sed -e 's|\\|/|g' | xargs cp --target-directory="bin"
+          ntldd -R "bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang|ucrt)(32|64)' | sed -e 's|\\|/|g' | xargs -r cp --target-directory="bin"
           cp -r /UCRT64/share/qt6/plugins/platforms/ $INSTALL_PREFIX/bin/platforms/
           zip -r -9 ${{ matrix.artifacts_path }} *
           cp ${{ matrix.artifacts_path }} $ARTIFACTSDIR
