@@ -23,8 +23,10 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef FORCE_X11
-        setenv("SDL_VIDEODRIVER", "x11", 1);
-        setenv("GDK_BACKEND", "x11", 1);
+        if (getenv("WAYLAND_DISPLAY") && getenv("DISPLAY") && !getenv("SDL_VIDEODRIVER") && !getenv("GDK_BACKEND")) {
+                setenv("SDL_VIDEODRIVER", "x11", 1);
+                setenv("GDK_BACKEND", "x11", 1);
+        }
 #endif
 
         if (!pc_main(argc, argv))

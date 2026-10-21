@@ -1,6 +1,7 @@
 #include "wx-status.h"
 #include "wx-common.h"
 #include "wx-utils.h"
+#include "wx-display.h"
 #include <wx/artprov.h>
 #include <wx/xrc/xmlres.h>
 #include <sstream>
@@ -214,6 +215,188 @@ void StatusPane::Render(wxDC &dc) {
         if (cSize.GetWidth() != width || cSize.GetHeight() != height) {
                 GetParent()->SetClientSize(width, height);
         }
+}
+
+#define DRIVE_ICON_SIZE 16
+#define DRIVE_ICON_SPACING 4
+#define DRIVE_LED_SIZE 5
+
+static bool is_zip_drive(const drive_info_t &info) { return info.type == DRIVE_TYPE_FDD && info.drive_letter >= 'C'; }
+
+DriveStatusPanel::DriveStatusPanel(wxWindow *parent) : wxPanel(parent, wxID_ANY) {
+#ifndef __WXOSX_MAC__
+        SetDoubleBuffered(true);
+#endif
+        numDrives = 0;
+        tooltipDrive = -1;
+        memset(drives, 0, sizeof(drives));
+
+        bitmapFDD[0] = wxXmlResource::Get()->LoadBitmap("BITMAP_FLOPPY");
+        bitmapFDD[1] = bitmapFDD[0].ConvertToDisabled();
+        bitmapHDD[0] = wxXmlResource::Get()->LoadBitmap("BITMAP_HARDDISK");
+        bitmapHDD[1] = bitmapHDD[0].ConvertToDisabled();
+        bitmapCDROM[0] = wxXmlResource::Get()->LoadBitmap("BITMAP_CDROM");
+        bitmapCDROM[1] = bitmapCDROM[0].ConvertToDisabled();
+
+        Bind(wxEVT_PAINT, &DriveStatusPanel::OnPaint, this);
+        Bind(wxEVT_MOTION, &DriveStatusPanel::OnMouseMove, this);
+        Bind(wxEVT_LEFT_UP, &DriveStatusPanel::OnClick, this);
+        Bind(wxEVT_RIGHT_UP, &DriveStatusPanel::OnClick, this);
+}
+
+bool DriveStatusPanel::UpdateDrives(drive_info_t *info, int num) {
+        if (num > MAX_STATUS_DRIVES)
+                num = MAX_STATUS_DRIVES;
+
+        bool countChanged = num != numDrives;
+        if (!countChanged && (!num || !memcmp(drives, info, num * sizeof(drive_info_t))))
+                return false;
+
+        if (num)
+                memcpy(drives, info, num * sizeof(drive_info_t));
+        numDrives = num;
+        tooltipDrive = -1;
+        Refresh();
+
+        return countChanged;
+}
+
+int DriveStatusPanel::GetPanelWidth() { return numDrives * (DRIVE_ICON_SIZE + DRIVE_ICON_SPACING) + DRIVE_ICON_SPACING; }
+
+wxBitmap DriveStatusPanel::GetBitmap(const drive_info_t &info) {
+        if (info.type == DRIVE_TYPE_FDD)
+                return info.enabled ? bitmapFDD[0] : bitmapFDD[1];
+        if (info.type == DRIVE_TYPE_CDROM)
+                return info.enabled ? bitmapCDROM[0] : bitmapCDROM[1];
+        return bitmapHDD[0];
+}
+
+int DriveStatusPanel::HitTest(int x) {
+        int i = (x - DRIVE_ICON_SPACING / 2) / (DRIVE_ICON_SIZE + DRIVE_ICON_SPACING);
+        return (x >= 0 && i < numDrives) ? i : -1;
+}
+
+void DriveStatusPanel::OnPaint(wxPaintEvent &event) {
+        wxPaintDC dc(this);
+        int y = (GetClientSize().GetHeight() - DRIVE_ICON_SIZE) / 2;
+
+        for (int i = 0; i < numDrives; ++i) {
+                int x = DRIVE_ICON_SPACING + i * (DRIVE_ICON_SIZE + DRIVE_ICON_SPACING);
+                dc.DrawBitmap(GetBitmap(drives[i]), x, y, true);
+
+                if (show_disc_activity) {
+                        dc.SetPen(wxPen(wxColour(0, 0, 0)));
+                        dc.SetBrush(wxBrush(drives[i].readflash ? wxColour(0, 255, 0) : wxColour(0, 100, 0)));
+                        dc.DrawRectangle(x + DRIVE_ICON_SIZE - DRIVE_LED_SIZE, y + DRIVE_ICON_SIZE - DRIVE_LED_SIZE,
+                                         DRIVE_LED_SIZE, DRIVE_LED_SIZE);
+                }
+        }
+}
+
+void DriveStatusPanel::OnMouseMove(wxMouseEvent &event) {
+        int i = HitTest(event.GetX());
+        if (i == tooltipDrive)
+                return;
+        tooltipDrive = i;
+        if (i < 0) {
+                UnsetToolTip();
+                return;
+        }
+
+        const drive_info_t &info = drives[i];
+        wxString name;
+        if (info.type == DRIVE_TYPE_CDROM)
+                name = "CD-ROM";
+        else if (info.type == DRIVE_TYPE_HDD)
+                name = "Hard disk";
+        else if (is_zip_drive(info))
+                name = "ZIP drive";
+        else
+                name = "Floppy drive";
+
+        wxString fn = info.fn;
+        if (fn.IsEmpty())
+                fn = info.enabled ? "(disk inserted)" : "(empty)";
+        SetToolTip(wxString::Format("%s %c: %s", name, info.drive_letter, fn));
+}
+
+void DriveStatusPanel::OnClick(wxMouseEvent &event) {
+        int i = HitTest(event.GetX());
+        if (i < 0)
+                return;
+
+        const drive_info_t &info = drives[i];
+        wxMenu menu;
+        if (info.type == DRIVE_TYPE_CDROM) {
+                menu.Append(XRCID("IDM_CDROM_IMAGE_LOAD"), "Load CD-ROM image...");
+                menu.Append(XRCID("IDM_CDROM_EMPTY"), "Eject CD-ROM")->Enable(info.enabled);
+        } else if (is_zip_drive(info)) {
+                menu.Append(XRCID("IDM_DISC_ZIP"), "Load ZIP disk...");
+                menu.Append(XRCID("IDM_EJECT_ZIP"), "Eject ZIP disk")->Enable(info.enabled);
+        } else if (info.type == DRIVE_TYPE_FDD) {
+                menu.Append(XRCID(info.drive ? "IDM_DISC_B" : "IDM_DISC_A"),
+                            wxString::Format("Change drive %c:...", info.drive_letter));
+                menu.Append(XRCID(info.drive ? "IDM_EJECT_B" : "IDM_EJECT_A"),
+                            wxString::Format("Eject drive %c:", info.drive_letter))
+                        ->Enable(info.enabled);
+        } else
+                return;
+
+        PopupMenu(&menu, event.GetPosition());
+}
+
+MainStatusBar::MainStatusBar(wxWindow *parent) : wxStatusBar(parent, wxID_ANY), timer(this) {
+        machineInfoText[0] = 0;
+        drivePanel = new DriveStatusPanel(this);
+
+        SetFieldsCount(3);
+        UpdateLayout();
+
+        Bind(wxEVT_TIMER, &MainStatusBar::OnTimer, this);
+        Bind(wxEVT_SIZE, &MainStatusBar::OnSize, this);
+        timer.Start(100);
+}
+
+MainStatusBar::~MainStatusBar() { timer.Stop(); }
+
+void MainStatusBar::UpdateLayout() {
+        int widths[3] = {drivePanel->GetPanelWidth(), -1, 110};
+        SetStatusWidths(3, widths);
+
+        wxRect rect;
+        if (GetFieldRect(0, rect))
+                drivePanel->SetSize(rect);
+}
+
+void MainStatusBar::OnSize(wxSizeEvent &event) {
+        UpdateLayout();
+        event.Skip();
+}
+
+void MainStatusBar::OnTimer(wxTimerEvent &event) {
+        wxString hint, speed;
+
+        if (emulation_state == EMULATION_STOPPED) {
+                if (drivePanel->UpdateDrives(NULL, 0))
+                        UpdateLayout();
+                speed = "Stopped";
+        } else {
+                int num_drives;
+                drive_info_t *drives = get_machine_info(machineInfoText, &num_drives);
+                if (drivePanel->UpdateDrives(drives, num_drives))
+                        UpdateLayout();
+
+                if (emulation_state == EMULATION_PAUSED)
+                        speed = "Paused";
+                else
+                        speed = wxString::Format("Speed: %d%%", fps);
+                hint = mousecapture ? "Press Ctrl+End to release mouse" : "Click to capture mouse";
+        }
+
+        if (GetStatusText(1) != hint)
+                SetStatusText(hint, 1);
+        if (GetStatusText(2) != speed)
+                SetStatusText(speed, 2);
 }
 
 extern "C" {

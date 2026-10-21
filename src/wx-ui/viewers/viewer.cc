@@ -5,6 +5,7 @@
 #include <wx/xrc/xmlres.h>
 
 #include "viewer.h"
+#include "wx-utils.h"
 #include <list>
 #include <string>
 #include <vector>
@@ -101,8 +102,9 @@ void viewer_call(viewer_t *viewer, void *p, void (*func)(void *v, void *param), 
 
 void update_viewers_menu(void *menu)
 {
-	wxMenuItem *m = ((wxMenu *)menu)->FindItem(XRCID("IDM_VIEW"));
-	wxMenu *wm = m->GetSubMenu();
+	wxMenu *wm = (wxMenu *)wx_getsubmenu(menu, XRCID("IDM_VIEW"));
+	if (!wm)
+		return;
 
 	for (int i = IDM_VIEWER; i < IDM_VIEWER_MAX; i++)
 	{

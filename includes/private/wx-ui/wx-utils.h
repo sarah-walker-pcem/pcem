@@ -31,7 +31,6 @@ void *wx_gettoolbar(void *window);
 
 void *wx_getsubmenu(void *window, int id);
 void wx_appendmenu(void *sub_menu, int id, const char *title, enum wxItemKind type);
-void *wx_getnativemenu(void *menu);
 
 int wx_textentrydialog(void *window, const char *message, const char *title, const char *value, unsigned int min_length,
                        unsigned int max_length, LONG_PARAM result);
@@ -107,9 +106,6 @@ void wx_config_free(void *config);
 
 int confirm();
 
-#ifdef _WIN32
-void wx_winsendmessage(void *window, int msg, INT_PARAM wParam, LONG_PARAM lParam);
-#endif
 #ifdef __cplusplus
 }
 #endif

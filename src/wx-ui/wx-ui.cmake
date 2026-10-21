@@ -52,6 +52,7 @@ set(PCEM_SRC ${PCEM_SRC}
         wx-ui/wx-joystickconfig.cc
         wx-ui/wx-config-eventbinder.cc
         wx-ui/wx-createdisc.cc
+        wx-ui/wx-sdl2-display.cc
         ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp
         )
 
@@ -62,24 +63,18 @@ if(USE_NETWORKING)
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        set(PCEM_SRC ${PCEM_SRC}
-                wx-ui/wx-sdl2-display.c
-                )
+        # wx-sdl2-display.cc looks up GTK/GDK functions at runtime
+        set(PCEM_LIBRARIES ${PCEM_LIBRARIES} ${CMAKE_DL_LIBS})
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         set(PCEM_SRC ${PCEM_SRC}
-                wx-ui/wx-sdl2-display-win.c
                 wx-ui/wx.rc
                 )
 endif()
 
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-        set(PCEM_SRC ${PCEM_SRC}
-                wx-ui/wx-sdl2-display.c
-                )
-
         add_compile_definitions(PCEM_RENDER_WITH_TIMER PCEM_RENDER_TIMER_LOOP)
 
 endif()

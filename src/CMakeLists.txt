@@ -53,10 +53,6 @@ if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/wx-ui.cmake)
         include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/viewers/viewers.cmake)
 endif()
-if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
-        include(${CMAKE_CURRENT_SOURCE_DIR}/qt-ui/qt-ui.cmake)
-        include(${CMAKE_CURRENT_SOURCE_DIR}/qt-ui/viewers/viewers.cmake)
-endif()
 
 set(PCEM_SRC ${PCEM_SRC}
         fdi2raw.c
@@ -75,9 +71,6 @@ set(PCEM_LIBRARIES ${DISPLAY_ENGINE_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRAR
 include(${CMAKE_CURRENT_SOURCE_DIR}/plugin-api/plugin-api.cmake)
 
 set(PCEM_LIBRARIES ${PCEM_LIBRARIES} PARENT_SCOPE)
-if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
-qt_add_executable(pcem ${PCEM_SRC} ${PCEM_PRIVATE_API} ${PCEM_EMBEDDED_PLUGIN_API})
-endif()
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
 add_executable(pcem ${PCEM_SRC} ${PCEM_PRIVATE_API} ${PCEM_EMBEDDED_PLUGIN_API})
 endif()

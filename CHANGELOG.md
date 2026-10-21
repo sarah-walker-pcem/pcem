@@ -8,13 +8,60 @@
   - Load up to 2GB disks to temporary disk (doesn't modify the image file)
   - Mounts as read-only if memory allocation fails (mind the 32bit PCem memory limits)
 - 32-bit Windows builds will now be deprecated due to technical issues. v17 will be the last 32-bit PCem.
+- Configuration dialog reworked to be more virt-manager like, allowing more pages
+- Real printer support for LPT devices, with configuration options for LPT devices
+- Added debug viewers: (S)VGA palette, font and video memory viewers, and a 3DFX state viewer
+- Added emulation of specific IDE hard drive models (3 Conner drives), needed by BIOSes that only accept certain drives
+- Added SCAMP EMS support (Commodore SL386SX-25)
+- Added Xi 8088 UMB DIP switch and BIOS flash programming
+- Added status window text for GUS
+- Added a menu option to configure the Linux CD-ROM device path
+- Added X11 Force Mode option (see #128)
+- Networking now uses libslirp
+- Large (>2GB) disk image support via 64-bit file offsets
+- Windows now stores configs, logs, NVR, ROMs and pcem.cfg in HOMEDIR/.pcem (move your v17 files there). Plugins and networking enabled by default.
+- Executable-path config support
+- New host platforms: Windows ARM64, macOS (Clang, Apple Silicon with MAP_JIT, OpenGL 3), Linux aarch64 and arm32 (Raspberry Pi)
+
+## Bug fixes in v18
+- CPU: Fixed CPL on ring-0 call gate transition (fixes Bleem! demo)
+- CPU: FSCALE returns 0.0 when ST(0) is 0.0 (fixes fade-in on MDK2); FSTENV stores correct top-of-stack (fixes CNCD - Inside)
+- Dynarec: Don't take trap when abort is pending (fixes FMV playback in Blood)
+- CD-ROM: Fixed raw sector reads in Linux ioctl code (fixes Bleem! game loading) and the "Empty" CD-ROM option on Linux
+- Sound Blaster: Don't read past end of DSP read FIFO
+- Voodoo: Fixes for Extreme Assault; emulation of dither subtraction (interpreter only)
+- Voodoo Banshee/3: Correct Y swap origin (fixes low resolutions) and fixed corrupt desktop with the video processor enabled
+- Reworked (S)VGA memory addressing with correct chain-4 and MA13/14 remapping (fixes Windows 3.x Paradise drivers and Titan); fixed Paradise banking
+- Fixed BY16 addressing on Cirrus Logic cards
+- Fixed S3 Trio64 linear framebuffer computation
+- Fixed window corruption with Matrox Millennium using the 9-30-1998 Win9x driver
+- CGA-class cards mirror CRTC between ports 3D0 and 3D7 (fixes scrolling in Prohibition)
+- Re-enabled byte panning and cursor skew on ET4000-based Korean VGA; fixed crashes with built-in VGA on AMA-932J, Samsung SPC-4620P and SPC-6033P
+- GUS sets DMA TC IRQ flag even when IRQ is disabled (fixes CNCD - Inside)
+- AudioPCI-based cards: Reduced filter gain to 0.65
+- FDC commands 8D and CD treated as format track (fixes formatting on AMI BIOSes)
+- IDE: Identify command reports hard drives as fixed drives
+- Stricter IO handler add/remove logic (fixes GA686BX crashes on power events)
+- Itautec Infoway keyboard controller SMI fix
+- FIC VA-503+ minimum RAM is now 8MB
+- Removed AWARD 286 BIOS turbo hack
+- Fixed SCAMP EMS register handling typos
+- MIDI: Fixed MIDI out on Windows; ALSA sysex messages up to 65536 bytes (fixes crashes)
+- Fixed mouse not moving on Windows hosts and window positioning on Windows
+- Fixed CTRL+END on Windows
+- Fixed sound config button (#235)
+- Fixed segfault loading config files with Windows \r\n line endings
+- Fixed Windows home directory paths containing spaces
+- Configure dialog forces an available model when the selected one has no ROMs
 
 ## Added the following machines to v18
 - Hyundai SUPER-16T
 - Hyundai SUPER-16TE
 - Commodore PC10C
+- GRiD GRiDcase 1520 (initial support)
 
 ## Added the following CD-Drives to v18
+- NEC CDR-1300A (6X)
 - Sony CDU311 (8X)
 - Toshiba XM-5702B (12X)
 - GoldStar CRD-8160B (16X)
@@ -23,6 +70,7 @@
 - BTC BCD36XH (36X)
 - Philips PCA403CD (40X)
 - Mitsumi CRMC-FX4820T (48X)
+- Kenwood True-X UCR-421 (72X)
 
 ## Added the following Video Cards to v18
 - Matrox Millennium
@@ -35,7 +83,10 @@
 ## Developer Changes to v18
 - First release to switch from autotools/make to CMake/Ninja
 - Legacy autotools and mingw makefiles are removed
-- Windows and Linux builds now will be built in Clang, and are required to be built with Clang
+- Removed VLAs and C99 for-loop declarations for wider compiler compatibility
+- Release builds target x86-64-v2, -O2, with LTO enabled
+- Added man page and devcontainer files
+- Logging improvements; separate debug flags per component in debug builds
 
 # PCem v17
 - New machines added - Amstrad PC5086, Compaq Deskpro, Samsung SPC-6033P, Samsung SPC-6000A, Intel VS440FX, Gigabyte GA-686BX

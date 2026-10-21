@@ -1,6 +1,5 @@
 # [PCem](https://pcem-emulator.co.uk/)
 ![GitHub Actions](https://github.com/sarah-walker-pcem/pcem/actions/workflows/workflow.yml/badge.svg)
-![GitHub Actions](https://github.com/sarah-walker-pcem/pcem/actions/workflows/workflow-qt.yml/badge.svg)
 ## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)/[vNext (Wise Global Solutions Mirror)](https://mirror.wiseglobalsolutions.com/pcem/)
 
 Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
@@ -39,7 +38,6 @@ default value.
   -DCMAKE_BUILD_TYPE=Release : Generate release build. Recommended for regular use.
   -DCMAKE_BUILD_TYPE=Debug   : Compile with debugging enabled.
   -DPCEM_DISPLAY_ENGINE=wxWidgets : Compile with the WxWidgets Display Engine. Default
-  -DPCEM_DISPLAY_ENGINE=Qt   : Compile with the Qt Display Engine.
   -DUSE_NETWORKING=ON        : Build with networking support.
   -DUSE_PCAP_NETWORKING=ON   : Build with pcap networking support. (Needs USE_NETWORKING to compile) Requires libpcap.
   -DUSE_ALSA=OFF             : Build with support for MIDI output through ALSA. Requires libasound. (Linux Only)

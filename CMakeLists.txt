@@ -166,19 +166,6 @@ if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         include(${wxWidgets_USE_FILE})
         set(DISPLAY_ENGINE_LIBRARIES ${wxWidgets_LIBRARIES})
 endif()
-if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
-        find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGLWidgets UiTools)
-        set(DISPLAY_ENGINE_LIBRARIES Qt6::Core Qt6::Widgets Qt6::OpenGLWidgets Qt6::UiTools)
-        set(CMAKE_AUTOMOC ON)
-        set(CMAKE_AUTORCC ON)
-        set(CMAKE_AUTOUIC ON)
-
-        # Qt6 propagates UNICODE/_UNICODE defines which cause Win32 APIs
-        # (CreateFile, etc.) to resolve to wide-char variants (CreateFileW).
-        # PCem uses char* (ANSI) Win32 APIs throughout, so disable these.
-        # This sets a property that Qt6's generator expression checks.
-        set(PCEM_QT_NO_UNICODE ON)
-endif()
 
 
 if(USE_ALSA)

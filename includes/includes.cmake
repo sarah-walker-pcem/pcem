@@ -24,8 +24,5 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/private/video)
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/private/wx-ui)
 endif()
-if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
-        include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/private/qt-ui)
-endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/public)

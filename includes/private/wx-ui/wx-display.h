@@ -10,9 +10,13 @@ void display_close();
 void display_start(void *hwnd);
 void display_stop();
 void display_resize(int width, int height);
+int display_get_mouse(int *dx, int *dy, int *buttons);
 
 #ifdef __cplusplus
 }
+
+class wxWindow;
+wxWindow *display_create_canvas(wxWindow *parent);
 #endif
 
 extern int mousecapture;

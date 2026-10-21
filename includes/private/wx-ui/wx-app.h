@@ -8,6 +8,8 @@
 
 #include "wx-utils.h"
 
+#include <map>
+
 class CallbackEvent;
 class PopupMenuEvent;
 
@@ -18,40 +20,6 @@ wxDECLARE_EVENT(WX_STOP_EMULATION_NOW_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_EXIT_COMPLETE_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_SHOW_WINDOW_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_POPUP_MENU_EVENT, PopupMenuEvent);
-
-#ifdef _WIN32
-class WinSendMessageEvent;
-wxDECLARE_EVENT(WX_WIN_SEND_MESSAGE_EVENT, WinSendMessageEvent);
-class WinSendMessageEvent : public wxCommandEvent {
-    public:
-        WinSendMessageEvent(void *hwnd, int message, INT_PARAM wParam, LONG_PARAM lParam)
-                : wxCommandEvent(WX_WIN_SEND_MESSAGE_EVENT) {
-                this->hwnd = hwnd;
-                this->message = message;
-                this->wParam = wParam;
-                this->lParam = lParam;
-        }
-        WinSendMessageEvent(const WinSendMessageEvent &event) : wxCommandEvent(event) {
-                this->hwnd = event.GetHWND();
-                this->message = event.GetMessage();
-                this->wParam = event.GetWParam();
-                this->lParam = event.GetLParam();
-        }
-
-        wxEvent *Clone() const { return new WinSendMessageEvent(*this); }
-
-        void *GetHWND() const { return hwnd; }
-        int GetMessage() const { return message; }
-        INT_PARAM GetWParam() const { return wParam; }
-        LONG_PARAM GetLParam() const { return lParam; }
-
-    private:
-        void *hwnd;
-        int message;
-        INT_PARAM wParam;
-        LONG_PARAM lParam;
-};
-#endif
 
 class CallbackEvent : public wxCommandEvent {
     public:
@@ -103,6 +71,19 @@ class PopupMenuEvent : public wxCommandEvent {
         wxWindow *window;
 };
 
+/* Menu bar built from the "main_menu" XRC menu. Top-level menus lose their
+   item ids once attached to a wxMenuBar, so they are remembered here so that
+   wx_getsubmenu() can still look up e.g. IDM_CDROM and IDM_VIEW. */
+class PCemMenuBar : public wxMenuBar {
+    public:
+        void AppendTop(wxMenu *menu, const wxString &title, int id);
+        wxMenu *FindSubMenu(int id);
+
+    private:
+        std::map<int, wxMenu *> topMenus;
+};
+
+class MainStatusBar;
 class Frame;
 
 class App : public wxApp {
@@ -134,7 +115,8 @@ class Frame : public wxFrame {
 
         void Start();
 
-        wxMenu *GetMenu();
+        wxMenuBar *GetMenu();
+        wxWindow *GetCanvas() { return canvas; }
 
     private:
         void OnCommand(wxCommandEvent &event);
@@ -146,12 +128,11 @@ class Frame : public wxFrame {
         void OnPopupMenuEvent(PopupMenuEvent &event);
         void OnCallbackEvent(CallbackEvent &event);
         void OnClose(wxCloseEvent &event);
-#ifdef _WIN32
-        void OnWinSendMessageEvent(WinSendMessageEvent &event);
-#endif
 
         void ShowConfigSelection();
-        wxMenu *menu;
+        PCemMenuBar *menu;
+        wxWindow *canvas;
+        MainStatusBar *statusBar;
 
         bool closing;
 

@@ -118,17 +118,13 @@ void wx_enablemenuitem(void *menu, int id, int enable) {
 }
 
 void *wx_getsubmenu(void *menu, int id) {
+        if (((wxObject *)menu)->GetClassInfo()->IsKindOf(CLASSINFO(wxMenuBar)))
+                return ((PCemMenuBar *)menu)->FindSubMenu(id);
+
         wxMenuItem *m = ((wxMenu *)menu)->FindItem(id);
         if (m)
                 return m->GetSubMenu();
 
-        return 0;
-}
-
-void *wx_getnativemenu(void *menu) {
-#ifdef _WIN32
-        return ((wxMenu *)menu)->GetHMenu();
-#endif
         return 0;
 }
 
@@ -138,13 +134,6 @@ void *wx_getnativewindow(void *window) {
 #endif
         return 0;
 }
-
-#ifdef _WIN32
-void wx_winsendmessage(void *window, int msg, INT_PARAM wParam, LONG_PARAM lParam) {
-        WinSendMessageEvent *event = new WinSendMessageEvent(wx_getnativewindow(window), msg, wParam, lParam);
-        wxQueueEvent((wxWindow *)window, event);
-}
-#endif
 
 void wx_appendmenu(void *sub_menu, int id, const char *title, enum wxItemKind type) {
         ((wxMenu *)sub_menu)->Append(id, title, wxEmptyString, type);

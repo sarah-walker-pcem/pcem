@@ -5,13 +5,8 @@
 #include "wx-utils.h"
 #include "wx-common.h"
 #include "logging-internal.h"
-
-#ifdef _WIN32
-#define BITMAP WINDOWS_BITMAP
-#include <windows.h>
-#include <windowsx.h>
-#undef BITMAP
-#endif
+#include "wx-display.h"
+#include "wx-status.h"
 
 extern "C" {
 int wx_load_config(void *);
@@ -37,9 +32,6 @@ wxDEFINE_EVENT(WX_STOP_EMULATION_NOW_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_EXIT_COMPLETE_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_SHOW_WINDOW_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_POPUP_MENU_EVENT, PopupMenuEvent);
-#ifdef _WIN32
-wxDEFINE_EVENT(WX_WIN_SEND_MESSAGE_EVENT, WinSendMessageEvent);
-#endif
 
 wxBEGIN_EVENT_TABLE(Frame, wxFrame) wxEND_EVENT_TABLE()
 
@@ -57,7 +49,7 @@ bool App::OnInit() {
         //        }
         InitXmlResource();
 
-        frame = new Frame(this, "null frame", wxPoint(500, 500), wxSize(100, 100));
+        frame = new Frame(this, "PCem " PCEM_VERSION_STRING, wxDefaultPosition, wxSize(640, 480));
         frame->Start();
         return true;
 }
@@ -66,11 +58,49 @@ int App::OnRun() { return wxApp::OnRun(); }
 
 #include <sstream>
 
+void PCemMenuBar::AppendTop(wxMenu *menu, const wxString &title, int id) {
+        Append(menu, title);
+        topMenus[id] = menu;
+}
+
+wxMenu *PCemMenuBar::FindSubMenu(int id) {
+        std::map<int, wxMenu *>::iterator it = topMenus.find(id);
+        if (it != topMenus.end())
+                return it->second;
+
+        wxMenuItem *item = FindItem(id);
+        return item ? item->GetSubMenu() : NULL;
+}
+
+static PCemMenuBar *create_menu_bar() {
+        PCemMenuBar *bar = new PCemMenuBar();
+        wxMenu *main_menu = wxXmlResource::Get()->LoadMenu(wxT("main_menu"));
+
+        while (main_menu->GetMenuItemCount() > 0) {
+                wxMenuItem *item = main_menu->Remove(main_menu->FindItemByPosition(0));
+                wxMenu *sub_menu = item->GetSubMenu();
+                if (sub_menu) {
+                        item->SetSubMenu(NULL);
+                        bar->AppendTop(sub_menu, item->GetItemLabel(), item->GetId());
+                }
+                delete item;
+        }
+        delete main_menu;
+
+        return bar;
+}
+
 Frame::Frame(App *app, const wxString &title, const wxPoint &pos, const wxSize &size)
-        : wxFrame(NULL, wxID_ANY, title, pos, size, 0) // wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER))
-{
+        : wxFrame(NULL, wxID_ANY, title, pos, size, wxDEFAULT_FRAME_STYLE) {
         this->closing = false;
-        this->menu = wxXmlResource::Get()->LoadMenu(wxT("main_menu"));
+        this->menu = create_menu_bar();
+        SetMenuBar(menu);
+
+        statusBar = new MainStatusBar(this);
+        SetStatusBar(statusBar);
+
+        /* The emulated display is rendered by SDL into this child window */
+        canvas = display_create_canvas(this);
 
         Bind(wxEVT_CLOSE_WINDOW, &Frame::OnClose, this);
         Bind(wxEVT_MENU, &Frame::OnCommand, this);
@@ -82,9 +112,6 @@ Frame::Frame(App *app, const wxString &title, const wxPoint &pos, const wxSize &
         Bind(WX_STOP_EMULATION_EVENT, &Frame::OnStopEmulationEvent, this);
         Bind(WX_STOP_EMULATION_NOW_EVENT, &Frame::OnStopEmulationNowEvent, this);
         Bind(WX_CALLBACK_EVENT, &Frame::OnCallbackEvent, this);
-#ifdef _WIN32
-        Bind(WX_WIN_SEND_MESSAGE_EVENT, &Frame::OnWinSendMessageEvent, this);
-#endif
 
         CenterOnScreen();
 }
@@ -171,11 +198,16 @@ void Frame::OnPopupMenuEvent(PopupMenuEvent &event) {
 void Frame::OnCommand(wxCommandEvent &event) { wx_handle_command(this, event.GetId(), event.IsChecked()); }
 
 void Frame::OnClose(wxCloseEvent &event) {
+        if (emulation_state != EMULATION_STOPPED && event.CanVeto()) {
+                event.Veto();
+                wx_stop_emulation(this);
+                return;
+        }
         pclog_end();
         wx_exit(this, 0);
 }
 
-wxMenu *Frame::GetMenu() { return menu; }
+wxMenuBar *Frame::GetMenu() { return menu; }
 
 /* Exit */
 
@@ -219,8 +251,3 @@ wxThread::ExitCode CExitThread::Entry() {
         return 0;
 }
 
-#ifdef _WIN32
-void Frame::OnWinSendMessageEvent(WinSendMessageEvent &event) {
-        SendMessage((HWND)event.GetHWND(), event.GetMessage(), event.GetWParam(), event.GetLParam());
-}
-#endif

@@ -173,7 +173,7 @@
 			</object>
 			<object class="separator" />
 			<object class="wxMenuItem" name="IDM_VID_FULLSCREEN_TOGGLE">
-				<label>Toggle fullscreen\tCtrl+Alt+PageDown</label>
+				<label>Toggle fullscreen (Ctrl+Alt+PageDown)</label>
 			</object>
 			<object class="wxMenuItem" name="IDM_VID_FULLSCREEN">
 				<label>Fullscreen on input grab</label>
@@ -460,7 +460,7 @@
 			<object class="wxMenu">
 				<label>_Screenshot</label>
 				<object class="wxMenuItem" name="IDM_SCREENSHOT">
-					<label>_Take screenshot\tCtrl+Alt+PageUp</label>
+					<label>_Take screenshot (Ctrl+Alt+PageUp)</label>
 				</object>
 				<object class="wxMenu">
 					<label>_Format</label>

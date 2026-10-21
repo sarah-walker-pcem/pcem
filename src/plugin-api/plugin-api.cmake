@@ -31,9 +31,6 @@ set(PCEM_SRC_PLUGINAPI
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         set(PCEM_SRC_PLUGINAPI ${PCEM_SRC_PLUGINAPI} plugin-api/wx-utils.cc)
 endif()
-if(${PCEM_DISPLAY_ENGINE} STREQUAL "Qt")
-        set(PCEM_SRC_PLUGINAPI ${PCEM_SRC_PLUGINAPI} plugin-api/qt-utils.cc)
-endif()
 
 if(PLUGIN_ENGINE)
         add_library(pcem-plugin-api SHARED ${PCEM_SRC_PLUGINAPI} ${PCEM_PUBLIC_API})
