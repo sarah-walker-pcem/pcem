@@ -3792,6 +3792,102 @@ void mach64_overlay_draw(svga_t *svga, int displine) {
         mach64->scaler_update = y_diff;
 }
 
+static uint8_t mach64_read_linear(uint32_t addr, void *p) {
+        svga_t *svga = (svga_t *)p;
+
+        egareads++;
+
+        cycles -= video_timing_read_b;
+        cycles_lost += video_timing_read_b;
+
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
+                return 0xff;
+
+        return svga->vram[addr & svga->vram_mask];
+}
+
+static uint16_t mach64_readw_linear(uint32_t addr, void *p) {
+        svga_t *svga = (svga_t *)p;
+
+        egareads += 2;
+
+        cycles -= video_timing_read_w;
+        cycles_lost += video_timing_read_w;
+
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
+                return 0xffff;
+
+        return *(uint16_t *)&svga->vram[addr & svga->vram_mask];
+}
+
+static uint32_t mach64_readl_linear(uint32_t addr, void *p) {
+        svga_t *svga = (svga_t *)p;
+
+        egareads += 4;
+
+        cycles -= video_timing_read_l;
+        cycles_lost += video_timing_read_l;
+
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
+                return 0xffffffff;
+
+        return *(uint32_t *)&svga->vram[addr & svga->vram_mask];
+}
+
+static void mach64_write_linear(uint32_t addr, uint8_t val, void *p) {
+        svga_t *svga = (svga_t *)p;
+
+        egawrites++;
+
+        cycles -= video_timing_write_b;
+        cycles_lost += video_timing_write_b;
+
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
+                return;
+
+        addr &= svga->vram_mask;
+        svga->changedvram[addr >> 12] = changeframecount;
+        svga->vram[addr] = val;
+}
+
+static void mach64_writew_linear(uint32_t addr, uint16_t val, void *p) {
+        svga_t *svga = (svga_t *)p;
+
+        egawrites += 2;
+
+        cycles -= video_timing_write_w;
+        cycles_lost += video_timing_write_w;
+
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
+                return;
+
+        addr &= svga->vram_mask;
+        svga->changedvram[addr >> 12] = changeframecount;
+        *(uint16_t *)&svga->vram[addr] = val;
+}
+
+static void mach64_writel_linear(uint32_t addr, uint32_t val, void *p) {
+        svga_t *svga = (svga_t *)p;
+
+        egawrites += 4;
+
+        cycles -= video_timing_write_l;
+        cycles_lost += video_timing_write_l;
+
+        addr &= svga->decode_mask;
+        if (addr >= svga->vram_max)
+                return;
+
+        addr &= svga->vram_mask;
+        svga->changedvram[addr >> 12] = changeframecount;
+        *(uint32_t *)&svga->vram[addr] = val;
+}
+
 static void mach64_io_remove(mach64_t *mach64) {
         int c;
 
@@ -4014,8 +4110,8 @@ static void *mach64_common_init() {
         if (PCI)
                 mem_mapping_disable(&mach64->bios_rom.mapping);
 
-        mem_mapping_add(&mach64->linear_mapping, 0, 0, svga_read_linear, svga_readw_linear, svga_readl_linear, svga_write_linear,
-                        svga_writew_linear, svga_writel_linear, NULL, 0, &mach64->svga);
+        mem_mapping_add(&mach64->linear_mapping, 0, 0, mach64_read_linear, mach64_readw_linear, mach64_readl_linear, mach64_write_linear,
+                        mach64_writew_linear, mach64_writel_linear, NULL, 0, &mach64->svga);
         mem_mapping_add(&mach64->mmio_linear_mapping, 0, 0, mach64_ext_readb, mach64_ext_readw, mach64_ext_readl,
                         mach64_ext_writeb, mach64_ext_writew, mach64_ext_writel, NULL, 0, mach64);
         mem_mapping_add(&mach64->mmio_linear_mapping_2, 0, 0, mach64_ext_readb, mach64_ext_readw, mach64_ext_readl,
