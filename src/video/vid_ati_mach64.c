@@ -201,6 +201,8 @@ typedef struct mach64_t {
 
         uint32_t cur_clr0, cur_clr1;
 
+        uint32_t cursor_cols[2];
+
         uint32_t overlay_dat[1024];
         uint32_t overlay_graphics_key_clr, overlay_graphics_key_msk;
         uint32_t overlay_video_key_clr, overlay_video_key_msk;
@@ -2694,8 +2696,7 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p) {
                 case 0x62:
                 case 0x63:
                         WRITE8(addr, mach64->cur_clr0, val);
-                        if (mach64->type == MACH64_VT2)
-                                mach64->ramdac.pallook[0] =
+                        mach64->cursor_cols[0] =
                                         makecol32((mach64->cur_clr0 >> 24) & 0xff, (mach64->cur_clr0 >> 16) & 0xff,
                                                   (mach64->cur_clr0 >> 8) & 0xff);
                         break;
@@ -2704,8 +2705,7 @@ void mach64_ext_writeb(uint32_t addr, uint8_t val, void *p) {
                 case 0x66:
                 case 0x67:
                         WRITE8(addr, mach64->cur_clr1, val);
-                        if (mach64->type == MACH64_VT2)
-                                mach64->ramdac.pallook[1] =
+                        mach64->cursor_cols[1] =
                                         makecol32((mach64->cur_clr1 >> 24) & 0xff, (mach64->cur_clr1 >> 16) & 0xff,
                                                   (mach64->cur_clr1 >> 8) & 0xff);
                         break;
@@ -3465,8 +3465,10 @@ void mach64_hwcursor_draw(svga_t *svga, int displine) {
         mach64_t *mach64 = (mach64_t *)svga->p;
         int x, offset;
         uint8_t dat;
-        uint32_t col0 = mach64->ramdac.pallook[0];
-        uint32_t col1 = mach64->ramdac.pallook[1];
+        uint32_t col0 = (svga->bpp > 8 || mach64->type == MACH64_VT2) ?
+                mach64->cursor_cols[0] : mach64->ramdac.pallook[mach64->cur_clr0 & 0xff];
+        uint32_t col1 = (svga->bpp > 8 || mach64->type == MACH64_VT2) ?
+                mach64->cursor_cols[1] : mach64->ramdac.pallook[mach64->cur_clr1 & 0xff];
 
         offset = svga->hwcursor_latch.xoff;
         for (x = 0; x < 64 - svga->hwcursor_latch.xoff; x += 4) {
