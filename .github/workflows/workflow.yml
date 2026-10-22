@@ -9,115 +9,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Debug, Release, RelWithDebInfo]
         include:
-          - name: Ubuntu 64bit Debug (GCC wxWidgets Build)
-            os: ubuntu-latest
-            args: -DCMAKE_BUILD_TYPE=Debug -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
-            artifacts_name: wxPCem-Debug-vNext-Ubuntu-GCC64-${{ github.run_number }}
-            artifacts_path: wxPCem-Debug-vNext-Ubuntu-GCC64-${{ github.run_number }}-${{ github.sha }}.tar.bz2
-            installdeps: >-
-              libsdl2-dev
-              libopenal-dev
-              libwxgtk3.2-dev
-              libpcap-dev
-              libslirp-dev
-              cmake
-              llvm
-              clang
-              ninja-build
-          - name: Windows 64bit Debug (GCC MSYS2 wxWidgets Build)
-            os: windows-latest
-            compiler: UCRT64
-            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
-            artifacts_name: wxPCem-Debug-vNext-Windows-GCC64-${{ github.run_number }}
-            artifacts_path: wxPCem-Debug-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
-            installdeps: >-
-              base-devel
-              zip
-              unzip
-              mingw-w64-ucrt-x86_64-ntldd-git
-              mingw-w64-ucrt-x86_64-toolchain
-              mingw-w64-ucrt-x86_64-SDL2
-              mingw-w64-ucrt-x86_64-openal
-              mingw-w64-ucrt-x86_64-wxwidgets3.2-msw
-              mingw-w64-ucrt-x86_64-cmake
-              mingw-w64-ucrt-x86_64-libslirp
-              mingw-w64-ucrt-x86_64-libpcap
-              mingw-w64-ucrt-x86_64-ninja
-          - name: Ubuntu 64bit Release (GCC wxWidgets Build)
-            os: ubuntu-latest
-            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
-            artifacts_name: wxPCem-vNext-Ubuntu-GCC64-${{ github.run_number }}
-            artifacts_path: wxPCem-vNext-Ubuntu-GCC64-${{ github.run_number }}-${{ github.sha }}.tar.bz2
-            installdeps: >-
-              libsdl2-dev
-              libopenal-dev
-              libwxgtk3.2-dev
-              libpcap-dev
-              libslirp-dev
-              cmake
-              llvm
-              clang
-              ninja-build
-          - name: Windows 64bit Release (GCC MSYS2 wxWidgets Build)
-            os: windows-latest
-            compiler: UCRT64
-            args: -DCMAKE_BUILD_TYPE=Release -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
-            artifacts_name: wxPCem-vNext-Windows-GCC64-${{ github.run_number }}
-            artifacts_path: wxPCem-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
-            installdeps: >-
-              base-devel
-              zip
-              unzip
-              mingw-w64-ucrt-x86_64-ntldd-git
-              mingw-w64-ucrt-x86_64-toolchain
-              mingw-w64-ucrt-x86_64-SDL2
-              mingw-w64-ucrt-x86_64-openal
-              mingw-w64-ucrt-x86_64-wxwidgets3.2-msw
-              mingw-w64-ucrt-x86_64-cmake
-              mingw-w64-ucrt-x86_64-libslirp
-              mingw-w64-ucrt-x86_64-libpcap
-              mingw-w64-ucrt-x86_64-ninja
-          - name: Ubuntu 64bit Release With Debug Info (GCC wxWidgets Build)
-            os: ubuntu-latest
-            args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
-            artifacts_name: wxPCem-RelWithDebInfo-vNext-Ubuntu-GCC64-${{ github.run_number }}
-            artifacts_path: wxPCem-RelWithDebInfo-vNext-Ubuntu-GCC64-${{ github.run_number }}-${{ github.sha }}.tar.bz2
-            installdeps: >-
-              libsdl2-dev
-              libopenal-dev
-              libwxgtk3.2-dev
-              libpcap-dev
-              libslirp-dev
-              cmake
-              llvm
-              clang
-              ninja-build
-          - name: Windows 64bit Release With Debug Info (GCC MSYS2 wxWidgets Build)
-            os: windows-latest
-            compiler: UCRT64
-            args: -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
-            artifacts_name: wxPCem-RelWithDebInfo-vNext-Windows-GCC64-${{ github.run_number }}
-            artifacts_path: wxPCem-RelWithDebInfo-vNext-Windows-GCC64-${{ github.run_number }}-${{ github.sha }}.zip
-            installdeps: >-
-              base-devel
-              zip
-              unzip
-              mingw-w64-ucrt-x86_64-ntldd-git
-              mingw-w64-ucrt-x86_64-toolchain
-              mingw-w64-ucrt-x86_64-SDL2
-              mingw-w64-ucrt-x86_64-openal
-              mingw-w64-ucrt-x86_64-wxwidgets3.2-msw
-              mingw-w64-ucrt-x86_64-cmake
-              mingw-w64-ucrt-x86_64-libslirp
-              mingw-w64-ucrt-x86_64-libpcap
-              mingw-w64-ucrt-x86_64-ninja
+          - os: ubuntu-latest
+            platform: Ubuntu
+            shell: bash
+          - os: windows-latest
+            platform: Windows
+            shell: msys2 {0}
 
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
+    name: ${{ matrix.platform }} 64bit ${{ matrix.build_type }} (GCC wxWidgets Build)
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    env:
+      ARTIFACT_NAME: wxPCem-${{ matrix.build_type != 'Release' && format('{0}-', matrix.build_type) || '' }}vNext-${{ matrix.platform }}-GCC64-${{ github.run_number }}
 
     steps:
-      - name: "Check out repository"
+      - name: Check out repository
         uses: actions/checkout@v4.1.1
         with:
           path: temp
@@ -125,96 +38,75 @@ jobs:
 
       - name: Setup MSYS2 (Windows)
         if: runner.os == 'Windows'
-        # You may pin to the exact commit or the version.
-        # uses: msys2/setup-msys2@a43b8403533fffe0c157dd8498f021ddec66bff7
         uses: msys2/setup-msys2@v2
         with:
-          # Variant of the environment to set by default: MSYS, MINGW32, GCC64, UCRT64 or GCC64
-          msystem: ${{ matrix.compiler }}
-          # Retrieve and extract base installation from upstream GitHub Releases
-          release: false # optional, default is true
-          # Update MSYS2 installation through pacman
+          msystem: UCRT64
+          release: false
           update: false
-          # Install packages after installation through pacman
-          install: ${{ matrix.installdeps }}
-      - name: Setup ubuntu dependencies
+          pacboy: >-
+            ntldd-git:p
+            toolchain:p
+            SDL2:p
+            openal:p
+            wxwidgets3.2-msw:p
+            cmake:p
+            libslirp:p
+            libpcap:p
+            ninja:p
+          install: >-
+            base-devel
+            zip
+            unzip
+
+      - name: Setup dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install ${{ matrix.installdeps }}
+          sudo apt-get install -y libsdl2-dev libopenal-dev libwxgtk3.2-dev libpcap-dev libslirp-dev cmake llvm clang ninja-build
 
       # Copy all the sources to the dist folder, before we start generating intermediate files.
-      - name: prepare-package (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
+      - name: Prepare package
         run: |
-          mkdir dist
-          mkdir dist/src
+          mkdir -p dist/src artifacts
           cp -R ./temp/* dist/src
           rm -Rf ./dist/src/.git
-      - name: configure (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: |
-          export INSTALL_PREFIX=$(pwd)/dist
-          mkdir temp/build
-          cd temp/build
-          cmake -G "Ninja" -DMSYS=TRUE -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX ${{ matrix.args }} ..
-      - name: ninja (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: |
-          cd temp/build
-          ninja
-      - name: package (Windows)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: |
-          export INSTALL_PREFIX=$(pwd)/dist
-          export ARTIFACTSDIR=$(pwd)/artifacts
-          mkdir -p $ARTIFACTSDIR
-          cd temp/build
-          ninja install
-          cd $INSTALL_PREFIX
-          ntldd -R "bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang|ucrt)(32|64)' | sed -e 's|\\|/|g' | xargs -r cp --target-directory="bin"
-          zip -r -9 ${{ matrix.artifacts_path }} *
-          cp ${{ matrix.artifacts_path }} $ARTIFACTSDIR
-      - name: prepare-package (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          mkdir dist
-          mkdir dist/src
-          cp -R ./temp/* dist/src
-          rm -Rf ./dist/src/.git
-      - name: configure (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          mkdir temp/build
-          cd temp/build
-          cmake -G "Ninja" ${{ matrix.args }} ..
-      - name: ninja (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          cd temp/build
-          ninja
-      - name: package (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          export DESTDIR=$(pwd)/dist
-          export ARTIFACTSDIR=$(pwd)/artifacts
-          mkdir -p $ARTIFACTSDIR
-          cd temp/build
-          ninja install
-          cd $DESTDIR
-          tar -cjf ${{ matrix.artifacts_path }} *
-          cp ${{ matrix.artifacts_path }} $ARTIFACTSDIR
 
-      - name: 'Upload GitHub Actions artifacts'
+      - name: Configure
+        run: |
+          EXTRA_ARGS=""
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            EXTRA_ARGS="-DMSYS=TRUE -DCMAKE_INSTALL_PREFIX=$(pwd)/dist"
+          fi
+          cmake -S temp -B temp/build -G Ninja $EXTRA_ARGS \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+
+      - name: Build
+        run: ninja -C temp/build
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          ninja -C temp/build install
+          ARCHIVE=$(pwd)/artifacts/$ARTIFACT_NAME-$GITHUB_SHA.zip
+          cd dist
+          ntldd -R "bin/pcem.exe" | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i '(mingw|clang|ucrt)(32|64)' | sed -e 's|\\|/|g' | xargs -r cp --target-directory="bin"
+          zip -r -9 "$ARCHIVE" *
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          DESTDIR=$(pwd)/dist ninja -C temp/build install
+          ARCHIVE=$(pwd)/artifacts/$ARTIFACT_NAME-$GITHUB_SHA.tar.bz2
+          cd dist
+          tar -cjf "$ARCHIVE" *
+
+      - name: Upload GitHub Actions artifacts
         uses: actions/upload-artifact@v4.3.1
         with:
-          name: ${{ matrix.artifacts_name }}
+          name: ${{ env.ARTIFACT_NAME }}
           path: ./artifacts
-          
+
       - name: Upload to Wise Mirror Service
         uses: Dylan700/sftp-upload-action@latest
         with:
