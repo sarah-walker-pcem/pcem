@@ -354,6 +354,7 @@ void resetpchard() {
         timer_reset();
         device_close_all();
         mouse_emu_close();
+        lpt1_device_close();
         viewer_close_all();
         device_init();
         viewer_reset();

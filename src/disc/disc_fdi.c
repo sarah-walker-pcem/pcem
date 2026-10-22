@@ -90,6 +90,7 @@ void fdi_load(int drive, char *fn) {
 void fdi_close(int drive) {
         if (fdi[drive].h)
                 fdi2raw_header_free(fdi[drive].h);
+        fdi[drive].h = NULL;
         if (fdi[drive].f)
                 fclose(fdi[drive].f);
         fdi[drive].f = NULL;
