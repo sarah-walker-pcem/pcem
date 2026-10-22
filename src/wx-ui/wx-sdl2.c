@@ -644,7 +644,7 @@ void reset_emulation() {
         resume_emulation();
 }
 
-int wx_stop() {
+int wx_stop(void *window) {
         pclog("Shutting down...\n");
         closepc();
         display_close();
