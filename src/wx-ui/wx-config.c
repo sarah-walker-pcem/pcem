@@ -4,6 +4,7 @@
 
 #include "ibm.h"
 #include "ide.h"
+#include "config.h"
 #include "cpu.h"
 #include "device.h"
 #include "fdd.h"
@@ -440,6 +441,62 @@ static void recalc_net_list(void *hdlg, int model) {
         if (!found_card)
                 wx_sendmessage(h, WX_CB_SETCURSEL, 0, 0);
 }
+
+static int hex_digit(char c) {
+        if (c >= '0' && c <= '9')
+                return c - '0';
+        if (c >= 'a' && c <= 'f')
+                return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F')
+                return c - 'A' + 10;
+        return -1;
+}
+
+static int parse_macaddr(const char *s, char *out) {
+        int c;
+
+        while (*s == ' ')
+                s++;
+        if (!*s) {
+                out[0] = 0;
+                return 1;
+        }
+
+        for (c = 0; c < 6; c++) {
+                int hi = hex_digit(s[0]);
+                int lo = hex_digit(s[1]);
+
+                if (hi < 0 || lo < 0)
+                        return 0;
+                if (c == 0 && (lo & 1)) /*Multicast bit set*/
+                        return 0;
+                sprintf(&out[c * 3], "%02x", (hi << 4) | lo);
+                s += 2;
+                if (c < 5) {
+                        if (*s != ':' && *s != '-')
+                                return 0;
+                        out[c * 3 + 2] = ':';
+                        s++;
+                }
+        }
+        while (*s == ' ')
+                s++;
+        return !*s;
+}
+
+static int config_validate_macaddr(void *hdlg) {
+        char s[256], mac[18];
+        void *h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_MACADDR"));
+
+        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+        if (!parse_macaddr(s, mac)) {
+                wx_messagebox(hdlg,
+                              "Invalid MAC address. Use the form XX:XX:XX:XX:XX:XX, or leave it blank for the default.",
+                              "PCem error", WX_MB_OK);
+                return 0;
+        }
+        return 1;
+}
 #endif
 
 int config_dlgsave(void *hdlg) {
@@ -456,6 +513,8 @@ int config_dlgsave(void *hdlg) {
         int temp_joystick_type;
 #ifdef USE_NETWORKING
         int temp_network_card;
+        char temp_macaddr[18];
+        int macaddr_changed;
 #endif
         int hdd_changed = 0;
         char s[260];
@@ -531,6 +590,12 @@ int config_dlgsave(void *hdlg) {
 #ifdef USE_NETWORKING
         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
         temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];
+
+        h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_MACADDR"));
+        wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
+        if (!parse_macaddr(s, temp_macaddr))
+                temp_macaddr[0] = 0;
+        macaddr_changed = strcmp(temp_macaddr, config_get_string(CFG_MACHINE, NULL, "macaddr", ""));
 #endif
 
         if (temp_model != model || gfx != gfxcard || mem != mem_size || temp_fpu != fpu_type || temp_GAMEBLASTER != GAMEBLASTER ||
@@ -539,7 +604,7 @@ int config_dlgsave(void *hdlg) {
             temp_fdb_type != fdd_get_type(1) || temp_mouse_type != mouse_type || hdd_changed || hd_changed ||
             cdrom_channel != new_cdrom_channel || zip_channel != new_zip_channel || lpt1_current != temp_lpt1_device
 #ifdef USE_NETWORKING
-            || temp_network_card != network_card_current
+            || temp_network_card != network_card_current || macaddr_changed
 #endif
         ) {
                 if (!has_been_inited || confirm()) {
@@ -562,6 +627,7 @@ int config_dlgsave(void *hdlg) {
                         strcpy(lpt1_device_name, lpt_device_get_internal_name(temp_lpt1_device));
 #ifdef USE_NETWORKING
                         network_card_current = temp_network_card;
+                        config_set_string(CFG_MACHINE, NULL, "macaddr", temp_macaddr);
 #endif
 
                         fdd_set_type(0, temp_fda_type);
@@ -906,6 +972,9 @@ int config_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         wx_enablewindow(h, TRUE);
                 else
                         wx_enablewindow(h, FALSE);
+
+                h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_MACADDR"));
+                wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)config_get_string(CFG_MACHINE, NULL, "macaddr", ""));
 #endif
 
                 return TRUE;
@@ -2275,6 +2344,10 @@ int config_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lPa
                 return config_dlgproc(hdlg, message, wParam, lParam);
         case WX_COMMAND: {
                 if (wParam == wxID_OK) {
+#ifdef USE_NETWORKING
+                        if (!config_validate_macaddr(hdlg))
+                                return TRUE;
+#endif
                         wx_config_destroyeventbinder(eventBinder);
                         eventBinder = NULL;
                         config_dlgsave(hdlg);
