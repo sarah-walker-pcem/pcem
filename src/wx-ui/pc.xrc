@@ -1537,6 +1537,26 @@
 													</object>
 												</object>
 											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALL</flag>
+												<border>5</border>
+												<object class="wxStaticText" name="m_staticTextMacAddr">
+													<size>80,-1</size>
+													<label>MAC address :</label>
+													<wrap>-1</wrap>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALL</flag>
+												<border>5</border>
+												<object class="wxTextCtrl" name="IDC_EDIT_MACADDR">
+													<size>150,-1</size>
+													<value/>
+													<maxlength>17</maxlength>
+												</object>
+											</object>
 										</object>
 									</object>
 								</object>
