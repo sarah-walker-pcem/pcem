@@ -300,7 +300,7 @@ void codegen_backend_init() {
         host_x86_POP(block, REG_EDI);
         host_x86_POP(block, REG_ESI);
         host_x86_POP(block, REG_EBP);
-        host_x86_POP(block, REG_EDX);
+        host_x86_POP(block, REG_EBX);
         host_x86_RET(block);
         block_write_data = NULL;
 
@@ -338,7 +338,7 @@ void codegen_backend_epilogue(codeblock_t *block) {
         host_x86_POP(block, REG_EDI);
         host_x86_POP(block, REG_ESI);
         host_x86_POP(block, REG_EBP);
-        host_x86_POP(block, REG_EDX);
+        host_x86_POP(block, REG_EBX);
         host_x86_RET(block);
 }
 
