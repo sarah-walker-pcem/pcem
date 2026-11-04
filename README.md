@@ -1,5 +1,10 @@
 # [PCem](https://pcem-emulator.co.uk/)
 ![GitHub Actions](https://github.com/sarah-walker-pcem/pcem/actions/workflows/workflow.yml/badge.svg)
+
+## AI Policy
+PCem is AI-free, and will not accept any AI generated code, AI generated/assisted code is not allowed in PCem. Pull Requests with 
+AI generated code will be rejected. Code subsequently discovered to be AI generated/assisted will be removed without warning.
+
 ## Download: [Windows](https://pcem-emulator.co.uk/files/PCemV17Win.zip)/[Linux](https://pcem-emulator.co.uk/files/PCemV17Linux.tar.gz)/[vNext (Wise Global Solutions Mirror)](https://mirror.wiseglobalsolutions.com/pcem/)
 
 Latest version: <b>v17</b> [Changelog](CHANGELOG.md)
