@@ -7,7 +7,7 @@ typedef struct ati68860_ramdac_t {
         int dac_write, dac_pos;
         int dac_r, dac_g;
         PALETTE pal;
-        uint32_t pallook[2];
+        uint32_t pallook[256];
 
         int ramdac_type;
 } ati68860_ramdac_t;
