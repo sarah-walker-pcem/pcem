@@ -15,6 +15,7 @@
 #include <errno.h>
 static ATAPI ioctl_atapi;
 
+int cdrom_drive;
 int old_cdrom_drive;
 
 static uint32_t cdrom_capacity = 0;

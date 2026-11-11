@@ -24,6 +24,11 @@
 
 #include "minivhd/minivhd.h"
 
+#if defined(__APPLE__) && defined(__MACH__)
+        #define fseeko64 fseeko
+        #define ftello64 ftello
+#endif
+
 //#define MAX_CYLINDERS ((((1 << 28)-1) / 16) / 63)
 #define MAX_CYLINDERS 265264 /*Award 430VX won't POST with a larger drive*/
 extern int pause;

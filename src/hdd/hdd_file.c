@@ -9,6 +9,10 @@
 #include "minivhd/minivhd.h"
 #include "minivhd/minivhd_util.h"
 
+#if defined(__APPLE__) && defined(__MACH__)
+        #define fseeko64 fseeko
+#endif
+
 bool is_ramdisk_file(const char *fn) {
         const char *ext1 = ".rdimg";
         const char *ext2 = ".rdvhd";
