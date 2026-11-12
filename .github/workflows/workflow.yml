@@ -9,25 +9,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Debug, Release, RelWithDebInfo]
         include:
           - os: ubuntu-latest
             platform: Ubuntu
             shell: bash
+            compiler: GCC
           - os: windows-latest
             platform: Windows
             shell: msys2 {0}
+            compiler: GCC
+          - os: macos-latest
+            platform: macOS
+            shell: bash
+            compiler: Clang
 
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.platform }} 64bit ${{ matrix.build_type }} (GCC wxWidgets Build)
+    name: ${{ matrix.platform }} 64bit ${{ matrix.build_type }} (${{ matrix.compiler }} wxWidgets Build)
 
     defaults:
       run:
         shell: ${{ matrix.shell }}
 
     env:
-      ARTIFACT_NAME: wxPCem-${{ matrix.build_type != 'Release' && format('{0}-', matrix.build_type) || '' }}vNext-${{ matrix.platform }}-GCC64-${{ github.run_number }}
+      ARTIFACT_NAME: wxPCem-${{ matrix.build_type != 'Release' && format('{0}-', matrix.build_type) || '' }}vNext-${{ matrix.platform }}-${{ matrix.compiler }}64-${{ github.run_number }}
 
     steps:
       - name: Check out repository
@@ -63,6 +69,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libsdl2-dev libopenal-dev libwxgtk3.2-dev libgtk-3-dev libpcap-dev libslirp-dev cmake llvm clang ninja-build
+
+      - name: Setup dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake libslirp ninja pkgconf sdl2-compat wxwidgets
 
       # Copy all the sources to the dist folder, before we start generating intermediate files.
       - name: Prepare package
@@ -100,6 +111,12 @@ jobs:
           ARCHIVE=$(pwd)/artifacts/$ARTIFACT_NAME-$GITHUB_SHA.tar.bz2
           cd dist
           tar -cjf "$ARCHIVE" *
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ARCHIVE=$(pwd)/artifacts/$ARTIFACT_NAME-$GITHUB_SHA.zip
+          ditto -c -k --sequesterRsrc --keepParent temp/build/src/PCem.app "$ARCHIVE"
 
       - name: Upload GitHub Actions artifacts
         uses: actions/upload-artifact@v4.3.1
