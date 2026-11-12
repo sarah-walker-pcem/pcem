@@ -1,29 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-# This is created if someone wants to use GCC still. Although I am targeting CLang, I am trying not to use non-GCC compatable
-# options. So if you really dont care, and want to try to make GCC build again, enable this option. It is only documented here
-#
-# To use just add -DI_WANT_TO_USE_GCC=YES to your cmake command.
-
-option(I_WANT_TO_USE_GCC "I dont care, I want to use GCC even if its not supported anymore" OFF)
-
-# We are going to force clang on both Linux and Windows builds to be uniform
-if(NOT I_WANT_TO_USE_GCC)
-    set(CMAKE_C_COMPILER "clang" CACHE FILEPATH "C compiler")
-    set(CMAKE_CXX_COMPILER "clang++" CACHE FILEPATH "C++ compiler")
-endif()
-
 project(PCem)
-
-# Dont allow GCC Building anymore, force Clang, unless I_WANT_TO_USE_GCC is on
-if(NOT I_WANT_TO_USE_GCC)
-    string(TOUPPER "${CMAKE_C_COMPILER_ID}" CMAKE_C_COMPILER_ID_UPPER) # This is to deal with some distros showing compiler id as clang instead of Clang
-    string(TOUPPER "${CMAKE_CXX_COMPILER_ID}" CMAKE_CXX_COMPILER_ID_UPPER) # This is to deal with some distros showing compiler id as clang instead of Clang
-
-    if(NOT (CMAKE_C_COMPILER_ID_UPPER MATCHES "CLANG" AND CMAKE_CXX_COMPILER_ID_UPPER MATCHES "CLANG"))
-            message(FATAL_ERROR "Detected compiler is not Clang! Please ensure Clang is in your PATH or specified correctly.")
-    endif()
-endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)

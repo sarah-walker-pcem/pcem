@@ -23,7 +23,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/wx-ui)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/pc.xrc
-        COMMAND wxrc
+        COMMAND ${wxWidgets_wxrc_EXECUTABLE}
         ARGS -c ${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/pc.xrc -o ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp)
 
 set(PCEM_SRC ${PCEM_SRC}
