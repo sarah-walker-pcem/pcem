@@ -113,6 +113,9 @@ static int midi_insysex;
 static uint8_t midi_sysex_data[65536];
 
 void midi_write(uint8_t val) {
+        if (midiout == NULL)
+                return;
+                
         // pclog("Write MIDI %02x\n", val);
 
         if ((val & 0x80) && !(val == 0xf7 && midi_insysex)) {
