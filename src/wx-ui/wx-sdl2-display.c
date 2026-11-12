@@ -46,7 +46,7 @@ int rendering = 0;
 
 int mousecapture = 0;
 
-extern int pause;
+extern int pauseEmulation;
 extern int video_scale;
 extern int take_screenshot;
 extern int fps;
@@ -532,7 +532,7 @@ static void display_event(int event, int param1, int param2) {
                 break;
         case WX_DISPLAY_MOUSE_UP:
                 if (!mousecapture) {
-                        if (param1 == 1 && !pause) {
+                        if (param1 == 1 && !pauseEmulation) {
                                 window_doinputgrab = 1;
                                 if (video_fullscreen)
                                         window_dofullscreen = 1;

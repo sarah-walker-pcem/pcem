@@ -31,7 +31,7 @@
 
 //#define MAX_CYLINDERS ((((1 << 28)-1) / 16) / 63)
 #define MAX_CYLINDERS 265264 /*Award 430VX won't POST with a larger drive*/
-extern int pause;
+extern int pauseEmulation;
 
 extern int is486;
 static int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
@@ -53,7 +53,7 @@ static int hd_new_type;
 static int new_cdrom_channel;
 static int new_zip_channel;
 
-extern int pause;
+extern int pauseEmulation;
 
 static int memspin_old;
 
@@ -725,7 +725,7 @@ int config_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 
         switch (message) {
         case WX_INITDIALOG: {
-                pause = 1;
+                pauseEmulation = 1;
                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
                 for (c = 0; c < ROM_MAX; c++)
                         romstolist[c] = 0;
@@ -2254,7 +2254,7 @@ static int hd_combodrivetype(void *hdlg, int drive) {
 int hdconf_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam) {
         switch (message) {
         case WX_INITDIALOG:
-                pause = 1;
+                pauseEmulation = 1;
                 return hdconf_init(hdlg);
 
         case WX_COMMAND:
@@ -2344,7 +2344,7 @@ void config_change_page_index(void *hdlg, int index) {
 int config_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam) {
         switch (message) {
         case WX_INITDIALOG:
-                pause = 1;
+                pauseEmulation = 1;
                 eventBinder = wx_config_eventbinder(hdlg, config_change_page_index);
                 return config_dlgproc(hdlg, message, wParam, lParam);
         case WX_COMMAND: {
@@ -2356,13 +2356,13 @@ int config_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lPa
                         wx_config_destroyeventbinder(eventBinder);
                         eventBinder = NULL;
                         config_dlgsave(hdlg);
-                        pause = 0;
+                        pauseEmulation = 0;
                         wx_enddialog(hdlg, 1);
                         return TRUE;
                 } else if (wParam == wxID_CANCEL) {
                         wx_config_destroyeventbinder(eventBinder);
                         eventBinder = NULL;
-                        pause = 0;
+                        pauseEmulation = 0;
                         wx_enddialog(hdlg, 0);
                         return TRUE;
                 }

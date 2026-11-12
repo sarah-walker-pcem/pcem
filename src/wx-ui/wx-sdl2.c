@@ -52,11 +52,9 @@
 #include "viewer.h"
 
 #if __APPLE__
-#define pause __pause
 #include <util.h>
 #include <fcntl.h>
 #include <unistd.h>
-#undef pause
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
@@ -97,7 +95,7 @@ void *ghwnd = 0;
 void *menu;
 
 emulation_state_t emulation_state = EMULATION_STOPPED;
-int pause = 0;
+int pauseEmulation = 0;
 
 int window_doreset = 0;
 int window_dosetresize = 0;
@@ -170,7 +168,7 @@ int mainthread(void *param) {
                 drawits += new_time - old_time;
                 old_time = new_time;
 
-                if (drawits > 0 && !pause) {
+                if (drawits > 0 && !pauseEmulation) {
                         uint64_t start_time = timer_read();
                         uint64_t end_time;
                         drawits -= 10;
@@ -528,7 +526,7 @@ int wx_start(void *hwnd) {
 int resume_emulation() {
         if (emulation_state == EMULATION_PAUSED) {
                 emulation_state = EMULATION_RUNNING;
-                pause = 0;
+                pauseEmulation = 0;
                 viewer_notify_resume();
                 return TRUE;
         }
@@ -543,7 +541,7 @@ int start_emulation(void *params) {
         loadconfig(NULL);
 
         emulation_state = EMULATION_RUNNING;
-        pause = 0;
+        pauseEmulation = 0;
 
         ghMutex = SDL_CreateMutex();
         mainMutex = SDL_CreateMutex();
@@ -596,7 +594,7 @@ int start_emulation(void *params) {
 int pause_emulation() {
         pclog("Emulation paused.\n");
         emulation_state = EMULATION_PAUSED;
-        pause = 1;
+        pauseEmulation = 1;
         viewer_notify_pause();
         return TRUE;
 }
@@ -725,23 +723,23 @@ int wx_handle_command(void *hwnd, int wParam, int checked) {
         if (ID_IS("IDM_STATUS")) {
                 wx_show_status(hwnd);
         } else if (ID_IS("IDM_FILE_RESET")) {
-                pause = 1;
+                pauseEmulation = 1;
                 SDL_Delay(100);
                 savenvr();
                 resetpc();
-                pause = 0;
+                pauseEmulation = 0;
         } else if (ID_IS("IDM_FILE_HRESET")) {
-                pause = 1;
+                pauseEmulation = 1;
                 SDL_Delay(100);
                 savenvr();
                 resetpchard();
-                pause = 0;
+                pauseEmulation = 0;
         } else if (ID_IS("IDM_FILE_RESET_CAD")) {
-                pause = 1;
+                pauseEmulation = 1;
                 SDL_Delay(100);
                 savenvr();
                 resetpc_cad();
-                pause = 0;
+                pauseEmulation = 0;
         } else if (ID_IS("IDM_FILE_EXIT")) {
                 //                wx_exit(hwnd, 0);
                 wx_stop_emulation(hwnd);
