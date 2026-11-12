@@ -523,12 +523,17 @@ void loadnvr() {
         }
         if (!f) {
                 memset(nvrram, 0xFF, 128);
+
+                nvrram[RTC_REGA] = 6;
+                nvrram[RTC_REGB] = RTC_2412;
+                nvrram[RTC_REGC] = 0;
+                nvrram[RTC_REGD] = 0x80;
+
                 if (!enable_sync) {
                         nvrram[RTC_SECONDS] = nvrram[RTC_MINUTES] = nvrram[RTC_HOURS] = 0;
                         nvrram[RTC_DOM] = nvrram[RTC_MONTH] = 1;
                         nvrram[RTC_YEAR] = BCD(80);
                         nvrram[RTC_CENTURY] = BCD(19);
-                        nvrram[RTC_REGB] = RTC_2412;
                 }
                 return;
         }
@@ -538,8 +543,6 @@ void loadnvr() {
         else
                 time_internal_set_nvrram(nvrram); /* Update the internal clock state based on the NVR registers. */
         fclose(f);
-        nvrram[RTC_REGA] = 6;
-        nvrram[RTC_REGB] = RTC_2412;
 }
 void savenvr() {
         FILE *f;
