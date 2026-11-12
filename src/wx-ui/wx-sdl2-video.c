@@ -273,7 +273,7 @@ void sdl_renderer_present(SDL_Window *window) {
         }
 
         SDL_Rect wr;
-        SDL_GetWindowSize(window, &wr.w, &wr.h);
+        display_get_size(window, &wr.w, &wr.h);
         sdl_scale(video_fullscreen_scale, wr, &wr, texture_rect.w, texture_rect.h);
         renderer->present(window, texture_rect, wr, screen_rect);
 }

@@ -7,6 +7,7 @@
 
 #include <wx/spinctrl.h>
 #include <wx/xrc/xmlres.h>
+#include <wx/xml/xml.h>
 #include <wx/stdpaths.h>
 #include <wx/fileconf.h>
 #include <wx/wfstream.h>
@@ -118,7 +119,22 @@ void wx_enablemenuitem(void *menu, int id, int enable) {
 }
 
 void *wx_getsubmenu(void *menu, int id) {
-        wxMenuItem *m = ((wxMenu *)menu)->FindItem(id);
+        wxMenuItem *m;
+        if (((wxObject *)menu)->GetClassInfo()->IsKindOf(CLASSINFO(wxMenuBar))) {
+                wxMenuBar *menubar = (wxMenuBar *)menu;
+                const wxXmlNode *node = wxXmlResource::Get()->GetResourceNode("main_menu");
+                size_t index = 0;
+                for (const wxXmlNode *child = node ? node->GetChildren() : NULL; child; child = child->GetNext()) {
+                        if (child->GetType() != wxXML_ELEMENT_NODE || child->GetAttribute("class") != "wxMenu")
+                                continue;
+                        wxString name = child->GetAttribute("name");
+                        if (!name.empty() && XRCID(name.c_str()) == id && index < menubar->GetMenuCount())
+                                return menubar->GetMenu(index);
+                        index++;
+                }
+                m = menubar->FindItem(id);
+        } else
+                m = ((wxMenu *)menu)->FindItem(id);
         if (m)
                 return m->GetSubMenu();
 
@@ -423,6 +439,355 @@ void *wx_create_status_frame(void *window) {
 void wx_destroy_status_frame(void *window) {
         StatusFrame *frame = (StatusFrame *)window;
         delete frame;
+}
+
+#define DISPLAY_CANVAS_NAME "pcem_display_canvas"
+#define DISPLAY_DRIVES_NAME "pcem_display_drives"
+#define DISPLAY_DRIVE_ICON_SPACING 4
+#define DISPLAY_MAX_DRIVES 10
+
+extern "C" drive_info_t *get_machine_info(char *, int *);
+extern int show_disc_activity;
+
+class DriveStatusPanel : public wxPanel {
+    public:
+        DriveStatusPanel(wxWindow *parent)
+                : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE, DISPLAY_DRIVES_NAME) {
+                count = 0;
+                hover = -1;
+                memset(drives, 0, sizeof(drives));
+                memset(flash, 0, sizeof(flash));
+                bitmapFDD[0] = wxXmlResource::Get()->LoadBitmap("BITMAP_FLOPPY");
+                bitmapFDD[1] = bitmapFDD[0].ConvertToDisabled();
+                bitmapHDD[0] = wxXmlResource::Get()->LoadBitmap("BITMAP_HARDDISK");
+                bitmapHDD[1] = bitmapHDD[0].ConvertToDisabled();
+                bitmapCDROM[0] = wxXmlResource::Get()->LoadBitmap("BITMAP_CDROM");
+                bitmapCDROM[1] = bitmapCDROM[0].ConvertToDisabled();
+                SetBackgroundStyle(wxBG_STYLE_PAINT);
+                Bind(wxEVT_PAINT, &DriveStatusPanel::OnPaint, this);
+                Bind(wxEVT_LEFT_UP, &DriveStatusPanel::OnClick, this);
+                Bind(wxEVT_RIGHT_UP, &DriveStatusPanel::OnClick, this);
+                Bind(wxEVT_MOTION, &DriveStatusPanel::OnMotion, this);
+                Bind(wxEVT_LEAVE_WINDOW, [this](wxMouseEvent &event) { hover = -1; });
+        }
+
+        int GetRequiredWidth() {
+                return count * (IconSize().x + DISPLAY_DRIVE_ICON_SPACING) + DISPLAY_DRIVE_ICON_SPACING;
+        }
+
+        bool UpdateDrives() {
+                char text[4096];
+                int num = 0;
+                drive_info_t *info = get_machine_info(text, &num);
+                bool count_changed = num != count;
+                bool changed = count_changed;
+
+                if (num > DISPLAY_MAX_DRIVES)
+                        num = DISPLAY_MAX_DRIVES;
+                for (int i = 0; i < num; i++) {
+                        int new_flash = info[i].readflash ? 1 : 0;
+                        if (i >= count || drives[i].type != info[i].type || drives[i].enabled != info[i].enabled ||
+                            drives[i].drive_letter != info[i].drive_letter || strcmp(drives[i].fn, info[i].fn) ||
+                            flash[i] != new_flash)
+                                changed = true;
+                        drives[i] = info[i];
+                        flash[i] = new_flash;
+                }
+                count = num;
+                if (changed) {
+                        Refresh();
+                        if (hover >= 0 && hover < count)
+                                SetToolTip(DriveDescription(hover));
+                }
+                return count_changed;
+        }
+
+    private:
+        drive_info_t drives[DISPLAY_MAX_DRIVES];
+        int flash[DISPLAY_MAX_DRIVES];
+        int count;
+        int hover;
+        wxBitmap bitmapFDD[2];
+        wxBitmap bitmapCDROM[2];
+        wxBitmap bitmapHDD[2];
+
+        wxSize IconSize() { return bitmapFDD[0].IsOk() ? bitmapFDD[0].GetSize() : wxSize(16, 16); }
+
+        bool IsZip(int i) { return drives[i].type == DRIVE_TYPE_FDD && drives[i].drive_letter >= 'C'; }
+
+        int HitTest(int x) {
+                int step = IconSize().x + DISPLAY_DRIVE_ICON_SPACING;
+                if (x < DISPLAY_DRIVE_ICON_SPACING)
+                        return -1;
+                int i = (x - DISPLAY_DRIVE_ICON_SPACING) / step;
+                return (i < count) ? i : -1;
+        }
+
+        wxString DriveDescription(int i) {
+                wxString s;
+                if (IsZip(i))
+                        s = wxString::Format("ZIP (%c:)", drives[i].drive_letter);
+                else if (drives[i].type == DRIVE_TYPE_CDROM)
+                        s = wxString::Format("CD-ROM (%c:)", drives[i].drive_letter);
+                else if (drives[i].type == DRIVE_TYPE_HDD)
+                        s = wxString::Format("Hard disk (%c:)", drives[i].drive_letter);
+                else
+                        s = wxString::Format("Floppy drive %c:", drives[i].drive_letter);
+                if (strlen(drives[i].fn))
+                        s += wxString(" - ") + wxString(drives[i].fn);
+                else if (!drives[i].enabled)
+                        s += " - empty";
+                return s;
+        }
+
+        void OnPaint(wxPaintEvent &event) {
+                wxPaintDC dc(this);
+                wxSize size = GetClientSize();
+                wxSize icon = IconSize();
+                dc.SetBackground(wxBrush(GetParent()->GetBackgroundColour()));
+                dc.Clear();
+                dc.SetPen(*wxTRANSPARENT_PEN);
+                for (int i = 0; i < count; i++) {
+                        int x = DISPLAY_DRIVE_ICON_SPACING + i * (icon.x + DISPLAY_DRIVE_ICON_SPACING);
+                        int y = (size.y - icon.y) / 2;
+                        int disabled = drives[i].enabled ? 0 : 1;
+                        wxBitmap *bitmap;
+                        if (drives[i].type == DRIVE_TYPE_CDROM)
+                                bitmap = &bitmapCDROM[disabled];
+                        else if (drives[i].type == DRIVE_TYPE_HDD)
+                                bitmap = &bitmapHDD[disabled];
+                        else
+                                bitmap = &bitmapFDD[disabled];
+                        if (bitmap->IsOk())
+                                dc.DrawBitmap(*bitmap, x, y, true);
+                        if (show_disc_activity) {
+                                dc.SetBrush(wxBrush(flash[i] ? wxColour(0, 255, 0) : wxColour(0, 100, 0)));
+                                dc.DrawRectangle(x + icon.x - 5, y + icon.y - 5, 5, 5);
+                        }
+                }
+        }
+
+        void OnMotion(wxMouseEvent &event) {
+                int i = HitTest(event.GetX());
+                if (i != hover) {
+                        hover = i;
+                        if (i >= 0)
+                                SetToolTip(DriveDescription(i));
+                        else
+                                UnsetToolTip();
+                }
+        }
+
+        void AppendCDROMItems(wxMenu *popup) {
+                wxFrame *frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
+                wxMenu *cdrom = (frame && frame->GetMenuBar()) ? (wxMenu *)wx_getsubmenu(frame->GetMenuBar(), XRCID("IDM_CDROM"))
+                                                               : NULL;
+                if (!cdrom) {
+                        popup->Append(XRCID("IDM_CDROM_IMAGE_LOAD"), "Load image...");
+                        popup->Append(XRCID("IDM_CDROM_EMPTY"), "Eject");
+                        return;
+                }
+                wxMenuItemList &items = cdrom->GetMenuItems();
+                for (wxMenuItemList::iterator it = items.begin(); it != items.end(); ++it) {
+                        wxMenuItem *item = *it;
+                        if (item->IsSeparator())
+                                popup->AppendSeparator();
+                        else if (!item->IsSubMenu()) {
+                                wxMenuItem *copy = popup->Append(item->GetId(), item->GetItemLabel(), wxEmptyString, item->GetKind());
+                                if (item->IsCheckable())
+                                        copy->Check(item->IsChecked());
+                                copy->Enable(item->IsEnabled());
+                        }
+                }
+        }
+
+        void OnClick(wxMouseEvent &event) {
+                int i = HitTest(event.GetX());
+                if (i < 0)
+                        return;
+
+                wxMenu popup;
+                if (IsZip(i)) {
+                        popup.Append(XRCID("IDM_DISC_ZIP"), "Load ZIP disc...");
+                        popup.Append(XRCID("IDM_EJECT_ZIP"), "Eject ZIP disc")->Enable(drives[i].enabled != 0);
+                } else if (drives[i].type == DRIVE_TYPE_FDD) {
+                        int b = drives[i].drive == 1;
+                        popup.Append(XRCID(b ? "IDM_DISC_B" : "IDM_DISC_A"), wxString::Format("Change drive %c:...", drives[i].drive_letter));
+                        popup.Append(XRCID(b ? "IDM_EJECT_B" : "IDM_EJECT_A"), wxString::Format("Eject drive %c:", drives[i].drive_letter))
+                                ->Enable(drives[i].enabled != 0);
+                        popup.AppendSeparator();
+                        popup.Append(XRCID("IDM_DISC_CREATE"), "Create blank disc image...");
+                } else if (drives[i].type == DRIVE_TYPE_CDROM)
+                        AppendCDROMItems(&popup);
+                else
+                        popup.Append(wxID_ANY, DriveDescription(i))->Enable(false);
+
+                PopupMenu(&popup, DISPLAY_DRIVE_ICON_SPACING + i * (IconSize().x + DISPLAY_DRIVE_ICON_SPACING), 0);
+        }
+};
+
+static void display_layout_status(wxFrame *frame) {
+        wxStatusBar *status = frame->GetStatusBar();
+        DriveStatusPanel *drives = status ? (DriveStatusPanel *)status->FindWindow(DISPLAY_DRIVES_NAME) : NULL;
+        if (!drives)
+                return;
+        int widths[4] = {-1, drives->GetRequiredWidth(), 90, 90};
+        status->SetStatusWidths(4, widths);
+        wxRect rect;
+        if (status->GetFieldRect(1, rect))
+                drives->SetSize(rect);
+}
+
+
+void *wx_display_create(void *parent, void *menubar, const char *title, WX_DISPLAY_CALLBACK callback) {
+        wxFrame *frame = new wxFrame((wxWindow *)parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE);
+        if (menubar)
+                frame->SetMenuBar((wxMenuBar *)menubar);
+        wxStatusBar *status = frame->CreateStatusBar(4);
+        int widths[4] = {-1, DISPLAY_DRIVE_ICON_SPACING, 90, 90};
+        status->SetStatusWidths(4, widths);
+        new DriveStatusPanel(status);
+        status->Bind(wxEVT_SIZE, [frame](wxSizeEvent &event) {
+                display_layout_status(frame);
+                event.Skip();
+        });
+
+        wxPanel *canvas = new wxPanel(frame, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS, DISPLAY_CANVAS_NAME);
+        canvas->SetBackgroundStyle(wxBG_STYLE_PAINT);
+        canvas->SetBackgroundColour(*wxBLACK);
+        wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
+        sizer->Add(canvas, 1, wxEXPAND);
+        frame->SetSizer(sizer);
+        frame->SetClientSize(640, 480);
+
+        wxWindow *owner = (wxWindow *)parent;
+        frame->Bind(wxEVT_MENU, [owner, callback](wxCommandEvent &event) {
+                if (event.GetId() == wxID_EXIT)
+                        callback(WX_DISPLAY_CLOSE, 0, 0);
+                else
+                        owner->GetEventHandler()->ProcessEvent(event);
+        });
+        frame->Bind(wxEVT_CLOSE_WINDOW, [callback](wxCloseEvent &event) {
+                if (event.CanVeto()) {
+                        event.Veto();
+                        callback(WX_DISPLAY_CLOSE, 0, 0);
+                } else
+                        event.Skip();
+        });
+        frame->Bind(wxEVT_ACTIVATE, [callback](wxActivateEvent &event) {
+                callback(event.GetActive() ? WX_DISPLAY_ACTIVATE : WX_DISPLAY_DEACTIVATE, 0, 0);
+                event.Skip();
+        });
+        frame->Bind(wxEVT_DESTROY, [frame, callback](wxWindowDestroyEvent &event) {
+                if (event.GetEventObject() == frame)
+                        callback(WX_DISPLAY_DESTROY, 0, 0);
+                event.Skip();
+        });
+        canvas->Bind(wxEVT_SIZE, [canvas, callback](wxSizeEvent &event) {
+                wxSize size = canvas->GetClientSize();
+                callback(WX_DISPLAY_SIZE, size.x, size.y);
+                event.Skip();
+        });
+        canvas->Bind(wxEVT_PAINT, [canvas](wxPaintEvent &event) { wxPaintDC dc(canvas); });
+        canvas->Bind(wxEVT_LEFT_UP, [callback](wxMouseEvent &event) { callback(WX_DISPLAY_MOUSE_UP, 1, 0); });
+        canvas->Bind(wxEVT_MIDDLE_UP, [callback](wxMouseEvent &event) { callback(WX_DISPLAY_MOUSE_UP, 2, 0); });
+        canvas->Bind(wxEVT_RIGHT_UP, [callback](wxMouseEvent &event) { callback(WX_DISPLAY_MOUSE_UP, 3, 0); });
+        canvas->Bind(wxEVT_KEY_DOWN, [](wxKeyEvent &event) {});
+        canvas->Bind(wxEVT_KEY_UP, [](wxKeyEvent &event) {});
+        canvas->Bind(wxEVT_CHAR, [](wxKeyEvent &event) {});
+
+        return frame;
+}
+
+void *wx_display_getnativecanvas(void *frame) {
+        wxWindow *canvas = ((wxWindow *)frame)->FindWindow(DISPLAY_CANVAS_NAME);
+        if (!canvas)
+                return NULL;
+#ifdef __WXGTK__
+        return canvas->GTKGetDrawingWindow();
+#else
+        return (void *)canvas->GetHandle();
+#endif
+}
+
+void wx_display_getcanvassize(void *frame, int *width, int *height) {
+        wxWindow *canvas = ((wxWindow *)frame)->FindWindow(DISPLAY_CANVAS_NAME);
+        wxSize size = canvas ? canvas->GetClientSize() : wxSize(0, 0);
+        *width = size.x;
+        *height = size.y;
+}
+
+void wx_display_setsize(void *frame, int width, int height, int resizable) {
+        wxFrame *f = (wxFrame *)frame;
+        if (f->IsFullScreen())
+                return;
+        f->SetMinSize(wxDefaultSize);
+        f->SetMaxSize(wxDefaultSize);
+        f->SetClientSize(width, height);
+        f->Layout();
+        if (!resizable) {
+                wxSize size = f->GetSize();
+                f->SetMinSize(size);
+                f->SetMaxSize(size);
+        }
+}
+
+void wx_display_getrect(void *frame, int *x, int *y, int *width, int *height) {
+        wxFrame *f = (wxFrame *)frame;
+        wxPoint pos = f->GetPosition();
+        wxSize size = f->GetClientSize();
+        *x = pos.x;
+        *y = pos.y;
+        *width = size.x;
+        *height = size.y;
+}
+
+void wx_display_center(void *frame) { ((wxFrame *)frame)->CenterOnScreen(); }
+
+void wx_display_show(void *frame, int show) {
+        wxFrame *f = (wxFrame *)frame;
+        if (!show && f->IsFullScreen())
+                f->ShowFullScreen(false);
+        f->Show(show != 0);
+        if (show) {
+                f->Raise();
+                wxWindow *canvas = f->FindWindow(DISPLAY_CANVAS_NAME);
+                if (canvas)
+                        canvas->SetFocus();
+        }
+}
+
+void wx_display_setfullscreen(void *frame, int fullscreen) {
+        wxFrame *f = (wxFrame *)frame;
+        if (fullscreen) {
+                f->SetMinSize(wxDefaultSize);
+                f->SetMaxSize(wxDefaultSize);
+        }
+        f->ShowFullScreen(fullscreen != 0, wxFULLSCREEN_ALL);
+        if (fullscreen)
+                f->Raise();
+}
+
+void wx_display_update(void *frame) {
+        wxFrame *f = (wxFrame *)frame;
+        wxStatusBar *status = f->GetStatusBar();
+        if (!status)
+                return;
+        DriveStatusPanel *drives = (DriveStatusPanel *)status->FindWindow(DISPLAY_DRIVES_NAME);
+        if (drives && drives->UpdateDrives())
+                display_layout_status(f);
+#ifdef __WXOSX__
+        status->Update();
+#endif
+}
+
+void wx_display_setstatustext(void *frame, int field, const char *text) {
+        wxStatusBar *status = ((wxFrame *)frame)->GetStatusBar();
+        if (!status || field >= status->GetFieldsCount())
+                return;
+        wxString s(text);
+        if (status->GetStatusText(field) != s)
+                status->SetStatusText(s, field);
 }
 
 void wx_setwindowposition(void *window, int x, int y) { ((wxFrame *)window)->SetPosition(wxPoint(x, y)); }

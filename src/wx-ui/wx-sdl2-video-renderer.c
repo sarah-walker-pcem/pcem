@@ -93,7 +93,7 @@ void sdl_video_renderer_present(SDL_Window *window, SDL_Rect texture_rect, SDL_R
                 int width = window_rect.w;
                 int height = window_rect.h;
 
-                SDL_GetWindowSize(window, &width, &height);
+                display_get_size(window, &width, &height);
 
                 /* seems to work without rendering to texture first */
                 //                SDL_Texture* tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888,

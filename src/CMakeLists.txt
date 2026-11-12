@@ -81,3 +81,35 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         target_link_options(pcem PRIVATE "-Wl,--subsystem,windows")
 endif()
 target_link_libraries(pcem PRIVATE ${PCEM_LIBRARIES})
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        set_target_properties(pcem PROPERTIES
+                MACOSX_BUNDLE TRUE
+                BUILD_WITH_INSTALL_RPATH TRUE
+                INSTALL_RPATH "@executable_path/../Frameworks"
+                OUTPUT_NAME PCem
+                MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/macos/Info.plist.in
+                MACOSX_BUNDLE_BUNDLE_NAME PCem
+                MACOSX_BUNDLE_GUI_IDENTIFIER org.pcem-emulator.PCem
+                MACOSX_BUNDLE_SHORT_VERSION_STRING "${PCEM_VERSION_STRING}"
+                MACOSX_BUNDLE_BUNDLE_VERSION "${PCEM_VERSION_STRING}")
+
+        find_library(PCEM_SDL3_LIBRARY NAMES SDL3)
+        set(PCEM_BUNDLE_LIB_DIRS "")
+        foreach(lib ${PCEM_LIBRARIES})
+                if(TARGET ${lib})
+                        set(PCEM_BUNDLE_LIB_DIRS "${PCEM_BUNDLE_LIB_DIRS}|$<TARGET_FILE_DIR:${lib}>")
+                elseif(lib MATCHES "^-L")
+                        string(SUBSTRING "${lib}" 2 -1 lib_dir)
+                        set(PCEM_BUNDLE_LIB_DIRS "${PCEM_BUNDLE_LIB_DIRS}|${lib_dir}")
+                elseif(IS_ABSOLUTE "${lib}")
+                        get_filename_component(lib_dir "${lib}" DIRECTORY)
+                        set(PCEM_BUNDLE_LIB_DIRS "${PCEM_BUNDLE_LIB_DIRS}|${lib_dir}")
+                endif()
+        endforeach()
+
+        add_custom_command(TARGET pcem POST_BUILD
+                COMMAND ${CMAKE_COMMAND} "-DAPP=$<TARGET_BUNDLE_DIR:pcem>" "-DLIB_DIRS=${PCEM_BUNDLE_LIB_DIRS}"
+                        "-DSDL3_LIBRARY=${PCEM_SDL3_LIBRARY}" -P ${CMAKE_SOURCE_DIR}/cmake/macos-bundle.cmake
+                VERBATIM)
+endif()

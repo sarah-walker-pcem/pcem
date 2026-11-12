@@ -52,6 +52,7 @@ int sdl_renderer_update(SDL_Window *window);
 void sdl_renderer_present(SDL_Window *window);
 void sdl_scale(int scale, SDL_Rect src, SDL_Rect *dst, int w, int h);
 int sdl_is_fullscreen(SDL_Window *window);
+void display_get_size(SDL_Window *window, int *width, int *height);
 
 sdl_render_driver *sdl_get_render_drivers(int *num_renderers);
 sdl_render_driver sdl_get_render_driver_by_id(int id, int def);

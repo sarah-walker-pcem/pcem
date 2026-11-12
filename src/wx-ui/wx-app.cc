@@ -48,6 +48,7 @@ wxBEGIN_EVENT_TABLE(Frame, wxFrame) wxEND_EVENT_TABLE()
 App::App() { this->frame = NULL; }
 
 bool App::OnInit() {
+        SetAppDisplayName("PCem");
         wxImage::AddHandler(new wxPNGHandler);
         wxXmlResource::Get()->InitAllHandlers();
         //        if (!wxXmlResource::Get()->Load("src/pc.xrc"))
@@ -70,7 +71,7 @@ Frame::Frame(App *app, const wxString &title, const wxPoint &pos, const wxSize &
         : wxFrame(NULL, wxID_ANY, title, pos, size, 0) // wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER))
 {
         this->closing = false;
-        this->menu = wxXmlResource::Get()->LoadMenu(wxT("main_menu"));
+        this->menu = wxXmlResource::Get()->LoadMenuBar(wxT("main_menu"));
 
         Bind(wxEVT_CLOSE_WINDOW, &Frame::OnClose, this);
         Bind(wxEVT_MENU, &Frame::OnCommand, this);
@@ -175,7 +176,7 @@ void Frame::OnClose(wxCloseEvent &event) {
         wx_exit(this, 0);
 }
 
-wxMenu *Frame::GetMenu() { return menu; }
+wxMenuBar *Frame::GetMenu() { return menu; }
 
 /* Exit */
 

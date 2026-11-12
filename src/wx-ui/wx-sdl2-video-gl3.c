@@ -1442,7 +1442,7 @@ void gl3_present(SDL_Window *window, SDL_Rect video_rect, SDL_Rect window_rect, 
                 int width = window_rect.w;
                 int height = window_rect.h;
 
-                SDL_GetWindowSize(window, &width, &height);
+                display_get_size(window, &width, &height);
 
                 unsigned char *rgba = (unsigned char *)malloc(width * height * 4);
 

@@ -1,22 +1,39 @@
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0501
+#endif
 #include <SDL2/SDL.h>
 #include "video.h"
 #include "wx-sdl2-video.h"
 #include "wx-utils.h"
+#include "wx-common.h"
 #include "ibm.h"
+#include "mouse.h"
 #include "wx-display.h"
 #include "plat-keyboard.h"
+#include "config.h"
+#include "model.h"
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #define BITMAP WINDOWS_BITMAP
 #undef UNICODE
 #include <windows.h>
 #include <windowsx.h>
-#include <pcem/api.h>
 #undef BITMAP
+#endif
 
-HHOOK hKeyboardHook;
-int modkeystate[255];
+#include <pcem/api.h>
 
+#ifdef __APPLE__
+#include <objc/message.h>
+#include <objc/runtime.h>
+#endif
+
+#if defined(__linux__) || defined(__FreeBSD__)
+#define PCEM_DISPLAY_X11
+#include <SDL2/SDL_syswm.h>
+#include <X11/Xlib.h>
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
 #endif
 
 SDL_mutex *rendererMutex;
@@ -32,9 +49,18 @@ int mousecapture = 0;
 extern int pause;
 extern int video_scale;
 extern int take_screenshot;
+extern int fps;
 
 extern void *ghwnd;
 extern void *menu;
+
+static void *window_ptr = NULL;
+static void *display_frame = NULL;
+static void *native_canvas = NULL;
+static void *status_timer = NULL;
+static volatile int display_fullscreen = 0;
+static volatile int canvas_width = 0;
+static volatile int canvas_height = 0;
 
 SDL_Rect remembered_rect;
 int remembered_mouse_x = 0;
@@ -57,6 +83,114 @@ int trigger_inputrelease = 0;
 PCEM_API extern void device_force_redraw();
 extern void mouse_wheel_update(int);
 extern void toggle_fullscreen();
+
+#ifdef _WIN32
+#define szMsgClassName "PCemMsgWnd"
+#define szSubClassName "PCemSubWnd"
+#define WM_PCEM_CREATE_CANVAS (WM_APP + 1)
+#define WM_PCEM_DESTROY_CANVAS (WM_APP + 2)
+#define WM_PCEM_FOCUS_CANVAS (WM_APP + 3)
+
+static HINSTANCE hinstance = 0;
+static HWND msg_hwnd = 0;
+static HWND sub_hwnd = 0;
+static HHOOK hKeyboardHook = 0;
+static RAWINPUTDEVICE device;
+static uint16_t scancode_map[65536];
+SDL_Window *dummy_window = NULL;
+#endif
+
+#ifdef __APPLE__
+typedef struct {
+        double x, y, width, height;
+} cocoa_rect_t;
+
+static void *cocoa_content_view = NULL;
+static void *cocoa_canvas_super = NULL;
+
+static void *cocoa_get(void *object, const char *selector) {
+        return ((void *(*)(void *, SEL))objc_msgSend)(object, sel_registerName(selector));
+}
+
+static void cocoa_set(void *object, const char *selector, void *value) {
+        ((void (*)(void *, SEL, void *))objc_msgSend)(object, sel_registerName(selector), value);
+}
+
+static void cocoa_save_views() {
+        void *nswindow = cocoa_get(native_canvas, "window");
+        cocoa_content_view = nswindow ? cocoa_get(nswindow, "contentView") : NULL;
+        cocoa_canvas_super = cocoa_get(native_canvas, "superview");
+        if (cocoa_content_view)
+                cocoa_get(cocoa_content_view, "retain");
+}
+
+static void cocoa_restore_views() {
+        void *nswindow = cocoa_get(native_canvas, "window");
+        if (nswindow && cocoa_content_view && cocoa_get(nswindow, "contentView") != cocoa_content_view) {
+                cocoa_set(nswindow, "setContentView:", cocoa_content_view);
+                if (cocoa_canvas_super)
+                        cocoa_set(cocoa_canvas_super, "addSubview:", native_canvas);
+        }
+        if (cocoa_content_view)
+                cocoa_get(cocoa_content_view, "release");
+        cocoa_content_view = NULL;
+}
+
+static void cocoa_fit_subviews() {
+        void *subviews, *superview;
+        long count, i;
+        cocoa_rect_t rect = {0, 0, 0, 0};
+
+        if (!native_canvas || canvas_width <= 0 || canvas_height <= 0)
+                return;
+        rect.width = canvas_width;
+        rect.height = canvas_height;
+        superview = cocoa_get(native_canvas, "superview");
+        if (superview) {
+                void *siblings = cocoa_get(cocoa_get(superview, "subviews"), "copy");
+                count = ((long (*)(void *, SEL))objc_msgSend)(siblings, sel_registerName("count"));
+                for (i = 0; i < count; i++) {
+                        void *view = ((void *(*)(void *, SEL, long))objc_msgSend)(siblings, sel_registerName("objectAtIndex:"), i);
+                        if (view != native_canvas && !strncmp(object_getClassName(view), "SDL", 3))
+                                cocoa_set(native_canvas, "addSubview:", view);
+                }
+                cocoa_get(siblings, "release");
+        }
+        subviews = cocoa_get(native_canvas, "subviews");
+        count = ((long (*)(void *, SEL))objc_msgSend)(subviews, sel_registerName("count"));
+        for (i = 0; i < count; i++) {
+                void *view = ((void *(*)(void *, SEL, long))objc_msgSend)(subviews, sel_registerName("objectAtIndex:"), i);
+                ((void (*)(void *, SEL, cocoa_rect_t))objc_msgSend)(view, sel_registerName("setFrame:"), rect);
+                ((void (*)(void *, SEL, unsigned long))objc_msgSend)(view, sel_registerName("setAutoresizingMask:"), 18);
+        }
+}
+#endif
+
+#ifdef PCEM_DISPLAY_X11
+static Display *x11_display = NULL;
+static Window x11_canvas = 0;
+#endif
+
+SDL_Event event;
+
+uint64_t render_time = 0;
+int render_fps = 0;
+uint32_t render_frame_time = 0;
+uint32_t render_frames = 0;
+static uint32_t status_update_time = 0;
+
+int is_fullscreen() { return display_fullscreen; }
+
+void display_get_size(SDL_Window *window, int *width, int *height) {
+#ifdef __APPLE__
+        if (canvas_width > 0 && canvas_height > 0) {
+                *width = canvas_width;
+                *height = canvas_height;
+                return;
+        }
+#endif
+        SDL_GetWindowSize(window, width, height);
+}
 
 void display_resize(int width, int height) {
         winsizex = width * (video_scale + 1) >> 1;
@@ -81,7 +215,380 @@ void releasemouse() {
         }
 }
 
+static void ui_call(WX_CALLBACK callback, void *data) {
+#ifdef PCEM_RENDER_WITH_TIMER
+        callback(data);
+#else
+        wx_callback(window_ptr, callback, data);
+#endif
+}
+
+#ifdef _WIN32
+UINT16 convert_scan_code(UINT16 scan_code) {
+        switch (scan_code) {
+        case 0xE001:
+                return 0xF001;
+        case 0xE002:
+                return 0xF002;
+        case 0xE005:
+                return 0xF005;
+        case 0xE006:
+                return 0xF006;
+        case 0xE007:
+                return 0xF007;
+        case 0xE071:
+                return 0xF008;
+        case 0xE072:
+                return 0xF009;
+        case 0xE07F:
+                return 0xF00A;
+        case 0xE0E1:
+                return 0xF00B;
+        case 0xE0EE:
+                return 0xF00C;
+        case 0xE0F1:
+                return 0xF00D;
+        case 0xE0FE:
+                return 0xF00E;
+        case 0xE0EF:
+                return 0xF00F;
+
+        default:
+                return scan_code;
+        }
+}
+
+void get_registry_key_map() {
+        char *keyName = "SYSTEM\\CurrentControlSet\\Control\\Keyboard Layout";
+        char *valueName = "Scancode Map";
+        char buf[32768];
+        DWORD bufSize;
+        HKEY hKey;
+        int j;
+
+        for (j = 0; j < 65536; j++)
+                scancode_map[j] = convert_scan_code(j);
+
+        bufSize = 32768;
+        pclog("Preparing scan code map list...\n");
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, 1, &hKey) == ERROR_SUCCESS) {
+                if (RegQueryValueEx(hKey, valueName, NULL, NULL, (LPBYTE)buf, &bufSize) == ERROR_SUCCESS) {
+                        UINT32 *bufEx2 = (UINT32 *)buf;
+                        int scMapCount = bufEx2[2];
+                        pclog("%lu scan code mappings found!\n", scMapCount);
+                        if ((bufSize != 0) && (scMapCount != 0)) {
+                                UINT16 *bufEx = (UINT16 *)(buf + 12);
+                                pclog("More than zero scan code mappings found, processing...\n");
+                                for (j = 0; j < scMapCount * 2; j += 2) {
+                                        int scancode_unmapped = bufEx[j + 1];
+                                        int scancode_mapped = bufEx[j];
+
+                                        scancode_mapped = convert_scan_code(scancode_mapped);
+
+                                        scancode_map[scancode_unmapped] = scancode_mapped;
+                                        pclog("Scan code mapping %u detected: %X -> %X\n", scancode_unmapped, scancode_mapped,
+                                              scancode_map[scancode_unmapped]);
+                                }
+                                pclog("Done processing!\n");
+                        }
+                }
+                RegCloseKey(hKey);
+        }
+        pclog("Done preparing!\n");
+}
+
+LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
+        if (nCode < 0 || nCode != HC_ACTION || (!mousecapture && !video_fullscreen))
+                return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+
+        KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
+
+        if (p->vkCode == VK_TAB && p->flags & LLKHF_ALTDOWN)
+                return 1;
+        if (p->vkCode == VK_SPACE && p->flags & LLKHF_ALTDOWN)
+                return 1;
+        if ((p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN))
+                return 1;
+        if (p->vkCode == VK_ESCAPE && p->flags & LLKHF_ALTDOWN)
+                return 1;
+        BOOL bControlKeyDown = GetAsyncKeyState(VK_CONTROL) >> ((sizeof(SHORT) * 8) - 1);
+        if (p->vkCode == VK_ESCAPE && bControlKeyDown)
+                return 1;
+
+        return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+}
+
+static void process_raw_input(LPARAM lParam) {
+        UINT size;
+        RAWINPUT *raw;
+
+        GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
+
+        raw = malloc(size);
+
+        GetRawInputData((HRAWINPUT)(lParam), RID_INPUT, raw, &size, sizeof(RAWINPUTHEADER));
+
+        if (raw->header.dwType == RIM_TYPEKEYBOARD) {
+                const RAWKEYBOARD rawKB = raw->data.keyboard;
+                USHORT scancode = rawKB.MakeCode;
+
+                if (!(rawKB.Flags & RI_KEY_E1)) {
+                        if (rawKB.Flags & RI_KEY_E0)
+                                scancode |= (0xE0 << 8);
+
+                        scancode = scancode_map[scancode];
+
+                        if ((scancode >> 8) == 0xF0)
+                                scancode |= 0x100;
+                        else if ((scancode >> 8) == 0xE0)
+                                scancode |= 0x80;
+
+                        if (!(scancode & 0xf00))
+                                rawinputkey[scancode & 0x1ff] = !(rawKB.Flags & RI_KEY_BREAK);
+                }
+        }
+        free(raw);
+}
+
+LRESULT CALLBACK MsgWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+        switch (message) {
+        case WM_INPUT:
+                if (infocus)
+                        process_raw_input(lParam);
+                break;
+        case WM_PCEM_CREATE_CANVAS: {
+                RECT r;
+                HWND parent = (HWND)native_canvas;
+                GetClientRect(parent, &r);
+                HWND child = CreateWindowEx(WS_EX_NOPARENTNOTIFY, szSubClassName, "", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, 0,
+                                            0, r.right - r.left, r.bottom - r.top, parent, NULL, hinstance, NULL);
+                sub_hwnd = child;
+                return (LRESULT)child;
+        }
+        case WM_PCEM_DESTROY_CANVAS:
+                if ((HWND)wParam == sub_hwnd)
+                        sub_hwnd = 0;
+                DestroyWindow((HWND)wParam);
+                return 0;
+        case WM_PCEM_FOCUS_CANVAS:
+                if (sub_hwnd)
+                        SetFocus(sub_hwnd);
+                return 0;
+        default:
+                break;
+        }
+        return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+LRESULT CALLBACK subWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+        switch (message) {
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+        case WM_CHAR:
+        case WM_SYSCHAR:
+                return 0;
+        case WM_ERASEBKGND:
+                return 1;
+        default:
+                break;
+        }
+        return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+static int windows_setup() {
+        WNDCLASSEX wincl;
+
+        if (msg_hwnd)
+                return 1;
+
+        hinstance = (HINSTANCE)GetModuleHandle(NULL);
+        memset(&wincl, 0, sizeof(wincl));
+        wincl.cbSize = sizeof(WNDCLASSEX);
+        wincl.hInstance = hinstance;
+        wincl.lpszClassName = szMsgClassName;
+        wincl.lpfnWndProc = MsgWindowProcedure;
+        if (!RegisterClassEx(&wincl))
+                return 0;
+
+        wincl.lpszClassName = szSubClassName;
+        wincl.lpfnWndProc = subWindowProcedure;
+        wincl.style = CS_OWNDC;
+        wincl.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+        if (!RegisterClassEx(&wincl))
+                return 0;
+
+        msg_hwnd = CreateWindowEx(0, szMsgClassName, "", 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hinstance, NULL);
+        if (!msg_hwnd)
+                return 0;
+
+        get_registry_key_map();
+
+        device.usUsagePage = 0x01;
+        device.usUsage = 0x06;
+        device.dwFlags = RIDEV_NOHOTKEYS | RIDEV_INPUTSINK;
+        device.hwndTarget = msg_hwnd;
+
+        if (RegisterRawInputDevices(&device, 1, sizeof(device)))
+                pclog("Raw input registered!\n");
+        else
+                pclog("Raw input registration failed!\n");
+
+        return 1;
+}
+#endif
+
+#ifdef PCEM_DISPLAY_X11
+static int x11_setup() {
+        GdkWindow *gdk_window = (GdkWindow *)native_canvas;
+        int w, h;
+
+        if (x11_canvas)
+                return 1;
+        if (!gdk_window || !GDK_IS_X11_WINDOW(gdk_window))
+                return 0;
+
+        x11_display = GDK_WINDOW_XDISPLAY(gdk_window);
+        wx_display_getcanvassize(display_frame, &w, &h);
+        x11_canvas = XCreateSimpleWindow(x11_display, gdk_x11_window_get_xid(gdk_window), 0, 0, w > 0 ? w : 1, h > 0 ? h : 1, 0,
+                                         0, BlackPixel(x11_display, DefaultScreen(x11_display)));
+        if (!x11_canvas)
+                return 0;
+        XMapWindow(x11_display, x11_canvas);
+        XSync(x11_display, False);
+        return 1;
+}
+#endif
+
+static void display_status_update() {
+        char s[256];
+
+        if (!display_frame)
+                return;
+
+        if (emulation_state == EMULATION_PAUSED)
+                strcpy(s, "Paused");
+        else if (!mousecapture)
+                strcpy(s, "Click to capture mouse");
+        else if (mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON)
+                strcpy(s, "Press CTRL-END to release mouse");
+        else
+                strcpy(s, "Press CTRL-END or middle button to release mouse");
+        wx_display_setstatustext(display_frame, 0, s);
+
+        sprintf(s, "Speed: %d%%", fps);
+        wx_display_setstatustext(display_frame, 2, s);
+
+        sprintf(s, "FPS: %d", render_fps);
+        wx_display_setstatustext(display_frame, 3, s);
+
+        wx_display_update(display_frame);
+
+        if (window_remember && !display_fullscreen) {
+                int x, y, w, h;
+                wx_display_getrect(display_frame, &x, &y, &w, &h);
+                window_x = x;
+                window_y = y;
+                window_w = w;
+                window_h = h;
+        }
+}
+
+static void display_event(int event, int param1, int param2) {
+        switch (event) {
+        case WX_DISPLAY_CLOSE:
+                wx_stop_emulation(window_ptr);
+                break;
+        case WX_DISPLAY_ACTIVATE:
+                infocus = 1;
+                break;
+        case WX_DISPLAY_DEACTIVATE:
+                infocus = 0;
+                if (display_fullscreen)
+                        window_dowindowed = 1;
+                window_doinputrelease = 1;
+#ifdef _WIN32
+                memset(rawinputkey, 0, sizeof(rawinputkey));
+#endif
+                break;
+        case WX_DISPLAY_SIZE:
+                canvas_width = param1;
+                canvas_height = param2;
+#ifdef __APPLE__
+                cocoa_fit_subviews();
+#endif
+#ifdef _WIN32
+                if (sub_hwnd)
+                        MoveWindow(sub_hwnd, 0, 0, param1, param2, TRUE);
+#endif
+#ifdef PCEM_DISPLAY_X11
+                if (x11_canvas) {
+                        XResizeWindow(x11_display, x11_canvas, param1 > 0 ? param1 : 1, param2 > 0 ? param2 : 1);
+                        XFlush(x11_display);
+                }
+#endif
+                device_force_redraw();
+                break;
+        case WX_DISPLAY_MOUSE_UP:
+                if (!mousecapture) {
+                        if (param1 == 1 && !pause) {
+                                window_doinputgrab = 1;
+                                if (video_fullscreen)
+                                        window_dofullscreen = 1;
+                        }
+                } else if (param1 == 2 && !display_fullscreen && !(mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON))
+                        window_doinputrelease = 1;
+                break;
+        case WX_DISPLAY_DESTROY:
+                display_frame = NULL;
+                native_canvas = NULL;
+                break;
+        }
+}
+
+static int ui_setsize(void *data) {
+        if (!display_frame || display_fullscreen)
+                return 0;
+
+        if (vid_resize == 2)
+                wx_display_setsize(display_frame, custom_resolution_width, custom_resolution_height, 0);
+        else if (vid_resize == 1) {
+                int w, h;
+                wx_display_getcanvassize(display_frame, &w, &h);
+                wx_display_setsize(display_frame, w, h, 1);
+        } else
+                wx_display_setsize(display_frame, winsizex, winsizey, 0);
+        return 0;
+}
+
+static int ui_fullscreen(void *data) {
+        if (display_frame)
+                wx_display_setfullscreen(display_frame, data != NULL);
+        if (!data)
+                ui_setsize(NULL);
+        return 0;
+}
+
+static int ui_title(void *data) {
+        if (display_frame && data)
+                wx_setwindowtitle(display_frame, (char *)data);
+        free(data);
+        return 0;
+}
+
+static int ui_remember(void *data) {
+        if (display_frame) {
+                wx_display_getrect(display_frame, &window_x, &window_y, &window_w, &window_h);
+                saveconfig(NULL);
+        }
+        return 0;
+}
+
 int display_init() {
+#ifdef _WIN32
+        SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
+#endif
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
                 printf("SDL could not initialize! Error: %s\n", SDL_GetError());
                 return 0;
@@ -95,9 +602,55 @@ int display_init() {
 
 void display_close() { SDL_Quit(); }
 
-void display_start(void *hwnd) {
-        ghwnd = hwnd;
-        menu = wx_getmenu(hwnd);
+void display_start(void *wnd_ptr) {
+        window_ptr = wnd_ptr;
+        menu = wx_getmenu(wnd_ptr);
+
+        if (!display_frame) {
+#ifdef __APPLE__
+                ((void (*)(void *, SEL, signed char))objc_msgSend)(objc_getClass("NSWindow"),
+                                                                   sel_registerName("setAllowsAutomaticWindowTabbing:"), 0);
+#endif
+                display_frame = wx_display_create(wnd_ptr, menu, "PCem " PCEM_VERSION_STRING, display_event);
+                {
+                        char title[600];
+                        snprintf(title, sizeof(title), "PCem " PCEM_VERSION_STRING " - %s - %s", config_name, model_getname());
+                        wx_setwindowtitle(display_frame, title);
+                }
+                if (window_remember && window_w > 0 && window_h > 0) {
+                        wx_display_setsize(display_frame, window_w, window_h, vid_resize == 1);
+                        wx_setwindowposition(display_frame, window_x, window_y);
+                } else
+                        wx_display_center(display_frame);
+        }
+        if (vid_resize == 2)
+                wx_display_setsize(display_frame, custom_resolution_width, custom_resolution_height, 0);
+        wx_display_show(display_frame, 1);
+        native_canvas = wx_display_getnativecanvas(display_frame);
+        {
+                int w, h;
+                wx_display_getcanvassize(display_frame, &w, &h);
+                canvas_width = w;
+                canvas_height = h;
+        }
+
+#ifdef _WIN32
+        if (!windows_setup())
+                pclog("Could not set up display windows!\n");
+        hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+        memset(rawinputkey, 0, sizeof(rawinputkey));
+#endif
+#ifdef PCEM_DISPLAY_X11
+        if (!x11_setup())
+                wx_messagebox(wnd_ptr, "Could not create the display. PCem requires X11.", "PCem error", WX_MB_OK);
+#endif
+
+        infocus = 1;
+        display_fullscreen = 0;
+
+        status_timer = wx_createtimer(display_status_update);
+        wx_starttimer(status_timer, 100, 0);
+
         atexit(releasemouse);
         rendererMutex = SDL_CreateMutex();
         rendererCond = SDL_CreateCond();
@@ -113,32 +666,30 @@ void display_stop() {
         SDL_DetachThread(renderthread);
 #endif
         releasemouse();
-}
 
-int is_fullscreen() {
-        int flags = SDL_GetWindowFlags(window);
-        return (flags & SDL_WINDOW_FULLSCREEN) || (flags & SDL_WINDOW_FULLSCREEN_DESKTOP);
+        if (status_timer) {
+                wx_destroytimer(status_timer);
+                status_timer = NULL;
+        }
+
+#ifdef _WIN32
+        if (hKeyboardHook)
+                UnhookWindowsHookEx(hKeyboardHook);
+        hKeyboardHook = 0;
+        if (sub_hwnd) {
+                DestroyWindow(sub_hwnd);
+                sub_hwnd = 0;
+        }
+#endif
+
+        display_fullscreen = 0;
+        if (display_frame)
+                wx_display_show(display_frame, 0);
 }
 
 void sdl_set_window_title(const char *title) {
-        if (window && !is_fullscreen())
-                SDL_SetWindowTitle(window, title);
-}
-
-int get_border_size(int *top, int *left, int *bottom, int *right) {
-#if SDL_VERSION_ATLEAST(2, 0, 5)
-        return SDL_GetWindowBordersSize(window, top, left, bottom, right);
-#else
-        if (top)
-                *top = 0;
-        if (left)
-                *left = 0;
-        if (bottom)
-                *bottom = 0;
-        if (right)
-                *right = 0;
-        return 0;
-#endif
+        if (display_frame && title)
+                ui_call(ui_title, strdup(title));
 }
 
 static const struct {
@@ -260,17 +811,14 @@ int sdl_scancode(SDL_Scancode scancode) {
         return -1;
 }
 
-SDL_Event event;
-SDL_Rect rect;
-int border_x, border_y = 0;
-
-uint64_t render_time = 0;
-int render_fps = 0;
-uint32_t render_frame_time = 0;
-uint32_t render_frames = 0;
 
 void window_setup() {
+#ifdef _WIN32
+        SDL_SetHint(SDL_HINT_GRAB_KEYBOARD, "0");
+        SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, "1");
+#else
         SDL_SetHint(SDL_HINT_GRAB_KEYBOARD, "1");
+#endif
 #if SDL_VERSION_ATLEAST(2, 0, 5)
         SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 #endif
@@ -280,97 +828,68 @@ void window_setup() {
                 window_dofullscreen = 1;
                 window_doinputgrab = 1;
         }
-
-        if (window_remember) {
-                rect.x = window_x;
-                rect.y = window_y;
-                rect.w = window_w;
-                rect.h = window_h;
-        } else {
-                rect.x = SDL_WINDOWPOS_CENTERED;
-                rect.y = SDL_WINDOWPOS_CENTERED;
-                rect.w = 640;
-                rect.h = 480;
-        }
-
-        if (vid_resize == 2) {
-                rect.w = custom_resolution_width;
-                rect.h = custom_resolution_height;
-        }
 }
-
-#ifdef __WINDOWS__
-int sdl_winhook(int code) {
-        switch (code) {
-        case VK_LMENU:
-                return SDL_SCANCODE_LALT;
-        case VK_LCONTROL:
-                return SDL_SCANCODE_LCTRL;
-        case VK_LWIN:
-                return SDL_SCANCODE_LGUI;
-        case VK_LSHIFT:
-                return SDL_SCANCODE_LSHIFT;
-        case VK_RMENU:
-                return SDL_SCANCODE_RALT;
-        case VK_RCONTROL:
-                return SDL_SCANCODE_RCTRL;
-        case VK_RWIN:
-                return SDL_SCANCODE_RGUI;
-        case VK_RSHIFT:
-                return SDL_SCANCODE_RSHIFT;
-        }
-
-        return -1;
-}
-
-LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-        KBDLLHOOKSTRUCT *p = (KBDLLHOOKSTRUCT *)lParam;
-
-        int c = p->vkCode;
-
-        int steal = 0;
-        int s = sdl_winhook(c);
-        if (s != -1) {
-                int key_state = !(p->flags & LLKHF_UP);
-                if (abs(modkeystate[c]) != key_state) {
-                        /* if mousecapture is 0, key_state should be negative */
-                        if (!mousecapture)
-                                key_state = -key_state;
-                        /* if key_state is 0 and modkeystate[c] is negative,
-                         an sdl_event should not be generated */
-                        if (key_state > 0 || modkeystate[c] > 0) {
-                                steal = key_state != 0;
-                                SDL_Event event;
-                                event.key.keysym.scancode = s;
-                                event.key.timestamp = p->time;
-
-                                event.type = key_state ? SDL_KEYDOWN : SDL_KEYUP;
-                                SDL_PushEvent(&event);
-                        }
-                        modkeystate[c] = key_state;
-                }
-                if (steal)
-                        return 1;
-        }
-
-        return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
-}
-#endif
 
 int window_create() {
-        window = SDL_CreateWindow("PCem Display", rect.x, rect.y, rect.w, rect.h,
-                                  requested_render_driver.sdl_window_params | (vid_resize == 1 ? SDL_WINDOW_RESIZABLE : 0));
+        void *native = NULL;
+        int opengl = requested_render_driver.sdl_window_params & SDL_WINDOW_OPENGL;
+
+#ifdef _WIN32
+        if (msg_hwnd && native_canvas)
+                native = (void *)SendMessage(msg_hwnd, WM_PCEM_CREATE_CANVAS, 0, 0);
+        if (native && opengl) {
+                dummy_window = SDL_CreateWindow("GL3 test", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1, 1,
+                                                SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);
+                if (dummy_window) {
+                        char ptr[32];
+                        snprintf(ptr, 31, "%p", dummy_window);
+                        ptr[31] = 0;
+                        SDL_SetHint(SDL_HINT_VIDEO_WINDOW_SHARE_PIXEL_FORMAT, ptr);
+                }
+        }
+#elif defined(PCEM_DISPLAY_X11)
+        native = (void *)x11_canvas;
+#else
+        native = native_canvas;
+#endif
+
+#ifdef SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL
+        SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, opengl ? "1" : "0");
+#endif
+
+#ifdef __APPLE__
+        if (native)
+                cocoa_save_views();
+#endif
+        window = native ? SDL_CreateWindowFrom(native) : NULL;
+#ifdef __APPLE__
+        if (native) {
+                cocoa_restore_views();
+                ui_setsize(NULL);
+        }
+#endif
         if (!window) {
                 char message[200];
                 sprintf(message, "SDL window could not be created! Error: %s\n", SDL_GetError());
-                wx_messagebox(ghwnd, message, "SDL Error", WX_MB_OK);
+                wx_messagebox(window_ptr, message, "SDL Error", WX_MB_OK);
                 return 0;
         }
 
-#ifdef __WINDOWS__
-        memset(modkeystate, 0, sizeof(modkeystate));
-        hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+#ifdef PCEM_DISPLAY_X11
+        {
+                SDL_SysWMinfo info;
+                SDL_VERSION(&info.version);
+                if (SDL_GetWindowWMInfo(window, &info) && info.subsystem == SDL_SYSWM_X11) {
+                        XSelectInput(info.info.x11.display, info.info.x11.window,
+                                     KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
+                                             EnterWindowMask | LeaveWindowMask | FocusChangeMask | StructureNotifyMask |
+                                             ExposureMask | KeymapStateMask);
+                        XFlush(info.info.x11.display);
+                }
+        }
 #endif
+
+        window_dosetresize = 1;
 
         render_time = 0;
         render_fps = 0;
@@ -380,53 +899,47 @@ int window_create() {
 }
 
 void window_close() {
-#ifdef __WINDOWS__
-        UnhookWindowsHookEx(hKeyboardHook);
-#endif
-
         sdl_renderer_close();
 
-        if (window) {
-                SDL_GetWindowPosition(window, &rect.x, &rect.y);
-                SDL_GetWindowSize(window, &rect.w, &rect.h);
-                get_border_size(&border_y, &border_x, 0, 0);
-                rect.x -= border_x;
-                rect.y -= border_y;
-
+        if (window)
                 SDL_DestroyWindow(window);
-        }
         window = NULL;
+
+#ifdef _WIN32
+        if (dummy_window) {
+                SDL_SetHint(SDL_HINT_VIDEO_WINDOW_SHARE_PIXEL_FORMAT, "");
+                SDL_DestroyWindow(dummy_window);
+        }
+        dummy_window = NULL;
+
+        if (sub_hwnd)
+                PostMessage(msg_hwnd, WM_PCEM_DESTROY_CANVAS, (WPARAM)sub_hwnd, 0);
+#endif
 }
 
 int render() {
         uint64_t start_time = timer_read();
         uint64_t end_time;
 
-        if (window_dosetresize) {
-                window_dosetresize = 0;
-#if SDL_VERSION_ATLEAST(2, 0, 5)
-                SDL_GetWindowSize(window, &rect.w, &rect.h);
-                SDL_SetWindowResizable(window, vid_resize == 1);
-                SDL_SetWindowSize(window, rect.w, rect.h);
-#else
-                window_doreset = 1;
-#endif
-                if (vid_resize == 2)
-                        SDL_SetWindowSize(window, custom_resolution_width, custom_resolution_height);
-
-                device_force_redraw();
-        }
         if (window_doreset) {
                 pclog("window_doreset\n");
                 window_doreset = 0;
                 renderer_doreset = 0;
                 return 0;
         }
+        if (window_dosetresize) {
+                window_dosetresize = 0;
+                ui_call(ui_setsize, NULL);
+                device_force_redraw();
+        }
         if (renderer_doreset) {
                 pclog("renderer_doreset\n");
                 renderer_doreset = 0;
                 sdl_renderer_close();
                 sdl_renderer_init(window);
+#ifdef __APPLE__
+                cocoa_fit_subviews();
+#endif
 
                 device_force_redraw();
                 video_wait_for_blit();
@@ -434,58 +947,24 @@ int render() {
         while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
-                        if (!mousecapture) {
-                                if (event.button.button == SDL_BUTTON_LEFT && !pause) {
-                                        window_doinputgrab = 1;
-                                        if (video_fullscreen)
-                                                window_dofullscreen = 1;
-                                } else if (event.button.button == SDL_BUTTON_RIGHT)
-                                        wx_popupmenu(ghwnd, menu, 0, 0);
-
-                        } else if (event.button.button == SDL_BUTTON_MIDDLE && !is_fullscreen())
-                                window_doinputrelease = 1;
+                        if (event.button.button == SDL_BUTTON_LEFT)
+                                display_event(WX_DISPLAY_MOUSE_UP, 1, 0);
+                        else if (event.button.button == SDL_BUTTON_MIDDLE)
+                                display_event(WX_DISPLAY_MOUSE_UP, 2, 0);
                         break;
                 case SDL_MOUSEWHEEL:
                         if (mousecapture)
                                 mouse_wheel_update(event.wheel.y);
                         break;
                 case SDL_WINDOWEVENT:
-                        if (event.window.event == SDL_WINDOWEVENT_CLOSE)
-                                wx_stop_emulation(ghwnd);
-                        if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                        if (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                                 device_force_redraw();
-                        if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-                                if (is_fullscreen())
-                                        window_dowindowed = 1;
-                                window_doinputrelease = 1;
-                        }
-
-                        if (window_remember) {
-                                int flags = SDL_GetWindowFlags(window);
-                                if (!(flags & SDL_WINDOW_FULLSCREEN) && !(flags & SDL_WINDOW_FULLSCREEN_DESKTOP)) {
-                                        if (event.window.event == SDL_WINDOWEVENT_MOVED) {
-                                                get_border_size(&border_y, &border_x, 0, 0);
-                                                window_x = event.window.data1 - border_x;
-                                                window_y = event.window.data2 - border_y;
-                                        } else if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                                                window_w = event.window.data1;
-                                                window_h = event.window.data2;
-                                        }
-                                        // save_window_pos = 1;
-                                }
-                        }
-
                         break;
+#ifndef _WIN32
                 case SDL_KEYDOWN: {
-#ifdef __WINDOWS__
-                        /* international keyboard workaround */
-                        if (event.key.keysym.scancode == SDL_SCANCODE_RALT && (event.key.keysym.mod & KMOD_LCTRL) &&
-                            event.key.timestamp == rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)])
-                                rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] = 0;
-#endif
                         int key_idx = sdl_scancode(event.key.keysym.scancode);
                         if (key_idx != -1)
-                                rawinputkey[key_idx] = event.key.timestamp;
+                                rawinputkey[key_idx] = event.key.timestamp ? event.key.timestamp : 1;
                         break;
                 }
                 case SDL_KEYUP: {
@@ -494,6 +973,7 @@ int render() {
                                 rawinputkey[key_idx] = 0;
                         break;
                 }
+#endif
                 }
         }
         if ((rawinputkey[sdl_scancode(SDL_SCANCODE_PAGEDOWN)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_3)]) &&
@@ -515,24 +995,19 @@ int render() {
                 trigger_inputrelease = 1;
         else if (trigger_inputrelease) {
                 trigger_inputrelease = 0;
-                if (!is_fullscreen())
+                if (!display_fullscreen)
                         window_doinputrelease = 1;
         }
         if (window_doremember) {
                 window_doremember = 0;
-                SDL_GetWindowPosition(window, &window_x, &window_y);
-                SDL_GetWindowSize(window, &window_w, &window_h);
-                get_border_size(&border_y, &border_x, 0, 0);
-                window_x -= border_x;
-                window_y -= border_y;
-                saveconfig(NULL);
+                ui_call(ui_remember, NULL);
         }
 
         if (window_dotogglefullscreen) {
                 window_dotogglefullscreen = 0;
-                if (SDL_GetWindowGrab(window) || is_fullscreen()) {
+                if (mousecapture || display_fullscreen) {
                         window_doinputrelease = 1;
-                        if (is_fullscreen())
+                        if (display_fullscreen)
                                 window_dowindowed = 1;
                 } else {
                         window_doinputgrab = 1;
@@ -542,57 +1017,51 @@ int render() {
 
         if (window_dofullscreen) {
                 window_dofullscreen = 0;
-                video_wait_for_blit();
-                SDL_RaiseWindow(window);
+                if (!display_fullscreen) {
+                        video_wait_for_blit();
 #if SDL_VERSION_ATLEAST(2, 0, 4)
-                SDL_GetGlobalMouseState(&remembered_mouse_x, &remembered_mouse_y);
+                        SDL_GetGlobalMouseState(&remembered_mouse_x, &remembered_mouse_y);
 #endif
-                SDL_GetWindowPosition(window, &remembered_rect.x, &remembered_rect.y);
-                get_border_size(&border_y, &border_x, 0, 0);
-                remembered_rect.x -= border_x;
-                remembered_rect.y -= border_y;
-                SDL_GetWindowSize(window, &remembered_rect.w, &remembered_rect.h);
-                SDL_SetWindowFullscreen(window,
-                                        video_fullscreen_mode == 0 ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN);
-                device_force_redraw();
+                        display_fullscreen = 1;
+                        ui_call(ui_fullscreen, (void *)1);
+                        device_force_redraw();
+                }
         }
         if (window_doinputgrab) {
                 window_doinputgrab = 0;
                 mousecapture = 1;
-                SDL_GetRelativeMouseState(0, 0);
+                SDL_Rect rect;
+                display_get_size(window, &rect.w, &rect.h);
+                SDL_WarpMouseInWindow(window, rect.w / 2, rect.h / 2);
                 SDL_SetWindowGrab(window, SDL_TRUE);
                 SDL_SetRelativeMouseMode(SDL_TRUE);
+                SDL_GetRelativeMouseState(0, 0);
+#ifdef _WIN32
+                PostMessage(msg_hwnd, WM_PCEM_FOCUS_CANVAS, 0, 0);
+#endif
         }
 
         if (window_doinputrelease) {
                 window_doinputrelease = 0;
-                mousecapture = 0;
-                SDL_SetWindowGrab(window, SDL_FALSE);
-                SDL_SetRelativeMouseMode(SDL_FALSE);
+                releasemouse();
         }
         if (window_dowindowed) {
                 window_dowindowed = 0;
-                SDL_SetWindowFullscreen(window, 0);
-                SDL_SetWindowSize(window, remembered_rect.w, remembered_rect.h);
-                SDL_SetWindowPosition(window, remembered_rect.x, remembered_rect.y);
+                if (display_fullscreen) {
+                        display_fullscreen = 0;
+                        ui_call(ui_fullscreen, NULL);
 #if SDL_VERSION_ATLEAST(2, 0, 4)
-                SDL_WarpMouseGlobal(remembered_mouse_x, remembered_mouse_y);
+                        SDL_WarpMouseGlobal(remembered_mouse_x, remembered_mouse_y);
 #endif
-                device_force_redraw();
+                        device_force_redraw();
+                }
         }
 
         if (win_doresize) {
-                int flags = SDL_GetWindowFlags(window);
-
                 win_doresize = 0;
-                if (!vid_resize || (flags & SDL_WINDOW_FULLSCREEN)) {
-                        SDL_GetWindowSize(window, &rect.w, &rect.h);
-                        if (rect.w != winsizex || rect.h != winsizey) {
-                                SDL_GetWindowPosition(window, &rect.x, &rect.y);
-                                SDL_SetWindowSize(window, winsizex, winsizey);
-                                SDL_SetWindowPosition(window, rect.x, rect.y);
-                                device_force_redraw();
-                        }
+                if (!vid_resize && !display_fullscreen) {
+                        ui_call(ui_setsize, NULL);
+                        device_force_redraw();
                 }
         }
 
@@ -609,6 +1078,13 @@ int render() {
                 render_frames = 0;
                 render_frame_time = ticks;
         }
+
+#ifdef PCEM_RENDER_TIMER_LOOP
+        if (ticks - status_update_time >= 100) {
+                status_update_time = ticks;
+                display_status_update();
+        }
+#endif
 
         return 1;
 }
@@ -630,14 +1106,14 @@ int renderer_thread(void *params) {
 
                 renderer_doreset = 1;
                 internal_rendering = 1;
-                pclog ("Start rendering...\n");
+                pclog("Start rendering...\n");
                 while (rendering && internal_rendering) {
                         if (!render())
                                 internal_rendering = 0;
-                    
+
                         SDL_Delay(1);
                 }
-                pclog ("Stop rendering...\n");
+                pclog("Stop rendering...\n");
                 window_close();
         }
 
@@ -652,7 +1128,6 @@ void *timer = 0;
 
 void render_timer() {
 #ifdef PCEM_RENDER_TIMER_LOOP
-        /* For some reason this while-loop works on OSX, which also fixes missing events. No idea why though. */
         renderer_thread(0);
 #else
         if (rendering && !render()) {

@@ -134,7 +134,7 @@ class Frame : public wxFrame {
 
         void Start();
 
-        wxMenu *GetMenu();
+        wxMenuBar *GetMenu();
 
     private:
         void OnCommand(wxCommandEvent &event);
@@ -151,7 +151,7 @@ class Frame : public wxFrame {
 #endif
 
         void ShowConfigSelection();
-        wxMenu *menu;
+        wxMenuBar *menu;
 
         bool closing;
 

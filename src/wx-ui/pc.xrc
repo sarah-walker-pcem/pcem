@@ -77,7 +77,7 @@
 			</object>
 		</object>
 	</object>
-	<object class="wxMenu" name="main_menu">
+	<object class="wxMenuBar" name="main_menu">
 		<object class="wxMenu">
 			<label>_System</label>
 			<object class="wxMenuItem" name="IDM_FILE_HRESET">

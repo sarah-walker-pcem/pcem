@@ -52,6 +52,7 @@ set(PCEM_SRC ${PCEM_SRC}
         wx-ui/wx-joystickconfig.cc
         wx-ui/wx-config-eventbinder.cc
         wx-ui/wx-createdisc.cc
+        wx-ui/wx-sdl2-display.c
         ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/wx-resources.cpp
         )
 
@@ -62,24 +63,21 @@ if(USE_NETWORKING)
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        set(PCEM_SRC ${PCEM_SRC}
-                wx-ui/wx-sdl2-display.c
-                )
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+        find_package(X11 REQUIRED)
+        include_directories(${GTK3_INCLUDE_DIRS} ${X11_INCLUDE_DIR})
+        set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} ${GTK3_LIBRARIES} ${X11_LIBRARIES})
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         set(PCEM_SRC ${PCEM_SRC}
-                wx-ui/wx-sdl2-display-win.c
                 wx-ui/wx.rc
                 )
 endif()
 
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-        set(PCEM_SRC ${PCEM_SRC}
-                wx-ui/wx-sdl2-display.c
-                )
-
         add_compile_definitions(PCEM_RENDER_WITH_TIMER PCEM_RENDER_TIMER_LOOP)
 
 endif()

@@ -427,3 +427,5 @@ build-*/
 cmake-build-*/
 output/
 !.vs/launch.vs.json
+
+.DS_Store

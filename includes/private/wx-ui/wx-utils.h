@@ -12,6 +12,14 @@
 #endif
 
 typedef int (*WX_CALLBACK)(void *data);
+typedef void (*WX_DISPLAY_CALLBACK)(int event, int param1, int param2);
+
+#define WX_DISPLAY_CLOSE 1
+#define WX_DISPLAY_ACTIVATE 2
+#define WX_DISPLAY_DEACTIVATE 3
+#define WX_DISPLAY_SIZE 4
+#define WX_DISPLAY_MOUSE_UP 5
+#define WX_DISPLAY_DESTROY 6
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,6 +84,17 @@ void wx_setwindowposition(void *window, int x, int y);
 void wx_setwindowsize(void *window, int width, int height);
 
 void wx_show_status(void *window);
+
+void *wx_display_create(void *parent, void *menubar, const char *title, WX_DISPLAY_CALLBACK callback);
+void *wx_display_getnativecanvas(void *frame);
+void wx_display_getcanvassize(void *frame, int *width, int *height);
+void wx_display_setsize(void *frame, int width, int height, int resizable);
+void wx_display_getrect(void *frame, int *x, int *y, int *width, int *height);
+void wx_display_center(void *frame);
+void wx_display_show(void *frame, int show);
+void wx_display_setfullscreen(void *frame, int fullscreen);
+void wx_display_setstatustext(void *frame, int field, const char *text);
+void wx_display_update(void *frame);
 void wx_close_status(void *window);
 
 PCEM_API void wx_get_home_directory(char *path);
