@@ -643,11 +643,11 @@ void ViewerVRAMCanvas::UpdateLabels()
 	char s[128];
 
 	wxRadioButton *rb = static_cast<wxRadioButton *>(vram_parent->FindWindow("IDC_STARTADDR_CURRENT"));
-	sprintf(s, "Current (%x)", current_start_addr);
+	snprintf(s, sizeof(s), "Current (%x)", current_start_addr);
 	rb->SetLabel(wxString(s));
 
 	rb = static_cast<wxRadioButton *>(vram_parent->FindWindow("IDC_PITCH_CURRENT"));
-	sprintf(s, "Current (%u)", current_pitch);
+	snprintf(s, sizeof(s), "Current (%u)", current_pitch);
 	rb->SetLabel(wxString(s));
 
 	rb = static_cast<wxRadioButton *>(vram_parent->FindWindow("IDC_DEPTH_CURRENT"));

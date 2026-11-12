@@ -53,9 +53,9 @@ static void rebuild_axis_button_selections(void *hdlg) {
                         for (d = 0; d < plat_joystick_state[joystick - 1].nr_povs; d++) {
                                 char s[80];
 
-                                sprintf(s, "%s (X axis)", plat_joystick_state[joystick - 1].pov[d].name);
+                                snprintf(s, sizeof(s), "%s (X axis)", plat_joystick_state[joystick - 1].pov[d].name);
                                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
-                                sprintf(s, "%s (Y axis)", plat_joystick_state[joystick - 1].pov[d].name);
+                                snprintf(s, sizeof(s), "%s (Y axis)", plat_joystick_state[joystick - 1].pov[d].name);
                                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                         }
                         wx_sendmessage(h, WX_CB_SETCURSEL, sel, 0);
@@ -92,9 +92,9 @@ static void rebuild_axis_button_selections(void *hdlg) {
                         for (d = 0; d < plat_joystick_state[joystick - 1].nr_povs; d++) {
                                 char s[80];
 
-                                sprintf(s, "%s (X axis)", plat_joystick_state[joystick - 1].pov[d].name);
+                                snprintf(s, sizeof(s), "%s (X axis)", plat_joystick_state[joystick - 1].pov[d].name);
                                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
-                                sprintf(s, "%s (Y axis)", plat_joystick_state[joystick - 1].pov[d].name);
+                                snprintf(s, sizeof(s), "%s (Y axis)", plat_joystick_state[joystick - 1].pov[d].name);
                                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
                         }
                         for (d = 0; d < plat_joystick_state[joystick - 1].nr_axes; d++) {
@@ -280,7 +280,7 @@ void joystickconfig_open(void *hwnd, int joy_nr, int type) {
                 cb->Append(plat_joystick_state[c].name);
 
         for (c = 0; c < joystick_get_axis_count(type); c++) {
-                sprintf(s, "Axis %i:", c);
+                snprintf(s, sizeof(s), "Axis %i:", c);
                 sizer->Add(new wxStaticText(&dialog, id++, s), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
                 wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
                 sizer->Add(comboSizer, 1, wxEXPAND, 5);
@@ -290,7 +290,7 @@ void joystickconfig_open(void *hwnd, int joy_nr, int type) {
         }
 
         for (c = 0; c < joystick_get_button_count(type); c++) {
-                sprintf(s, "Button %i:", c);
+                snprintf(s, sizeof(s), "Button %i:", c);
                 sizer->Add(new wxStaticText(&dialog, id++, s), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
                 wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
                 sizer->Add(comboSizer, 1, wxEXPAND, 5);
@@ -300,7 +300,7 @@ void joystickconfig_open(void *hwnd, int joy_nr, int type) {
         }
 
         for (c = 0; c < joystick_get_pov_count(type) * 2; c++) {
-                sprintf(s, "POV %i:", c);
+                snprintf(s, sizeof(s), "POV %i:", c);
                 sizer->Add(new wxStaticText(&dialog, id++, s), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
                 wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
                 sizer->Add(comboSizer, 1, wxEXPAND, 5);

@@ -154,6 +154,7 @@ uint8_t mmb_read(uint16_t addr, void *p) {
                         else
                                 return 0;
         }
+        return 0;
 }
 
 void mmb_init(mmb_t *mmb, uint16_t base, uint16_t size, int freq) {

@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
+if(POLICY CMP0142)
+        cmake_policy(SET CMP0142 NEW)
+endif()
 
 project(PCem)
+
+set(CMAKE_XCODE_ATTRIBUTE_GCC_WARN_64_TO_32_BIT_CONVERSION NO)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)

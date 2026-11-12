@@ -6,6 +6,7 @@
 #include <math.h>
 #ifdef USE_OPENAL
 #ifdef __APPLE__
+#define OPENAL_DEPRECATED
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #else

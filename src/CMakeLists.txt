@@ -90,7 +90,8 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
                 OUTPUT_NAME PCem
                 MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/macos/Info.plist.in
                 MACOSX_BUNDLE_BUNDLE_NAME PCem
-                MACOSX_BUNDLE_GUI_IDENTIFIER org.pcem-emulator.PCem
+                MACOSX_BUNDLE_GUI_IDENTIFIER uk.co.pcem-emulator.PCem
+                XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER uk.co.pcem-emulator.PCem
                 MACOSX_BUNDLE_SHORT_VERSION_STRING "${PCEM_VERSION_STRING}"
                 MACOSX_BUNDLE_BUNDLE_VERSION "${PCEM_VERSION_STRING}")
 

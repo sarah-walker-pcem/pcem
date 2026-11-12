@@ -241,7 +241,7 @@ void deviceconfig_open(void *hwnd, device_t *device) {
                 case CONFIG_MIDI: {
                         if (config->type == CONFIG_MIDI && midi_get_num_devs() == 0)
                                 break;
-                        sprintf(s, "%s:", config->description);
+                        snprintf(s, sizeof(s), "%s:", config->description);
                         sizer->Add(new wxStaticText(&dialog, id++, s), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
                         wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
                         sizer->Add(comboSizer, 1, wxEXPAND, 5);

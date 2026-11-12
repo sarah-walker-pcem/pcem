@@ -8,7 +8,6 @@
 
 extern "C" {
 int pc_main(int, char **);
-int main(int argc, char **argv);
 }
 
 #if WIN32

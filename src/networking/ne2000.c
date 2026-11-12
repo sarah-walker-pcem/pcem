@@ -118,8 +118,15 @@ static void *pcem_slirp_timer_new(SlirpTimerCb cb, void *cb_opaque, void *opaque
 
 static void pcem_slirp_timer_free(void *timer, void *opaque) {}
 static void pcem_slirp_timer_mod(void *timer, int64_t expire_time, void *opaque) {}
-static void pcem_slirp_register_poll_fd(int fd, void *opaque) {}
-static void pcem_slirp_unregister_poll_fd(int fd, void *opaque) {}
+#if SLIRP_CHECK_VERSION(4, 8, 0)
+#define PCEM_SLIRP_CONFIG_VERSION 6
+typedef slirp_os_socket pcem_slirp_socket;
+#else
+#define PCEM_SLIRP_CONFIG_VERSION 4
+typedef int pcem_slirp_socket;
+#endif
+static void pcem_slirp_register_poll_fd(pcem_slirp_socket fd, void *opaque) {}
+static void pcem_slirp_unregister_poll_fd(pcem_slirp_socket fd, void *opaque) {}
 static void pcem_slirp_notify(void *opaque) {}
 
 static const SlirpCb pcem_slirp_callbacks = {
@@ -129,8 +136,13 @@ static const SlirpCb pcem_slirp_callbacks = {
         .timer_new = pcem_slirp_timer_new,
         .timer_free = pcem_slirp_timer_free,
         .timer_mod = pcem_slirp_timer_mod,
+#if SLIRP_CHECK_VERSION(4, 8, 0)
+        .register_poll_socket = pcem_slirp_register_poll_fd,
+        .unregister_poll_socket = pcem_slirp_unregister_poll_fd,
+#else
         .register_poll_fd = pcem_slirp_register_poll_fd,
         .unregister_poll_fd = pcem_slirp_unregister_poll_fd,
+#endif
         .notify = pcem_slirp_notify,
 };
 void slirp_tic();
@@ -1627,7 +1639,7 @@ void *ne2000_common_init() {
 
                 SlirpConfig cfg;
                 memset(&cfg, 0, sizeof(cfg));
-                cfg.version = 4;
+                cfg.version = PCEM_SLIRP_CONFIG_VERSION;
                 cfg.restricted = 0;
                 cfg.in_enabled = 1;
                 cfg.vnetwork.s_addr = htonl(0x0A020000);      /* 10.2.0.0 */
@@ -1671,21 +1683,14 @@ void *ne2000_common_init() {
                 pclog("ne2000 initalizing libpcap\n");
                 net_is_slirp = 0;
 
-                if (pcap_lib_version && pcap_open_live && pcap_sendpacket && pcap_setnonblock && pcap_next && pcap_close &&
-                    pcap_getnonblock) {
-                        pclog("ne2000 Pcap version [%s]\n", pcap_lib_version());
+                pclog("ne2000 Pcap version [%s]\n", pcap_lib_version());
 
-                        if ((net_pcap = pcap_open_live(config_get_string(CFG_GLOBAL, NULL, "pcap_device", "nothing"), 1518, 1, 15,
-                                                       errbuf)) == 0) {
-                                pclog("ne2000 pcap_open_live error on %s!\n",
-                                      config_get_string(CFG_GLOBAL, NULL, "pcap_device", "whatever the ethernet is"));
-                                net_is_pcap = 0;
-                                return (ne2000); // YUCK!!!
-                        }
-                } else {
-                        pclog("%d %d %d %d %d %d %d\n", pcap_lib_version, pcap_open_live, pcap_sendpacket, pcap_setnonblock,
-                              pcap_next, pcap_close, pcap_getnonblock);
-                        net_is_pcap = 1;
+                if ((net_pcap = pcap_open_live(config_get_string(CFG_GLOBAL, NULL, "pcap_device", "nothing"), 1518, 1, 15,
+                                               errbuf)) == 0) {
+                        pclog("ne2000 pcap_open_live error on %s!\n",
+                              config_get_string(CFG_GLOBAL, NULL, "pcap_device", "whatever the ethernet is"));
+                        net_is_pcap = 0;
+                        return (ne2000); // YUCK!!!
                 }
 
                 // Time to check that we are in non-blocking mode.
@@ -1720,33 +1725,28 @@ void *ne2000_common_init() {
                         break;
                 }
                 if (net_is_pcap) {
-                        if (pcap_compile && pcap_setfilter) {
-                                struct bpf_program fp;
-                                char filter_exp[255];
+                        struct bpf_program fp;
+                        char filter_exp[255];
 
-                                pclog("ne2000 Building packet filter...");
-                                sprintf(filter_exp,
-                                        "( ((ether dst ff:ff:ff:ff:ff:ff) or (ether dst %02x:%02x:%02x:%02x:%02x:%02x)) and not "
-                                        "(ether src %02x:%02x:%02x:%02x:%02x:%02x) )",
-                                        maclocal[0], maclocal[1], maclocal[2], maclocal[3], maclocal[4], maclocal[5], maclocal[0],
-                                        maclocal[1], maclocal[2], maclocal[3], maclocal[4], maclocal[5]);
+                        pclog("ne2000 Building packet filter...");
+                        sprintf(filter_exp,
+                                "( ((ether dst ff:ff:ff:ff:ff:ff) or (ether dst %02x:%02x:%02x:%02x:%02x:%02x)) and not "
+                                "(ether src %02x:%02x:%02x:%02x:%02x:%02x) )",
+                                maclocal[0], maclocal[1], maclocal[2], maclocal[3], maclocal[4], maclocal[5], maclocal[0],
+                                maclocal[1], maclocal[2], maclocal[3], maclocal[4], maclocal[5]);
 
-                                // I'm doing a MAC level filter so TCP/IP doesn't matter.
-                                if (pcap_compile(net_pcap, &fp, filter_exp, 0, 0xffffffff) == -1) {
-                                        pclog("\nne2000 Couldn't compile filter\n");
-                                } else {
-                                        pclog("...");
-                                        if (pcap_setfilter(net_pcap, &fp) == -1) {
-                                                pclog("\nError installing pcap filter.\n");
-                                        } else {
-                                                pclog("...!\n");
-                                        }
-                                }
-                                pclog("ne2000 Using filter\t[%s]\n", filter_exp);
+                        // I'm doing a MAC level filter so TCP/IP doesn't matter.
+                        if (pcap_compile(net_pcap, &fp, filter_exp, 0, 0xffffffff) == -1) {
+                                pclog("\nne2000 Couldn't compile filter\n");
                         } else {
-                                pclog("ne2000 Your platform lacks pcap_compile & pcap_setfilter\n");
-                                net_is_pcap = 0;
+                                pclog("...");
+                                if (pcap_setfilter(net_pcap, &fp) == -1) {
+                                        pclog("\nError installing pcap filter.\n");
+                                } else {
+                                        pclog("...!\n");
+                                }
                         }
+                        pclog("ne2000 Using filter\t[%s]\n", filter_exp);
                         pclog("ne2000 net_is_pcap is %d and net_pcap is %x\n", net_is_pcap, net_pcap);
                 }
         } // end pcap setup
@@ -1810,7 +1810,6 @@ void ne2000_close(void *p) {
 
 static device_config_t ne2000_config[] = {{.name = "addr",
                                            .description = "Address",
-                                           .type = CONFIG_BINARY,
                                            .type = CONFIG_SELECTION,
                                            .selection = {{.description = "0x280", .value = 0x280},
                                                          {.description = "0x300", .value = 0x300},
@@ -1841,7 +1840,7 @@ device_t rtl8029as_device = {"Realtek RTL8029AS", DEVICE_PCI, rtl8029_init, ne20
 #define MAX_POLL_FDS 256
 
 static struct {
-        int fd;
+        pcem_slirp_socket fd;
         int events;
 } poll_fds[MAX_POLL_FDS];
 static int poll_fd_count = 0;
@@ -1849,7 +1848,7 @@ static int poll_fd_count = 0;
 static fd_set slirp_rfds, slirp_wfds, slirp_xfds;
 static int slirp_nfds = 0;
 
-static int pcem_add_poll(int fd, int events, void *opaque) {
+static int pcem_add_poll(pcem_slirp_socket fd, int events, void *opaque) {
         if (poll_fd_count >= MAX_POLL_FDS)
                 return -1;
 
@@ -1863,8 +1862,8 @@ static int pcem_add_poll(int fd, int events, void *opaque) {
                 FD_SET(fd, &slirp_wfds);
         FD_SET(fd, &slirp_xfds);
 
-        if (fd >= slirp_nfds)
-                slirp_nfds = fd + 1;
+        if ((int)fd >= slirp_nfds)
+                slirp_nfds = (int)fd + 1;
 
         return idx;
 }
@@ -1873,7 +1872,7 @@ static int pcem_get_revents(int idx, void *opaque) {
         if (idx < 0 || idx >= poll_fd_count)
                 return 0;
 
-        int fd = poll_fds[idx].fd;
+        pcem_slirp_socket fd = poll_fds[idx].fd;
         int revents = 0;
 
         if (FD_ISSET(fd, &slirp_rfds))
@@ -1898,7 +1897,11 @@ void slirp_tic() {
         poll_fd_count = 0;
 
         uint32_t timeout = 0;
+#if SLIRP_CHECK_VERSION(4, 8, 0)
+        slirp_pollfds_fill_socket(slirp_instance, &timeout, pcem_add_poll, NULL);
+#else
         slirp_pollfds_fill(slirp_instance, &timeout, pcem_add_poll, NULL);
+#endif
 
         /* Non-blocking poll — don't let select() stall the emulation loop */
         struct timeval tv;

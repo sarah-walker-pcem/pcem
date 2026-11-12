@@ -302,7 +302,9 @@ void codegen_backend_init() {
 
         codegen_allocator_clean_blocks(block->head_mem_block);
 
-        asm("mrs %0, fpcr\n" : "=r"(cpu_state.old_fp_control));
+        uint64_t fpcr;
+        asm("mrs %0, fpcr\n" : "=r"(fpcr));
+        cpu_state.old_fp_control = fpcr;
 }
 
 void codegen_set_rounding_mode(int mode) {
