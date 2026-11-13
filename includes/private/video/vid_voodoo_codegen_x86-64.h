@@ -3265,8 +3265,13 @@ void voodoo_codegen_init(voodoo_t *voodoo) {
 #if WIN64
         voodoo->codegen_data = VirtualAlloc(NULL, sizeof(voodoo_x86_data_t) * BLOCK_NUM * 4, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
+#if defined(__APPLE__) && defined(MAP_JIT)
+        voodoo->codegen_data = mmap(0, sizeof(voodoo_x86_data_t) * BLOCK_NUM * 4, PROT_READ | PROT_WRITE | PROT_EXEC,
+                                    MAP_ANON | MAP_PRIVATE | MAP_JIT, 0, 0);
+#else
         voodoo->codegen_data = mmap(0, sizeof(voodoo_x86_data_t) * BLOCK_NUM * 4, PROT_READ | PROT_WRITE | PROT_EXEC,
                                     MAP_ANON | MAP_PRIVATE, 0, 0);
+#endif
 #endif
 
         for (c = 0; c < 256; c++) {

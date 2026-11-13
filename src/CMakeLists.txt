@@ -100,6 +100,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
                 MACOSX_BUNDLE_SHORT_VERSION_STRING "${PCEM_VERSION_STRING}"
                 MACOSX_BUNDLE_BUNDLE_VERSION "${PCEM_VERSION_STRING}")
 
+        set(PCEM_CODESIGN_IDENTITY "-" CACHE STRING "codesign identity for the app bundle (\"-\" = ad-hoc)")
         find_library(PCEM_SDL3_LIBRARY NAMES SDL3)
         set(PCEM_BUNDLE_LIB_DIRS "")
         foreach(lib ${PCEM_LIBRARIES})
@@ -116,6 +117,9 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 
         add_custom_command(TARGET pcem POST_BUILD
                 COMMAND ${CMAKE_COMMAND} "-DAPP=$<TARGET_BUNDLE_DIR:pcem>" "-DLIB_DIRS=${PCEM_BUNDLE_LIB_DIRS}"
-                        "-DSDL3_LIBRARY=${PCEM_SDL3_LIBRARY}" -P ${CMAKE_SOURCE_DIR}/cmake/macos-bundle.cmake
+                        "-DSDL3_LIBRARY=${PCEM_SDL3_LIBRARY}"
+                        "-DCODESIGN_IDENTITY=${PCEM_CODESIGN_IDENTITY}"
+                        "-DENTITLEMENTS=${CMAKE_SOURCE_DIR}/cmake/macos/PCem.entitlements"
+                        -P ${CMAKE_SOURCE_DIR}/cmake/macos-bundle.cmake
                 VERBATIM)
 endif()
