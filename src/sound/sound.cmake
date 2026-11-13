@@ -98,6 +98,13 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
                 sound/win-midi.c
                 )
                 set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} winmm)
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        set(PCEM_SRC ${PCEM_SRC}
+                sound/midi_coremidi.c
+                )
+        set_source_files_properties(sound/midi_coremidi.c PROPERTIES
+                COMPILE_OPTIONS "-Wno-deprecated-declarations")
+        set(PCEM_ADDITIONAL_LIBS ${PCEM_ADDITIONAL_LIBS} "-framework CoreMIDI" "-framework CoreFoundation")
 else()
     message(STATUS "Warning: Using sdl2-midi. It currently is an empty midi implementation")
         set(PCEM_SRC ${PCEM_SRC}
