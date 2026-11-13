@@ -777,8 +777,21 @@ void loadconfig(char *fn) {
         cd_speed = config_get_int(CFG_MACHINE, NULL, "cd_speed", 24);
         cd_model = cd_model_from_config((char *)config_get_string(CFG_MACHINE, NULL, "cd_model", cd_get_config_model(0)));
 
-        joystick_type = config_get_int(CFG_MACHINE, NULL, "joystick_type", 0);
-        mouse_type = config_get_int(CFG_MACHINE, NULL, "mouse_type", 0);
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "joystick", NULL);
+        if (p)
+                joystick_type = joystick_get_from_name(p);
+        else
+                joystick_type = config_get_int(CFG_MACHINE, NULL, "joystick_type", 0);
+        if (joystick_type < 0 || !joystick_get_name(joystick_type))
+                joystick_type = 0;
+
+        p = (char *)config_get_string(CFG_MACHINE, NULL, "mouse", NULL);
+        if (p)
+                mouse_type = mouse_get_from_name(p);
+        else
+                mouse_type = config_get_int(CFG_MACHINE, NULL, "mouse_type", 0);
+        if (mouse_type < 0 || !mouse_get_name(mouse_type))
+                mouse_type = 0;
 
         for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++) {
                 sprintf(s, "joystick_%i_nr", c);
@@ -925,8 +938,10 @@ void saveconfig(char *fn) {
         config_set_int(CFG_MACHINE, NULL, "cd_speed", cd_speed);
         config_set_string(CFG_MACHINE, NULL, "cd_model", cd_model_to_config(cd_model));
 
-        config_set_int(CFG_MACHINE, NULL, "joystick_type", joystick_type);
-        config_set_int(CFG_MACHINE, NULL, "mouse_type", mouse_type);
+        if (joystick_get_name(joystick_type))
+                config_set_string(CFG_MACHINE, NULL, "joystick", joystick_get_name(joystick_type));
+        if (mouse_get_name(mouse_type))
+                config_set_string(CFG_MACHINE, NULL, "mouse", mouse_get_name(mouse_type));
 
         for (c = 0; c < joystick_get_max_joysticks(joystick_type); c++) {
                 char s[80];

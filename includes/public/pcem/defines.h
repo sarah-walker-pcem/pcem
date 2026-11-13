@@ -10,5 +10,8 @@
 #define NETWORK_CARD_MAX 256
 #define LPT_MAX 256
 #define CALLBACK_MAX 256
+#define MOUSE_MAX 64
+#define JOYSTICK_MAX 64
+#define PLUGIN_MAX 64
 
 #endif /* _PCEM_DEFINES_H_ */

@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdlib.h>
 #include "ibm.h"
 #include "device.h"
@@ -14,29 +15,53 @@
 
 int joystick_type;
 
-static joystick_if_t *joystick_list[] = {
-        &joystick_standard,           &joystick_standard_4button, &joystick_standard_6button, &joystick_standard_8button,
-        &joystick_ch_flightstick_pro, &joystick_sw_pad,           &joystick_tm_fcs,           NULL};
+PCEM_API extern joystick_if_t *joystick_list[JOYSTICK_MAX];
+
+void joystick_init_builtin() {
+        pcem_add_joystick(&joystick_standard);
+        pcem_add_joystick(&joystick_standard_4button);
+        pcem_add_joystick(&joystick_standard_6button);
+        pcem_add_joystick(&joystick_standard_8button);
+        pcem_add_joystick(&joystick_ch_flightstick_pro);
+        pcem_add_joystick(&joystick_sw_pad);
+        pcem_add_joystick(&joystick_tm_fcs);
+}
+
+static joystick_if_t *joystick_get(int joystick) {
+        if (joystick < 0 || joystick >= JOYSTICK_MAX || !joystick_list[joystick])
+                return joystick_list[0];
+        return joystick_list[joystick];
+}
 
 char *joystick_get_name(int joystick) {
-        if (!joystick_list[joystick])
+        if (joystick < 0 || joystick >= JOYSTICK_MAX || !joystick_list[joystick])
                 return NULL;
         return joystick_list[joystick]->name;
 }
 
-int joystick_get_max_joysticks(int joystick) { return joystick_list[joystick]->max_joysticks; }
+int joystick_get_from_name(char *s) {
+        int c;
 
-int joystick_get_axis_count(int joystick) { return joystick_list[joystick]->axis_count; }
+        for (c = 0; c < JOYSTICK_MAX && joystick_list[c]; c++) {
+                if (!strcmp(joystick_list[c]->name, s))
+                        return c;
+        }
+        return -1;
+}
 
-int joystick_get_button_count(int joystick) { return joystick_list[joystick]->button_count; }
+int joystick_get_max_joysticks(int joystick) { return joystick_get(joystick)->max_joysticks; }
 
-int joystick_get_pov_count(int joystick) { return joystick_list[joystick]->pov_count; }
+int joystick_get_axis_count(int joystick) { return joystick_get(joystick)->axis_count; }
 
-char *joystick_get_axis_name(int joystick, int id) { return joystick_list[joystick]->axis_names[id]; }
+int joystick_get_button_count(int joystick) { return joystick_get(joystick)->button_count; }
 
-char *joystick_get_button_name(int joystick, int id) { return joystick_list[joystick]->button_names[id]; }
+int joystick_get_pov_count(int joystick) { return joystick_get(joystick)->pov_count; }
 
-char *joystick_get_pov_name(int joystick, int id) { return joystick_list[joystick]->pov_names[id]; }
+char *joystick_get_axis_name(int joystick, int id) { return joystick_get(joystick)->axis_names[id]; }
+
+char *joystick_get_button_name(int joystick, int id) { return joystick_get(joystick)->button_names[id]; }
+
+char *joystick_get_pov_name(int joystick, int id) { return joystick_get(joystick)->pov_names[id]; }
 
 typedef struct gameport_axis_t {
         pc_timer_t timer;
@@ -129,7 +154,7 @@ void *gameport_init_common() {
         timer_add(&gameport->axis[2].timer, gameport_timer_over, &gameport->axis[2], 0);
         timer_add(&gameport->axis[3].timer, gameport_timer_over, &gameport->axis[3], 0);
 
-        gameport->joystick = joystick_list[joystick_type];
+        gameport->joystick = joystick_get(joystick_type);
         gameport->joystick_dat = gameport->joystick->init();
 
         gameport_global = gameport;
@@ -142,7 +167,7 @@ void gameport_update_joystick_type() {
 
         if (gameport) {
                 gameport->joystick->close(gameport->joystick_dat);
-                gameport->joystick = joystick_list[joystick_type];
+                gameport->joystick = joystick_get(joystick_type);
                 gameport->joystick_dat = gameport->joystick->init();
         }
 }

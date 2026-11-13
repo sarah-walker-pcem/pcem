@@ -19,6 +19,8 @@ SOUND_CARD *sound_cards[SOUND_MAX];
 HDD_CONTROLLER *hdd_controllers[HDDCONTROLLERS_MAX];
 NETWORK_CARD *network_cards[NETWORK_CARD_MAX];
 LPT_DEVICE *lpt_devices[LPT_MAX];
+mouse_t *mouse_list[MOUSE_MAX];
+joystick_if_t *joystick_list[JOYSTICK_MAX];
 device_t *current_device;
 char *current_device_name = NULL;
 void *device_priv[DEV_MAX];
@@ -26,6 +28,12 @@ void *device_priv[DEV_MAX];
 void (*_sound_speed_changed)();
 
 device_t *model_getdevice(int model) { return models[model]->device; }
+
+device_t *pcem_model_getdevice(int model) {
+        if (model < 0 || model >= ROM_MAX || !models[model])
+                return NULL;
+        return models[model]->device;
+}
 
 void device_init() { memset(devices, 0, sizeof(devices)); }
 
@@ -212,95 +220,163 @@ char *pcem_model_get_config_string(device_t *device, char *s) {
 int model_count() {
         int ret = 0;
 
-        while (models[ret] != NULL && ret < ROM_MAX)
+        while (ret < ROM_MAX && models[ret] != NULL)
                 ret++;
 
         return ret;
 }
 
 void pcem_add_model(MODEL *model) {
-        // TODO: Add sanity check to not go past MAX amount
-        models[model_count()] = model;
+        int c = model_count();
+
+        if (c >= ROM_MAX - 1) {
+                error("pcem_add_model : too many entries, ignoring %s\n", model->name);
+                return;
+        }
+        models[c] = model;
 }
 
 int video_count() {
         int ret = 0;
 
-        while (video_cards[ret] != NULL && ret < GFX_MAX)
+        while (ret < GFX_MAX && video_cards[ret] != NULL)
                 ret++;
 
         return ret;
 }
 
 void pcem_add_video(VIDEO_CARD *video) {
-        // TODO: Add sanity check to not go past MAX amount
-        video_cards[video_count()] = video;
+        int c = video_count();
+
+        if (c >= GFX_MAX - 1) {
+                error("pcem_add_video : too many entries, ignoring %s\n", video->name);
+                return;
+        }
+        video_cards[c] = video;
 }
 
 int lpt_count() {
         int ret = 0;
 
-        while (lpt_devices[ret] != NULL && ret < LPT_MAX)
+        while (ret < LPT_MAX && lpt_devices[ret] != NULL)
                 ret++;
 
         return ret;
 }
 
 void pcem_add_lpt(LPT_DEVICE *lpt) {
-        // TODO: Add sanity check to not go past MAX amount
-        lpt_devices[lpt_count()] = lpt;
+        int c = lpt_count();
+
+        if (c >= LPT_MAX - 1) {
+                error("pcem_add_lpt : too many entries, ignoring %s\n", lpt->name);
+                return;
+        }
+        lpt_devices[c] = lpt;
 }
 
 int sound_count() {
         int ret = 0;
 
-        while (sound_cards[ret] != NULL && ret < SOUND_MAX)
+        while (ret < SOUND_MAX && sound_cards[ret] != NULL)
                 ret++;
 
         return ret;
 }
 
 void pcem_add_sound(SOUND_CARD *sound) {
-        // TODO: Add sanity check to not go past MAX amount
-        sound_cards[sound_count()] = sound;
+        int c = sound_count();
+
+        if (c >= SOUND_MAX - 1) {
+                error("pcem_add_sound : too many entries, ignoring %s\n", sound->name);
+                return;
+        }
+        sound_cards[c] = sound;
 }
 
 int hdd_controller_count() {
         int ret = 0;
 
-        while (hdd_controllers[ret] != NULL && ret < HDDCONTROLLERS_MAX)
+        while (ret < HDDCONTROLLERS_MAX && hdd_controllers[ret] != NULL)
                 ret++;
 
         return ret;
 }
 
 void pcem_add_hddcontroller(HDD_CONTROLLER *hddcontroller) {
-        // TODO: Add sanity check to not go past MAX amount
-        hdd_controllers[hdd_controller_count()] = hddcontroller;
+        int c = hdd_controller_count();
+
+        if (c >= HDDCONTROLLERS_MAX - 1) {
+                error("pcem_add_hddcontroller : too many entries, ignoring %s\n", hddcontroller->name);
+                return;
+        }
+        hdd_controllers[c] = hddcontroller;
 }
 
 int network_card_count() {
         int ret = 0;
 
-        while (network_cards[ret] != NULL && ret < NETWORK_CARD_MAX)
+        while (ret < NETWORK_CARD_MAX && network_cards[ret] != NULL)
                 ret++;
 
         return ret;
 }
 
 void pcem_add_networkcard(NETWORK_CARD *netcard) {
-        // TODO: Add sanity check to not go past MAX amount
-        network_cards[network_card_count()] = netcard;
+        int c = network_card_count();
+
+        if (c >= NETWORK_CARD_MAX - 1) {
+                error("pcem_add_networkcard : too many entries, ignoring %s\n", netcard->name);
+                return;
+        }
+        network_cards[c] = netcard;
+}
+
+int mouse_count() {
+        int ret = 0;
+
+        while (ret < MOUSE_MAX && mouse_list[ret] != NULL)
+                ret++;
+
+        return ret;
+}
+
+void pcem_add_mouse(mouse_t *mouse) {
+        int c = mouse_count();
+
+        if (c >= MOUSE_MAX - 1) {
+                error("pcem_add_mouse : too many entries, ignoring %s\n", mouse->name);
+                return;
+        }
+        mouse_list[c] = mouse;
+}
+
+int joystick_count() {
+        int ret = 0;
+
+        while (ret < JOYSTICK_MAX && joystick_list[ret] != NULL)
+                ret++;
+
+        return ret;
+}
+
+void pcem_add_joystick(joystick_if_t *joystick) {
+        int c = joystick_count();
+
+        if (c >= JOYSTICK_MAX - 1) {
+                error("pcem_add_joystick : too many entries, ignoring %s\n", joystick->name);
+                return;
+        }
+        joystick_list[c] = joystick;
 }
 
 void pcem_add_device(device_t *d) {
         int c = 0;
         void *priv = NULL;
 
-        while (devices[c] != NULL && c < 256)
+        while (c < DEV_MAX && devices[c] != NULL)
                 c++;
 
-        if (c >= 256)
+        if (c >= DEV_MAX)
                 fatal("device_add : too many devices\n");
 
         current_device = d;

@@ -35,10 +35,10 @@ extern int pauseEmulation;
 
 extern int is486;
 static int romstolist[ROM_MAX], listtomodel[ROM_MAX], romstomodel[ROM_MAX], modeltolist[ROM_MAX];
-static int settings_sound_to_list[20], settings_list_to_sound[20];
-static int settings_mouse_to_list[20], settings_list_to_mouse[20];
+static int settings_sound_to_list[SOUND_MAX], settings_list_to_sound[SOUND_MAX];
+static int settings_mouse_to_list[MOUSE_MAX], settings_list_to_mouse[MOUSE_MAX];
 #ifdef USE_NETWORKING
-static int settings_network_to_list[20], settings_list_to_network[20];
+static int settings_network_to_list[NETWORK_CARD_MAX], settings_list_to_network[NETWORK_CARD_MAX];
 #endif
 static char *hdd_names[16];
 static void *eventBinder;
@@ -489,9 +489,29 @@ static int parse_macaddr(const char *s, char *out) {
         return !*s;
 }
 
+static int selected_network_card_has_device(void *hdlg) {
+        void *h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
+        int sel = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
+
+        if (sel < 0)
+                return 0;
+        return network_card_getdevice(settings_list_to_network[sel]) != NULL;
+}
+
+static void update_macaddr_visibility(void *hdlg) {
+        int show = selected_network_card_has_device(hdlg);
+
+        wx_sendmessage(wx_getdlgitem(hdlg, WX_ID("m_staticTextMacAddr")), WX_WM_SHOW, 0, (LONG_PARAM)show);
+        wx_sendmessage(wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_MACADDR")), WX_WM_SHOW, 0, (LONG_PARAM)show);
+        wx_sendmessage(wx_getdlgitem(hdlg, WX_ID("m_panelnet")), WX_WM_LAYOUT, 0, 0);
+}
+
 static int config_validate_macaddr(void *hdlg) {
         char s[256], mac[18];
         void *h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_MACADDR"));
+
+        if (!selected_network_card_has_device(hdlg))
+                return 1;
 
         wx_sendmessage(h, WX_WM_GETTEXT, 255, (LONG_PARAM)s);
         if (!parse_macaddr(s, mac)) {
@@ -980,6 +1000,7 @@ int config_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
 
                 h = wx_getdlgitem(hdlg, WX_ID("IDC_EDIT_MACADDR"));
                 wx_sendmessage(h, WX_WM_SETTEXT, 0, (LONG_PARAM)config_get_string(CFG_MACHINE, NULL, "macaddr", ""));
+                update_macaddr_visibility(hdlg);
 #endif
 
                 return TRUE;
@@ -1123,6 +1144,7 @@ int config_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                         recalc_snd_list(hdlg, temp_model);
 #ifdef USE_NETWORKING
                         recalc_net_list(hdlg, temp_model);
+                        update_macaddr_visibility(hdlg);
 #endif
                 } else if (wParam == WX_ID("IDC_COMBOCPUM")) {
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO1"));
@@ -1274,6 +1296,8 @@ int config_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam)
                                 wx_enablewindow(h, TRUE);
                         else
                                 wx_enablewindow(h, FALSE);
+
+                        update_macaddr_visibility(hdlg);
                 } else if (wParam == WX_ID("IDC_CONFIGURE_NETCARD")) {
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETCARD"));
                         temp_network_card = settings_list_to_network[wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0)];

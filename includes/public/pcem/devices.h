@@ -117,12 +117,48 @@ typedef struct LPT_DEVICE {
         lpt_device_t *device;
 } LPT_DEVICE;
 
+#define MOUSE_TYPE_SERIAL 0
+#define MOUSE_TYPE_PS2 1
+#define MOUSE_TYPE_AMSTRAD 2
+#define MOUSE_TYPE_OLIM24 3
+
+#define MOUSE_TYPE_IF_MASK 3
+
+#define MOUSE_TYPE_3BUTTON (1 << 31)
+
+typedef struct mouse_t {
+        char name[80];
+        void *(*init)();
+        void (*close)(void *p);
+        void (*poll)(int x, int y, int z, int b, void *p);
+        int type;
+} mouse_t;
+
+#define AXIS_NOT_PRESENT -99999
+
+typedef struct joystick_if_t {
+        char name[80];
+        void *(*init)();
+        void (*close)(void *p);
+        uint8_t (*read)(void *p);
+        void (*write)(void *p);
+        int (*read_axis)(void *p, int axis);
+        void (*a0_over)(void *p);
+        int axis_count, button_count, pov_count;
+        int max_joysticks;
+        char axis_names[8][32];
+        char button_names[32][32];
+        char pov_names[4][32];
+} joystick_if_t;
+
 PCEM_API extern void pcem_add_model(MODEL *model);
 PCEM_API extern void pcem_add_video(VIDEO_CARD *video);
 PCEM_API extern void pcem_add_sound(SOUND_CARD *sound);
 PCEM_API extern void pcem_add_lpt(LPT_DEVICE *lpt);
 PCEM_API extern void pcem_add_hddcontroller(HDD_CONTROLLER *hddcontroller);
 PCEM_API extern void pcem_add_networkcard(NETWORK_CARD *netcard);
+PCEM_API extern void pcem_add_mouse(mouse_t *mouse);
+PCEM_API extern void pcem_add_joystick(joystick_if_t *joystick);
 PCEM_API extern void pcem_add_device(device_t *device);
 
 PCEM_API extern int pcem_device_get_config_int(device_t *device, char *name);
