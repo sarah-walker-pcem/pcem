@@ -45,6 +45,19 @@ wxBEGIN_EVENT_TABLE(Frame, wxFrame) wxEND_EVENT_TABLE()
 
         wxIMPLEMENT_APP_NO_MAIN(App);
 
+static void bind_quit_handlers(wxApp *app) {
+#ifdef __WXOSX__
+        app->Bind(wxEVT_CHAR_HOOK, [](wxKeyEvent &event) {
+                wxDialog *dlg = wxDynamicCast(wxGetTopLevelParent((wxWindow *)event.GetEventObject()), wxDialog);
+                if (event.GetKeyCode() == 'Q' && event.GetModifiers() == wxMOD_CMD && dlg &&
+                    dlg->GetName() == "ConfigureSelectionDlg" && dlg->IsModal())
+                        dlg->EndModal(0);
+                else
+                        event.Skip();
+        });
+#endif
+}
+
 App::App() { this->frame = NULL; }
 
 bool App::OnInit() {
@@ -57,6 +70,8 @@ bool App::OnInit() {
         //                return false;
         //        }
         InitXmlResource();
+
+        bind_quit_handlers(this);
 
         frame = new Frame(this, "null frame", wxPoint(500, 500), wxSize(100, 100));
         frame->Start();
