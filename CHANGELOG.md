@@ -8,6 +8,9 @@
   - Load up to 2GB disks to temporary disk (doesn't modify the image file)
   - Mounts as read-only if memory allocation fails (mind the 32bit PCem memory limits)
 - 32-bit Windows builds will now be deprecated due to technical issues. v17 will be the last 32-bit PCem.
+- Now support macOS (Apple Silicon only)
+- Added MIDI Support to macOS
+- Added status bar and unified the main display for all 3 versions
 
 ## Added the following machines to v18
 - Hyundai SUPER-16T
