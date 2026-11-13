@@ -7,6 +7,8 @@
 
 #ifdef USE_PCAP_NETWORKING
 #include <pcap.h>
+#include <stdlib.h>
+#include <string.h>
 #endif
 
 #include "wx-utils.h"
@@ -18,7 +20,19 @@
 #include "nethandler.h"
 
 #ifdef USE_PCAP_NETWORKING
-static char *dev_names[20];
+#define MAX_PCAP_DEVICES 64
+static char *dev_names[MAX_PCAP_DEVICES];
+static int dev_count = 0;
+
+static void free_dev_names() {
+        int i;
+
+        for (i = 0; i < dev_count; i++) {
+                free(dev_names[i]);
+                dev_names[i] = NULL;
+        }
+        dev_count = 0;
+}
 #endif
 
 #define ETH_DEV_NAME_MAX 256 /* maximum device name size */
@@ -26,7 +40,7 @@ static char *dev_names[20];
 #define ETH_MAX_DEVICE 30    /* maximum ethernet devices */
 #define ETH_PROMISC 1        /* promiscuous mode = true */
 #define ETH_MAX_PACKET 1514  /* maximum ethernet packet size */
-#define PCAP_READ_TIMEOUT -1
+#define PCAP_READ_TIMEOUT 15
 
 #ifdef USE_PCAP_NETWORKING
 static int get_network_name(char *dev_name, char *regval) {
@@ -63,7 +77,7 @@ static int get_network_name(char *dev_name, char *regval) {
 int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam) {
         void *h;
 #ifdef USE_PCAP_NETWORKING
-		pcap_if_t *alldevs;
+        pcap_if_t *alldevs = NULL;
         pcap_if_t *dev;
         char errbuf[PCAP_ERRBUF_SIZE];
 #endif
@@ -80,6 +94,7 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
 
                 int c = 0;
                 int match = 0;
+                char open_err[PCAP_ERRBUF_SIZE] = "";
                 const char *pcap_version = pcap_lib_version();
                 pclog("PCAP library version: %s\n", pcap_version);
 
@@ -88,14 +103,18 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                         char *pcap_device = config_get_string(CFG_GLOBAL, NULL, "pcap_device", "nothing");
 
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETWORK_DEVICE"));
+                        free_dev_names();
 
-                        for (dev = alldevs; dev; dev = dev->next) {
+                        for (dev = alldevs; dev && c < MAX_PCAP_DEVICES; dev = dev->next) {
                                 pcap_t *conn = pcap_open_live(dev->name, ETH_MAX_PACKET, ETH_PROMISC, PCAP_READ_TIMEOUT, errbuf);
                                 int datalink = 0;
 
                                 if (conn) {
                                         datalink = pcap_datalink(conn);
                                         pcap_close(conn);
+                                } else if (!open_err[0]) {
+                                        errbuf[PCAP_ERRBUF_SIZE - 1] = '\0';
+                                        strcpy(open_err, errbuf);
                                 }
 
                                 if (conn && datalink == DLT_EN10MB) {
@@ -110,7 +129,11 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                                                         match = c;
                                         }
 
-                                        dev_names[c++] = dev->name;
+                                        dev_names[c] = strdup(dev->name);
+                                        if (!dev_names[c])
+                                                continue;
+                                        c++;
+                                        dev_count = c;
                                         if (get_network_name(dev->name, desc))
                                                 wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)dev->name);
                                         else {
@@ -123,8 +146,11 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                         errbuf[PCAP_ERRBUF_SIZE - 1] = '\0';
                         error("Error in pcap_findalldevs: %s\n", errbuf);
                 }
-                if (alldevs != 0) {
-                	pcap_freealldevs(alldevs);
+                if (alldevs != NULL) {
+                        pcap_freealldevs(alldevs);
+                }
+                if (!c && open_err[0]) {
+                        pclog("PCAP: no usable devices: %s\n", open_err);
                 }
                 if (c) {
                         h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETWORK_TYPE"));
@@ -155,8 +181,13 @@ int hostconfig_dialog_proc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM
                                 h = wx_getdlgitem(hdlg, WX_ID("IDC_COMBO_NETWORK_DEVICE"));
                                 idev = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
 
-                                config_set_int(CFG_GLOBAL, NULL, "net_type", NET_PCAP);
-                                config_set_string(CFG_GLOBAL, NULL, "pcap_device", dev_names[idev]);
+                                if (idev >= 0 && idev < dev_count && dev_names[idev]) {
+                                        config_set_int(CFG_GLOBAL, NULL, "net_type", NET_PCAP);
+                                        config_set_string(CFG_GLOBAL, NULL, "pcap_device", dev_names[idev]);
+                                } else {
+                                        config_set_int(CFG_GLOBAL, NULL, "net_type", NET_SLIRP);
+                                        config_set_string(CFG_GLOBAL, NULL, "pcap_device", "nothing");
+                                }
                         } else /*SLiRP*/
                         {
 #endif
