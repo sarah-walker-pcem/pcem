@@ -1,7 +1,7 @@
-#ifndef SRC_WX_GLSLP_PARSER_H_
-#define SRC_WX_GLSLP_PARSER_H_
+#ifndef _SDL2_GLSLP_PARSER_H_
+#define _SDL2_GLSLP_PARSER_H_
 
-#include "wx-glsl.h"
+#include "sdl2-glsl.h"
 
 struct parameter {
         char id[64];
@@ -53,4 +53,4 @@ void get_glslp_name(const char *f, char *s, int size);
 glslp_t *glslp_parse(const char *f);
 void glslp_free(glslp_t *p);
 
-#endif /* SRC_WX_GLSLP_PARSER_H_ */
+#endif /* _SDL2_GLSLP_PARSER_H_ */

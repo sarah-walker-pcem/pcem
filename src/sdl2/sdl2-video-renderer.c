@@ -3,9 +3,9 @@
 #include <string.h>
 #include <stdio.h>
 #include "video.h"
-#include "wx-utils.h"
-#include "wx-sdl2-video.h"
-#include "wx-sdl2-video-renderer.h"
+#include "sdl2-host.h"
+#include "sdl2-video.h"
+#include "sdl2-video-renderer.h"
 
 static SDL_Texture *texture = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -32,7 +32,7 @@ int sdl_video_renderer_init(SDL_Window *window, sdl_render_driver requested_rend
         if (!renderer) {
                 char message[200];
                 sprintf(message, "SDL window could not be created! Error: %s\n", SDL_GetError());
-                wx_messagebox(0, message, "SDL Error", WX_MB_OK);
+                sdl_host_message("SDL Error", "%s", message);
                 return SDL_FALSE;
         }
 

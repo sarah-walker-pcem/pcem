@@ -15,7 +15,7 @@
 #include "plugin.h"
 #include "paths.h"
 #include "config.h"
-#include "wx-utils.h"
+#include "fs-utils.h"
 
 #include <pcem/logging.h>
 
@@ -47,8 +47,8 @@ void pluginengine_init_config() {
         if (strlen(plugin_path) == 0)
                 set_plugin_path(default_plugin_path);
 
-        if (!wx_dir_exists(plugin_path))
-                wx_create_directory(plugin_path);
+        if (!pcem_dir_exists(plugin_path))
+                pcem_create_directory(plugin_path);
 }
 
 static int has_extension(const char *name, const char *ext) {

@@ -6,7 +6,7 @@
 #include <wx/spinctrl.h>
 #include <wx/xrc/xmlres.h>
 #include <string>
-#include "viewer.h"
+#include "wx-viewer.h"
 extern "C"
 {
 #include "ibm.h"

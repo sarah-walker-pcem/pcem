@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "wx-utils.h"
-#include "wx-display.h"
-#include "wx-glslp-parser.h"
+#include "sdl2-display.h"
+#include "sdl2-glslp-parser.h"
 #include "wx-shaderconfig.h"
 #include "config.h"
 #include <pcem/api.h>

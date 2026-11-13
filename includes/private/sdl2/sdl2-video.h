@@ -1,5 +1,5 @@
-#ifndef _WX_SDL2_VIDEO_H_
-#define _WX_SDL2_VIDEO_H_
+#ifndef _SDL2_VIDEO_H_
+#define _SDL2_VIDEO_H_
 #define RENDERER_AUTO 0
 #define RENDERER_DIRECT3D 1
 #define RENDERER_OPENGL 2
@@ -71,4 +71,4 @@ extern char current_render_driver_name[50];
 extern int custom_resolution_width;
 extern int custom_resolution_height;
 
-#endif /* _WX_SDL2_VIDEO_H_ */
+#endif /* _SDL2_VIDEO_H_ */

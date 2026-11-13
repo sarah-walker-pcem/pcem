@@ -4,7 +4,7 @@
 #include <SDL.h>
 #include <sys/stat.h>
 #include "ibm.h"
-#include "wx-utils.h"
+#include "fs-utils.h"
 
 char default_roms_paths[4096];
 char default_nvr_path[512];
@@ -87,7 +87,7 @@ void set_roms_paths(char *path) {
         }
 }
 
-int dir_exists(char *path) { return wx_dir_exists(path); }
+int dir_exists(char *path) { return pcem_dir_exists(path); }
 
 void set_nvr_path(char *s) {
         safe_strncpy(nvr_path, s, 512);
@@ -219,7 +219,7 @@ void get_pcem_path(char *s, int size) {
 #if defined(__APPLE__)
         /*TODO: Use CoreFoundation functions to get proper directory, in case
           the Application Support directory is different (I.E., with signing)*/
-        wx_get_home_directory(s);
+        pcem_get_home_directory(s);
         strcat(s, "Library/Application Support/PCem/");
 
         struct stat st = {0};
@@ -233,8 +233,8 @@ void get_pcem_path(char *s, int size) {
         char* sdlBasePath = SDL_GetBasePath();
         strcpy(s, sdlBasePath);
         strcat(s, ".pcem/");
-        if(!wx_dir_exists(s)) {
-                wx_get_home_directory(s);
+        if(!pcem_dir_exists(s)) {
+                pcem_get_home_directory(s);
                 strcat(s, ".pcem/");
         }
 #endif

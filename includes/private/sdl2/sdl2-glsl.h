@@ -1,5 +1,5 @@
-#ifndef SRC_WX_GLSL_H_
-#define SRC_WX_GLSL_H_
+#ifndef _SDL2_GLSL_H_
+#define _SDL2_GLSL_H_
 
 #define MAX_PREV 7
 

@@ -1,5 +1,5 @@
-#ifndef _WX_DISPLAY_H_
-#define _WX_DISPLAY_H_
+#ifndef _SDL2_DISPLAY_H_
+#define _SDL2_DISPLAY_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,4 +35,4 @@ extern int window_doinputgrab;
 extern int window_doinputrelease;
 extern int window_dotogglefullscreen;
 
-#endif /* _WX_DISPLAY_H_ */
+#endif /* _SDL2_DISPLAY_H_ */

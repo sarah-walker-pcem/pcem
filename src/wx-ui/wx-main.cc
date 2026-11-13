@@ -1,4 +1,5 @@
 #include "wx-app.h"
+#include "wx-frontend.h"
 #include <SDL2/SDL.h>
 
 #if WIN32
@@ -25,6 +26,8 @@ int main(int argc, char **argv)
         setenv("SDL_VIDEODRIVER", "x11", 1);
         setenv("GDK_BACKEND", "x11", 1);
 #endif
+
+        wx_frontend_init();
 
         if (!pc_main(argc, argv))
                 return -1;

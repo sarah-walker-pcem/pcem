@@ -13,7 +13,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include "viewer.h"
+#include "wx-viewer.h"
 #include "viewer_voodoo.h"
 extern "C"
 {

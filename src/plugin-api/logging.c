@@ -104,7 +104,6 @@ void warning(const char *format, ...) {
         vsprintf(buf, format, ap);
         va_end(ap);
 
-        // wx_messagebox(NULL, buf, "PCem", WX_MB_OK); //FIX: Fix it
 }
 
 void pclog(const char *format, ...) {

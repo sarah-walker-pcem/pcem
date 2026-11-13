@@ -6,6 +6,7 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/bswap.h
         ${CMAKE_SOURCE_DIR}/includes/private/fdi2raw.h
         ${CMAKE_SOURCE_DIR}/includes/private/filters.h
+        ${CMAKE_SOURCE_DIR}/includes/private/plugin-api/fs-utils.h
         ${CMAKE_SOURCE_DIR}/includes/private/ibm.h
         ${CMAKE_SOURCE_DIR}/includes/private/io.h
         ${CMAKE_SOURCE_DIR}/includes/private/pch.h
@@ -21,6 +22,8 @@ set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
         ${CMAKE_SOURCE_DIR}/includes/private/rtc_tc8521.h
         ${CMAKE_SOURCE_DIR}/includes/private/scamp.h
         ${CMAKE_SOURCE_DIR}/includes/private/thread.h
+        ${CMAKE_SOURCE_DIR}/includes/private/viewer.h
+        ${CMAKE_SOURCE_DIR}/includes/private/viewer_voodoo.h
         ${CMAKE_SOURCE_DIR}/includes/private/timer.h
         )
 
@@ -48,6 +51,7 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/scsi/scsi.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/sound/sound.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/video/video.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sdl2/sdl2.cmake)
 
 if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         include(${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/wx-ui.cmake)
@@ -66,6 +70,7 @@ set(PCEM_SRC ${PCEM_SRC}
         pzx.c
         rtc.c
         rtc_tc8521.c
+        thread.c
         timer.c
         )
 
@@ -88,7 +93,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
                 BUILD_WITH_INSTALL_RPATH TRUE
                 INSTALL_RPATH "@executable_path/../Frameworks"
                 OUTPUT_NAME PCem
-                MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/wx-ui/macos/Info.plist.in
+                MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/cmake/macos/Info.plist.in
                 MACOSX_BUNDLE_BUNDLE_NAME PCem
                 MACOSX_BUNDLE_GUI_IDENTIFIER uk.co.pcem-emulator.PCem
                 XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER uk.co.pcem-emulator.PCem

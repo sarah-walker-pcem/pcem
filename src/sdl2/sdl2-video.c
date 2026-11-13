@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "wx-sdl2.h"
+#include "sdl2-emu.h"
 #include "video.h"
-#include "wx-sdl2-video.h"
+#include "sdl2-video.h"
 
-#include "wx-sdl2-video-gl3.h"
-#include "wx-sdl2-video-renderer.h"
+#include "sdl2-video-gl3.h"
+#include "sdl2-video-renderer.h"
 
 void video_blit_complete();
 

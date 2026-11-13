@@ -5,18 +5,19 @@
 #include <SDL2/SDL_opengl_glext.h>
 #endif
 #undef BITMAP
-#include "wx-sdl2-glw.h"
+#include "sdl2-glw.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "video.h"
-#include "wx-sdl2-video.h"
-#include "wx-sdl2-video-renderer.h"
+#include "sdl2-video.h"
+#include "sdl2-video-renderer.h"
 #include "ibm.h"
-#include "wx-glslp-parser.h"
-#include "wx-utils.h"
+#include "sdl2-glslp-parser.h"
+#include "sdl2-host.h"
 #include "config.h"
-#include "wx-glsl.h"
+#include "sdl2-glsl.h"
 #include <pcem/api.h>
 
 PCEM_API extern char *get_filename(char *);
@@ -146,7 +147,7 @@ static int compile_shader(GLenum shader_type, const char *prepend, const char *p
                 glw->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
                 char *log = malloc(length);
                 glw->glGetShaderInfoLog(shader, length, &length, log);
-                wx_simple_messagebox("GLSL Error", "Could not compile shader:\n%s", log);
+                sdl_host_message("GLSL Error", "Could not compile shader:\n%s", log);
                 pclog("Could not compile shader: %s\n", log);
                 //                pclog("Shader: %s\n", program);
 
@@ -180,7 +181,7 @@ static int create_program(struct shader_program *program) {
                 glw->glGetProgramiv(program->id, GL_INFO_LOG_LENGTH, &maxLength);
                 char *log = malloc(maxLength);
                 glw->glGetProgramInfoLog(program->id, maxLength, &length, log);
-                wx_simple_messagebox("GLSL Error", "Program not linked:\n%s", log);
+                sdl_host_message("GLSL Error", "Program not linked:\n%s", log);
                 free(log);
                 return 0;
         }
@@ -462,42 +463,29 @@ static void create_scene_shader() {
 }
 
 static int load_texture(const char *f, struct shader_texture *tex) {
-        void *img = wx_image_load(f);
+        int src_width, src_height;
+        unsigned char *img = sdl_host_image_load(f, &src_width, &src_height);
         if (!img)
                 return 0;
-        int width, height;
-        wx_image_get_size(img, &width, &height);
+        int width = next_pow2(src_width);
+        int height = next_pow2(src_height);
 
-        if (width != next_pow2(width) || height != next_pow2(height))
-                wx_image_rescale(img, next_pow2(width), next_pow2(height));
+        GLubyte *data = malloc(width * height * 4);
 
-        wx_image_get_size(img, &width, &height);
-
-        GLubyte *rgb = wx_image_get_data(img);
-        GLubyte *alpha = wx_image_get_alpha(img);
-
-        int bpp = alpha ? 4 : 3;
-
-        GLubyte *data = malloc(width * height * bpp);
-
-        int x, y, Y;
+        int x, y, sx, sy;
         for (y = 0; y < height; ++y) {
-                Y = height - y - 1;
+                sy = ((height - y - 1) * src_height) / height;
                 for (x = 0; x < width; x++) {
-                        data[(y * width + x) * bpp + 0] = rgb[(Y * width + x) * 3 + 0];
-                        data[(y * width + x) * bpp + 1] = rgb[(Y * width + x) * 3 + 1];
-                        data[(y * width + x) * bpp + 2] = rgb[(Y * width + x) * 3 + 2];
-
-                        if (alpha)
-                                data[(y * width + x) * bpp + 3] = alpha[Y * width + x];
+                        sx = (x * src_width) / width;
+                        memcpy(&data[(y * width + x) * 4], &img[(sy * src_width + sx) * 4], 4);
                 }
         }
-        wx_image_free(img);
+        free(img);
 
         tex->width = width;
         tex->height = height;
-        tex->internal_format = alpha ? GL_RGBA8 : GL_RGB8;
-        tex->format = alpha ? GL_RGBA : GL_RGB;
+        tex->internal_format = GL_RGBA8;
+        tex->format = GL_RGBA;
         tex->type = GL_UNSIGNED_BYTE;
         tex->data = data;
         return 1;
@@ -532,7 +520,7 @@ static glsl_t *load_glslp(glsl_t *glsl, int num_shader, const char *f) {
                         pclog("Load texture %s...\n", file);
 
                         if (!load_texture(file, &tex->texture)) {
-                                wx_simple_messagebox("GLSL Error", "Could not load texture: %s", file);
+                                sdl_host_message("GLSL Error", "Could not load texture: %s", file);
                                 pclog("Could not load texture %s!\n", file);
                                 failed = 1;
                                 break;
@@ -578,7 +566,7 @@ static glsl_t *load_glslp(glsl_t *glsl, int num_shader, const char *f) {
                                 pclog("Creating pass %u (%s)\n", (i + 1), pass->alias);
                                 pclog("Loading shader %s...\n", shader->shader_fn);
                                 if (!shader->shader_program) {
-                                        wx_simple_messagebox("GLSL Error", "Could not load shader: %s", shader->shader_fn);
+                                        sdl_host_message("GLSL Error", "Could not load shader: %s", shader->shader_fn);
                                         pclog("Could not load shader %s\n", shader->shader_fn);
                                         failed = 1;
                                         break;

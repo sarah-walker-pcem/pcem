@@ -28,6 +28,10 @@ endif()
 
 set(PCEM_VERSION_STRING "vNext" CACHE STRING "PCem Version String")
 set(PCEM_DISPLAY_ENGINE "wxWidgets" CACHE STRING "PCem Display Engine")
+set_property(CACHE PCEM_DISPLAY_ENGINE PROPERTY STRINGS wxWidgets SDL)
+if(NOT PCEM_DISPLAY_ENGINE MATCHES "^(wxWidgets|SDL)$")
+        message(FATAL_ERROR "Unknown PCEM_DISPLAY_ENGINE '${PCEM_DISPLAY_ENGINE}'. Use wxWidgets or SDL.")
+endif()
 set(PCEM_DEFINES ${PCEM_DEFINES} PCEM_VERSION_STRING="${PCEM_VERSION_STRING}")
 
 message("PCem ${PCEM_VERSION_STRING} - Build Type: ${CMAKE_BUILD_TYPE}")
@@ -62,10 +66,11 @@ if(USE_NETWORKING)
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        option(USE_ALSA "Build PCem with MIDI output using ALSA" OFF)
-        message("ALSA MIDI Support: ${USE_ALSA}")
         option(FORCE_X11 "Force X11 Mode on Wayland Systems" ON)
         message("Force X11 Mode on Wayland Systems: ${FORCE_X11}")
+
+        find_package(ALSA REQUIRED)
+        include_directories(${ALSA_INCLUDE_DIRS})
 endif()
 
 option(USE_EXPERIMENTAL "Build PCem with experimental code" OFF)
@@ -76,6 +81,9 @@ if(USE_EXPERIMENTAL)
         message("       PGC Support: ${USE_EXPERIMENTAL_PGC}")
         option(USE_EXPERIMENTAL_PRINTER "Build Printer Support" OFF)
         message("       Printer Support: ${USE_EXPERIMENTAL_PRINTER}")
+        if(USE_EXPERIMENTAL_PRINTER AND NOT ${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
+                message(FATAL_ERROR "USE_EXPERIMENTAL_PRINTER requires PCEM_DISPLAY_ENGINE=wxWidgets")
+        endif()
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -169,12 +177,6 @@ if(${PCEM_DISPLAY_ENGINE} STREQUAL "wxWidgets")
         find_package(wxWidgets REQUIRED COMPONENTS core base xrc xml adv)
         include(${wxWidgets_USE_FILE})
         set(DISPLAY_ENGINE_LIBRARIES ${wxWidgets_LIBRARIES})
-endif()
-
-
-if(USE_ALSA)
-        find_package(ALSA REQUIRED)
-        include_directories(${ALSA_INCLUDE_DIRS})
 endif()
 
 if(USE_NETWORKING AND USE_PCAP_NETWORKING)

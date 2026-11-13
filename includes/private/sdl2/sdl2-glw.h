@@ -1,5 +1,5 @@
-#ifndef _WX_SDL2_GLW_H_
-#define _WX_SDL2_GLW_H_
+#ifndef _SDL2_GLW_H_
+#define _SDL2_GLW_H_
 
 typedef struct glw_t {
         PFNGLACTIVETEXTUREPROC glActiveTexture;
@@ -85,4 +85,4 @@ glw_t *glw_init() {
 
 void glw_free(glw_t *glw) { free(glw); }
 
-#endif /* _WX_SDL2_GLW_H_ */
+#endif /* _SDL2_GLW_H_ */

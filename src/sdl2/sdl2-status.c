@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 #include "video.h"
-#include "wx-sdl2.h"
-#include "wx-sdl2-video.h"
+#include "sdl2-emu.h"
+#include "sdl2-video.h"
 #include "ibm.h"
 #include "device.h"
 #include "x86_ops.h"
@@ -15,7 +15,7 @@
 #include "cdrom-image.h"
 #include "scsi_zip.h"
 #include "codegen_allocator.h"
-#include "wx-common.h"
+#include "sdl2-common.h"
 
 drive_info_t drive_info[10];
 

@@ -1,10 +1,11 @@
-#include "wx-glslp-parser.h"
+#include "sdl2-glslp-parser.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "wx-utils.h"
+#include "config-file.h"
+#include "sdl2-host.h"
 #include <pcem/api.h>
 
 #define safe_strncpy(a, b, n)                                                                                                    \
@@ -132,7 +133,7 @@ static glslp_t *glsl_parse(const char *f) {
         strcpy(shader->shader_fn, f);
         shader->shader_program = load_file(f);
         if (!shader->shader_program) {
-                wx_simple_messagebox("GLSL error", "Could not load shader %s\n", shader->shader_fn);
+                sdl_host_message("GLSL error", "Could not load shader %s\n", shader->shader_fn);
                 glslp_free(glslp);
                 return 0;
         }
@@ -155,10 +156,10 @@ glslp_t *glslp_parse(const char *f) {
         if (endswith(f, ".glsl"))
                 return glsl_parse(f);
 
-        void *cfg = wx_config_load(f);
+        void *cfg = config_file_load(f);
 
         if (!cfg) {
-                wx_simple_messagebox("GLSLP error", "Could not load GLSLP-file %s\n", f);
+                sdl_host_message("GLSLP error", "Could not load GLSLP-file %s\n", f);
                 return 0;
         }
 
@@ -167,15 +168,15 @@ glslp_t *glslp_parse(const char *f) {
 
         get_glslp_name(f, glslp->name, sizeof(glslp->name));
 
-        wx_config_get_int(cfg, "shaders", &glslp->num_shaders, 0);
+        config_file_get_int(cfg, "shaders", &glslp->num_shaders, 0);
 
-        wx_config_get_bool(cfg, "filter_linear0", &glslp->input_filter_linear, -1);
+        config_file_get_bool(cfg, "filter_linear0", &glslp->input_filter_linear, -1);
 
         for (i = 0; i < glslp->num_shaders; ++i) {
                 struct shader *shader = &glslp->shaders[i];
 
                 snprintf(s, sizeof(s) - 1, "shader%d", i);
-                if (!wx_config_get_string(cfg, s, t, sizeof(t), 0)) {
+                if (!config_file_get_string(cfg, s, t, sizeof(t), 0)) {
                         /* shader doesn't exist, lets break here */
                         glslp->num_shaders = i;
                         break;
@@ -185,7 +186,7 @@ glslp_t *glslp_parse(const char *f) {
                 snprintf(shader->shader_fn, sizeof(shader->shader_fn) - 1, "%s%s", s, t);
                 shader->shader_program = load_file(shader->shader_fn);
                 if (!shader->shader_program) {
-                        wx_simple_messagebox("GLSL error", "Could not load shader %s\n", shader->shader_fn);
+                        sdl_host_message("GLSL error", "Could not load shader %s\n", shader->shader_fn);
                         glslp_free(glslp);
                         return 0;
                 }
@@ -193,51 +194,51 @@ glslp_t *glslp_parse(const char *f) {
                 strip_defines(shader->shader_program);
 
                 snprintf(s, sizeof(s) - 1, "alias%d", i);
-                wx_config_get_string(cfg, s, shader->alias, sizeof(shader->alias), 0);
+                config_file_get_string(cfg, s, shader->alias, sizeof(shader->alias), 0);
 
                 snprintf(s, sizeof(s) - 1, "filter_linear%d", i + 1);
-                wx_config_get_bool(cfg, s, &shader->filter_linear, 0);
+                config_file_get_bool(cfg, s, &shader->filter_linear, 0);
 
                 snprintf(s, sizeof(s) - 1, "wrap_mode%d", i);
-                wx_config_get_string(cfg, s, shader->wrap_mode, sizeof(shader->wrap_mode), 0);
+                config_file_get_string(cfg, s, shader->wrap_mode, sizeof(shader->wrap_mode), 0);
 
                 snprintf(s, sizeof(s) - 1, "float_framebuffer%d", i);
-                wx_config_get_bool(cfg, s, &shader->float_framebuffer, 0);
+                config_file_get_bool(cfg, s, &shader->float_framebuffer, 0);
                 snprintf(s, sizeof(s) - 1, "srgb_framebuffer%d", i);
-                wx_config_get_bool(cfg, s, &shader->srgb_framebuffer, 0);
+                config_file_get_bool(cfg, s, &shader->srgb_framebuffer, 0);
 
                 snprintf(s, sizeof(s) - 1, "mipmap_input%d", i);
-                wx_config_get_bool(cfg, s, &shader->mipmap_input, 0);
+                config_file_get_bool(cfg, s, &shader->mipmap_input, 0);
 
                 strcpy(shader->scale_type_x, "source");
                 snprintf(s, sizeof(s) - 1, "scale_type_x%d", i);
-                wx_config_get_string(cfg, s, shader->scale_type_x, sizeof(shader->scale_type_x), 0);
+                config_file_get_string(cfg, s, shader->scale_type_x, sizeof(shader->scale_type_x), 0);
                 strcpy(shader->scale_type_y, "source");
                 snprintf(s, sizeof(s) - 1, "scale_type_y%d", i);
-                wx_config_get_string(cfg, s, shader->scale_type_y, sizeof(shader->scale_type_y), 0);
+                config_file_get_string(cfg, s, shader->scale_type_y, sizeof(shader->scale_type_y), 0);
                 snprintf(s, sizeof(s) - 1, "scale_type%d", i);
-                if (wx_config_has_entry(cfg, s)) {
-                        wx_config_get_string(cfg, s, shader->scale_type_x, sizeof(shader->scale_type_x), 0);
-                        wx_config_get_string(cfg, s, shader->scale_type_y, sizeof(shader->scale_type_y), 0);
+                if (config_file_has_entry(cfg, s)) {
+                        config_file_get_string(cfg, s, shader->scale_type_x, sizeof(shader->scale_type_x), 0);
+                        config_file_get_string(cfg, s, shader->scale_type_y, sizeof(shader->scale_type_y), 0);
                 }
 
                 snprintf(s, sizeof(s) - 1, "scale_x%d", i);
-                wx_config_get_float(cfg, s, &shader->scale_x, 1.0f);
+                config_file_get_float(cfg, s, &shader->scale_x, 1.0f);
                 snprintf(s, sizeof(s) - 1, "scale_y%d", i);
-                wx_config_get_float(cfg, s, &shader->scale_y, 1.0f);
+                config_file_get_float(cfg, s, &shader->scale_y, 1.0f);
                 snprintf(s, sizeof(s) - 1, "scale%d", i);
-                if (wx_config_has_entry(cfg, s)) {
-                        wx_config_get_float(cfg, s, &shader->scale_x, 1.0f);
-                        wx_config_get_float(cfg, s, &shader->scale_y, 1.0f);
+                if (config_file_has_entry(cfg, s)) {
+                        config_file_get_float(cfg, s, &shader->scale_x, 1.0f);
+                        config_file_get_float(cfg, s, &shader->scale_y, 1.0f);
                 }
 
                 snprintf(s, sizeof(s) - 1, "frame_count_mod%d", i);
-                wx_config_get_int(cfg, s, &shader->frame_count_mod, 0);
+                config_file_get_int(cfg, s, &shader->frame_count_mod, 0);
         }
 
         /* textures */
         glslp->num_textures = 0;
-        wx_config_get_string(cfg, "textures", t, sizeof(t), 0);
+        config_file_get_string(cfg, "textures", t, sizeof(t), 0);
 
         len = strlen(t);
         j = 0;
@@ -251,16 +252,16 @@ glslp_t *glslp_parse(const char *f) {
                         struct texture *tex = &glslp->textures[glslp->num_textures++];
 
                         strcpy(tex->name, s);
-                        wx_config_get_string(cfg, s, tex->path, sizeof(tex->path), 0);
+                        config_file_get_string(cfg, s, tex->path, sizeof(tex->path), 0);
 
                         snprintf(z, sizeof(z) - 1, "%s_linear", s);
-                        wx_config_get_bool(cfg, z, &tex->linear, 0);
+                        config_file_get_bool(cfg, z, &tex->linear, 0);
 
                         snprintf(z, sizeof(z) - 1, "%s_mipmap", s);
-                        wx_config_get_bool(cfg, z, &tex->mipmap, 0);
+                        config_file_get_bool(cfg, z, &tex->mipmap, 0);
 
                         snprintf(z, sizeof(z) - 1, "%s_wrap_mode", s);
-                        wx_config_get_string(cfg, z, tex->wrap_mode, sizeof(tex->wrap_mode), 0);
+                        config_file_get_string(cfg, z, tex->wrap_mode, sizeof(tex->wrap_mode), 0);
 
                         j = i + 1;
                 }
@@ -269,7 +270,7 @@ glslp_t *glslp_parse(const char *f) {
         /* parameters */
         get_parameters(glslp);
 
-        wx_config_get_string(cfg, "parameters", t, sizeof(t), 0);
+        config_file_get_string(cfg, "parameters", t, sizeof(t), 0);
 
         len = strlen(t);
         j = 0;
@@ -283,13 +284,13 @@ glslp_t *glslp_parse(const char *f) {
                         struct parameter *p = get_parameter(glslp, s);
 
                         if (p)
-                                wx_config_get_float(cfg, s, &p->default_value, 0);
+                                config_file_get_float(cfg, s, &p->default_value, 0);
 
                         j = i + 1;
                 }
         }
 
-        wx_config_free(cfg);
+        config_file_free(cfg);
 
         return glslp;
 }

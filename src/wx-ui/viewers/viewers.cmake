@@ -1,5 +1,5 @@
 set(PCEM_PRIVATE_API ${PCEM_PRIVATE_API}
-        ${CMAKE_SOURCE_DIR}/includes/private/wx-ui/viewer.h
+        ${CMAKE_SOURCE_DIR}/includes/private/wx-ui/wx-viewer.h
         )
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/wx-ui/viewers)

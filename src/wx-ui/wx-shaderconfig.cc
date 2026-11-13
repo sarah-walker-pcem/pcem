@@ -10,7 +10,7 @@
 #include <wx/xrc/xmlres.h>
 #include <wx/spinctrl.h>
 
-#include "wx-glslp-parser.h"
+#include "sdl2-glslp-parser.h"
 #include "wx-shaderconfig.h"
 
 extern "C" {

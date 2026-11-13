@@ -3,12 +3,12 @@
 #endif
 #include <SDL2/SDL.h>
 #include "video.h"
-#include "wx-sdl2-video.h"
-#include "wx-utils.h"
-#include "wx-common.h"
+#include "sdl2-video.h"
+#include "sdl2-host.h"
+#include "sdl2-emu.h"
 #include "ibm.h"
 #include "mouse.h"
-#include "wx-display.h"
+#include "sdl2-display.h"
 #include "plat-keyboard.h"
 #include "config.h"
 #include "model.h"
@@ -28,12 +28,10 @@
 #include <objc/runtime.h>
 #endif
 
-#if defined(__linux__) || defined(__FreeBSD__)
+#if (defined(__linux__) || defined(__FreeBSD__)) && defined(PCEM_SDL_X11)
 #define PCEM_DISPLAY_X11
 #include <SDL2/SDL_syswm.h>
 #include <X11/Xlib.h>
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
 #endif
 
 SDL_mutex *rendererMutex;
@@ -42,22 +40,17 @@ SDL_Thread *renderthread = NULL;
 
 SDL_Window *window = NULL;
 
-int rendering = 0;
+static volatile int rendering = 0;
 
 int mousecapture = 0;
 
-extern int pauseEmulation;
-extern int video_scale;
-extern int take_screenshot;
 extern int fps;
-
-extern void *ghwnd;
-extern void *menu;
 
 static void *window_ptr = NULL;
 static void *display_frame = NULL;
 static void *native_canvas = NULL;
-static void *status_timer = NULL;
+static char display_title[600];
+static char display_status_title[800];
 static volatile int display_fullscreen = 0;
 static volatile int canvas_width = 0;
 static volatile int canvas_height = 0;
@@ -82,7 +75,10 @@ int trigger_inputrelease = 0;
 
 PCEM_API extern void device_force_redraw();
 extern void mouse_wheel_update(int);
-extern void toggle_fullscreen();
+
+#define host sdl_host_get()
+
+static int is_embedded() { return host->panel_create != NULL; }
 
 #ifdef _WIN32
 #define szMsgClassName "PCemMsgWnd"
@@ -215,13 +211,7 @@ void releasemouse() {
         }
 }
 
-static void ui_call(WX_CALLBACK callback, void *data) {
-#ifdef PCEM_RENDER_WITH_TIMER
-        callback(data);
-#else
-        wx_callback(window_ptr, callback, data);
-#endif
-}
+static void ui_call(SDL_HOST_CALLBACK callback, void *data) { sdl_host_ui_call(callback, data); }
 
 #ifdef _WIN32
 UINT16 convert_scan_code(UINT16 scan_code) {
@@ -441,18 +431,20 @@ static int windows_setup() {
 
 #ifdef PCEM_DISPLAY_X11
 static int x11_setup() {
-        GdkWindow *gdk_window = (GdkWindow *)native_canvas;
-        int w, h;
+        Window parent = (Window)(uintptr_t)native_canvas;
 
         if (x11_canvas)
                 return 1;
-        if (!gdk_window || !GDK_IS_X11_WINDOW(gdk_window))
+        if (!parent)
                 return 0;
 
-        x11_display = GDK_WINDOW_XDISPLAY(gdk_window);
-        wx_display_getcanvassize(display_frame, &w, &h);
-        x11_canvas = XCreateSimpleWindow(x11_display, gdk_x11_window_get_xid(gdk_window), 0, 0, w > 0 ? w : 1, h > 0 ? h : 1, 0,
-                                         0, BlackPixel(x11_display, DefaultScreen(x11_display)));
+        if (!x11_display)
+                x11_display = XOpenDisplay(NULL);
+        if (!x11_display)
+                return 0;
+        x11_canvas = XCreateSimpleWindow(x11_display, parent, 0, 0, canvas_width > 0 ? canvas_width : 1,
+                                         canvas_height > 0 ? canvas_height : 1, 0, 0,
+                                         BlackPixel(x11_display, DefaultScreen(x11_display)));
         if (!x11_canvas)
                 return 0;
         XMapWindow(x11_display, x11_canvas);
@@ -461,11 +453,62 @@ static int x11_setup() {
 }
 #endif
 
-static void display_status_update() {
-        char s[256];
+static SDL_SpinLock title_lock = 0;
+static int own_window_valid = 0;
+static int own_x, own_y, own_w, own_h;
 
-        if (!display_frame)
-                return;
+static void ui_call_panel(SDL_HOST_CALLBACK callback, void *data) {
+        if (is_embedded())
+                ui_call(callback, data);
+        else
+                callback(data);
+}
+
+static void panel_get_rect(int *x, int *y, int *w, int *h) {
+        if (is_embedded()) {
+                if (display_frame && host->panel_get_rect)
+                        host->panel_get_rect(display_frame, x, y, w, h);
+        } else if (window) {
+                SDL_GetWindowPosition(window, x, y);
+                SDL_GetWindowSize(window, w, h);
+        }
+}
+
+static void panel_canvas_size(int *w, int *h) {
+        *w = *h = 0;
+        if (is_embedded()) {
+                if (display_frame && host->panel_canvas_size)
+                        host->panel_canvas_size(display_frame, w, h);
+        } else if (window)
+                SDL_GetWindowSize(window, w, h);
+}
+
+static void panel_set_size(int w, int h, int resizable) {
+        if (is_embedded()) {
+                if (display_frame && host->panel_set_size)
+                        host->panel_set_size(display_frame, w, h, resizable);
+        } else if (window) {
+#if SDL_VERSION_ATLEAST(2, 0, 5)
+                SDL_SetWindowResizable(window, resizable ? SDL_TRUE : SDL_FALSE);
+#endif
+                SDL_SetWindowSize(window, w, h);
+        }
+}
+
+static void panel_set_fullscreen(int fullscreen) {
+        if (is_embedded()) {
+                if (display_frame && host->panel_set_fullscreen)
+                        host->panel_set_fullscreen(display_frame, fullscreen);
+        } else if (window)
+                SDL_SetWindowFullscreen(window, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+}
+
+static int display_status_update(void *data) {
+        char s[256];
+        char title[sizeof(display_title)];
+
+        if (is_embedded() ? !display_frame : !window)
+                return 0;
 
         if (emulation_state == EMULATION_PAUSED)
                 strcpy(s, "Paused");
@@ -475,35 +518,43 @@ static void display_status_update() {
                 strcpy(s, "Press CTRL-END to release mouse");
         else
                 strcpy(s, "Press CTRL-END or middle button to release mouse");
-        wx_display_setstatustext(display_frame, 0, s);
 
-        sprintf(s, "Speed: %d%%", fps);
-        wx_display_setstatustext(display_frame, 2, s);
-
-        sprintf(s, "FPS: %d", render_fps);
-        wx_display_setstatustext(display_frame, 3, s);
-
-        wx_display_update(display_frame);
+        if (is_embedded()) {
+                if (host->panel_set_status)
+                        host->panel_set_status(display_frame, s, fps, render_fps);
+        } else {
+                SDL_AtomicLock(&title_lock);
+                strcpy(title, display_title);
+                SDL_AtomicUnlock(&title_lock);
+                snprintf(display_status_title, sizeof(display_status_title), "%s - Speed: %d%% - FPS: %d - %s", title, fps,
+                         render_fps, s);
+                if (strcmp(SDL_GetWindowTitle(window), display_status_title))
+                        SDL_SetWindowTitle(window, display_status_title);
+        }
 
         if (window_remember && !display_fullscreen) {
-                int x, y, w, h;
-                wx_display_getrect(display_frame, &x, &y, &w, &h);
+                int x = window_x, y = window_y, w = window_w, h = window_h;
+                panel_get_rect(&x, &y, &w, &h);
                 window_x = x;
                 window_y = y;
                 window_w = w;
                 window_h = h;
         }
+        return 0;
 }
 
-static void display_event(int event, int param1, int param2) {
+void sdl_display_event(int event, int param1, int param2) {
         switch (event) {
-        case WX_DISPLAY_CLOSE:
-                wx_stop_emulation(window_ptr);
+        case SDL_DISPLAY_CLOSE:
+                if (host->request_stop)
+                        host->request_stop();
+                else
+                        display_end();
                 break;
-        case WX_DISPLAY_ACTIVATE:
+        case SDL_DISPLAY_ACTIVATE:
                 infocus = 1;
                 break;
-        case WX_DISPLAY_DEACTIVATE:
+        case SDL_DISPLAY_DEACTIVATE:
                 infocus = 0;
                 if (display_fullscreen)
                         window_dowindowed = 1;
@@ -512,7 +563,7 @@ static void display_event(int event, int param1, int param2) {
                 memset(rawinputkey, 0, sizeof(rawinputkey));
 #endif
                 break;
-        case WX_DISPLAY_SIZE:
+        case SDL_DISPLAY_SIZE:
                 canvas_width = param1;
                 canvas_height = param2;
 #ifdef __APPLE__
@@ -530,7 +581,7 @@ static void display_event(int event, int param1, int param2) {
 #endif
                 device_force_redraw();
                 break;
-        case WX_DISPLAY_MOUSE_UP:
+        case SDL_DISPLAY_MOUSE_UP:
                 if (!mousecapture) {
                         if (param1 == 1 && !pauseEmulation) {
                                 window_doinputgrab = 1;
@@ -540,7 +591,7 @@ static void display_event(int event, int param1, int param2) {
                 } else if (param1 == 2 && !display_fullscreen && !(mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON))
                         window_doinputrelease = 1;
                 break;
-        case WX_DISPLAY_DESTROY:
+        case SDL_DISPLAY_DESTROY:
                 display_frame = NULL;
                 native_canvas = NULL;
                 break;
@@ -548,38 +599,45 @@ static void display_event(int event, int param1, int param2) {
 }
 
 static int ui_setsize(void *data) {
-        if (!display_frame || display_fullscreen)
+        if ((is_embedded() && !display_frame) || display_fullscreen)
                 return 0;
 
         if (vid_resize == 2)
-                wx_display_setsize(display_frame, custom_resolution_width, custom_resolution_height, 0);
+                panel_set_size(custom_resolution_width, custom_resolution_height, 0);
         else if (vid_resize == 1) {
                 int w, h;
-                wx_display_getcanvassize(display_frame, &w, &h);
-                wx_display_setsize(display_frame, w, h, 1);
+                panel_canvas_size(&w, &h);
+                panel_set_size(w, h, 1);
         } else
-                wx_display_setsize(display_frame, winsizex, winsizey, 0);
+                panel_set_size(winsizex, winsizey, 0);
         return 0;
 }
 
 static int ui_fullscreen(void *data) {
-        if (display_frame)
-                wx_display_setfullscreen(display_frame, data != NULL);
+        panel_set_fullscreen(data != NULL);
         if (!data)
                 ui_setsize(NULL);
         return 0;
 }
 
 static int ui_title(void *data) {
-        if (display_frame && data)
-                wx_setwindowtitle(display_frame, (char *)data);
+        if (data) {
+                if (is_embedded()) {
+                        if (display_frame && host->panel_set_title)
+                                host->panel_set_title(display_frame, (char *)data);
+                } else {
+                        SDL_AtomicLock(&title_lock);
+                        snprintf(display_title, sizeof(display_title), "%s", (char *)data);
+                        SDL_AtomicUnlock(&title_lock);
+                }
+        }
         free(data);
         return 0;
 }
 
 static int ui_remember(void *data) {
-        if (display_frame) {
-                wx_display_getrect(display_frame, &window_x, &window_y, &window_w, &window_h);
+        if (is_embedded() ? display_frame != NULL : window != NULL) {
+                panel_get_rect(&window_x, &window_y, &window_w, &window_h);
                 saveconfig(NULL);
         }
         return 0;
@@ -604,34 +662,43 @@ void display_close() { SDL_Quit(); }
 
 void display_start(void *wnd_ptr) {
         window_ptr = wnd_ptr;
-        menu = wx_getmenu(wnd_ptr);
+        snprintf(display_title, sizeof(display_title), "PCem " PCEM_VERSION_STRING " - %s - %s", config_name, model_getname());
 
-        if (!display_frame) {
 #ifdef __APPLE__
-                ((void (*)(void *, SEL, signed char))objc_msgSend)(objc_getClass("NSWindow"),
-                                                                   sel_registerName("setAllowsAutomaticWindowTabbing:"), 0);
+        ((void (*)(void *, SEL, signed char))objc_msgSend)(objc_getClass("NSWindow"), sel_registerName("setAllowsAutomaticWindowTabbing:"),
+                                                           0);
 #endif
-                display_frame = wx_display_create(wnd_ptr, menu, "PCem " PCEM_VERSION_STRING, display_event);
-                {
-                        char title[600];
-                        snprintf(title, sizeof(title), "PCem " PCEM_VERSION_STRING " - %s - %s", config_name, model_getname());
-                        wx_setwindowtitle(display_frame, title);
+
+        if (is_embedded()) {
+                if (!display_frame) {
+                        display_frame = host->panel_create(wnd_ptr, "PCem " PCEM_VERSION_STRING, sdl_display_event);
+                        if (display_frame) {
+                                if (host->panel_set_title)
+                                        host->panel_set_title(display_frame, display_title);
+                                if (window_remember && window_w > 0 && window_h > 0) {
+                                        panel_set_size(window_w, window_h, vid_resize == 1);
+                                        if (host->panel_set_position)
+                                                host->panel_set_position(display_frame, window_x, window_y);
+                                } else if (host->panel_center)
+                                        host->panel_center(display_frame);
+                        }
                 }
-                if (window_remember && window_w > 0 && window_h > 0) {
-                        wx_display_setsize(display_frame, window_w, window_h, vid_resize == 1);
-                        wx_setwindowposition(display_frame, window_x, window_y);
-                } else
-                        wx_display_center(display_frame);
-        }
-        if (vid_resize == 2)
-                wx_display_setsize(display_frame, custom_resolution_width, custom_resolution_height, 0);
-        wx_display_show(display_frame, 1);
-        native_canvas = wx_display_getnativecanvas(display_frame);
-        {
-                int w, h;
-                wx_display_getcanvassize(display_frame, &w, &h);
-                canvas_width = w;
-                canvas_height = h;
+                if (vid_resize == 2)
+                        panel_set_size(custom_resolution_width, custom_resolution_height, 0);
+                if (display_frame && host->panel_show)
+                        host->panel_show(display_frame, 1);
+                native_canvas = (display_frame && host->panel_native) ? host->panel_native(display_frame) : NULL;
+                {
+                        int w, h;
+                        panel_canvas_size(&w, &h);
+                        canvas_width = w;
+                        canvas_height = h;
+                }
+        } else {
+                native_canvas = NULL;
+                canvas_width = 0;
+                canvas_height = 0;
+                own_window_valid = 0;
         }
 
 #ifdef _WIN32
@@ -641,15 +708,12 @@ void display_start(void *wnd_ptr) {
         memset(rawinputkey, 0, sizeof(rawinputkey));
 #endif
 #ifdef PCEM_DISPLAY_X11
-        if (!x11_setup())
-                wx_messagebox(wnd_ptr, "Could not create the display. PCem requires X11.", "PCem error", WX_MB_OK);
+        if (is_embedded() && !x11_setup())
+                sdl_host_message("PCem error", "Could not create the display. PCem requires X11.");
 #endif
 
         infocus = 1;
         display_fullscreen = 0;
-
-        status_timer = wx_createtimer(display_status_update);
-        wx_starttimer(status_timer, 100, 0);
 
         atexit(releasemouse);
         rendererMutex = SDL_CreateMutex();
@@ -667,11 +731,6 @@ void display_stop() {
 #endif
         releasemouse();
 
-        if (status_timer) {
-                wx_destroytimer(status_timer);
-                status_timer = NULL;
-        }
-
 #ifdef _WIN32
         if (hKeyboardHook)
                 UnhookWindowsHookEx(hKeyboardHook);
@@ -683,13 +742,13 @@ void display_stop() {
 #endif
 
         display_fullscreen = 0;
-        if (display_frame)
-                wx_display_show(display_frame, 0);
+        if (display_frame && host->panel_show)
+                host->panel_show(display_frame, 0);
 }
 
 void sdl_set_window_title(const char *title) {
-        if (display_frame && title)
-                ui_call(ui_title, strdup(title));
+        if (title && (!is_embedded() || display_frame))
+                ui_call_panel(ui_title, strdup(title));
 }
 
 static const struct {
@@ -830,6 +889,38 @@ void window_setup() {
         }
 }
 
+static SDL_Window *own_window_create(int opengl) {
+        Uint32 flags = opengl ? SDL_WINDOW_OPENGL : 0;
+        int x = SDL_WINDOWPOS_CENTERED, y = SDL_WINDOWPOS_CENTERED;
+        int w = winsizex, h = winsizey;
+        char title[sizeof(display_title)];
+
+        if (vid_resize == 1)
+                flags |= SDL_WINDOW_RESIZABLE;
+        if (vid_resize == 2) {
+                w = custom_resolution_width;
+                h = custom_resolution_height;
+        }
+        if (own_window_valid) {
+                x = own_x;
+                y = own_y;
+                w = own_w;
+                h = own_h;
+        } else if (window_remember && window_w > 0 && window_h > 0) {
+                x = window_x;
+                y = window_y;
+                w = window_w;
+                h = window_h;
+        }
+        if (display_fullscreen)
+                flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+
+        SDL_AtomicLock(&title_lock);
+        strcpy(title, display_title);
+        SDL_AtomicUnlock(&title_lock);
+        return SDL_CreateWindow(title, x, y, w > 0 ? w : 640, h > 0 ? h : 480, flags);
+}
+
 int window_create() {
         void *native = NULL;
         int opengl = requested_render_driver.sdl_window_params & SDL_WINDOW_OPENGL;
@@ -861,7 +952,12 @@ int window_create() {
         if (native)
                 cocoa_save_views();
 #endif
-        window = native ? SDL_CreateWindowFrom(native) : NULL;
+        if (native)
+                window = SDL_CreateWindowFrom(native);
+        else if (!is_embedded())
+                window = own_window_create(opengl);
+        else
+                window = NULL;
 #ifdef __APPLE__
         if (native) {
                 cocoa_restore_views();
@@ -869,14 +965,12 @@ int window_create() {
         }
 #endif
         if (!window) {
-                char message[200];
-                sprintf(message, "SDL window could not be created! Error: %s\n", SDL_GetError());
-                wx_messagebox(window_ptr, message, "SDL Error", WX_MB_OK);
+                sdl_host_message("SDL Error", "SDL window could not be created! Error: %s\n", SDL_GetError());
                 return 0;
         }
 
 #ifdef PCEM_DISPLAY_X11
-        {
+        if (native) {
                 SDL_SysWMinfo info;
                 SDL_VERSION(&info.version);
                 if (SDL_GetWindowWMInfo(window, &info) && info.subsystem == SDL_SYSWM_X11) {
@@ -901,6 +995,11 @@ int window_create() {
 void window_close() {
         sdl_renderer_close();
 
+        if (window && !is_embedded() && !display_fullscreen) {
+                SDL_GetWindowPosition(window, &own_x, &own_y);
+                SDL_GetWindowSize(window, &own_w, &own_h);
+                own_window_valid = 1;
+        }
         if (window)
                 SDL_DestroyWindow(window);
         window = NULL;
@@ -929,7 +1028,7 @@ int render() {
         }
         if (window_dosetresize) {
                 window_dosetresize = 0;
-                ui_call(ui_setsize, NULL);
+                ui_call_panel(ui_setsize, NULL);
                 device_force_redraw();
         }
         if (renderer_doreset) {
@@ -948,9 +1047,9 @@ int render() {
                 switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
                         if (event.button.button == SDL_BUTTON_LEFT)
-                                display_event(WX_DISPLAY_MOUSE_UP, 1, 0);
+                                sdl_display_event(SDL_DISPLAY_MOUSE_UP, 1, 0);
                         else if (event.button.button == SDL_BUTTON_MIDDLE)
-                                display_event(WX_DISPLAY_MOUSE_UP, 2, 0);
+                                sdl_display_event(SDL_DISPLAY_MOUSE_UP, 2, 0);
                         break;
                 case SDL_MOUSEWHEEL:
                         if (mousecapture)
@@ -959,6 +1058,18 @@ int render() {
                 case SDL_WINDOWEVENT:
                         if (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                                 device_force_redraw();
+                        if (!is_embedded()) {
+                                if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+                                        sdl_display_event(SDL_DISPLAY_ACTIVATE, 0, 0);
+                                else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+                                        sdl_display_event(SDL_DISPLAY_DEACTIVATE, 0, 0);
+                                else if (event.window.event == SDL_WINDOWEVENT_CLOSE)
+                                        sdl_display_event(SDL_DISPLAY_CLOSE, 0, 0);
+                        }
+                        break;
+                case SDL_QUIT:
+                        if (!is_embedded())
+                                sdl_display_event(SDL_DISPLAY_CLOSE, 0, 0);
                         break;
 #ifndef _WIN32
                 case SDL_KEYDOWN: {
@@ -1000,7 +1111,7 @@ int render() {
         }
         if (window_doremember) {
                 window_doremember = 0;
-                ui_call(ui_remember, NULL);
+                ui_call_panel(ui_remember, NULL);
         }
 
         if (window_dotogglefullscreen) {
@@ -1023,7 +1134,7 @@ int render() {
                         SDL_GetGlobalMouseState(&remembered_mouse_x, &remembered_mouse_y);
 #endif
                         display_fullscreen = 1;
-                        ui_call(ui_fullscreen, (void *)1);
+                        ui_call_panel(ui_fullscreen, (void *)1);
                         device_force_redraw();
                 }
         }
@@ -1049,7 +1160,7 @@ int render() {
                 window_dowindowed = 0;
                 if (display_fullscreen) {
                         display_fullscreen = 0;
-                        ui_call(ui_fullscreen, NULL);
+                        ui_call_panel(ui_fullscreen, NULL);
 #if SDL_VERSION_ATLEAST(2, 0, 4)
                         SDL_WarpMouseGlobal(remembered_mouse_x, remembered_mouse_y);
 #endif
@@ -1060,7 +1171,7 @@ int render() {
         if (win_doresize) {
                 win_doresize = 0;
                 if (!vid_resize && !display_fullscreen) {
-                        ui_call(ui_setsize, NULL);
+                        ui_call_panel(ui_setsize, NULL);
                         device_force_redraw();
                 }
         }
@@ -1079,12 +1190,10 @@ int render() {
                 render_frame_time = ticks;
         }
 
-#ifdef PCEM_RENDER_TIMER_LOOP
         if (ticks - status_update_time >= 100) {
                 status_update_time = ticks;
-                display_status_update();
+                ui_call_panel(display_status_update, NULL);
         }
-#endif
 
         return 1;
 }
@@ -1124,54 +1233,28 @@ int renderer_thread(void *params) {
         return SDL_TRUE;
 }
 
-void *timer = 0;
+void display_run(void) { renderer_thread(NULL); }
 
-void render_timer() {
-#ifdef PCEM_RENDER_TIMER_LOOP
-        renderer_thread(0);
-#else
-        if (rendering && !render()) {
-                window_close();
-                window_create();
-                renderer_doreset = 1;
-        }
-#endif
-}
-
-void render_start_timer() {
-#ifdef PCEM_RENDER_TIMER_LOOP
-        timer = wx_createtimer(render_timer);
-        wx_starttimer(timer, 500, 1);
-#else
-        window_setup();
-        if (window_create()) {
-                rendering = 1;
-                renderer_doreset = 1;
-                wx_starttimer(timer, 1, 0);
-        }
-#endif
-}
+void display_end(void) { rendering = 0; }
 
 void renderer_start() {
         if (!rendering) {
-#ifdef PCEM_RENDER_WITH_TIMER
-                render_start_timer();
-#else
-                SDL_LockMutex(rendererMutex);
-                renderthread = SDL_CreateThread(renderer_thread, "SDL2 Thread", NULL);
-                SDL_CondWait(rendererCond, rendererMutex);
-                SDL_UnlockMutex(rendererMutex);
-#endif
+                if (host->start_render_loop) {
+                        host->start_render_loop(display_run);
+                } else {
+                        SDL_LockMutex(rendererMutex);
+                        renderthread = SDL_CreateThread(renderer_thread, "SDL2 Thread", NULL);
+                        SDL_CondWait(rendererCond, rendererMutex);
+                        SDL_UnlockMutex(rendererMutex);
+                }
         }
 }
 
 void renderer_stop(int timeout) {
-#if defined(PCEM_RENDER_WITH_TIMER) && defined(PCEM_RENDER_TIMER_LOOP)
-        rendering = 0;
-        window_close();
-        wx_destroytimer(timer);
-#else
-        if (rendering) {
+        if (host->start_render_loop) {
+                rendering = 0;
+                window_close();
+        } else if (rendering) {
                 SDL_LockMutex(rendererMutex);
                 rendering = 0;
                 if (timeout)
@@ -1181,7 +1264,4 @@ void renderer_stop(int timeout) {
                 SDL_UnlockMutex(rendererMutex);
                 renderthread = NULL;
         }
-        if (timer)
-                wx_destroytimer(timer);
-#endif
 }

@@ -2,6 +2,9 @@
 #define _WX_UTILS2_H_
 #include <wx/defs.h>
 #include <pcem/api.h>
+#include "fs-utils.h"
+#include "sdl2-common.h"
+#include "sdl2-host.h"
 
 #ifndef LONG_PARAM
 #define LONG_PARAM wxIntPtr
@@ -12,14 +15,14 @@
 #endif
 
 typedef int (*WX_CALLBACK)(void *data);
-typedef void (*WX_DISPLAY_CALLBACK)(int event, int param1, int param2);
+typedef SDL_DISPLAY_CALLBACK WX_DISPLAY_CALLBACK;
 
-#define WX_DISPLAY_CLOSE 1
-#define WX_DISPLAY_ACTIVATE 2
-#define WX_DISPLAY_DEACTIVATE 3
-#define WX_DISPLAY_SIZE 4
-#define WX_DISPLAY_MOUSE_UP 5
-#define WX_DISPLAY_DESTROY 6
+#define WX_DISPLAY_CLOSE SDL_DISPLAY_CLOSE
+#define WX_DISPLAY_ACTIVATE SDL_DISPLAY_ACTIVATE
+#define WX_DISPLAY_DEACTIVATE SDL_DISPLAY_DEACTIVATE
+#define WX_DISPLAY_SIZE SDL_DISPLAY_SIZE
+#define WX_DISPLAY_MOUSE_UP SDL_DISPLAY_MOUSE_UP
+#define WX_DISPLAY_DESTROY SDL_DISPLAY_DESTROY
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,35 +97,19 @@ void wx_display_center(void *frame);
 void wx_display_show(void *frame, int show);
 void wx_display_setfullscreen(void *frame, int fullscreen);
 void wx_display_setstatustext(void *frame, int field, const char *text);
+void wx_display_setstatus(void *frame, const char *message, int speed, int fps);
 void wx_display_update(void *frame);
 void wx_close_status(void *window);
 
-PCEM_API void wx_get_home_directory(char *path);
-PCEM_API int wx_create_directory(char *path);
-
 int wx_setup(char *path);
 int wx_file_exists(char *path);
-PCEM_API int wx_dir_exists(char *path);
 int wx_copy_file(char *from, char *to, int overwrite);
 
 void wx_date_format(char *s, const char *format);
 
 int wx_image_save(const char *path, const char *name, const char *format, unsigned char *rgba, int width, int height, int alpha);
 
-void *wx_image_load(const char *path);
-void wx_image_rescale(void *image, int width, int height);
-void wx_image_get_size(void *image, int *width, int *height);
-unsigned char *wx_image_get_data(void *image);
-unsigned char *wx_image_get_alpha(void *image);
-void wx_image_free(void *image);
-
-void *wx_config_load(const char *path);
-int wx_config_get_string(void *config, const char *name, char *dst, int size, const char *defVal);
-int wx_config_get_int(void *config, const char *name, int *dst, int defVal);
-int wx_config_get_float(void *config, const char *name, float *dst, float defVal);
-int wx_config_get_bool(void *config, const char *name, int *dst, int defVal);
-int wx_config_has_entry(void *config, const char *name);
-void wx_config_free(void *config);
+unsigned char *wx_image_load_rgba(const char *path, int *width, int *height);
 
 int confirm();
 
@@ -189,11 +176,6 @@ extern void (*wx_idle_func)(void *window, void *event);
 #define WX_MB_OKCANCEL wxOK | wxCANCEL
 #define WX_MB_NODEFAULT wxYES_NO | wxNO_DEFAULT
 #define WX_IDOK wxOK
-
-#define IMAGE_JPG "jpg"
-#define IMAGE_PNG "png"
-#define IMAGE_BMP "bmp"
-#define IMAGE_TIFF "tiff"
 
 extern int has_been_inited;
 

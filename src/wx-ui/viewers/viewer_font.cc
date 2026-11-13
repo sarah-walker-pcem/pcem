@@ -3,7 +3,7 @@
 #include <wx/wx.h>
 #endif
 #include <wx/rawbmp.h>
-#include "viewer.h"
+#include "wx-viewer.h"
 extern "C"
 {
 #include "ibm.h"

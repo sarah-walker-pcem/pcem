@@ -21,6 +21,11 @@
 #include "wx-common.h"
 #include "wx-status.h"
 
+#ifdef __WXGTK__
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#endif
+
 extern "C" {
 #include "thread.h"
 }
@@ -704,7 +709,10 @@ void *wx_display_getnativecanvas(void *frame) {
         if (!canvas)
                 return NULL;
 #ifdef __WXGTK__
-        return canvas->GTKGetDrawingWindow();
+        GdkWindow *gdk_window = canvas->GTKGetDrawingWindow();
+        if (!gdk_window || !GDK_IS_X11_WINDOW(gdk_window))
+                return NULL;
+        return (void *)(uintptr_t)gdk_x11_window_get_xid(gdk_window);
 #else
         return (void *)canvas->GetHandle();
 #endif
@@ -788,6 +796,16 @@ void wx_display_setstatustext(void *frame, int field, const char *text) {
         wxString s(text);
         if (status->GetStatusText(field) != s)
                 status->SetStatusText(s, field);
+}
+
+void wx_display_setstatus(void *frame, const char *message, int speed, int fps) {
+        char s[64];
+        wx_display_setstatustext(frame, 0, message);
+        snprintf(s, sizeof(s), "Speed: %d%%", speed);
+        wx_display_setstatustext(frame, 2, s);
+        snprintf(s, sizeof(s), "FPS: %d", fps);
+        wx_display_setstatustext(frame, 3, s);
+        wx_display_update(frame);
 }
 
 void wx_setwindowposition(void *window, int x, int y) { ((wxFrame *)window)->SetPosition(wxPoint(x, y)); }
@@ -902,81 +920,28 @@ int wx_image_save(const char *path, const char *name, const char *format, unsign
         return res;
 }
 
-void *wx_image_load(const char *path) {
-        wxLogNull logNull; /* removes sRGB-warnings on Windows */
-        wxImage *image = new wxImage(path);
-        if (image->IsOk())
-                return image;
-        delete image;
-        return 0;
-}
-
-void wx_image_free(void *image) { delete (wxImage *)image; }
-
-void wx_image_rescale(void *image, int width, int height) { ((wxImage *)image)->Rescale(width, height); }
-
-void wx_image_get_size(void *image, int *width, int *height) {
-        *width = ((wxImage *)image)->GetWidth();
-        *height = ((wxImage *)image)->GetHeight();
-}
-
-unsigned char *wx_image_get_data(void *image) { return ((wxImage *)image)->GetData(); }
-
-unsigned char *wx_image_get_alpha(void *image) { return ((wxImage *)image)->GetAlpha(); }
-
-/* wxFileConfig */
-
-void *wx_config_load(const char *path) {
-        if (!wxFileExists(path))
-                return 0;
-        wxFileInputStream stream(path);
-        if (stream.IsOk())
-                return new wxFileConfig(stream);
-        return 0;
-}
-int wx_config_get_string(void *config, const char *name, char *dst, int size, const char *defVal) {
-        wxFileConfig *c = ((wxFileConfig *)config);
-        wxString val;
-        bool res = c->Read(name, &val, wxString(defVal));
-        strncpy(dst, val.GetData().AsChar(), size - 1);
-        dst[size - 1] = 0;
-        return res;
-}
-int wx_config_get_int(void *config, const char *name, int *dst, int defVal) {
-        wxFileConfig *c = ((wxFileConfig *)config);
-        return c->Read(name, dst, defVal);
-}
-
-int wx_config_get_float(void *config, const char *name, float *dst, float defVal) {
-        wxFileConfig *c = ((wxFileConfig *)config);
-        return c->Read(name, dst, defVal);
-}
-
-int wx_config_get_bool(void *config, const char *name, int *dst, int defVal) {
-        wxFileConfig *c = ((wxFileConfig *)config);
-        wxString val;
-        bool res = 1;
-        if (c->Read(name, &val)) {
-                val.LowerCase();
-                if (val.StartsWith("true"))
-                        *dst = 1;
-                else if (val.StartsWith("false"))
-                        *dst = 0;
-                else
-                        res = 0;
+unsigned char *wx_image_load_rgba(const char *path, int *width, int *height) {
+        wxLogNull logNull;
+        wxImage image(path);
+        if (!image.IsOk())
+                return NULL;
+        int w = image.GetWidth();
+        int h = image.GetHeight();
+        unsigned char *rgb = image.GetData();
+        unsigned char *alpha = image.HasAlpha() ? image.GetAlpha() : NULL;
+        unsigned char *data = (unsigned char *)malloc(w * h * 4);
+        if (!data)
+                return NULL;
+        for (int i = 0; i < w * h; ++i) {
+                data[i * 4 + 0] = rgb[i * 3 + 0];
+                data[i * 4 + 1] = rgb[i * 3 + 1];
+                data[i * 4 + 2] = rgb[i * 3 + 2];
+                data[i * 4 + 3] = alpha ? alpha[i] : 0xff;
         }
-        if (!res)
-                res = c->Read(name, (bool *)dst, (bool)defVal);
-
-        return res;
+        *width = w;
+        *height = h;
+        return data;
 }
-
-int wx_config_has_entry(void *config, const char *name) {
-        wxFileConfig *c = ((wxFileConfig *)config);
-        return c->HasEntry(name);
-}
-
-void wx_config_free(void *config) { delete (wxFileConfig *)config; }
 
 typedef struct progress_data_t {
         WX_CALLBACK callback;
