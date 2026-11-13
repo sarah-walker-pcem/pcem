@@ -3,6 +3,16 @@ on:
     branches: [master, dev]
   pull_request:
     branches: [master, dev]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version Number'
+        required: false
+        default: 'vNext'
+        type: string
+
+env:
+  VERSION: ${{ inputs.version || 'vNext' }}
 
 jobs:
   build:
@@ -10,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        build_type: [Debug, Release, RelWithDebInfo]
+        build_type: ${{ fromJSON((inputs.version || 'vNext') == 'vNext' && '["Debug", "Release", "RelWithDebInfo"]' || '["Release"]') }}
         include:
           - os: ubuntu-latest
             platform: Ubuntu
@@ -33,7 +43,7 @@ jobs:
         shell: ${{ matrix.shell }}
 
     env:
-      ARTIFACT_NAME: wxPCem-${{ matrix.build_type != 'Release' && format('{0}-', matrix.build_type) || '' }}vNext-${{ matrix.platform }}-${{ matrix.compiler }}64-${{ github.run_number }}
+      ARTIFACT_NAME: wxPCem-${{ matrix.build_type != 'Release' && format('{0}-', matrix.build_type) || '' }}${{ inputs.version || 'vNext' }}-${{ matrix.platform }}-${{ matrix.compiler }}64-${{ github.run_number }}
 
     steps:
       - name: Check out repository
@@ -90,7 +100,7 @@ jobs:
           fi
           cmake -S temp -B temp/build -G Ninja $EXTRA_ARGS \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DPCEM_VERSION_STRING="vNext build ${GITHUB_SHA::8}"
+            -DPCEM_VERSION_STRING="$VERSION build ${GITHUB_SHA::8}"
 
       - name: Build
         run: ninja -C temp/build

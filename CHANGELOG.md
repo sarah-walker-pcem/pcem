@@ -11,6 +11,8 @@
 - Now support macOS (Apple Silicon only)
 - Added MIDI Support to macOS
 - Added status bar and unified the main display for all 3 versions
+- PCAP networking now lists host network devices correctly on macOS
+- ALSA MIDI output is now always enabled on Linux
 
 ## Added the following machines to v18
 - Hyundai SUPER-16T
@@ -38,7 +40,8 @@
 ## Developer Changes to v18
 - First release to switch from autotools/make to CMake/Ninja
 - Legacy autotools and mingw makefiles are removed
-- Windows and Linux builds now will be built in Clang, and are required to be built with Clang
+- `USE_ALSA` CMake option removed; ALSA is now a required dependency on Linux
+- SDL display/emulation code separated from the wxWidgets frontend into a UI-agnostic host interface, to allow future frontends (Android, iOS, etc.)
 
 # PCem v17
 - New machines added - Amstrad PC5086, Compaq Deskpro, Samsung SPC-6033P, Samsung SPC-6000A, Intel VS440FX, Gigabyte GA-686BX
