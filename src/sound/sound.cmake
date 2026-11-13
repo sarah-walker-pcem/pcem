@@ -88,7 +88,7 @@ set(PCEM_SRC ${PCEM_SRC}
         sound/resid-fp/wave.cc
         )
 
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND USE_ALSA)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         set(PCEM_SRC ${PCEM_SRC}
                 sound/midi_alsa.c
                 )
