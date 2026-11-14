@@ -165,6 +165,71 @@ static void cocoa_fit_subviews() {
 #ifdef PCEM_DISPLAY_X11
 static Display *x11_display = NULL;
 static Window x11_canvas = 0;
+static Display *x11_grab_display = NULL;
+
+static int x11_keycode_to_scancode(unsigned int keycode) {
+        unsigned int code;
+
+        if (keycode < 8)
+                return -1;
+        code = keycode - 8;
+        if (code >= 1 && code <= 83)
+                return code;
+        switch (code) {
+        case 86: return 0x56;
+        case 87: return 0x57;
+        case 88: return 0x58;
+        case 89: return 0x73;
+        case 92: return 0x79;
+        case 93: return 0x70;
+        case 94: return 0x7b;
+        case 124: return 0x7d;
+        case 96: return 0x9c;
+        case 97: return 0x9d;
+        case 98: return 0xb5;
+        case 99: return 0xb7;
+        case 100: return 0xb8;
+        case 102: return 0xc7;
+        case 103: return 0xc8;
+        case 104: return 0xc9;
+        case 105: return 0xcb;
+        case 106: return 0xcd;
+        case 107: return 0xcf;
+        case 108: return 0xd0;
+        case 109: return 0xd1;
+        case 110: return 0xd2;
+        case 111: return 0xd3;
+        case 125: return 0xdb;
+        case 126: return 0xdc;
+        case 127: return 0xdd;
+        default: return -1;
+        }
+}
+
+static void x11_grab_keyboard(int grab) {
+        if (grab) {
+                SDL_SysWMinfo info;
+                if (x11_grab_display || !window || !x11_canvas)
+                        return;
+                SDL_VERSION(&info.version);
+                if (!SDL_GetWindowWMInfo(window, &info) || info.subsystem != SDL_SYSWM_X11)
+                        return;
+                int ret = XGrabKeyboard(info.info.x11.display, info.info.x11.window, False, GrabModeAsync, GrabModeAsync,
+                                        CurrentTime);
+                if (ret == GrabSuccess) {
+                        x11_grab_display = info.info.x11.display;
+                        memset(rawinputkey, 0, sizeof(rawinputkey));
+                } else
+                        pclog("XGrabKeyboard failed (%i)\n", ret);
+                XFlush(info.info.x11.display);
+        } else if (x11_grab_display) {
+                XUngrabKeyboard(x11_grab_display, CurrentTime);
+                XFlush(x11_grab_display);
+                x11_grab_display = NULL;
+
+                memset(rawinputkey, 0, sizeof(rawinputkey));
+        }
+}
 #endif
 
 SDL_Event event;
@@ -209,6 +274,9 @@ void releasemouse() {
                 SDL_SetRelativeMouseMode(SDL_FALSE);
                 mousecapture = 0;
         }
+#ifdef PCEM_DISPLAY_X11
+        x11_grab_keyboard(0);
+#endif
 }
 
 static void ui_call(SDL_HOST_CALLBACK callback, void *data) { sdl_host_ui_call(callback, data); }
@@ -559,8 +627,17 @@ void sdl_display_event(int event, int param1, int param2) {
                 if (display_fullscreen)
                         window_dowindowed = 1;
                 window_doinputrelease = 1;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(PCEM_DISPLAY_X11)
                 memset(rawinputkey, 0, sizeof(rawinputkey));
+#endif
+                break;
+        case SDL_DISPLAY_KEY:
+#ifdef PCEM_DISPLAY_X11
+                if (infocus && !x11_grab_display) {
+                        int scancode = x11_keycode_to_scancode((unsigned int)param1);
+                        if (scancode != -1)
+                                rawinputkey[scancode] = param2 ? 1 : 0;
+                }
 #endif
                 break;
         case SDL_DISPLAY_SIZE:
@@ -1000,6 +1077,9 @@ void window_close() {
                 SDL_GetWindowSize(window, &own_w, &own_h);
                 own_window_valid = 1;
         }
+#ifdef PCEM_DISPLAY_X11
+        x11_grab_keyboard(0);
+#endif
         if (window)
                 SDL_DestroyWindow(window);
         window = NULL;
@@ -1149,6 +1229,9 @@ int render() {
                 SDL_GetRelativeMouseState(0, 0);
 #ifdef _WIN32
                 PostMessage(msg_hwnd, WM_PCEM_FOCUS_CANVAS, 0, 0);
+#endif
+#ifdef PCEM_DISPLAY_X11
+                x11_grab_keyboard(1);
 #endif
         }
 

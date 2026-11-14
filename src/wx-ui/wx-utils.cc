@@ -697,8 +697,13 @@ void *wx_display_create(void *parent, void *menubar, const char *title, WX_DISPL
         canvas->Bind(wxEVT_LEFT_UP, [callback](wxMouseEvent &event) { callback(WX_DISPLAY_MOUSE_UP, 1, 0); });
         canvas->Bind(wxEVT_MIDDLE_UP, [callback](wxMouseEvent &event) { callback(WX_DISPLAY_MOUSE_UP, 2, 0); });
         canvas->Bind(wxEVT_RIGHT_UP, [callback](wxMouseEvent &event) { callback(WX_DISPLAY_MOUSE_UP, 3, 0); });
+#ifdef __WXGTK__
+        canvas->Bind(wxEVT_KEY_DOWN, [callback](wxKeyEvent &event) { callback(WX_DISPLAY_KEY, event.GetRawKeyFlags(), 1); });
+        canvas->Bind(wxEVT_KEY_UP, [callback](wxKeyEvent &event) { callback(WX_DISPLAY_KEY, event.GetRawKeyFlags(), 0); });
+#else
         canvas->Bind(wxEVT_KEY_DOWN, [](wxKeyEvent &event) {});
         canvas->Bind(wxEVT_KEY_UP, [](wxKeyEvent &event) {});
+#endif
         canvas->Bind(wxEVT_CHAR, [](wxKeyEvent &event) {});
 
         return frame;
