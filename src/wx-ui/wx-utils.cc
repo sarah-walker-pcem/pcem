@@ -21,6 +21,12 @@
 #include "wx-common.h"
 #include "wx-status.h"
 
+#ifdef __WXOSX__
+#include <math.h>
+#include <objc/message.h>
+#include <objc/runtime.h>
+#endif
+
 #ifdef __WXGTK__
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -770,6 +776,28 @@ void wx_display_show(void *frame, int show) {
         }
 }
 
+#ifdef __WXOSX__
+static int display_top_safe_inset(wxFrame *f) {
+        typedef struct {
+                double top, left, bottom, right;
+        } edge_insets_t;
+        void *nswindow = (void *)f->GetWXWindow();
+        if (!nswindow)
+                return 0;
+        void *screen = ((void *(*)(void *, SEL))objc_msgSend)(nswindow, sel_registerName("screen"));
+        SEL sel = sel_registerName("safeAreaInsets");
+        if (!screen || !((BOOL(*)(void *, SEL, SEL))objc_msgSend)(screen, sel_registerName("respondsToSelector:"), sel))
+                return 0;
+        edge_insets_t insets;
+#if defined(__x86_64__)
+        ((void (*)(edge_insets_t *, void *, SEL))objc_msgSend_stret)(&insets, screen, sel);
+#else
+        insets = ((edge_insets_t(*)(void *, SEL))objc_msgSend)(screen, sel);
+#endif
+        return insets.top > 0 ? (int)ceil(insets.top) : 0;
+}
+#endif
+
 void wx_display_setfullscreen(void *frame, int fullscreen) {
         wxFrame *f = (wxFrame *)frame;
         if (fullscreen) {
@@ -777,6 +805,21 @@ void wx_display_setfullscreen(void *frame, int fullscreen) {
                 f->SetMaxSize(wxDefaultSize);
         }
         f->ShowFullScreen(fullscreen != 0, wxFULLSCREEN_ALL);
+
+        wxStatusBar *status = f->GetStatusBar();
+        if (status && status->IsShown() != !fullscreen)
+                status->Show(!fullscreen);
+#ifdef __WXOSX__
+        wxWindow *canvas = f->FindWindow(DISPLAY_CANVAS_NAME);
+        wxSizerItem *item = (canvas && f->GetSizer()) ? f->GetSizer()->GetItem(canvas) : NULL;
+        if (item) {
+                item->SetFlag(wxEXPAND | wxTOP);
+                item->SetBorder(fullscreen ? display_top_safe_inset(f) : 0);
+        }
+        f->SetBackgroundColour(fullscreen ? *wxBLACK : wxNullColour);
+        f->Refresh();
+#endif
+        f->SendSizeEvent();
         if (fullscreen)
                 f->Raise();
 }

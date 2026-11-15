@@ -132,6 +132,19 @@ static void cocoa_restore_views() {
         cocoa_content_view = NULL;
 }
 
+static void cocoa_update_drawables(void *view) {
+        void *subviews;
+        long count, i;
+        SEL update = sel_registerName("updateDrawableSize");
+
+        if (((BOOL(*)(void *, SEL, SEL))objc_msgSend)(view, sel_registerName("respondsToSelector:"), update))
+                ((void (*)(void *, SEL))objc_msgSend)(view, update);
+        subviews = cocoa_get(view, "subviews");
+        count = ((long (*)(void *, SEL))objc_msgSend)(subviews, sel_registerName("count"));
+        for (i = 0; i < count; i++)
+                cocoa_update_drawables(((void *(*)(void *, SEL, long))objc_msgSend)(subviews, sel_registerName("objectAtIndex:"), i));
+}
+
 static void cocoa_fit_subviews() {
         void *subviews, *superview;
         long count, i;
@@ -166,6 +179,7 @@ static void cocoa_fit_subviews() {
 static Display *x11_display = NULL;
 static Window x11_canvas = 0;
 static Display *x11_grab_display = NULL;
+static Display *x11_pointer_display = NULL;
 
 static int x11_keycode_to_scancode(unsigned int keycode) {
         unsigned int code;
@@ -230,6 +244,29 @@ static void x11_grab_keyboard(int grab) {
                 memset(rawinputkey, 0, sizeof(rawinputkey));
         }
 }
+
+static void x11_grab_pointer(int grab) {
+        if (grab) {
+                SDL_SysWMinfo info;
+                if (x11_pointer_display || !window || !x11_canvas)
+                        return;
+                SDL_VERSION(&info.version);
+                if (!SDL_GetWindowWMInfo(window, &info) || info.subsystem != SDL_SYSWM_X11)
+                        return;
+                int ret = XGrabPointer(info.info.x11.display, info.info.x11.window, True,
+                                       ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync,
+                                       info.info.x11.window, None, CurrentTime);
+                if (ret == GrabSuccess)
+                        x11_pointer_display = info.info.x11.display;
+                else
+                        pclog("XGrabPointer failed (%i)\n", ret);
+                XFlush(info.info.x11.display);
+        } else if (x11_pointer_display) {
+                XUngrabPointer(x11_pointer_display, CurrentTime);
+                XFlush(x11_pointer_display);
+                x11_pointer_display = NULL;
+        }
+}
 #endif
 
 SDL_Event event;
@@ -268,16 +305,45 @@ void display_resize(int width, int height) {
         win_doresize = 1;
 }
 
-void releasemouse() {
-        if (mousecapture) {
+#if defined(_WIN32)
+static void plat_input_capture(int on) {
+        if (on && msg_hwnd)
+                PostMessage(msg_hwnd, WM_PCEM_FOCUS_CANVAS, 0, 0);
+}
+#elif defined(PCEM_DISPLAY_X11)
+static void plat_input_capture(int on) {
+        x11_grab_keyboard(on);
+        x11_grab_pointer(on);
+}
+#else
+static void plat_input_capture(int on) {}
+#endif
+
+static void input_capture(int on) {
+        if (on) {
+                SDL_Rect rect;
+
+                mousecapture = 1;
+                display_get_size(window, &rect.w, &rect.h);
+                SDL_WarpMouseInWindow(window, rect.w / 2, rect.h / 2);
+                SDL_SetWindowGrab(window, SDL_TRUE);
+                SDL_SetRelativeMouseMode(SDL_TRUE);
+                SDL_GetRelativeMouseState(0, 0);
+        } else if (mousecapture) {
                 SDL_SetWindowGrab(window, SDL_FALSE);
                 SDL_SetRelativeMouseMode(SDL_FALSE);
                 mousecapture = 0;
         }
-#ifdef PCEM_DISPLAY_X11
-        x11_grab_keyboard(0);
-#endif
+        plat_input_capture(on);
 }
+
+void releasemouse() { input_capture(0); }
+
+#ifdef __APPLE__
+#define RELEASE_KEY_NAME "CTRL-CMD"
+#else
+#define RELEASE_KEY_NAME "CTRL-END"
+#endif
 
 static void ui_call(SDL_HOST_CALLBACK callback, void *data) { sdl_host_ui_call(callback, data); }
 
@@ -583,9 +649,9 @@ static int display_status_update(void *data) {
         else if (!mousecapture)
                 strcpy(s, "Click to capture mouse");
         else if (mouse_get_type(mouse_type) & MOUSE_TYPE_3BUTTON)
-                strcpy(s, "Press CTRL-END to release mouse");
+                strcpy(s, "Press " RELEASE_KEY_NAME " to release mouse");
         else
-                strcpy(s, "Press CTRL-END or middle button to release mouse");
+                strcpy(s, "Press " RELEASE_KEY_NAME " or middle button to release mouse");
 
         if (is_embedded()) {
                 if (host->panel_set_status)
@@ -645,6 +711,8 @@ void sdl_display_event(int event, int param1, int param2) {
                 canvas_height = param2;
 #ifdef __APPLE__
                 cocoa_fit_subviews();
+                if (native_canvas)
+                        cocoa_update_drawables(native_canvas);
 #endif
 #ifdef _WIN32
                 if (sub_hwnd)
@@ -1077,9 +1145,7 @@ void window_close() {
                 SDL_GetWindowSize(window, &own_w, &own_h);
                 own_window_valid = 1;
         }
-#ifdef PCEM_DISPLAY_X11
-        x11_grab_keyboard(0);
-#endif
+        plat_input_capture(0);
         if (window)
                 SDL_DestroyWindow(window);
         window = NULL;
@@ -1093,6 +1159,15 @@ void window_close() {
 
         if (sub_hwnd)
                 PostMessage(msg_hwnd, WM_PCEM_DESTROY_CANVAS, (WPARAM)sub_hwnd, 0);
+#endif
+}
+
+static int release_keys_down() {
+        int ctrl = rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)];
+#ifdef __APPLE__
+        return ctrl && (rawinputkey[sdl_scancode(SDL_SCANCODE_LGUI)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RGUI)]);
+#else
+        return ctrl && (rawinputkey[sdl_scancode(SDL_SCANCODE_END)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_1)]);
 #endif
 }
 
@@ -1181,8 +1256,7 @@ int render() {
         else if (trigger_screenshot) {
                 trigger_screenshot = 0;
                 take_screenshot = 1;
-        } else if ((rawinputkey[sdl_scancode(SDL_SCANCODE_END)] || rawinputkey[sdl_scancode(SDL_SCANCODE_KP_1)]) &&
-                   (rawinputkey[sdl_scancode(SDL_SCANCODE_LCTRL)] || rawinputkey[sdl_scancode(SDL_SCANCODE_RCTRL)]))
+        } else if (release_keys_down())
                 trigger_inputrelease = 1;
         else if (trigger_inputrelease) {
                 trigger_inputrelease = 0;
@@ -1220,19 +1294,7 @@ int render() {
         }
         if (window_doinputgrab) {
                 window_doinputgrab = 0;
-                mousecapture = 1;
-                SDL_Rect rect;
-                display_get_size(window, &rect.w, &rect.h);
-                SDL_WarpMouseInWindow(window, rect.w / 2, rect.h / 2);
-                SDL_SetWindowGrab(window, SDL_TRUE);
-                SDL_SetRelativeMouseMode(SDL_TRUE);
-                SDL_GetRelativeMouseState(0, 0);
-#ifdef _WIN32
-                PostMessage(msg_hwnd, WM_PCEM_FOCUS_CANVAS, 0, 0);
-#endif
-#ifdef PCEM_DISPLAY_X11
-                x11_grab_keyboard(1);
-#endif
+                input_capture(1);
         }
 
         if (window_doinputrelease) {

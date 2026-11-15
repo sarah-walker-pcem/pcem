@@ -66,6 +66,16 @@ void sdl_video_renderer_update(SDL_Window *window, SDL_Rect updated_rect, VIDEO_
 }
 
 void sdl_video_renderer_present(SDL_Window *window, SDL_Rect texture_rect, SDL_Rect window_rect, SDL_Rect screen) {
+        {
+                static int last_w = -1, last_h = -1;
+                int w, h;
+                if (!SDL_GetRendererOutputSize(renderer, &w, &h) && (w != last_w || h != last_h)) {
+                        SDL_Rect full = {0, 0, w, h};
+                        SDL_RenderSetViewport(renderer, &full);
+                        last_w = w;
+                        last_h = h;
+                }
+        }
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, &texture_rect, &window_rect);
         int sshot = take_screenshot;
