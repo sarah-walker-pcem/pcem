@@ -1,4 +1,5 @@
 #include "wx-status.h"
+#include "wx-app.h"
 #include "wx-common.h"
 #include "wx-utils.h"
 #include <wx/artprov.h>
@@ -235,6 +236,7 @@ int wx_window_y = 0;
 StatusFrame::StatusFrame(wxWindow *parent)
         : wxFrame(parent, STATUS_WINDOW_ID, "PCem Machine", wxPoint(0, 0), wxSize(DEFAULT_WINDOW_WIDTH, 200),
                   wxCAPTION | wxCLOSE_BOX) {
+        wx_set_app_icon(this);
         SetMenuBar(wxXmlResource::Get()->LoadMenuBar(wxT("status_menu")));
         SetToolBar(wxXmlResource::Get()->LoadToolBar(this, wxT("tool_bar")));
 

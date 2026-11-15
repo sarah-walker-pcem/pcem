@@ -160,4 +160,6 @@ class Frame : public wxFrame {
         wxDECLARE_EVENT_TABLE();
 };
 
+void wx_set_app_icon(wxTopLevelWindow *win);
+
 #endif /* SRC_WX_APP_H_ */

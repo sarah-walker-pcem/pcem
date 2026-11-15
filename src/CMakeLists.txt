@@ -79,7 +79,17 @@ set(PCEM_LIBRARIES ${DISPLAY_ENGINE_LIBRARIES} ${SDL2_LIBRARIES} ${OPENAL_LIBRAR
 include(${CMAKE_CURRENT_SOURCE_DIR}/plugin-api/plugin-api.cmake)
 
 set(PCEM_LIBRARIES ${PCEM_LIBRARIES} PARENT_SCOPE)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        set(PCEM_MACOS_ICON ${CMAKE_SOURCE_DIR}/cmake/macos/pcem.icns)
+        set_source_files_properties(${PCEM_MACOS_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+        set(PCEM_SRC ${PCEM_SRC} ${PCEM_MACOS_ICON})
+endif()
+
 add_executable(pcem ${PCEM_SRC} ${PCEM_PRIVATE_API} ${PCEM_EMBEDDED_PLUGIN_API})
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+        target_include_directories(pcem PRIVATE $<$<COMPILE_LANGUAGE:RC>:${CMAKE_SOURCE_DIR}/cmake/windows>)
+        set_property(SOURCE wx-ui/wx.rc APPEND PROPERTY OBJECT_DEPENDS ${CMAKE_SOURCE_DIR}/cmake/windows/pcem.ico)
+endif()
 target_compile_definitions(pcem PUBLIC ${PCEM_DEFINES})
 target_compile_options(pcem PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-fno-common> $<$<COMPILE_LANGUAGE:C>:-fno-common>)
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
@@ -95,6 +105,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
                 OUTPUT_NAME PCem
                 MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/cmake/macos/Info.plist.in
                 MACOSX_BUNDLE_BUNDLE_NAME PCem
+                MACOSX_BUNDLE_ICON_FILE pcem.icns
                 MACOSX_BUNDLE_GUI_IDENTIFIER uk.co.pcem-emulator.PCem
                 XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER uk.co.pcem-emulator.PCem
                 MACOSX_BUNDLE_SHORT_VERSION_STRING "${PCEM_VERSION_STRING}"

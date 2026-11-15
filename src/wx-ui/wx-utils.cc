@@ -652,6 +652,7 @@ static void display_layout_status(wxFrame *frame) {
 
 void *wx_display_create(void *parent, void *menubar, const char *title, WX_DISPLAY_CALLBACK callback) {
         wxFrame *frame = new wxFrame((wxWindow *)parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE);
+        wx_set_app_icon(frame);
         if (menubar)
                 frame->SetMenuBar((wxMenuBar *)menubar);
         wxStatusBar *status = frame->CreateStatusBar(4);

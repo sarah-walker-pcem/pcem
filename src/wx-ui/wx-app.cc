@@ -102,7 +102,18 @@ Frame::Frame(App *app, const wxString &title, const wxPoint &pos, const wxSize &
         Bind(WX_WIN_SEND_MESSAGE_EVENT, &Frame::OnWinSendMessageEvent, this);
 #endif
 
+        wx_set_app_icon(this);
         CenterOnScreen();
+}
+
+void wx_set_app_icon(wxTopLevelWindow *win) {
+#ifdef __WXMSW__
+        static wxIconBundle icons(wxT("aaaa"), 0);
+        if (icons.IsOk())
+                win->SetIcons(icons);
+#else
+        (void)win;
+#endif
 }
 
 void Frame::Start() {
