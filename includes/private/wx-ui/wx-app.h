@@ -8,8 +8,9 @@
 
 #include "wx-utils.h"
 
+typedef int (*WX_CALLBACK)(void *data);
+
 class CallbackEvent;
-class PopupMenuEvent;
 
 wxDECLARE_EVENT(WX_CALLBACK_EVENT, CallbackEvent);
 wxDECLARE_EVENT(WX_EXIT_EVENT, wxCommandEvent);
@@ -17,41 +18,7 @@ wxDECLARE_EVENT(WX_STOP_EMULATION_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_STOP_EMULATION_NOW_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_EXIT_COMPLETE_EVENT, wxCommandEvent);
 wxDECLARE_EVENT(WX_SHOW_WINDOW_EVENT, wxCommandEvent);
-wxDECLARE_EVENT(WX_POPUP_MENU_EVENT, PopupMenuEvent);
 
-#ifdef _WIN32
-class WinSendMessageEvent;
-wxDECLARE_EVENT(WX_WIN_SEND_MESSAGE_EVENT, WinSendMessageEvent);
-class WinSendMessageEvent : public wxCommandEvent {
-    public:
-        WinSendMessageEvent(void *hwnd, int message, INT_PARAM wParam, LONG_PARAM lParam)
-                : wxCommandEvent(WX_WIN_SEND_MESSAGE_EVENT) {
-                this->hwnd = hwnd;
-                this->message = message;
-                this->wParam = wParam;
-                this->lParam = lParam;
-        }
-        WinSendMessageEvent(const WinSendMessageEvent &event) : wxCommandEvent(event) {
-                this->hwnd = event.GetHWND();
-                this->message = event.GetMessage();
-                this->wParam = event.GetWParam();
-                this->lParam = event.GetLParam();
-        }
-
-        wxEvent *Clone() const { return new WinSendMessageEvent(*this); }
-
-        void *GetHWND() const { return hwnd; }
-        int GetMessage() const { return message; }
-        INT_PARAM GetWParam() const { return wParam; }
-        LONG_PARAM GetLParam() const { return lParam; }
-
-    private:
-        void *hwnd;
-        int message;
-        INT_PARAM wParam;
-        LONG_PARAM lParam;
-};
-#endif
 
 class CallbackEvent : public wxCommandEvent {
     public:
@@ -72,35 +39,6 @@ class CallbackEvent : public wxCommandEvent {
     private:
         WX_CALLBACK callback;
         void *data;
-};
-
-class PopupMenuEvent : public wxCommandEvent {
-    public:
-        PopupMenuEvent(wxWindow *window, wxMenu *menu, int *x, int *y) : wxCommandEvent(WX_POPUP_MENU_EVENT) {
-                this->window = window;
-                this->menu = menu;
-                this->x = x;
-                this->y = y;
-        }
-        PopupMenuEvent(const PopupMenuEvent &event) : wxCommandEvent(event) {
-                this->window = event.GetWindow();
-                this->menu = event.GetMenu();
-                this->x = event.GetX();
-                this->y = event.GetY();
-        }
-
-        wxEvent *Clone() const { return new PopupMenuEvent(*this); }
-
-        wxWindow *GetWindow() const { return window; }
-        wxMenu *GetMenu() const { return menu; }
-        int *GetX() const { return x; }
-        int *GetY() const { return y; }
-
-    private:
-        int *x;
-        int *y;
-        wxMenu *menu;
-        wxWindow *window;
 };
 
 class Frame;
@@ -136,6 +74,13 @@ class Frame : public wxFrame {
 
         wxMenuBar *GetMenu();
 
+        void QueueCallback(WX_CALLBACK callback, void *data);
+        void StopEmulation();
+        void StopEmulationNow();
+        void ToggleVisible();
+        void ShowStatus();
+        void CloseStatus();
+
     private:
         void OnCommand(wxCommandEvent &event);
         void OnExitEvent(wxCommandEvent &event);
@@ -143,14 +88,11 @@ class Frame : public wxFrame {
         void OnStopEmulationEvent(wxCommandEvent &event);
         void OnStopEmulationNowEvent(wxCommandEvent &event);
         void OnShowWindowEvent(wxCommandEvent &event);
-        void OnPopupMenuEvent(PopupMenuEvent &event);
         void OnCallbackEvent(CallbackEvent &event);
         void OnClose(wxCloseEvent &event);
-#ifdef _WIN32
-        void OnWinSendMessageEvent(WinSendMessageEvent &event);
-#endif
 
         void ShowConfigSelection();
+        void QueueCommand(wxEventType type, int value);
         wxMenuBar *menu;
 
         bool closing;

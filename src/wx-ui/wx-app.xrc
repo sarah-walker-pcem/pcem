@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwidgets.org/wxxrc" version="2.5.3.0">
+	<ids-range name="IDM_SCREENSHOT_FORMAT" start="950" />
+
+	<ids-range name="IDM_VID_RESOLUTION" start="990" />
+
+	<ids-range name="IDM_VID_FS" start="1000" />
+
+	<ids-range name="IDM_VID_FS_MODE" start="1100" />
+
+	<ids-range name="IDM_VID_SCALE" start="1200" />
+
+	<ids-range name="IDM_VID_SCALE_MODE" start="1300" />
+
+	<ids-range name="IDM_VID_RENDER_DRIVER" start="1400" />
+
+	<ids-range name="IDM_SND_BUF" start="2000" />
+
+	<ids-range name="IDM_SND_GAIN" start="2100" />
+
+	<ids-range name="IDM_VID_GL3_INPUT_STRETCH" start="3000" />
+
+	<ids-range name="IDM_VID_GL3_INPUT_SCALE" start="3100" />
+
+	<ids-range name="IDM_VID_GL3_SHADER_REFRESH_RATE" start="3200" />
+
+	<object class="wxMenuBar" name="main_menu">
+		<object class="wxMenu">
+			<label>_System</label>
+			<object class="wxMenuItem" name="IDM_FILE_HRESET">
+				<label>_Hard Reset</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_FILE_RESET_CAD">
+				<label>_Ctrl+Alt+Del</label>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_FILE_EXIT">
+				<label>_Shutdown</label>
+			</object>
+		</object>
+		<object class="wxMenu">
+			<label>_Disc</label>
+			<object class="wxMenuItem" name="IDM_DISC_A">
+				<label>Change drive _A:...</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_DISC_B">
+				<label>Change drive _B:...</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_EJECT_A">
+				<label>_Eject drive A:</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_EJECT_B">
+				<label>Eject drive B:</label>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_BPB_DISABLE">
+				<label>Disable BPB checking</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_DISC_CREATE">
+				<label>Create blank disc image...</label>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_DISC_ZIP">
+				<label>Load _ZIP drive...</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_EJECT_ZIP">
+				<label>Eject ZIP drive</label>
+			</object>
+		</object>
+		<object class="wxMenu" name="IDM_CDROM">
+			<label>_CD-ROM</label>
+			<object class="wxMenuItem" name="IDM_CDROM_IMAGE_LOAD">
+				<label>_Load image...</label>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_CDROM_EMPTY">
+				<label>_Empty</label>
+				<radio>1</radio>
+			</object>
+			<object class="wxMenuItem" name="IDM_CDROM_IMAGE">
+				<label>_Image...</label>
+				<radio>1</radio>
+			</object>
+		</object>
+		<object class="wxMenu" name="IDM_CASSETTE">
+			<label>C_assette</label>
+			<object class="wxMenuItem" name="IDM_CASSETTE_LOAD">
+				<label>_Load tapefile...</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_CASSETTE_EJECT">
+				<label>_Eject tape</label>
+			</object>
+		</object>
+		<object class="wxMenu">
+			<label>Video</label>
+			<object class="wxMenu">
+				<label>Resolution</label>
+				<object class="wxMenuItem" name="IDM_VID_RESOLUTION[0]">
+					<label>Original</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_RESOLUTION[1]">
+					<label>Resizable</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_RESOLUTION[2]">
+					<label>Custom</label>
+					<radio>1</radio>
+				</object>
+				<object class="separator"/>
+				<object class="wxMenuItem" name="IDM_VID_RESOLUTION_CUSTOM">
+					<label>Set custom resolution...</label>
+				</object>
+			</object>
+			<object class="wxMenuItem" name="IDM_VID_REMEMBER">
+				<label>Remember size &amp;&amp; position</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="IDM_VID_FULLSCREEN_TOGGLE">
+				<label>Toggle fullscreen\tCtrl+Alt+PageDown</label>
+			</object>
+			<object class="wxMenuItem" name="IDM_VID_FULLSCREEN">
+				<label>Fullscreen on input grab</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenu">
+				<label>Fullscreen mode</label>
+				<object class="wxMenuItem" name="IDM_VID_FS_MODE[0]">
+					<label>_Borderless</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_FS_MODE[1]">
+					<label>_Exclusive</label>
+					<radio>1</radio>
+				</object>
+			</object>
+			<object class="wxMenu" name="IDM_VID_RENDER_DRIVER">
+				<label>_Render driver</label>
+				<object class="wxMenuItem" name="IDM_VID_RENDER_DRIVER[0]">
+					<label>Auto</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_RENDER_DRIVER[1]">
+					<label>Direct3D</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_RENDER_DRIVER[2]">
+					<label>OpenGL</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_RENDER_DRIVER[6]">
+					<label>OpenGL 3.0</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_RENDER_DRIVER[5]">
+					<label>Software</label>
+					<radio>1</radio>
+				</object>
+			</object>
+			<object class="wxMenuItem" name="IDM_VID_VSYNC">
+				<label>_VSync</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="wxMenuItem" name="IDM_VID_LOST_FOCUS_DIM">
+				<label>_Dim display on lost focus</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="wxMenuItem" name="IDM_VID_ALTERNATIVE_UPDATE_LOCK">
+				<label>Alternative update-lock</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenu">
+				<label>Scale filtering</label>
+				<object class="wxMenuItem" name="IDM_VID_SCALE_MODE[0]">
+					<label>_Nearest</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_SCALE_MODE[1]">
+					<label>_Linear</label>
+					<radio>1</radio>
+				</object>
+			</object>
+			<object class="wxMenu">
+				<label>Output stretch-mode</label>
+				<object class="wxMenuItem" name="IDM_VID_FS[0]">
+					<label>_None</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_FS[1]">
+					<label>_4:3</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_FS[2]">
+					<label>_Square pixels</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_FS[3]">
+					<label>_Integer scale</label>
+					<radio>1</radio>
+				</object>
+			</object>
+			<object class="wxMenu" name="IDM_VID_SCALE_MENU">
+				<label>Output scale</label>
+				<object class="wxMenuItem" name="IDM_VID_SCALE[0]">
+					<label>0.5x</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_SCALE[1]">
+					<label>1x</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_SCALE[2]">
+					<label>1.5x</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_SCALE[3]">
+					<label>2x</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_SCALE[4]">
+					<label>2.5x</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_SCALE[5]">
+					<label>3x</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_SCALE[6]">
+					<label>3.5x</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_VID_SCALE[7]">
+					<label>4x</label>
+					<radio>1</radio>
+				</object>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenu" name="IDM_VID_GL3">
+				<label>OpenGL 3.0 renderer</label>
+				<object class="wxMenu">
+					<label>Input stretch-mode</label>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_STRETCH[0]">
+						<label>_None</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_STRETCH[1]">
+						<label>_4:3</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_STRETCH[2]">
+						<label>_Square pixels</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_STRETCH[3]">
+						<label>_Integer scale</label>
+						<radio>1</radio>
+					</object>
+				</object>
+				<object class="wxMenu">
+					<label>Input scale</label>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_SCALE[0]">
+						<label>0.5x</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_SCALE[1]">
+						<label>1x</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_SCALE[2]">
+						<label>1.5x</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_SCALE[3]">
+						<label>2x</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_SCALE[4]">
+						<label>2.5x</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_SCALE[5]">
+						<label>3x</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_SCALE[6]">
+						<label>3.5x</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_INPUT_SCALE[7]">
+						<label>4x</label>
+						<radio>1</radio>
+					</object>
+				</object>
+				<object class="wxMenu">
+					<label>Shader refresh rate</label>
+					<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_REFRESH_RATE[0]">
+						<label>Same as emulated display</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_REFRESH_RATE[10]">
+						<label>10 hz</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_REFRESH_RATE[25]">
+						<label>25 hz</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_REFRESH_RATE[30]">
+						<label>30 hz</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_REFRESH_RATE[50]">
+						<label>50 hz</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_REFRESH_RATE[60]">
+						<label>60 hz</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_REFRESH_RATE[72]">
+						<label>72 hz</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_REFRESH_RATE[85]">
+						<label>85 hz</label>
+						<radio>1</radio>
+					</object>
+				</object>
+				<object class="separator"/>
+				<object class="wxMenuItem" name="IDM_VID_GL3_SHADER_MANAGER">
+					<label>Shader manager</label>
+				</object>
+			</object>
+		</object>
+		<object class="wxMenu">
+			<label>Sound</label>
+			<object class="wxMenu">
+				<label>_Buffer length</label>
+				<object class="wxMenuItem" name="IDM_SND_BUF[0]">
+					<label>_50 ms</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_BUF[1]">
+					<label>_100 ms</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_BUF[2]">
+					<label>_200 ms</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_BUF[3]">
+					<label>_400 ms</label>
+					<radio>1</radio>
+				</object>
+			</object>
+			<object class="wxMenu">
+				<label>_Output level</label>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[0]">
+					<label>_Normal</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[1]">
+					<label>+_2 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[2]">
+					<label>+_4 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[3]">
+					<label>+_6 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[4]">
+					<label>+_8 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[5]">
+					<label>+_10 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[6]">
+					<label>+12 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[7]">
+					<label>+14 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[8]">
+					<label>+16 dB</label>
+					<radio>1</radio>
+				</object>
+				<object class="wxMenuItem" name="IDM_SND_GAIN[9]">
+					<label>+18 dB</label>
+					<radio>1</radio>
+				</object>
+			</object>
+		</object>
+		<object class="wxMenu">
+			<label>Misc</label>
+			<object class="wxMenu">
+				<label>_Screenshot</label>
+				<object class="wxMenuItem" name="IDM_SCREENSHOT">
+					<label>_Take screenshot\tCtrl+Alt+PageUp</label>
+				</object>
+				<object class="wxMenu">
+					<label>_Format</label>
+					<object class="wxMenuItem" name="IDM_SCREENSHOT_FORMAT[0]">
+						<label>PNG</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_SCREENSHOT_FORMAT[1]">
+						<label>TIFF</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_SCREENSHOT_FORMAT[2]">
+						<label>BMP</label>
+						<radio>1</radio>
+					</object>
+					<object class="wxMenuItem" name="IDM_SCREENSHOT_FORMAT[3]">
+						<label>JPG</label>
+						<radio>1</radio>
+					</object>
+				</object>
+				<object class="wxMenuItem" name="IDM_SCREENSHOT_FLASH">
+					<label>Flash screen</label>
+					<checkable>1</checkable>
+				</object>
+			</object>
+			<object class="wxMenuItem" name="IDM_STATUS">
+				<label>_Machine</label>
+			</object>
+		</object>
+		<object class="wxMenu" name="IDM_VIEW">
+			<label>_View</label>
+		</object>
+	</object>
+
+	<object class="wxDialog" name="ConfirmRememberDlg">
+		<style>wxDEFAULT_DIALOG_STYLE|wxSTAY_ON_TOP</style>
+		<title>PCem</title>
+		<centered>1</centered>
+		<object class="wxPanel" name="ROOT_PANEL">
+			<object class="wxBoxSizer">
+				<orient>wxVERTICAL</orient>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALL</flag>
+							<border>5</border>
+							<object class="wxStaticBitmap">
+								<bitmap stock_id="wxART_QUESTION" stock_client="wxART_CMN_DIALOG"/>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<option>0</option>
+							<flag>wxALIGN_CENTER|wxALL</flag>
+							<border>5</border>
+							<object class="wxStaticText" name="IDC_CONFIRM_LABEL">
+								<label>IDC_CONFIRM_LABEL</label>
+								<wrap>-1</wrap>
+							</object>
+						</object>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxCheckBox" name="IDC_CONFIRM_REMEMBER">
+						<label>IDC_CONFIRM_REMEMBER</label>
+						<checked>0</checked>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>1</option>
+					<flag>wxEXPAND</flag>
+					<border>5</border>
+					<object class="wxStdDialogButtonSizer">
+						<object class="button">
+							<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+							<border>5</border>
+							<object class="wxButton" name="wxID_OK">
+								<label>_OK</label>
+								<default>1</default>
+							</object>
+						</object>
+						<object class="button">
+							<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+							<border>5</border>
+							<object class="wxButton" name="wxID_CANCEL">
+								<label>_Cancel</label>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+</resource>

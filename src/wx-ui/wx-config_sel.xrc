@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwidgets.org/wxxrc" version="2.5.3.0">
+	<object class="wxDialog" name="ConfigureSelectionDlg">
+		<title>PCem Configuration Manager</title>
+		<centered>1</centered>
+		<object class="wxFlexGridSizer">
+			<rows>1</rows>
+			<cols>1</cols>
+			<vgap>0</vgap>
+			<hgap>0</hgap>
+			<growablecols>0</growablecols>
+			<growablerows>0</growablerows>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxFlexGridSizer">
+					<rows>2</rows>
+					<cols>2</cols>
+					<vgap>0</vgap>
+					<hgap>0</hgap>
+					<growablecols>0</growablecols>
+					<growablerows>0</growablerows>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxBoxSizer">
+							<orient>wxVERTICAL</orient>
+							<object class="sizeritem">
+								<option>1</option>
+								<flag>wxALL|wxEXPAND</flag>
+								<border>5</border>
+								<object class="wxListBox" name="IDC_LIST">
+									<style>wxLB_SINGLE</style>
+									<size>250,300</size>
+									<content />
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxBoxSizer">
+							<orient>wxVERTICAL</orient>
+							<object class="sizeritem">
+								<option>0</option>
+								<flag>wxALL</flag>
+								<border>5</border>
+								<object class="wxBitmapButton" name="wxID_OK">
+									<style>wxBU_AUTODRAW</style>
+									<tooltip>Load</tooltip>
+									<bitmap>icons/32x32/control_play_blue.png</bitmap>
+									<default>1</default>
+								</object>
+							</object>
+							<object class="sizeritem">
+								<option>0</option>
+								<flag>wxALL</flag>
+								<border>5</border>
+								<object class="wxBitmapButton" name="IDC_CONFIG">
+									<style>wxBU_AUTODRAW</style>
+									<tooltip>Configure</tooltip>
+									<bitmap>icons/32x32/setting_tools.png</bitmap>
+									<default>0</default>
+								</object>
+							</object>
+                                                        <object class="spacer">
+        							<option>1</option>
+        							<flag>wxEXPAND</flag>
+        							<border>5</border>
+        							<size>0,0</size>
+        						</object>
+        						<object class="sizeritem">
+        							<option>0</option>
+        							<flag>wxALL</flag>
+        							<border>5</border>
+        							<object class="wxBitmapButton" name="IDC_CONFIG_HOST">
+        								<style>wxBU_AUTODRAW</style>
+               								<tooltip>Configure Host</tooltip>
+        								<bitmap>icons/32x32/widescreen.png</bitmap>
+        								<default>0</default>
+        							</object>
+        						</object>
+                                                </object>
+					</object>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxBoxSizer">
+							<orient>wxHORIZONTAL</orient>
+							<object class="sizeritem">
+								<option>0</option>
+								<flag>wxALL</flag>
+								<border>5</border>
+								<object class="wxBitmapButton" name="IDC_NEW">
+									<style>wxBU_AUTODRAW</style>
+									<tooltip>New</tooltip>
+									<bitmap>icons/32x32/computer_add.png</bitmap>
+									<default>0</default>
+								</object>
+							</object>
+							<object class="sizeritem">
+								<option>0</option>
+								<flag>wxALL</flag>
+								<border>5</border>
+								<object class="wxBitmapButton" name="IDC_RENAME">
+									<style>wxBU_AUTODRAW</style>
+									<tooltip>Rename</tooltip>
+									<bitmap>icons/32x32/computer_edit.png</bitmap>
+									<default>0</default>
+								</object>
+							</object>
+							<object class="sizeritem">
+								<option>0</option>
+								<flag>wxALL</flag>
+								<border>5</border>
+								<object class="wxBitmapButton" name="IDC_COPY">
+									<style>wxBU_AUTODRAW</style>
+									<tooltip>Copy</tooltip>
+									<bitmap>icons/32x32/computer_go.png</bitmap>
+									<default>0</default>
+								</object>
+							</object>
+							<object class="sizeritem">
+								<option>0</option>
+								<flag>wxALL</flag>
+								<border>5</border>
+								<object class="wxBitmapButton" name="IDC_DELETE">
+									<style>wxBU_AUTODRAW</style>
+									<tooltip>Delete</tooltip>
+									<bitmap>icons/32x32/computer_delete.png</bitmap>
+									<default>0</default>
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxBitmapButton" name="wxID_CANCEL">
+							<style>wxBU_AUTODRAW</style>
+							<tooltip>Quit</tooltip>
+							<bitmap>icons/32x32/door_in.png</bitmap>
+							<default>0</default>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+</resource>

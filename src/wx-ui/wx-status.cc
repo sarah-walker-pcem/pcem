@@ -1,5 +1,6 @@
 #include "wx-status.h"
 #include "wx-app.h"
+#include "wx-config.h"
 #include "wx-common.h"
 #include "wx-utils.h"
 #include <wx/artprov.h>
@@ -218,17 +219,10 @@ void StatusPane::Render(wxDC &dc) {
 }
 
 extern "C" {
-extern int window_remember;
-void wx_handle_command(void *, int, int);
-
-void resume_emulation();
-void pause_emulation();
-int stop_emulation_confirm();
-void reset_emulation();
-
-void hdconf_open(void *hwnd);
-void config_open(void *hwnd);
+#include "sdl2-emu.h"
 }
+
+extern int window_remember;
 
 int wx_window_x = 0;
 int wx_window_y = 0;
@@ -298,7 +292,7 @@ void StatusFrame::OnCommand(wxCommandEvent &event) {
                         UpdateToolbar();
                 }
         } else if (event.GetId() == XRCID("TOOLBAR_STOP"))
-                wx_stop_emulation(GetParent());
+                ((Frame *)GetParent())->StopEmulation();
         else if (event.GetId() == XRCID("IDM_SHOW_STATUS"))
                 show_status = event.IsChecked();
         else if (event.GetId() == XRCID("IDM_SPEED_HISTORY"))
@@ -309,10 +303,8 @@ void StatusFrame::OnCommand(wxCommandEvent &event) {
                 show_mount_paths = event.IsChecked();
         else if (event.GetId() == XRCID("IDM_SHOW_MACHINE_ON_START"))
                 show_machine_on_start = event.IsChecked();
-        //        else if (event.GetId() == XRCID("IDM_HDCONF"))
-        //                hdconf_open(this);
         else if (event.GetId() == XRCID("IDM_CONFIG"))
-                config_open(this);
+                ConfigDialog::Open(this);
         else if (event.GetId() == XRCID("IDM_RESET_CONFIRMATION_DIALOGS")) {
                 confirm_on_reset_machine = 1;
                 confirm_on_stop_emulation = 1;

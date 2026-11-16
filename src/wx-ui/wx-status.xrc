@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwidgets.org/wxxrc" version="2.5.3.0">
+	<object class="wxToolBar" name="tool_bar">
+		<style>wxTB_FLAT|wxTB_NODIVIDER</style>
+		<object class="tool" name="TOOLBAR_RUN">
+       		<bitmap>icons/24x24/play.png</bitmap>
+        	<label>Run</label>
+       	</object>
+		<object class="tool" name="TOOLBAR_PAUSE">
+       		<bitmap>icons/24x24/pause.png</bitmap>
+        	<label>Pause</label>
+       	</object>
+		<object class="tool" name="TOOLBAR_STOP">
+       		<bitmap>icons/24x24/stop.png</bitmap>
+        	<label>Stop</label>
+       	</object>
+		<object class="tool" name="TOOLBAR_RESET">
+       		<bitmap>icons/24x24/refresh.png</bitmap>
+        	<label>Hard reset</label>
+       	</object>
+    </object>
+
+	<object class="wxMenuBar" name="status_menu">
+		<object class="wxMenu">
+			<label>_Options</label>
+			<object class="wxMenuItem" name="IDM_DISC_ACTIVITY">
+				<label>Disc activity</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="wxMenuItem" name="IDM_MACHINE_MOUNT_PATHS">
+				<label>Mount paths</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="wxMenuItem" name="IDM_SHOW_STATUS">
+				<label>Status</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="wxMenuItem" name="IDM_SPEED_HISTORY">
+				<label>Speed history</label>
+				<checkable>1</checkable>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_SHOW_MACHINE_ON_START">
+				<label>Show on start</label>
+				<checkable>1</checkable>
+			</object>
+		</object>
+		<object class ="wxMenu">
+			<label>_Configure</label>
+			<object class="wxMenuItem" name="IDM_CONFIG">
+				<label>Machine</label>
+			</object>
+		</object>
+		<object class ="wxMenu">
+			<label>_Misc</label>
+			<object class="wxMenuItem" name="IDM_RESET_CONFIRMATION_DIALOGS">
+				<label>_Reset confirmation dialogs</label>
+			</object>
+			<object class="separator"/>
+			<object class="wxMenuItem" name="IDM_ABOUT">
+				<label>_About</label>
+			</object>
+		</object>
+	</object>
+
+	<object class="wxDialog" name="AboutDlg">
+		<style>wxDEFAULT_DIALOG_STYLE</style>
+		<title></title>
+		<centered>1</centered>
+		<object class="wxPanel" name="ROOT_PANEL">
+			<object class="wxBoxSizer">
+				<orient>wxVERTICAL</orient>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxStaticText" name="VERSION_TEXT">
+						<label>PCem PCEM-VERSION-STRING\nCopyright (C) 2007-2020 Sarah Walker and Contributors\nCopyright (C) 2021-2026 Michael Manley, Sarah Walker and Contributors\n\nhttps://pcem-emulator.co.uk/\n\nThis program is licensed under the GNU General Public License version 2.\nSee COPYING for more details.\n\nToolbar-icons made by Roundicons (https://roundicons.com/) from www.flaticon.com\nOther icons made by FatCow (http://www.fatcow.com/free-icons/)</label>
+						<wrap>-1</wrap>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxEXPAND | wxALL</flag>
+					<border>5</border>
+					<object class="wxStaticLine">
+						<style>wxLI_HORIZONTAL</style>
+					</object>
+				</object>
+				<object class="sizeritem">
+					<option>0</option>
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxButton" name="wxID_OK">
+						<label>_OK</label>
+						<default>1</default>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+</resource>

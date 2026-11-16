@@ -102,7 +102,7 @@ void viewer_call(viewer_t *viewer, void *p, void (*func)(void *v, void *param), 
 
 void update_viewers_menu(void *menu)
 {
-	wxMenu *wm = (wxMenu *)wx_getsubmenu(menu, XRCID("IDM_VIEW"));
+	wxMenu *wm = wx_getsubmenu((wxMenuBar *)menu, XRCID("IDM_VIEW"));
 	if (!wm)
 		return;
 

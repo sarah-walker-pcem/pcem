@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwidgets.org/wxxrc" version="2.5.3.0">
+	<object class="wxDialog" name="ShaderManagerDlg">
+		<style>wxDEFAULT_DIALOG_STYLE|wxSTAY_ON_TOP</style>
+		<title>PCem Shader Manager</title>
+		<centered>1</centered>
+		<object class="wxPanel" name="ROOT_PANEL">
+			<object class="wxBoxSizer">
+				<object class="sizeritem">
+					<flag>wxALL</flag>
+					<border>5</border>
+					<object class="wxBoxSizer">
+						<orient>wxHORIZONTAL</orient>
+						<object class="sizeritem">
+							<flag>wxALL</flag>
+							<border>0</border>
+							<object class="wxListBox" name="IDC_LIST">
+								<style>wxLB_SINGLE</style>
+								<size>300,350</size>
+							</object>
+						</object>
+						<object class="sizeritem">
+							<flag>wxEXPAND</flag>
+							<border>0</border>
+							<object class="wxBoxSizer">
+								<orient>wxVERTICAL</orient>
+
+								<object class="sizeritem">
+									<flag>wxALL</flag>
+									<border>0</border>
+									<object class="wxButton" name="IDC_ADD">
+										<label>Add</label>
+									</object>
+								</object>
+
+								<object class="sizeritem">
+									<flag>wxALL</flag>
+									<border>0</border>
+									<object class="wxButton" name="IDC_REMOVE">
+										<label>Remove</label>
+									</object>
+								</object>
+
+								<object class="spacer">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+								</object>
+
+								<object class="sizeritem">
+									<flag>wxALL</flag>
+									<border>0</border>
+									<object class="wxButton" name="IDC_CONFIG">
+										<label>Configure...</label>
+									</object>
+								</object>
+
+								<object class="sizeritem">
+									<flag>wxALL</flag>
+									<border>0</border>
+									<object class="wxButton" name="IDC_MOVE_UP">
+										<label>Move up</label>
+									</object>
+								</object>
+
+								<object class="sizeritem">
+									<flag>wxALL</flag>
+									<border>0</border>
+									<object class="wxButton" name="IDC_MOVE_DOWN">
+										<label>Move down</label>
+									</object>
+								</object>
+
+								<object class="spacer">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+								</object>
+
+								<object class="sizeritem">
+									<flag>wxALL</flag>
+									<border>0</border>
+									<object class="wxButton" name="IDC_APPLY">
+										<label>Apply</label>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<flag>wxALL</flag>
+									<border>0</border>
+									<object class="wxButton" name="wxID_OK">
+										<label>OK</label>
+										<default>1</default>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<flag>wxALL</flag>
+									<border>0</border>
+									<object class="wxButton" name="wxID_CANCEL">
+										<label>Cancel</label>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+</resource>

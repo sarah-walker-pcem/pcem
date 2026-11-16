@@ -1,8 +1,28 @@
-#ifndef SRC_WX_CREATEDISC_H_
-#define SRC_WX_CREATEDISC_H_
+#ifndef _PCEM_WX_CREATEDISC_H_
+#define _PCEM_WX_CREATEDISC_H_
 
-extern "C" {
-void creatediscimage_open(void *hwnd);
-}
+#include "wx-utils.h"
 
-#endif /* SRC_WX_CREATEDISC_H_ */
+#include <vector>
+
+class CreateDiscDialog : public wxDialog {
+    public:
+        static void Open(wxWindow *parent);
+
+        CreateDiscDialog(wxWindow *parent);
+
+    private:
+        struct DiscFormat {
+                const char *name;
+                int nr_sectors;
+        };
+
+        static const DiscFormat disc_formats[];
+        static const int num_disc_formats;
+
+        std::vector<wxRadioButton *> formats;
+
+        void OnOk(wxCommandEvent &event);
+};
+
+#endif /* _PCEM_WX_CREATEDISC_H_ */

@@ -1,264 +1,20 @@
 #include "wx-joystickconfig.h"
 
-#include "wx-utils.h"
-#include "wx/wxprec.h"
-
-#include "wx-dialogbox.h"
-
-#ifndef WX_PRECOMP
-#include "wx/wx.h"
-#endif
-
-#include "wx/xrc/xmlres.h"
-#include <pcem/api.h>
+#include <strings.h>
+#include <vector>
 
 extern "C" {
-PCEM_API void pclog(const char *format, ...);
-#include "config.h"
-#include "device.h"
+#include "ibm.h"
 #include "gameport.h"
 #include "plat-joystick.h"
 }
 
-#define IDC_CONFIG_BASE 1000
-
-static int joystick_nr;
-static int joystick_config_type;
-#define AXIS_STRINGS_MAX 3
-static char axis_strings[AXIS_STRINGS_MAX][10] = {"X Axis", "Y Axis", "Z Axis"};
-
-static void rebuild_axis_button_selections(void *hdlg) {
-        int id = IDC_CONFIG_BASE + 3;
-        void *h;
-        int joystick;
-        int c, d;
-
-        h = wx_getdlgitem(hdlg, IDC_CONFIG_BASE + 1);
-        joystick = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-
-        for (c = 0; c < joystick_get_axis_count(joystick_config_type); c++) {
-                int sel = c;
-
-                h = wx_getdlgitem(hdlg, id);
-                wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
-
-                if (joystick) {
-                        for (d = 0; d < plat_joystick_state[joystick - 1].nr_axes; d++) {
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)plat_joystick_state[joystick - 1].axis[d].name);
-                                if (c < AXIS_STRINGS_MAX) {
-                                        if (!strcasecmp(axis_strings[c], plat_joystick_state[joystick - 1].axis[d].name))
-                                                sel = d;
-                                }
-                        }
-                        for (d = 0; d < plat_joystick_state[joystick - 1].nr_povs; d++) {
-                                char s[80];
-
-                                snprintf(s, sizeof(s), "%s (X axis)", plat_joystick_state[joystick - 1].pov[d].name);
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
-                                snprintf(s, sizeof(s), "%s (Y axis)", plat_joystick_state[joystick - 1].pov[d].name);
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
-                        }
-                        wx_sendmessage(h, WX_CB_SETCURSEL, sel, 0);
-                        wx_enablewindow(h, TRUE);
-                } else
-                        wx_enablewindow(h, FALSE);
-
-                id += 2;
-        }
-
-        for (c = 0; c < joystick_get_button_count(joystick_config_type); c++) {
-                h = wx_getdlgitem(hdlg, id);
-                wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
-
-                if (joystick) {
-                        for (d = 0; d < plat_joystick_state[joystick - 1].nr_buttons; d++)
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0,
-                                               (LONG_PARAM)plat_joystick_state[joystick - 1].button[d].name);
-                        wx_sendmessage(h, WX_CB_SETCURSEL, c, 0);
-                        wx_enablewindow(h, TRUE);
-                } else
-                        wx_enablewindow(h, FALSE);
-
-                id += 2;
-        }
-
-        for (c = 0; c < joystick_get_pov_count(joystick_config_type) * 2; c++) {
-                int sel = c;
-
-                h = wx_getdlgitem(hdlg, id);
-                wx_sendmessage(h, WX_CB_RESETCONTENT, 0, 0);
-
-                if (joystick) {
-                        for (d = 0; d < plat_joystick_state[joystick - 1].nr_povs; d++) {
-                                char s[80];
-
-                                snprintf(s, sizeof(s), "%s (X axis)", plat_joystick_state[joystick - 1].pov[d].name);
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
-                                snprintf(s, sizeof(s), "%s (Y axis)", plat_joystick_state[joystick - 1].pov[d].name);
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)s);
-                        }
-                        for (d = 0; d < plat_joystick_state[joystick - 1].nr_axes; d++) {
-                                wx_sendmessage(h, WX_CB_ADDSTRING, 0, (LONG_PARAM)plat_joystick_state[joystick - 1].axis[d].name);
-                        }
-                        wx_sendmessage(h, WX_CB_SETCURSEL, sel, 0);
-                        wx_enablewindow(h, TRUE);
-                } else
-                        wx_enablewindow(h, FALSE);
-
-                id += 2;
-        }
-}
-
-static int get_axis(void *hdlg, int id) {
-        void *h = wx_getdlgitem(hdlg, id);
-        int axis_sel = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-        int nr_axes = plat_joystick_state[joystick_state[joystick_nr].plat_joystick_nr - 1].nr_axes;
-
-        if (axis_sel < nr_axes)
-                return axis_sel;
-
-        axis_sel -= nr_axes;
-        if (axis_sel & 1)
-                return POV_Y | (axis_sel >> 1);
-        else
-                return POV_X | (axis_sel >> 1);
-}
-
-static int get_pov(void *hdlg, int id) {
-        void *h = wx_getdlgitem(hdlg, id);
-        int axis_sel = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-        int nr_povs = plat_joystick_state[joystick_state[joystick_nr].plat_joystick_nr - 1].nr_povs * 2;
-
-        if (axis_sel < nr_povs) {
-                if (axis_sel & 1)
-                        return POV_Y | (axis_sel >> 1);
-                else
-                        return POV_X | (axis_sel >> 1);
-        }
-
-        return axis_sel - nr_povs;
-}
-
-static int joystickconfig_dlgproc(void *hdlg, int message, INT_PARAM wParam, LONG_PARAM lParam) {
-        switch (message) {
-        case WX_INITDIALOG: {
-                //                        rebuild_axis_button_selections(hdlg);
-
-                void *h = wx_getdlgitem(hdlg, IDC_CONFIG_BASE + 1);
-                int c;
-                int id = IDC_CONFIG_BASE + 3;
-                int joystick = joystick_state[joystick_nr].plat_joystick_nr;
-
-                wx_sendmessage(h, WX_CB_SETCURSEL, joystick, 0);
-
-                rebuild_axis_button_selections(hdlg);
-
-                if (joystick_state[joystick_nr].plat_joystick_nr) {
-                        int nr_axes = plat_joystick_state[joystick - 1].nr_axes;
-                        int nr_povs = plat_joystick_state[joystick - 1].nr_povs;
-                        for (c = 0; c < joystick_get_axis_count(joystick_config_type); c++) {
-                                int mapping = joystick_state[joystick_nr].axis_mapping[c];
-
-                                h = wx_getdlgitem(hdlg, id);
-                                if (mapping & POV_X)
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, nr_axes + (mapping & 3) * 2, 0);
-                                else if (mapping & POV_Y)
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, nr_axes + (mapping & 3) * 2 + 1, 0);
-                                else
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, mapping, 0);
-                                id += 2;
-                        }
-                        for (c = 0; c < joystick_get_button_count(joystick_config_type); c++) {
-                                h = wx_getdlgitem(hdlg, id);
-                                wx_sendmessage(h, WX_CB_SETCURSEL, joystick_state[joystick_nr].button_mapping[c], 0);
-                                id += 2;
-                        }
-                        for (c = 0; c < joystick_get_pov_count(joystick_config_type); c++) {
-                                int mapping;
-
-                                h = wx_getdlgitem(hdlg, id);
-                                mapping = joystick_state[joystick_nr].pov_mapping[c][0];
-                                if (mapping & POV_X)
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, (mapping & 3) * 2, 0);
-                                else if (mapping & POV_Y)
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, (mapping & 3) * 2 + 1, 0);
-                                else
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, mapping + nr_povs * 2, 0);
-                                id += 2;
-                                h = wx_getdlgitem(hdlg, id);
-                                mapping = joystick_state[joystick_nr].pov_mapping[c][1];
-                                if (mapping & POV_X)
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, (mapping & 3) * 2, 0);
-                                else if (mapping & POV_Y)
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, (mapping & 3) * 2 + 1, 0);
-                                else
-                                        wx_sendmessage(h, WX_CB_SETCURSEL, mapping + nr_povs * 2, 0);
-                                id += 2;
-                        }
-                }
-        }
-                return TRUE;
-
-        case WX_COMMAND:
-                switch (wParam) {
-                case IDC_CONFIG_BASE + 1:
-                        //                        if (HIWORD(wParam) == CBN_SELCHANGE)
-                        rebuild_axis_button_selections(hdlg);
-                        break;
-
-                case wxID_OK: {
-                        void *h;
-                        int c;
-                        int id = IDC_CONFIG_BASE + 3;
-
-                        h = wx_getdlgitem(hdlg, IDC_CONFIG_BASE + 1);
-                        joystick_state[joystick_nr].plat_joystick_nr = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-
-                        if (joystick_state[joystick_nr].plat_joystick_nr) {
-                                for (c = 0; c < joystick_get_axis_count(joystick_config_type); c++) {
-                                        joystick_state[joystick_nr].axis_mapping[c] = get_axis(hdlg, id);
-                                        id += 2;
-                                }
-                                for (c = 0; c < joystick_get_button_count(joystick_config_type); c++) {
-                                        h = wx_getdlgitem(hdlg, id);
-                                        joystick_state[joystick_nr].button_mapping[c] = wx_sendmessage(h, WX_CB_GETCURSEL, 0, 0);
-                                        id += 2;
-                                }
-                                for (c = 0; c < joystick_get_pov_count(joystick_config_type); c++) {
-                                        h = wx_getdlgitem(hdlg, id);
-                                        joystick_state[joystick_nr].pov_mapping[c][0] = get_pov(hdlg, id);
-                                        id += 2;
-                                        h = wx_getdlgitem(hdlg, id);
-                                        joystick_state[joystick_nr].pov_mapping[c][1] = get_pov(hdlg, id);
-                                        id += 2;
-                                }
-                        }
-                }
-                case wxID_CANCEL:
-                        wx_enddialog(hdlg, 0);
-                        return TRUE;
-                }
-                break;
-        }
-        return FALSE;
-}
-
-void joystickconfig_open(void *hwnd, int joy_nr, int type) {
-        char s[257];
-        int c;
-
-        PCemDialogBox dialog((wxWindow *)hwnd, joystickconfig_dlgproc);
-        //	dialog.SetWindowStyle(wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
-
-        joystick_nr = joy_nr;
-        joystick_config_type = type;
-
-        dialog.SetTitle("Joystick Configuration");
-
+JoystickConfigDialog::JoystickConfigDialog(wxWindow *parent, int joy_nr, int type) : wxDialog(parent, wxID_ANY,
+                                           "Joystick Configuration"), joy_nr(joy_nr), type(type) {
         wxFlexGridSizer *root = new wxFlexGridSizer(0, 1, 0, 0);
         root->SetFlexibleDirection(wxBOTH);
         root->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
-        dialog.SetSizer(root);
+        SetSizer(root);
 
         wxFlexGridSizer *sizer = new wxFlexGridSizer(0, 2, 0, 0);
         sizer->SetFlexibleDirection(wxBOTH);
@@ -266,58 +22,164 @@ void joystickconfig_open(void *hwnd, int joy_nr, int type) {
         sizer->AddGrowableCol(1);
         root->Add(sizer, 1, wxEXPAND, 5);
 
-        int id = IDC_CONFIG_BASE;
+        device = AddCombo(sizer, "Device:");
+        device->Append("None");
+        for (int c = 0; c < joysticks_present; c++)
+                device->Append(plat_joystick_state[c].name);
 
-        sizer->Add(new wxStaticText(&dialog, id++, "Device:"), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
-        wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
-        sizer->Add(comboSizer, 1, wxEXPAND, 5);
-        wxComboBox *cb = new wxComboBox(&dialog, id++);
-        cb->SetEditable(false);
-        comboSizer->Add(cb, 1, wxALL, 5);
-
-        cb->Append("None");
-        for (c = 0; c < joysticks_present; c++)
-                cb->Append(plat_joystick_state[c].name);
-
-        for (c = 0; c < joystick_get_axis_count(type); c++) {
-                snprintf(s, sizeof(s), "Axis %i:", c);
-                sizer->Add(new wxStaticText(&dialog, id++, s), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
-                wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
-                sizer->Add(comboSizer, 1, wxEXPAND, 5);
-                wxComboBox *cb = new wxComboBox(&dialog, id++);
-                cb->SetEditable(false);
-                comboSizer->Add(cb, 1, wxALL, 5);
-        }
-
-        for (c = 0; c < joystick_get_button_count(type); c++) {
-                snprintf(s, sizeof(s), "Button %i:", c);
-                sizer->Add(new wxStaticText(&dialog, id++, s), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
-                wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
-                sizer->Add(comboSizer, 1, wxEXPAND, 5);
-                wxComboBox *cb = new wxComboBox(&dialog, id++);
-                cb->SetEditable(false);
-                comboSizer->Add(cb, 1, wxALL, 5);
-        }
-
-        for (c = 0; c < joystick_get_pov_count(type) * 2; c++) {
-                snprintf(s, sizeof(s), "POV %i:", c);
-                sizer->Add(new wxStaticText(&dialog, id++, s), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
-                wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
-                sizer->Add(comboSizer, 1, wxEXPAND, 5);
-                wxComboBox *cb = new wxComboBox(&dialog, id++);
-                cb->SetEditable(false);
-                comboSizer->Add(cb, 1, wxALL, 5);
-        }
+        for (int c = 0; c < joystick_get_axis_count(type); c++)
+                axes.push_back(AddCombo(sizer, wxString::Format("Axis %i:", c)));
+        for (int c = 0; c < joystick_get_button_count(type); c++)
+                buttons.push_back(AddCombo(sizer, wxString::Format("Button %i:", c)));
+        for (int c = 0; c < joystick_get_pov_count(type) * 2; c++)
+                povs.push_back(AddCombo(sizer, wxString::Format("POV %i:", c)));
 
         wxBoxSizer *okCancelSizer = new wxBoxSizer(wxHORIZONTAL);
         root->Add(okCancelSizer, 1, wxEXPAND, 5);
-
         okCancelSizer->Add(0, 0, 1, wxEXPAND, 5);
-        okCancelSizer->Add(new wxButton(&dialog, wxID_OK), 0, wxALL, 5);
-        okCancelSizer->Add(new wxButton(&dialog, wxID_CANCEL), 0, wxALL, 5);
+        okCancelSizer->Add(new wxButton(this, wxID_OK), 0, wxALL, 5);
+        okCancelSizer->Add(new wxButton(this, wxID_CANCEL), 0, wxALL, 5);
 
-        dialog.Fit();
-        dialog.OnInit();
-        dialog.ShowModal();
-        dialog.Destroy();
+        InitSelections();
+
+        device->Bind(wxEVT_COMBOBOX, [this](wxCommandEvent &) { Rebuild(); });
+        Bind(wxEVT_BUTTON, &JoystickConfigDialog::OnOk, this, wxID_OK);
+        Bind(wxEVT_BUTTON, [this](wxCommandEvent &) { EndModal(wxID_CANCEL); }, wxID_CANCEL);
+
+        Fit();
+}
+
+wxComboBox *JoystickConfigDialog::AddCombo(wxFlexGridSizer *sizer, const wxString &label) {
+        sizer->Add(new wxStaticText(this, wxID_ANY, label), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+        wxBoxSizer *comboSizer = new wxBoxSizer(wxHORIZONTAL);
+        sizer->Add(comboSizer, 1, wxEXPAND, 5);
+        wxComboBox *cb = new wxComboBox(this, wxID_ANY);
+        cb->SetEditable(false);
+        comboSizer->Add(cb, 1, wxALL, 5);
+        return cb;
+}
+
+void JoystickConfigDialog::AppendPovs(wxComboBox *cb, plat_joystick_t *joystick) {
+        for (int d = 0; d < joystick->nr_povs; d++) {
+                cb->Append(wxString::Format("%s (X axis)", joystick->pov[d].name));
+                cb->Append(wxString::Format("%s (Y axis)", joystick->pov[d].name));
+        }
+}
+
+void JoystickConfigDialog::AppendAxes(wxComboBox *cb, plat_joystick_t *joystick) {
+        for (int d = 0; d < joystick->nr_axes; d++)
+                cb->Append(joystick->axis[d].name);
+}
+
+void JoystickConfigDialog::Rebuild() {
+        static const char *axis_strings[] = {"X Axis", "Y Axis", "Z Axis"};
+        const int axis_strings_max = (int)(sizeof(axis_strings) / sizeof(axis_strings[0]));
+        int joystick = device->GetSelection();
+        plat_joystick_t *state = joystick > 0 ? &plat_joystick_state[joystick - 1] : NULL;
+
+        for (size_t c = 0; c < axes.size(); c++) {
+                wx_combobox_clear(axes[c]);
+                if (state) {
+                        int sel = c;
+                        AppendAxes(axes[c], state);
+                        for (int d = 0; d < state->nr_axes; d++) {
+                                if ((int)c < axis_strings_max && !strcasecmp(axis_strings[c], state->axis[d].name))
+                                        sel = d;
+                        }
+                        AppendPovs(axes[c], state);
+                        wx_combobox_select(axes[c], sel);
+                }
+                axes[c]->Enable(state != NULL);
+        }
+
+        for (size_t c = 0; c < buttons.size(); c++) {
+                wx_combobox_clear(buttons[c]);
+                if (state) {
+                        for (int d = 0; d < state->nr_buttons; d++)
+                                buttons[c]->Append(state->button[d].name);
+                        wx_combobox_select(buttons[c], c);
+                }
+                buttons[c]->Enable(state != NULL);
+        }
+
+        for (size_t c = 0; c < povs.size(); c++) {
+                wx_combobox_clear(povs[c]);
+                if (state) {
+                        AppendPovs(povs[c], state);
+                        AppendAxes(povs[c], state);
+                        wx_combobox_select(povs[c], c);
+                }
+                povs[c]->Enable(state != NULL);
+        }
+}
+
+int JoystickConfigDialog::PovIndex(int mapping, int other_count) {
+        if (mapping & POV_X)
+                return (mapping & 3) * 2;
+        if (mapping & POV_Y)
+                return (mapping & 3) * 2 + 1;
+        return mapping + other_count;
+}
+
+void JoystickConfigDialog::InitSelections() {
+        joystick_t *state = &joystick_state[joy_nr];
+        wx_combobox_select(device, state->plat_joystick_nr);
+        Rebuild();
+
+        if (!state->plat_joystick_nr)
+                return;
+
+        plat_joystick_t *plat = &plat_joystick_state[state->plat_joystick_nr - 1];
+        for (size_t c = 0; c < axes.size(); c++) {
+                int mapping = state->axis_mapping[c];
+                if (mapping & (POV_X | POV_Y))
+                        wx_combobox_select(axes[c], plat->nr_axes + PovIndex(mapping, 0));
+                else
+                        wx_combobox_select(axes[c], mapping);
+        }
+        for (size_t c = 0; c < buttons.size(); c++)
+                wx_combobox_select(buttons[c], state->button_mapping[c]);
+        for (size_t c = 0; c < povs.size(); c++)
+                wx_combobox_select(povs[c], PovIndex(state->pov_mapping[c / 2][c & 1], plat->nr_povs * 2));
+}
+
+int JoystickConfigDialog::GetAxis(wxComboBox *cb) {
+        int axis_sel = cb->GetSelection();
+        int nr_axes = plat_joystick_state[joystick_state[joy_nr].plat_joystick_nr - 1].nr_axes;
+
+        if (axis_sel < nr_axes)
+                return axis_sel;
+
+        axis_sel -= nr_axes;
+        return ((axis_sel & 1) ? POV_Y : POV_X) | (axis_sel >> 1);
+}
+
+int JoystickConfigDialog::GetPov(wxComboBox *cb) {
+        int axis_sel = cb->GetSelection();
+        int nr_povs = plat_joystick_state[joystick_state[joy_nr].plat_joystick_nr - 1].nr_povs * 2;
+
+        if (axis_sel < nr_povs)
+                return ((axis_sel & 1) ? POV_Y : POV_X) | (axis_sel >> 1);
+
+        return axis_sel - nr_povs;
+}
+
+void JoystickConfigDialog::OnOk(wxCommandEvent &event) {
+        joystick_t *state = &joystick_state[joy_nr];
+        state->plat_joystick_nr = device->GetSelection();
+
+        if (state->plat_joystick_nr) {
+                for (size_t c = 0; c < axes.size(); c++)
+                        state->axis_mapping[c] = GetAxis(axes[c]);
+                for (size_t c = 0; c < buttons.size(); c++)
+                        state->button_mapping[c] = buttons[c]->GetSelection();
+                for (size_t c = 0; c < povs.size(); c++)
+                        state->pov_mapping[c / 2][c & 1] = GetPov(povs[c]);
+        }
+        EndModal(wxID_OK);
+}
+
+void JoystickConfigDialog::Open(wxWindow *parent, int joy_nr, int type) {
+        JoystickConfigDialog dlg(parent, joy_nr, type);
+        dlg.ShowModal();
 }

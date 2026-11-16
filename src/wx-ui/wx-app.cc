@@ -4,26 +4,12 @@
 #include <wx/event.h>
 #include "wx-utils.h"
 #include "wx-common.h"
+#include "wx-frontend.h"
+#include "wx-status.h"
 #include "logging-internal.h"
 
-#ifdef _WIN32
-#define BITMAP WINDOWS_BITMAP
-#include <windows.h>
-#include <windowsx.h>
-#undef BITMAP
-#endif
-
 extern "C" {
-int wx_load_config(void *);
-int wx_start(void *);
-int wx_stop(void *);
-void wx_show(void *);
-void wx_handle_command(void *, int, int);
-
-int start_emulation(void *);
-int resume_emulation();
-int pause_emulation();
-int stop_emulation();
+#include "sdl2-emu.h"
 }
 
 extern int config_override;
@@ -36,10 +22,6 @@ wxDEFINE_EVENT(WX_STOP_EMULATION_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_STOP_EMULATION_NOW_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_EXIT_COMPLETE_EVENT, wxCommandEvent);
 wxDEFINE_EVENT(WX_SHOW_WINDOW_EVENT, wxCommandEvent);
-wxDEFINE_EVENT(WX_POPUP_MENU_EVENT, PopupMenuEvent);
-#ifdef _WIN32
-wxDEFINE_EVENT(WX_WIN_SEND_MESSAGE_EVENT, WinSendMessageEvent);
-#endif
 
 wxBEGIN_EVENT_TABLE(Frame, wxFrame) wxEND_EVENT_TABLE()
 
@@ -64,11 +46,6 @@ bool App::OnInit() {
         SetAppDisplayName("PCem");
         wxImage::AddHandler(new wxPNGHandler);
         wxXmlResource::Get()->InitAllHandlers();
-        //        if (!wxXmlResource::Get()->Load("src/pc.xrc"))
-        //        {
-        //                std::cout << "Could not load resource file" << std::endl;
-        //                return false;
-        //        }
         InitXmlResource();
 
         bind_quit_handlers(this);
@@ -92,15 +69,11 @@ Frame::Frame(App *app, const wxString &title, const wxPoint &pos, const wxSize &
         Bind(wxEVT_MENU, &Frame::OnCommand, this);
         Bind(wxEVT_TOOL, &Frame::OnCommand, this);
         Bind(WX_SHOW_WINDOW_EVENT, &Frame::OnShowWindowEvent, this);
-        Bind(WX_POPUP_MENU_EVENT, &Frame::OnPopupMenuEvent, this);
         Bind(WX_EXIT_EVENT, &Frame::OnExitEvent, this);
         Bind(WX_EXIT_COMPLETE_EVENT, &Frame::OnExitCompleteEvent, this);
         Bind(WX_STOP_EMULATION_EVENT, &Frame::OnStopEmulationEvent, this);
         Bind(WX_STOP_EMULATION_NOW_EVENT, &Frame::OnStopEmulationNowEvent, this);
         Bind(WX_CALLBACK_EVENT, &Frame::OnCallbackEvent, this);
-#ifdef _WIN32
-        Bind(WX_WIN_SEND_MESSAGE_EVENT, &Frame::OnWinSendMessageEvent, this);
-#endif
 
         wx_set_app_icon(this);
         CenterOnScreen();
@@ -108,7 +81,7 @@ Frame::Frame(App *app, const wxString &title, const wxPoint &pos, const wxSize &
 
 void wx_set_app_icon(wxTopLevelWindow *win) {
 #ifdef __WXMSW__
-        static wxIconBundle icons(wxT("aaaa"), 0);
+        static wxIconBundle icons(wxT("MAIN_ICO"), 0);
         if (icons.IsOk())
                 win->SetIcons(icons);
 #else
@@ -183,26 +156,40 @@ void Frame::OnShowWindowEvent(wxCommandEvent &event) {
                 window->Refresh();
 }
 
-void Frame::OnPopupMenuEvent(PopupMenuEvent &event) {
-        wxWindow *window = event.GetWindow();
-        wxMenu *menu = event.GetMenu();
-        int *x = event.GetX();
-        int *y = event.GetY();
-
-        if (x && y)
-                window->PopupMenu(menu, *x, *y);
-        else
-                window->PopupMenu(menu);
-}
-
 void Frame::OnCommand(wxCommandEvent &event) { wx_handle_command(this, event.GetId(), event.IsChecked()); }
 
 void Frame::OnClose(wxCloseEvent &event) {
         pclog_end();
-        wx_exit(this, 0);
+        QueueCommand(WX_EXIT_EVENT, 0);
 }
 
 wxMenuBar *Frame::GetMenu() { return menu; }
+
+void Frame::QueueCommand(wxEventType type, int value) {
+        wxCommandEvent *event = new wxCommandEvent(type, wxID_ANY);
+        event->SetEventObject(this);
+        event->SetInt(value);
+        wxQueueEvent(this, event);
+}
+
+void Frame::QueueCallback(WX_CALLBACK callback, void *data) { wxQueueEvent(this, new CallbackEvent(callback, data)); }
+
+void Frame::StopEmulation() { QueueCommand(WX_STOP_EMULATION_EVENT, 0); }
+
+void Frame::StopEmulationNow() { QueueCommand(WX_STOP_EMULATION_NOW_EVENT, 0); }
+
+void Frame::ToggleVisible() { QueueCommand(WX_SHOW_WINDOW_EVENT, -1); }
+
+void Frame::ShowStatus() {
+        if (!FindWindowById(STATUS_WINDOW_ID))
+                (new StatusFrame(this))->Show();
+}
+
+void Frame::CloseStatus() {
+        wxWindow *status = FindWindowById(STATUS_WINDOW_ID);
+        if (status)
+                status->Close();
+}
 
 /* Exit */
 
@@ -246,8 +233,3 @@ wxThread::ExitCode CExitThread::Entry() {
         return 0;
 }
 
-#ifdef _WIN32
-void Frame::OnWinSendMessageEvent(WinSendMessageEvent &event) {
-        SendMessage((HWND)event.GetHWND(), event.GetMessage(), event.GetWParam(), event.GetLParam());
-}
-#endif

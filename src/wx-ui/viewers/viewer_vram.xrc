@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwidgets.org/wxxrc" version="2.5.3.0">
+	<object class="wxPanel" name="ViewerVRAMPanel">
+		<style>wxTAB_TRAVERSAL | wxVSCROLL | wxALWAYS_SHOW_SB</style>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticText">
+					<label>Start address:</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_STARTADDR_CURRENT">
+					<label>Current (xxxxxxx)</label>
+					<style>wxRB_GROUP</style>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<object class="wxRadioButton" name="IDC_STARTADDR_CUSTOM">
+							<label>Custom</label>
+							<value>1</value>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<object class="wxTextCtrl" name="IDC_STARTADDR_TEXTCTRL">
+							<value>0</value>
+							<style>wxTE_PROCESS_ENTER</style>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticText">
+					<label>Pitch:</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_PITCH_CURRENT">
+					<label>Current (xxxxxxx)</label>
+					<style>wxRB_GROUP</style>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<object class="wxRadioButton" name="IDC_PITCH_CUSTOM">
+							<label>Custom</label>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<object class="wxTextCtrl" name="IDC_PITCH_TEXTCTRL">
+							<value>80</value>
+							<style>wxTE_PROCESS_ENTER</style>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticText">
+					<label>Colour depth:</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_CURRENT">
+					<label>Current (xxxxxxx)</label>
+					<style>wxRB_GROUP</style>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_1BPP">
+					<label>2 colours</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_2BPP">
+					<label>4 colours</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_4BPP">
+					<label>16 colours</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_8BPP">
+					<label>256 colours</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_1555">
+					<label>32k colours (555) </label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_565">
+					<label>64k colours (565)</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_888">
+					<label>16M colours (888)</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_DEPTH_8888">
+					<label>16M colours (8888)</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticText">
+					<label>Address mode:</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_ADDRMODE_CURRENT">
+					<label>Current</label>
+					<style>wxRB_GROUP</style>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_ADDRMODE_NORMAL">
+					<label>Normal</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_ADDRMODE_ODDEVEN">
+					<label>Odd/even</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxRadioButton" name="IDC_ADDRMODE_CHAIN4">
+					<label>Chain-4</label>
+				</object>
+			</object>
+
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticText">
+					<label>Scale factor:</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<object class="wxSpinCtrl" name="IDC_SCALE">
+					<style>wxSP_ARROW_KEYS</style>
+					<value>1</value>
+					<min>1</min>
+					<max>16</max>
+				</object>
+			</object>
+		</object>
+	</object>
+</resource>
