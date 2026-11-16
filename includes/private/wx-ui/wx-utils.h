@@ -37,7 +37,7 @@ static inline void wx_config_set_string(int global, const char *head, const char
 static inline void wx_config_free_section(int global, const char *head) { config_free_section(global, (char *)head); }
 
 template <typename T> T *wx_ctrl(wxWindow *parent, const wxString &name) {
-        return wxStaticCast(parent->FindWindow(XRCID(name)), T);
+        return wxStaticCast(parent->FindWindow(XRCID(name.utf8_str())), T);
 }
 
 static inline void wx_strlcpy(char *dst, const wxString &src, size_t size) {

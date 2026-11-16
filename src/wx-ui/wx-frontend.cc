@@ -76,11 +76,11 @@ static void wx_enablemenuitem(wxMenuBar *menubar, int id, bool enable) {
 #endif
 }
 
-static int xrcid_index(const char *name, int index) { return XRCID(wxString::Format("%s[%d]", name, index)); }
+static int xrcid_index(const char *name, int index) { return XRCID(wxString::Format("%s[%d]", name, index).utf8_str()); }
 
 static bool id_in_range(int id, const char *name, int *index) {
-        int start = XRCID(wxString(name) + "[start]");
-        int end = XRCID(wxString(name) + "[end]");
+        int start = XRCID((wxString(name) + "[start]").utf8_str());
+        int end = XRCID((wxString(name) + "[end]").utf8_str());
         if (id < start || id > end)
                 return false;
         *index = id - start;
@@ -204,7 +204,7 @@ static int wx_setupmenu(void *data) {
 
         wx_checkmenuitem(menu, xrcid_index("IDM_VID_GL3_INPUT_STRETCH", gl3_input_stretch), true);
         wx_checkmenuitem(menu, xrcid_index("IDM_VID_GL3_INPUT_SCALE", (int)((gl3_input_scale - 0.5) * 2)), true);
-        wx_checkmenuitem(menu, XRCID(wxString::Format("IDM_VID_GL3_SHADER_REFRESH_RATE[%g]", gl3_shader_refresh_rate)), true);
+        wx_checkmenuitem(menu, XRCID(wxString::Format("IDM_VID_GL3_SHADER_REFRESH_RATE[%g]", gl3_shader_refresh_rate).utf8_str()), true);
 
         return 1;
 }

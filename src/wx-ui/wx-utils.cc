@@ -83,7 +83,7 @@ wxMenu *wx_getsubmenu(wxMenuBar *menubar, int id) {
                 if (child->GetType() != wxXML_ELEMENT_NODE || child->GetAttribute("class") != "wxMenu")
                         continue;
                 wxString name = child->GetAttribute("name");
-                if (!name.empty() && XRCID(name) == id && index < menubar->GetMenuCount())
+                if (!name.empty() && XRCID(name.utf8_str()) == id && index < menubar->GetMenuCount())
                         return menubar->GetMenu(index);
                 index++;
         }
