@@ -1,5 +1,6 @@
 #include "wx-hdgeometry.h"
 
+#include <cstdint>
 #include <stdio.h>
 
 const HdGeometryDialog::HdType HdGeometryDialog::hd_types[NUM_HD_TYPES] = {

@@ -1,6 +1,8 @@
 #include "wx-hdnew.h"
 #include "wx-frontend.h"
 
+#include <cstdint>
+
 #include <wx/progdlg.h>
 
 #include <atomic>
