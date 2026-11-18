@@ -1337,6 +1337,14 @@ void mem_init() {
         smram_disable = NULL;
 }
 
+void mem_mapping_clear() {
+        memset(read_mapping, 0, sizeof(read_mapping));
+        memset(write_mapping, 0, sizeof(write_mapping));
+        memset(_mem_exec, 0, sizeof(_mem_exec));
+        memset(&base_mapping, 0, sizeof(base_mapping));
+        flushmmucache();
+}
+
 void mem_alloc() {
         int c;
 

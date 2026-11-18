@@ -448,6 +448,7 @@ int stop_emulation() {
         SDL_DestroyMutex(ghMutex);
 
         device_close_all();
+        mem_mapping_clear();
         midi_close();
 
         pclog("Emulation stopped.\n");

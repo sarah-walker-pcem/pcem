@@ -204,6 +204,7 @@ void mem_add_bios();
 
 void mem_init();
 void mem_alloc();
+void mem_mapping_clear();
 
 void mem_set_704kb();
 
