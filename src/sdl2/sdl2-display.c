@@ -96,6 +96,7 @@ static uint16_t scancode_map[65536];
 static int raw_mouse = 0;
 static SDL_atomic_t raw_mouse_dx, raw_mouse_dy, raw_mouse_buttons;
 static int cursor_clipped = 0;
+static SDL_mutex *present_mutex = NULL;
 static void win_clip_cursor(int on);
 SDL_Window *dummy_window = NULL;
 #endif
@@ -825,8 +826,19 @@ void sdl_display_event(int event, int param1, int param2) {
                         cocoa_update_drawables(native_canvas);
 #endif
 #ifdef _WIN32
-                if (sub_hwnd)
+                if (sub_hwnd) {
+                        int locked = 0, tries;
+                        for (tries = 0; present_mutex && tries < 250; tries++) {
+                                if (SDL_TryLockMutex(present_mutex) == 0) {
+                                        locked = 1;
+                                        break;
+                                }
+                                SDL_Delay(1);
+                        }
                         MoveWindow(sub_hwnd, 0, 0, param1, param2, TRUE);
+                        if (locked)
+                                SDL_UnlockMutex(present_mutex);
+                }
 #endif
 #ifdef PCEM_DISPLAY_X11
                 if (x11_canvas) {
@@ -959,6 +971,8 @@ void display_start(void *wnd_ptr) {
 #ifdef _WIN32
         if (!windows_setup())
                 pclog("Could not set up display windows!\n");
+        if (!present_mutex)
+                present_mutex = SDL_CreateMutex();
         hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
         memset(rawinputkey, 0, sizeof(rawinputkey));
 #endif
@@ -1299,8 +1313,16 @@ int render() {
         if (renderer_doreset) {
                 pclog("renderer_doreset\n");
                 renderer_doreset = 0;
+#ifdef _WIN32
+                if (present_mutex)
+                        SDL_LockMutex(present_mutex);
+#endif
                 sdl_renderer_close();
                 sdl_renderer_init(window);
+#ifdef _WIN32
+                if (present_mutex)
+                        SDL_UnlockMutex(present_mutex);
+#endif
 #ifdef __APPLE__
                 cocoa_fit_subviews();
 #endif
@@ -1433,8 +1455,16 @@ int render() {
                 }
         }
 
+#ifdef _WIN32
+        if (present_mutex)
+                SDL_LockMutex(present_mutex);
+#endif
         if (sdl_renderer_update(window))
                 sdl_renderer_present(window);
+#ifdef _WIN32
+        if (present_mutex)
+                SDL_UnlockMutex(present_mutex);
+#endif
 
         end_time = timer_read();
         render_time += end_time - start_time;
