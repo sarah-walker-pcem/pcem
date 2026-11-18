@@ -52,6 +52,8 @@ void viewer_add(char *title, viewer_t *viewer, void *p)
 
 void viewer_open(void *parent, int id)
 {
+	if (id < 0 || id >= (int)viewer_routs.size())
+		return;
 	Viewer *i = (Viewer *)viewer_routs[id].viewer->open(parent, viewer_routs[id].p, viewer_routs[id].title.c_str());
 	if (i)
 		viewer_windows.push_back(i);
@@ -118,6 +120,9 @@ void update_viewers_menu(void *menu)
 
 	for (std::vector<ViewerRout>::iterator it = viewer_routs.begin(); it != viewer_routs.end(); it++)
 	{
-		wm->Append(id++, (*it).title, wxEmptyString, wxITEM_NORMAL);
+		wm->Append(id++, wxString::FromUTF8((*it).title.c_str()), wxEmptyString, wxITEM_NORMAL);
 	}
+
+	if (viewer_routs.empty())
+		wm->Append(IDM_VIEWER_MAX - 1, "No viewers available")->Enable(false);
 }

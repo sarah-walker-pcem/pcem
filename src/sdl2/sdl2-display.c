@@ -91,8 +91,12 @@ static HINSTANCE hinstance = 0;
 static HWND msg_hwnd = 0;
 static HWND sub_hwnd = 0;
 static HHOOK hKeyboardHook = 0;
-static RAWINPUTDEVICE device;
+static RAWINPUTDEVICE devices[2];
 static uint16_t scancode_map[65536];
+static int raw_mouse = 0;
+static SDL_atomic_t raw_mouse_dx, raw_mouse_dy, raw_mouse_buttons;
+static int cursor_clipped = 0;
+static void win_clip_cursor(int on);
 SDL_Window *dummy_window = NULL;
 #endif
 
@@ -223,7 +227,8 @@ static int x11_keycode_to_scancode(unsigned int keycode) {
 static void x11_grab_keyboard(int grab) {
         if (grab) {
                 SDL_SysWMinfo info;
-                if (x11_grab_display || !window || !x11_canvas)
+                static int last_ret = GrabSuccess;
+                if (!window || !x11_canvas)
                         return;
                 SDL_VERSION(&info.version);
                 if (!SDL_GetWindowWMInfo(window, &info) || info.subsystem != SDL_SYSWM_X11)
@@ -231,10 +236,18 @@ static void x11_grab_keyboard(int grab) {
                 int ret = XGrabKeyboard(info.info.x11.display, info.info.x11.window, False, GrabModeAsync, GrabModeAsync,
                                         CurrentTime);
                 if (ret == GrabSuccess) {
+                        if (!x11_grab_display)
+                                memset(rawinputkey, 0, sizeof(rawinputkey));
                         x11_grab_display = info.info.x11.display;
-                        memset(rawinputkey, 0, sizeof(rawinputkey));
-                } else
-                        pclog("XGrabKeyboard failed (%i)\n", ret);
+                } else {
+                        if (ret != last_ret)
+                                pclog("XGrabKeyboard failed (%i)\n", ret);
+                        if (x11_grab_display) {
+                                x11_grab_display = NULL;
+                                memset(rawinputkey, 0, sizeof(rawinputkey));
+                        }
+                }
+                last_ret = ret;
                 XFlush(info.info.x11.display);
         } else if (x11_grab_display) {
                 XUngrabKeyboard(x11_grab_display, CurrentTime);
@@ -248,7 +261,8 @@ static void x11_grab_keyboard(int grab) {
 static void x11_grab_pointer(int grab) {
         if (grab) {
                 SDL_SysWMinfo info;
-                if (x11_pointer_display || !window || !x11_canvas)
+                static int last_ret = GrabSuccess;
+                if (!window || !x11_canvas)
                         return;
                 SDL_VERSION(&info.version);
                 if (!SDL_GetWindowWMInfo(window, &info) || info.subsystem != SDL_SYSWM_X11)
@@ -258,8 +272,9 @@ static void x11_grab_pointer(int grab) {
                                        info.info.x11.window, None, CurrentTime);
                 if (ret == GrabSuccess)
                         x11_pointer_display = info.info.x11.display;
-                else
+                else if (ret != last_ret)
                         pclog("XGrabPointer failed (%i)\n", ret);
+                last_ret = ret;
                 XFlush(info.info.x11.display);
         } else if (x11_pointer_display) {
                 XUngrabPointer(x11_pointer_display, CurrentTime);
@@ -306,17 +321,51 @@ void display_resize(int width, int height) {
 }
 
 #if defined(_WIN32)
+static int plat_owns_mouse() { return raw_mouse && sub_hwnd; }
+
 static void plat_input_capture(int on) {
         if (on && msg_hwnd)
                 PostMessage(msg_hwnd, WM_PCEM_FOCUS_CANVAS, 0, 0);
+        if (plat_owns_mouse()) {
+                if (on) {
+                        SDL_AtomicSet(&raw_mouse_dx, 0);
+                        SDL_AtomicSet(&raw_mouse_dy, 0);
+                        SDL_AtomicSet(&raw_mouse_buttons, 0);
+                }
+                SDL_ShowCursor(on ? SDL_DISABLE : SDL_ENABLE);
+        }
+        win_clip_cursor(on);
+}
+
+static void plat_input_maintain() {
+        if (!plat_owns_mouse())
+                return;
+        win_clip_cursor(mousecapture && infocus);
+        if (mousecapture && SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE)
+                SDL_ShowCursor(SDL_DISABLE);
 }
 #elif defined(PCEM_DISPLAY_X11)
+static int plat_owns_mouse() { return 0; }
+
 static void plat_input_capture(int on) {
         x11_grab_keyboard(on);
         x11_grab_pointer(on);
 }
+
+static void plat_input_maintain() {
+        static uint32_t last_check = 0;
+        uint32_t ticks = SDL_GetTicks();
+
+        if (!mousecapture || !infocus || !x11_canvas || ticks - last_check < 250)
+                return;
+        last_check = ticks;
+        x11_grab_keyboard(1);
+        x11_grab_pointer(1);
+}
 #else
+static int plat_owns_mouse() { return 0; }
 static void plat_input_capture(int on) {}
+static void plat_input_maintain() {}
 #endif
 
 static void input_capture(int on) {
@@ -326,12 +375,16 @@ static void input_capture(int on) {
                 mousecapture = 1;
                 display_get_size(window, &rect.w, &rect.h);
                 SDL_WarpMouseInWindow(window, rect.w / 2, rect.h / 2);
-                SDL_SetWindowGrab(window, SDL_TRUE);
-                SDL_SetRelativeMouseMode(SDL_TRUE);
-                SDL_GetRelativeMouseState(0, 0);
+                if (!plat_owns_mouse()) {
+                        SDL_SetWindowGrab(window, SDL_TRUE);
+                        SDL_SetRelativeMouseMode(SDL_TRUE);
+                        SDL_GetRelativeMouseState(0, 0);
+                }
         } else if (mousecapture) {
-                SDL_SetWindowGrab(window, SDL_FALSE);
-                SDL_SetRelativeMouseMode(SDL_FALSE);
+                if (!plat_owns_mouse()) {
+                        SDL_SetWindowGrab(window, SDL_FALSE);
+                        SDL_SetRelativeMouseMode(SDL_FALSE);
+                }
                 mousecapture = 0;
         }
         plat_input_capture(on);
@@ -470,6 +523,24 @@ static void process_raw_input(LPARAM lParam) {
                         if (!(scancode & 0xf00))
                                 rawinputkey[scancode & 0x1ff] = !(rawKB.Flags & RI_KEY_BREAK);
                 }
+        } else if (raw->header.dwType == RIM_TYPEMOUSE && raw_mouse) {
+                const RAWMOUSE *m = &raw->data.mouse;
+                static const USHORT down[3] = {RI_MOUSE_LEFT_BUTTON_DOWN, RI_MOUSE_RIGHT_BUTTON_DOWN, RI_MOUSE_MIDDLE_BUTTON_DOWN};
+                static const USHORT up[3] = {RI_MOUSE_LEFT_BUTTON_UP, RI_MOUSE_RIGHT_BUTTON_UP, RI_MOUSE_MIDDLE_BUTTON_UP};
+                int buttons = SDL_AtomicGet(&raw_mouse_buttons);
+                int i;
+
+                for (i = 0; i < 3; i++) {
+                        if (m->usButtonFlags & down[i])
+                                buttons |= 1 << i;
+                        if (m->usButtonFlags & up[i])
+                                buttons &= ~(1 << i);
+                }
+                SDL_AtomicSet(&raw_mouse_buttons, buttons);
+                if (mousecapture && !(m->usFlags & MOUSE_MOVE_ABSOLUTE)) {
+                        SDL_AtomicAdd(&raw_mouse_dx, m->lLastX);
+                        SDL_AtomicAdd(&raw_mouse_dy, m->lLastY);
+                }
         }
         free(raw);
 }
@@ -549,19 +620,58 @@ static int windows_setup() {
 
         get_registry_key_map();
 
-        device.usUsagePage = 0x01;
-        device.usUsage = 0x06;
-        device.dwFlags = RIDEV_NOHOTKEYS | RIDEV_INPUTSINK;
-        device.hwndTarget = msg_hwnd;
+        devices[0].usUsagePage = 0x01;
+        devices[0].usUsage = 0x06;
+        devices[0].dwFlags = RIDEV_NOHOTKEYS | RIDEV_INPUTSINK;
+        devices[0].hwndTarget = msg_hwnd;
+        devices[1].usUsagePage = 0x01;
+        devices[1].usUsage = 0x02;
+        devices[1].dwFlags = RIDEV_INPUTSINK;
+        devices[1].hwndTarget = msg_hwnd;
 
-        if (RegisterRawInputDevices(&device, 1, sizeof(device)))
+        raw_mouse = is_embedded();
+        if (RegisterRawInputDevices(devices, raw_mouse ? 2 : 1, sizeof(RAWINPUTDEVICE)))
                 pclog("Raw input registered!\n");
-        else
+        else {
                 pclog("Raw input registration failed!\n");
+                raw_mouse = 0;
+        }
 
         return 1;
 }
+
+static void win_clip_cursor(int on) {
+        RECT r, current;
+
+        if (!on || !sub_hwnd) {
+                if (cursor_clipped) {
+                        ClipCursor(NULL);
+                        cursor_clipped = 0;
+                }
+                return;
+        }
+        if (!GetClientRect(sub_hwnd, &r))
+                return;
+        MapWindowPoints(sub_hwnd, NULL, (POINT *)&r, 2);
+        if (r.right <= r.left || r.bottom <= r.top)
+                return;
+        if (!GetClipCursor(&current) || memcmp(&current, &r, sizeof(RECT)))
+                ClipCursor(&r);
+        cursor_clipped = 1;
+}
 #endif
+
+int display_raw_mouse(int *dx, int *dy, int *buttons) {
+#ifdef _WIN32
+        if (raw_mouse && sub_hwnd) {
+                *dx = SDL_AtomicSet(&raw_mouse_dx, 0);
+                *dy = SDL_AtomicSet(&raw_mouse_dy, 0);
+                *buttons = SDL_AtomicGet(&raw_mouse_buttons);
+                return 1;
+        }
+#endif
+        return 0;
+}
 
 #ifdef PCEM_DISPLAY_X11
 static int x11_setup() {
@@ -1312,6 +1422,8 @@ int render() {
                         device_force_redraw();
                 }
         }
+
+        plat_input_maintain();
 
         if (win_doresize) {
                 win_doresize = 0;

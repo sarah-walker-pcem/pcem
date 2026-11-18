@@ -241,6 +241,8 @@ static void wx_host_config_loaded(void) {
 }
 
 static void wx_host_emulation_started(void) {
+        if (menu)
+                update_viewers_menu(menu);
         if (show_machine_on_start)
                 ghwnd->ShowStatus();
 }
@@ -410,6 +412,14 @@ static void eject_cdrom() {
         atapi_close();
 }
 
+static bool hotkey_held(wxKeyCode key) {
+#ifdef __WXMSW__
+        return wxGetKeyState(WXK_CONTROL) && wxGetKeyState(WXK_ALT) && wxGetKeyState(key);
+#else
+        return false;
+#endif
+}
+
 void wx_handle_command(wxWindow *hwnd, int id, bool checked) {
         int index;
 
@@ -419,6 +429,7 @@ void wx_handle_command(wxWindow *hwnd, int id, bool checked) {
                 pause_and_reset(resetpc);
         } else if (id == XRCID("IDM_FILE_HRESET")) {
                 pause_and_reset(resetpchard);
+                update_viewers_menu(menu);
         } else if (id == XRCID("IDM_FILE_RESET_CAD")) {
                 pause_and_reset(resetpc_cad);
         } else if (id == XRCID("IDM_FILE_EXIT")) {
@@ -474,7 +485,8 @@ void wx_handle_command(wxWindow *hwnd, int id, bool checked) {
                         window_dosetresize = 1;
                 }
         } else if (id == XRCID("IDM_SCREENSHOT")) {
-                take_screenshot = 1;
+                if (!hotkey_held(WXK_PAGEUP))
+                        take_screenshot = 1;
         } else if (id_in_range(id, "IDM_SCREENSHOT_FORMAT", &index)) {
                 static const char *formats[] = {IMAGE_PNG, IMAGE_TIFF, IMAGE_BMP, IMAGE_JPG};
                 if (index < 4)
@@ -499,7 +511,8 @@ void wx_handle_command(wxWindow *hwnd, int id, bool checked) {
                 wx_checkmenuitem(menu, id, video_fullscreen);
                 saveconfig(NULL);
         } else if (id == XRCID("IDM_VID_FULLSCREEN_TOGGLE")) {
-                toggle_fullscreen();
+                if (!hotkey_held(WXK_PAGEDOWN))
+                        toggle_fullscreen();
         } else if (id_in_range(id, "IDM_VID_FS", &index)) {
                 video_fullscreen_scale = index;
                 display_resize(video_width, video_height);

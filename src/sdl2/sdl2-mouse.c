@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <string.h>
 #include "plat-mouse.h"
+#include "sdl2-display.h"
 
 int mouse_buttons;
 static int mouse_x = 0, mouse_y = 0, mouse_z = 0;
@@ -15,16 +16,21 @@ void mouse_wheel_update(int dir) { mouse[2] += dir; }
 
 void mouse_poll_host() {
         if (mousecapture) {
-                uint32_t mb = SDL_GetRelativeMouseState(&mouse[0], &mouse[1]);
-                mouse_buttons = 0;
-                if (mb & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-                        mouse_buttons |= 1;
-                }
-                if (mb & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
-                        mouse_buttons |= 2;
-                }
-                if (mb & SDL_BUTTON(SDL_BUTTON_MIDDLE)) {
-                        mouse_buttons |= 4;
+                int raw_buttons;
+                if (display_raw_mouse(&mouse[0], &mouse[1], &raw_buttons)) {
+                        mouse_buttons = raw_buttons;
+                } else {
+                        uint32_t mb = SDL_GetRelativeMouseState(&mouse[0], &mouse[1]);
+                        mouse_buttons = 0;
+                        if (mb & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+                                mouse_buttons |= 1;
+                        }
+                        if (mb & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+                                mouse_buttons |= 2;
+                        }
+                        if (mb & SDL_BUTTON(SDL_BUTTON_MIDDLE)) {
+                                mouse_buttons |= 4;
+                        }
                 }
                 mouse_x += mouse[0];
                 mouse_y += mouse[1];

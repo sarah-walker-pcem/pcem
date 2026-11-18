@@ -12,6 +12,7 @@
 #ifdef __WXGTK__
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <gtk/gtk.h>
 #endif
 
 #define DISPLAY_DRIVES_NAME "pcem_display_drives"
@@ -334,6 +335,14 @@ void DisplayFrame::SetDisplayFullscreen(bool fullscreen) {
         if (fullscreen) {
                 SetMinSize(wxDefaultSize);
                 SetMaxSize(wxDefaultSize);
+#ifdef __WXGTK__
+                GdkWindow *gdk_window = gtk_widget_get_window((GtkWidget *)GetHandle());
+                if (gdk_window) {
+                        GdkGeometry geometry = {};
+                        gdk_window_set_geometry_hints(gdk_window, &geometry, (GdkWindowHints)0);
+                        gdk_display_flush(gdk_window_get_display(gdk_window));
+                }
+#endif
         }
         ShowFullScreen(fullscreen, wxFULLSCREEN_ALL);
 
