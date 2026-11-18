@@ -43,6 +43,22 @@ SDL_Window *window = NULL;
 static volatile int rendering = 0;
 
 int mousecapture = 0;
+static SDL_atomic_t host_mouse_buttons;
+
+static int host_button_bit(int button) {
+        switch (button) {
+        case 1:
+                return 1;
+        case 2:
+                return 4;
+        case 3:
+                return 2;
+        default:
+                return 0;
+        }
+}
+
+int display_host_mouse_buttons() { return SDL_AtomicGet(&host_mouse_buttons); }
 
 extern int fps;
 
@@ -95,6 +111,8 @@ static RAWINPUTDEVICE devices[2];
 static uint16_t scancode_map[65536];
 static int raw_mouse = 0;
 static SDL_atomic_t raw_mouse_dx, raw_mouse_dy, raw_mouse_buttons;
+static volatile int raw_abs_valid = 0;
+static LONG raw_abs_x, raw_abs_y;
 static int cursor_clipped = 0;
 static SDL_mutex *present_mutex = NULL;
 static void win_clip_cursor(int on);
@@ -332,6 +350,7 @@ static void plat_input_capture(int on) {
                         SDL_AtomicSet(&raw_mouse_dx, 0);
                         SDL_AtomicSet(&raw_mouse_dy, 0);
                         SDL_AtomicSet(&raw_mouse_buttons, 0);
+                        raw_abs_valid = 0;
                 }
                 SDL_ShowCursor(on ? SDL_DISABLE : SDL_ENABLE);
         }
@@ -370,6 +389,7 @@ static void plat_input_maintain() {}
 #endif
 
 static void input_capture(int on) {
+        SDL_AtomicSet(&host_mouse_buttons, 0);
         if (on) {
                 SDL_Rect rect;
 
@@ -538,7 +558,23 @@ static void process_raw_input(LPARAM lParam) {
                                 buttons &= ~(1 << i);
                 }
                 SDL_AtomicSet(&raw_mouse_buttons, buttons);
-                if (mousecapture && !(m->usFlags & MOUSE_MOVE_ABSOLUTE)) {
+                if (m->usFlags & MOUSE_MOVE_ABSOLUTE) {
+                        if (!(m->usButtonFlags && !m->lLastX && !m->lLastY)) {
+                                int virt = m->usFlags & MOUSE_VIRTUAL_DESKTOP;
+                                int w = GetSystemMetrics(virt ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
+                                int h = GetSystemMetrics(virt ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);
+                                LONG x = MulDiv(m->lLastX, w, 65535);
+                                LONG y = MulDiv(m->lLastY, h, 65535);
+
+                                if (mousecapture && raw_abs_valid) {
+                                        SDL_AtomicAdd(&raw_mouse_dx, x - raw_abs_x);
+                                        SDL_AtomicAdd(&raw_mouse_dy, y - raw_abs_y);
+                                }
+                                raw_abs_x = x;
+                                raw_abs_y = y;
+                                raw_abs_valid = 1;
+                        }
+                } else if (mousecapture) {
                         SDL_AtomicAdd(&raw_mouse_dx, m->lLastX);
                         SDL_AtomicAdd(&raw_mouse_dy, m->lLastY);
                 }
@@ -848,7 +884,12 @@ void sdl_display_event(int event, int param1, int param2) {
 #endif
                 device_force_redraw();
                 break;
+        case SDL_DISPLAY_MOUSE_DOWN:
+                if (mousecapture)
+                        SDL_AtomicSet(&host_mouse_buttons, SDL_AtomicGet(&host_mouse_buttons) | host_button_bit(param1));
+                break;
         case SDL_DISPLAY_MOUSE_UP:
+                SDL_AtomicSet(&host_mouse_buttons, SDL_AtomicGet(&host_mouse_buttons) & ~host_button_bit(param1));
                 if (!mousecapture) {
                         if (param1 == 1 && !pauseEmulation) {
                                 window_doinputgrab = 1;

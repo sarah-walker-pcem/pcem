@@ -31,6 +31,7 @@ void mouse_poll_host() {
                         if (mb & SDL_BUTTON(SDL_BUTTON_MIDDLE)) {
                                 mouse_buttons |= 4;
                         }
+                        mouse_buttons |= display_host_mouse_buttons();
                 }
                 mouse_x += mouse[0];
                 mouse_y += mouse[1];

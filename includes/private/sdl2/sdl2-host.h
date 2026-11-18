@@ -10,6 +10,7 @@
 #define SDL_DISPLAY_MOUSE_UP 5
 #define SDL_DISPLAY_DESTROY 6
 #define SDL_DISPLAY_KEY 7
+#define SDL_DISPLAY_MOUSE_DOWN 8
 
 typedef int (*SDL_HOST_CALLBACK)(void *data);
 typedef void (*SDL_DISPLAY_CALLBACK)(int event, int param1, int param2);

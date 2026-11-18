@@ -251,6 +251,18 @@ DisplayFrame::DisplayFrame(wxWindow *owner, wxMenuBar *menubar, const char *titl
         canvas->Bind(wxEVT_LEFT_UP, [this](wxMouseEvent &event) { this->callback(SDL_DISPLAY_MOUSE_UP, 1, 0); });
         canvas->Bind(wxEVT_MIDDLE_UP, [this](wxMouseEvent &event) { this->callback(SDL_DISPLAY_MOUSE_UP, 2, 0); });
         canvas->Bind(wxEVT_RIGHT_UP, [this](wxMouseEvent &event) { this->callback(SDL_DISPLAY_MOUSE_UP, 3, 0); });
+        auto mouse_down = [this](int button) {
+                return [this, button](wxMouseEvent &event) {
+                        this->callback(SDL_DISPLAY_MOUSE_DOWN, button, 0);
+                        event.Skip();
+                };
+        };
+        canvas->Bind(wxEVT_LEFT_DOWN, mouse_down(1));
+        canvas->Bind(wxEVT_LEFT_DCLICK, mouse_down(1));
+        canvas->Bind(wxEVT_MIDDLE_DOWN, mouse_down(2));
+        canvas->Bind(wxEVT_MIDDLE_DCLICK, mouse_down(2));
+        canvas->Bind(wxEVT_RIGHT_DOWN, mouse_down(3));
+        canvas->Bind(wxEVT_RIGHT_DCLICK, mouse_down(3));
 #ifdef __WXGTK__
         canvas->Bind(wxEVT_KEY_DOWN, [this](wxKeyEvent &event) { this->callback(SDL_DISPLAY_KEY, event.GetRawKeyFlags(), 1); });
         canvas->Bind(wxEVT_KEY_UP, [this](wxKeyEvent &event) { this->callback(SDL_DISPLAY_KEY, event.GetRawKeyFlags(), 0); });

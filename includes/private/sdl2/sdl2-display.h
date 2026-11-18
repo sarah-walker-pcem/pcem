@@ -11,6 +11,7 @@ void display_start(void *hwnd);
 void display_stop();
 void display_resize(int width, int height);
 int display_raw_mouse(int *dx, int *dy, int *buttons);
+int display_host_mouse_buttons();
 
 #ifdef __cplusplus
 }
