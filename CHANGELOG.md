@@ -1,4 +1,30 @@
-# PCem v18
+# PCem v18-rc2
+## Changes since v18-rc1
+
+### General
+- Updated the Nuked-OPL3 emulation to a newer version (#245)
+- Added an application icon for Windows and macOS (temporary until a final icon is made)
+- Fixed a crash when closing a machine or exiting PCem
+
+### Display
+- Linux: Fullscreen now actually goes fullscreen instead of only hiding the menu and status bar
+- Windows: Fixed a crash with the software renderer at startup or when entering fullscreen
+- macOS: Fixed several fullscreen issues and renderer issues
+
+### Input
+- The mouse now stays inside the window when captured on Windows and Linux
+- Fixed mouse movement and clicks not reaching the emulated machine while captured
+- Linux: Fixed the keyboard and mouse not being captured, including in fullscreen
+- Windows: Fixed the fullscreen and screenshot shortcuts sometimes firing multiple times
+
+### Interface
+- Linux/Windows: Fixed the View menu being empty; it now shows "No viewers available" when no viewers apply to the machine and this list updates after a hard reset
+
+## Developer Changes since v18-rc1
+- Split the wxWidgets UI into one .xrc file per window and moved the window code into its own C++ files (`pc.xrc` is now `wx-config.xrc`)
+- Added `mem_mapping_clear()`, called after `device_close_all()` so no memory mappings point at closed devices
+
+# PCem v18-rc1
 ## Changes in v18
 - PCAP Support is now both Windows and Linux
 - Numerous bugfixes in this build
