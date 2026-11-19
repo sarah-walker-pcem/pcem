@@ -921,6 +921,46 @@ static int ui_setsize(void *data) {
         return 0;
 }
 
+#ifdef __APPLE__
+static volatile int resize_notify_pending = 0;
+
+static int ui_notify_resize(void *data) {
+        void *nswindow = native_canvas ? cocoa_get(native_canvas, "window") : NULL;
+        if (nswindow) {
+                void *center = cocoa_get(objc_getClass("NSNotificationCenter"), "defaultCenter");
+                void *name = ((void *(*)(void *, SEL, const char *))objc_msgSend)(objc_getClass("NSString"),
+                                                                                  sel_registerName("stringWithUTF8String:"),
+                                                                                  "NSWindowDidResizeNotification");
+                ((void (*)(void *, SEL, void *, void *))objc_msgSend)(center, sel_registerName("postNotificationName:object:"), name,
+                                                                     nswindow);
+        }
+        resize_notify_pending = 0;
+        return 0;
+}
+
+static void cocoa_check_pixel_size() {
+        static uint32_t last_notify = 0;
+        int pw, ph, ew = canvas_width, eh = canvas_height;
+        uint32_t ticks;
+
+        if (!window || !native_canvas || ew <= 0 || eh <= 0 || resize_notify_pending)
+                return;
+        SDL_GetWindowSizeInPixels(window, &pw, &ph);
+        if (SDL_GetWindowFlags(window) & SDL_WINDOW_ALLOW_HIGHDPI) {
+                void *nswindow = cocoa_get(native_canvas, "window");
+                double scale = nswindow ? ((double (*)(void *, SEL))objc_msgSend)(nswindow, sel_registerName("backingScaleFactor")) : 1.0;
+                ew = (int)(ew * scale + 0.5);
+                eh = (int)(eh * scale + 0.5);
+        }
+        ticks = SDL_GetTicks();
+        if ((pw == ew && ph == eh) || ticks - last_notify < 250)
+                return;
+        last_notify = ticks;
+        resize_notify_pending = 1;
+        ui_call(ui_notify_resize, NULL);
+}
+#endif
+
 static int ui_fullscreen(void *data) {
         panel_set_fullscreen(data != NULL);
         if (!data)
@@ -1496,6 +1536,10 @@ int render() {
                 }
         }
 
+#ifdef __APPLE__
+        if (is_embedded())
+                cocoa_check_pixel_size();
+#endif
 #ifdef _WIN32
         if (present_mutex)
                 SDL_LockMutex(present_mutex);

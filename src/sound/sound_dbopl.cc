@@ -4,7 +4,7 @@
 
 static struct {
         DBOPL::Chip chip;
-        struct opl3_chip opl3chip;
+        opl3_chip opl3chip;
         int addr;
         int timer[2];
         uint8_t timer_ctrl;
