@@ -1091,6 +1091,7 @@ uint8_t svga_read(uint32_t addr, void *p) {
         } else if (svga->chain4) {
                 readplane = addr & 3;
                 addr = ((addr & 0xfffc) << 2) | ((addr & 0x30000) >> 14) | (addr & ~0x3ffff);
+                latch_addr = addr;
         } else if (svga->chain2_read) {
                 readplane = (readplane & 2) | (addr & 1);
                 addr &= ~1;
