@@ -1187,6 +1187,8 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                                         dest_g = dithersub_g2x2[dest_g][real_y & 1][x & 1];
                                                         dest_b = dithersub_rb2x2[dest_b][real_y & 1][x & 1];
                                                 }
+                                                if (params->fbzMode & FBZ_ALPHA_PLANE)
+                                                        dest_a = voodoo->params.aux_tiled ? aux_mem[x_tiled] : aux_mem[x];
                                                 ALPHA_BLEND(src_r, src_g, src_b, src_a, prefog);
                                         }
 
@@ -1219,6 +1221,13 @@ static void voodoo_half_triangle(voodoo_t *voodoo, voodoo_params_t *params, vood
                                                                 aux_mem[x_tiled] = new_depth;
                                                         else
                                                                 aux_mem[x] = new_depth;
+                                                }
+                                                if (params->fbzMode & FBZ_ALPHA_PLANE)
+                                                {
+                                                        if (voodoo->params.aux_tiled)
+                                                                aux_mem[x_tiled] = dest_a;
+                                                        else
+                                                                aux_mem[x] = dest_a;
                                                 }
                                         }
                                 }
