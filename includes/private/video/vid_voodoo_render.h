@@ -168,7 +168,7 @@ void voodoo_codegen_close(voodoo_t *voodoo);
 #define ALPHA_BLEND(src_r, src_g, src_b, src_a, prefog)                                                                          \
         do {                                                                                                                     \
                 int _a;                                                                                                          \
-                int newdest_r = 0, newdest_g = 0, newdest_b = 0;                                                                 \
+                int newdest_r = 0, newdest_g = 0, newdest_b = 0, newdest_a = 0;                                                  \
                                                                                                                                  \
                 switch (dest_afunc) {                                                                                            \
                 case AFUNC_AZERO:                                                                                                \
@@ -267,6 +267,12 @@ void voodoo_codegen_close(voodoo_t *voodoo);
                 src_r = CLAMP(src_r);                                                                                            \
                 src_g = CLAMP(src_g);                                                                                            \
                 src_b = CLAMP(src_b);                                                                                            \
+                                                                                                                                 \
+                if (src_a_afunc == AFUNC_AONE)                                                                                   \
+                        newdest_a += src_a;                                                                                      \
+                if (dest_a_afunc == AFUNC_AONE)                                                                                  \
+                        newdest_a += dest_a;                                                                                     \
+                dest_a = CLAMP(newdest_a);                                                                                       \
         } while (0)
 
 void voodoo_render_thread_1(void *param);

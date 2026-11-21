@@ -366,6 +366,7 @@ enum {
 
         FBZ_DEPTH_BIAS = (1 << 16),
 
+        FBZ_ALPHA_PLANE = (1 << 18),
         FBZ_DITHER_SUB = (1 << 19),
         FBZ_DEPTH_SOURCE = (1 << 20),
 
@@ -585,6 +586,8 @@ enum {
 
 #define src_afunc ((params->alphaMode >> 8) & 0xf)
 #define dest_afunc ((params->alphaMode >> 12) & 0xf)
+#define src_a_afunc ((params->alphaMode >> 16) & 0xf)
+#define dest_a_afunc ((params->alphaMode >> 20) & 0xf)
 #define alpha_func ((params->alphaMode >> 1) & 7)
 #define a_ref (params->alphaMode >> 24)
 #define depth_op ((params->fbzMode >> 5) & 7)
