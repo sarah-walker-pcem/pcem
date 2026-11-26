@@ -3,9 +3,9 @@
 #define OP_SHIFT_b(c, ea32)                                                                                                      \
         {                                                                                                                        \
                 uint8_t temp_orig = temp;                                                                                        \
+                flags_rebuild();                                                                                                 \
                 if (!c)                                                                                                          \
                         return 0;                                                                                                \
-                flags_rebuild();                                                                                                 \
                 switch (rmdat & 0x38) {                                                                                          \
                 case 0x00: /*ROL b, c*/                                                                                          \
                         temp = (temp << (c & 7)) | (temp >> (8 - (c & 7)));                                                      \
@@ -106,9 +106,9 @@
 #define OP_SHIFT_w(c, ea32)                                                                                                      \
         {                                                                                                                        \
                 uint16_t temp_orig = temp;                                                                                       \
+                flags_rebuild();                                                                                                 \
                 if (!c)                                                                                                          \
                         return 0;                                                                                                \
-                flags_rebuild();                                                                                                 \
                 switch (rmdat & 0x38) {                                                                                          \
                 case 0x00: /*ROL w, c*/                                                                                          \
                         temp = (temp << (c & 15)) | (temp >> (16 - (c & 15)));                                                   \
@@ -209,9 +209,9 @@
 #define OP_SHIFT_l(c, ea32)                                                                                                      \
         {                                                                                                                        \
                 uint32_t temp_orig = temp;                                                                                       \
+                flags_rebuild();                                                                                                 \
                 if (!c)                                                                                                          \
                         return 0;                                                                                                \
-                flags_rebuild();                                                                                                 \
                 switch (rmdat & 0x38) {                                                                                          \
                 case 0x00: /*ROL l, c*/                                                                                          \
                         temp = (temp << c) | (temp >> (32 - c));                                                                 \
